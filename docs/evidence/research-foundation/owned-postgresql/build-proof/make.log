@@ -1,0 +1,35 @@
+make -C ./src/backend generated-headers
+make[1]: Entering directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend'
+make -C ../include/catalog generated-headers
+make -C nodes generated-header-symlinks
+make -C utils generated-header-symlinks
+make -C storage/lmgr lwlocknames.h
+make[2]: Entering directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/storage/lmgr'
+'/usr/bin/perl' ./generate-lwlocknames.pl ../../../include/storage/lwlocklist.h ../../utils/activity/wait_event_names.txt generate-lwlocknames.pl
+make[2]: Entering directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/nodes'
+'/usr/bin/perl' gen_node_support.pl ../../../src/include/nodes/nodes.h ../../../src/include/nodes/primnodes.h ../../../src/include/nodes/parsenodes.h ../../../src/include/nodes/pathnodes.h ../../../src/include/nodes/plannodes.h ../../../src/include/nodes/execnodes.h ../../../src/include/access/amapi.h ../../../src/include/access/cmptype.h ../../../src/include/access/sdir.h ../../../src/include/access/tableam.h ../../../src/include/access/tsmapi.h ../../../src/include/commands/event_trigger.h ../../../src/include/commands/trigger.h ../../../src/include/executor/tuptable.h ../../../src/include/foreign/fdwapi.h ../../../src/include/nodes/bitmapset.h ../../../src/include/nodes/extensible.h ../../../src/include/nodes/lockoptions.h ../../../src/include/nodes/miscnodes.h ../../../src/include/nodes/replnodes.h ../../../src/include/nodes/supportnodes.h ../../../src/include/nodes/value.h ../../../src/include/utils/rel.h
+make[2]: Entering directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/utils'
+make -C adt jsonpath_gram.h
+make[2]: Entering directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/include/catalog'
+'/usr/bin/perl' ../../../src/backend/catalog/genbki.pl --include-path=../../../src/include/ \
+	--set-version=18 ../../../src/include/catalog/pg_proc.h ../../../src/include/catalog/pg_type.h ../../../src/include/catalog/pg_attribute.h ../../../src/include/catalog/pg_class.h ../../../src/include/catalog/pg_attrdef.h ../../../src/include/catalog/pg_constraint.h ../../../src/include/catalog/pg_inherits.h ../../../src/include/catalog/pg_index.h ../../../src/include/catalog/pg_operator.h ../../../src/include/catalog/pg_opfamily.h ../../../src/include/catalog/pg_opclass.h ../../../src/include/catalog/pg_am.h ../../../src/include/catalog/pg_amop.h ../../../src/include/catalog/pg_amproc.h ../../../src/include/catalog/pg_language.h ../../../src/include/catalog/pg_largeobject_metadata.h ../../../src/include/catalog/pg_largeobject.h ../../../src/include/catalog/pg_aggregate.h ../../../src/include/catalog/pg_statistic.h ../../../src/include/catalog/pg_statistic_ext.h ../../../src/include/catalog/pg_statistic_ext_data.h ../../../src/include/catalog/pg_rewrite.h ../../../src/include/catalog/pg_trigger.h ../../../src/include/catalog/pg_event_trigger.h ../../../src/include/catalog/pg_description.h ../../../src/include/catalog/pg_cast.h ../../../src/include/catalog/pg_enum.h ../../../src/include/catalog/pg_namespace.h ../../../src/include/catalog/pg_conversion.h ../../../src/include/catalog/pg_depend.h ../../../src/include/catalog/pg_database.h ../../../src/include/catalog/pg_db_role_setting.h ../../../src/include/catalog/pg_tablespace.h ../../../src/include/catalog/pg_authid.h ../../../src/include/catalog/pg_auth_members.h ../../../src/include/catalog/pg_shdepend.h ../../../src/include/catalog/pg_shdescription.h ../../../src/include/catalog/pg_ts_config.h ../../../src/include/catalog/pg_ts_config_map.h ../../../src/include/catalog/pg_ts_dict.h ../../../src/include/catalog/pg_ts_parser.h ../../../src/include/catalog/pg_ts_template.h ../../../src/include/catalog/pg_extension.h ../../../src/include/catalog/pg_foreign_data_wrapper.h ../../../src/include/catalog/pg_foreign_server.h ../../../src/include/catalog/pg_user_mapping.h ../../../src/include/catalog/pg_foreign_table.h ../../../src/include/catalog/pg_policy.h ../../../src/include/catalog/pg_replication_origin.h ../../../src/include/catalog/pg_default_acl.h ../../../src/include/catalog/pg_init_privs.h ../../../src/include/catalog/pg_seclabel.h ../../../src/include/catalog/pg_shseclabel.h ../../../src/include/catalog/pg_collation.h ../../../src/include/catalog/pg_parameter_acl.h ../../../src/include/catalog/pg_partitioned_table.h ../../../src/include/catalog/pg_range.h ../../../src/include/catalog/pg_transform.h ../../../src/include/catalog/pg_sequence.h ../../../src/include/catalog/pg_publication.h ../../../src/include/catalog/pg_publication_namespace.h ../../../src/include/catalog/pg_publication_rel.h ../../../src/include/catalog/pg_subscription.h ../../../src/include/catalog/pg_subscription_rel.h
+make[3]: Entering directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/utils/adt'
+/var/tmp/quantmesh-owned-pg-0ue7gicj/prefix/usr/bin/bison -Wno-deprecated  -d -o jsonpath_gram.c jsonpath_gram.y
+/var/tmp/quantmesh-owned-pg-0ue7gicj/prefix/usr/bin/bison: m4 subprocess failed: No such file or directory
+make[3]: *** [../../../../src/Makefile.global:813: jsonpath_gram.c] Error 1
+make[3]: Leaving directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/utils/adt'
+make[2]: *** [Makefile:44: submake-adt-headers] Error 2
+make[2]: Leaving directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/utils'
+make[1]: *** [Makefile:127: submake-utils-headers] Error 2
+make[1]: *** Waiting for unfinished jobs....
+make[2]: Leaving directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/storage/lmgr'
+touch node-support-stamp
+cd '../../../src/include/nodes/' && for file in nodetags.h; do \
+  rm -f $file && ln -s "../../../src/backend/nodes/$file" . ; \
+done
+touch ../../../src/include/nodes/header-stamp
+make[2]: Leaving directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend/nodes'
+touch bki-stamp
+make[2]: Leaving directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/include/catalog'
+make[1]: Leaving directory '/var/tmp/quantmesh-owned-pg-0ue7gicj/postgresql-18.6/src/backend'
+make: *** [src/Makefile.global:400: submake-generated-headers] Error 2

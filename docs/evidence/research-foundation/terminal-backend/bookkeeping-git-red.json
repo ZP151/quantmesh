@@ -1,0 +1,7 @@
+{
+  "argv": "WSL Python finalize.py original git subprocess",
+  "exit": 1,
+  "observed": "AssertionError at frozen HEAD equality; no earlier subprocess stderr persisted",
+  "diagnosis": "Windows managed .git pointer is gitdir C:/Users/15492/Develop/QuantMesh/.git/worktrees/QuantMesh18; final evidence now uses native Windows Git actual state",
+  "not_a_native_runtime_attempt": true
+}

@@ -1,0 +1,5 @@
+* -text whitespace=cr-at-eol
+*.log whitespace=-trailing-space,-blank-at-eof
+*.stdout whitespace=-trailing-space,-blank-at-eof
+*.stderr whitespace=-trailing-space,-blank-at-eof
+*.md whitespace=cr-at-eol,-trailing-space,-blank-at-eof

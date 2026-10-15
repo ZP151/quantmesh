@@ -1,0 +1,3 @@
+First metadata seal stopped before writes: Linux Git could not resolve the
+Windows-managed worktree gitdir. Retried with existing Windows git.exe for
+read-only HEAD/blob hashing. No source import/test/runtime action or cap reset.

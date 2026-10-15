@@ -37,9 +37,9 @@ public ingress, vendor configuration, trading or AWS runtime.
   installation's helper-absence boundary. Active-helper uninstall still has
   its separate real-policy regression. Independent Spec and Standards round1
   both have no actionable P1/P2; these reviews do not certify installation.
-- [ ] Push one tested checkpoint and PR; exact-head CI and applicable review
+- [x] Push one tested checkpoint and PR; exact-head CI and applicable review
   policy must pass before merge. No repeated tests for earlier PRs.
-- [ ] Install only merged reviewed bytes. Replacing a running helper requires
+- [x] Install only merged reviewed bytes. Replacing a running helper requires
   a concrete operator handoff that preserves any active owned/external tunnel;
   do not stop it implicitly. Existing installation stays untouched meanwhile.
 - [x] After human SSH authentication, prove remote loopback/source reachability
@@ -51,6 +51,17 @@ public ingress, vendor configuration, trading or AWS runtime.
 Evidence: `output/0037-probe-cleanup/`. The initial RED invocation had a missing
 basetemp parent; the first fixture revision hit a C# constant-branch compiler
 warning. Neither is runtime evidence. Corrected red2 records actual failures.
+
+October13 release: actual user chat supplies human approval; exactda6 CI38248602251
+is SUCCESS and normal match-head squash is7da320f, tree39c4599bf53475464dbcfecd73e7fec6cbfc71c0
+matching candidate. Actual missing helper/mutex permits safe merged-byte install,
+digest60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961.
+Helper12688/mutex, singleton duplicateexit0, Startup and OpenD28036 preservation
+pass. PrivateHTTPS health69515b7/papertrue/livefalse passes06:31UTC. A new SSH
+challenge leaves remote loopback/current source acceptance pending; do not
+reuse October12 readiness as a fresh pass. No app redeployment. Release evidence
+is output/0038-pr166-release in the coordinator worktree. This installed Windows
+recovery does not qualify server-owned markets or the whole research foundation.
 
 ## Other blockers remain separate
 

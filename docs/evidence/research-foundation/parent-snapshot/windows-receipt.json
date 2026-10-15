@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "C:\\Users\\15492\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_fixture_snapshot.py",
+    "tests/test_research_job_runner.py::test_runtime_rejection_precedes_job_and_content_decoding",
+    "tests/test_research_job_runner.py::test_child_metadata_bounds_and_file_types_precede_job_decoder",
+    "-q",
+    "-rs",
+    "--tb=short",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\178-worker-directory-association-20261014\\windows-tmp"
+  ],
+  "exit": 0,
+  "python": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "win32",
+  "actual_supports_dir_fd": [],
+  "source_hashes": {
+    "src/quantmesh/research/_fixture_handles.py": "3c48ed81591cc5a35e32046f663cd3894e4deb0015207749b76da3aac269b630",
+    "src/quantmesh/research/fixture_snapshot.py": "ed23e0446df15f6080c17ff3b4e272e32355902ff5c9ddedddfa84debeae043c",
+    "src/quantmesh/research/job_runner.py": "426ffb38eb85e43453ab722e84e10ee4bc99128d2646e1551aa15b7fa222ef6e",
+    "tests/test_fixture_snapshot.py": "8516d31716d7fad10a495cbf106b80b0e1f3bd91e5bb02a00715859ddfa673c5",
+    "tests/test_research_job_runner.py": "e9a24338650e3aa9697a0293b2f3829496e4a5eecc80cb157ac4533047c6b792"
+  },
+  "fixture_bytes": 50,
+  "claim": "unsupported profile only; no Windows snapshot/admission/Job Object witness"
+}

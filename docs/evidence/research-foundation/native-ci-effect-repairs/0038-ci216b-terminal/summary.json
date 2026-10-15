@@ -1,0 +1,11 @@
+{
+  "run": 38330059615,
+  "head": "216b378192bbc0a1742a28b7a1fc75a86ae2fda9",
+  "conclusion": "failure",
+  "selected_lines": [
+    "release\tCertify exact checkout\t2026-10-13T01:43:13.6528455Z FAILED after 39:35; exit code -1; last output:",
+    "release\tCertify exact checkout\t2026-10-13T01:43:13.8641063Z RELEASE GATE FAILED \u2014 diagnostics kept at /tmp/qmesh-release-gate-3q6l4o3h",
+    "release\tCertify exact checkout\t2026-10-13T01:43:13.8736170Z ##[error]Process completed with exit code 1.",
+    "python\tRequire successful selected gates\t2026-10-13T01:43:21.2993846Z ##[error]Process completed with exit code 1."
+  ]
+}

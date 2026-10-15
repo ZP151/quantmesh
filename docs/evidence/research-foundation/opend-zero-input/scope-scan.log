@@ -1,0 +1,1 @@
+{"scope": "/var/tmp/quantmesh-opend-zero-input-f88g68z1/", "uid": 1000, "owned_executable_pids": [], "inaccessible_same_uid_processes": 2, "scope_complete": false, "no_readable_owned_executable_remaining": true, "initial_scan_error": "non-owned-/proc/1/exe-permission-denied"}

@@ -76,10 +76,9 @@ PLATFORM_TOLERATED = {
 CLOSURE_FILE = Path(__file__).resolve().parents[1] / "requirements-audit.txt"
 
 # Documented allowlist (docs/licenses.md mirrors it). A license outside
-# this set — GPL/AGPL, LGPL, proprietary, source-available
-# restrictions such as the Commons Clause, or unknown — is
-# incompatible with the project's local-first, redistributable posture
-# and fails the job.
+# this set — GPL/AGPL, LGPL, proprietary, source-available restrictions such
+# as the Commons Clause, or unknown — is incompatible with the project's
+# local-first, redistributable posture and fails the job.
 ALLOWED = {
     "MIT",
     "BSD-2-Clause",
@@ -134,6 +133,11 @@ _SPDX_ALIASES = {
     "PSF License": "PSF-2.0",
 }
 
+# SPDX exceptions are admitted only with the license identifier to which the
+# exception applies. Unknown exceptions and incompatible license pairings
+# stay closed.
+_SPDX_EXCEPTION_LICENSES = {"LLVM-exception": {"Apache-2.0"}}
+
 
 def _from_expression(expr: str) -> str | None:
     """Resolve an SPDX expression to an allowed key, or None if no
@@ -142,12 +146,22 @@ def _from_expression(expr: str) -> str | None:
     ``WITH <exception>`` qualifier (e.g. ``WITH LLVM-exception``)
     *relaxes* the license, so the exception identifier itself is
     stripped, never treated as a restricting member."""
-    if "commons" in expr.lower():
+    if "commons" in expr.casefold():
         # "WITH Commons-Clause" is not an SPDX exception — it is a
         # restricting condition that cancels the Apache grant; refused
         # before the qualifier strip could turn it into Apache-2.0.
         return None
-    expr = re.sub(r"\s+WITH\s+[A-Za-z0-9._-]+", "", expr)
+    qualifiers = re.findall(
+        r"([A-Za-z0-9.+-]+)\s+WITH\s+([A-Za-z0-9._-]+)",
+        expr,
+        re.IGNORECASE,
+    )
+    if any(
+        license_id not in _SPDX_EXCEPTION_LICENSES.get(exception, set())
+        for license_id, exception in qualifiers
+    ):
+        return None
+    expr = re.sub(r"\s+WITH\s+[A-Za-z0-9._-]+", "", expr, flags=re.IGNORECASE)
     parts = [p.strip() for p in re.split(r"\s+AND\s+", expr)]
     alternatives = [p.strip() for p in re.split(r"\s+OR\s+", " OR ".join(parts))]
     keys = [_SPDX_ALIASES.get(a, a) for a in alternatives]
@@ -182,7 +196,7 @@ def _from_text(text: str) -> str | None:
     blobs would otherwise misclassify via a bundled text); MIT and
     BSD are otherwise distinguished by the BSD 'Neither the name ...'
     restriction."""
-    if "Commons Clause" in text:
+    if "commons clause" in text.casefold():
         # Apache-2.0 + Commons Clause is source-available, not OSI —
         # the Apache appendix text is inside, so the clause must be
         # refused *before* the Apache pattern can match (vectorbt).
@@ -209,6 +223,7 @@ def _from_text(text: str) -> str | None:
 
 _CLASSIFIER_MAP = {
     "License :: OSI Approved :: MIT License": "MIT",
+    "License :: OSI Approved :: MIT No Attribution License (MIT-0)": "MIT-0",
     "License :: OSI Approved :: BSD License": "BSD-3-Clause",
     "License :: OSI Approved :: BSD-3-Clause": "BSD-3-Clause",
     "License :: OSI Approved :: BSD-2-Clause License": "BSD-2-Clause",

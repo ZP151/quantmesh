@@ -1,0 +1,8 @@
+.....                                                                    [100%]
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+5 passed, 27 deselected, 1 warning in 5.03s

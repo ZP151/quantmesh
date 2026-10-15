@@ -1,0 +1,8 @@
+{"message_type":"error","message":"error for tree d4701dce:\n"}
+{"message_type":"error","message":"  decrypting blob \u003ctree/d4701dce\u003e from pack 3c98d5094051fea95fcd5589ba7edb6639cbfa03637184b1cbcd281a8af70c21 failed: ciphertext verification failed\n"}
+{"message_type":"error","message":"pack 3c98d5094051fea95fcd5589ba7edb6639cbfa03637184b1cbcd281a8af70c21 contains 2 errors: [blob d4701dce7d1cf0b262d2d2aa7450d0642bd9756d5e8a5659a3e0e6b91f8a1afd: decrypting blob \u003ctree/d4701dce\u003e from pack 3c98d5094051fea95fcd5589ba7edb6639cbfa03637184b1cbcd281a8af70c21 failed: ciphertext verification failed unexpected pack id 0d20380ee88c62206411d2854ca8222e461e947b996c861da2f7267409b64063]\n"}
+{"message_type":"error","message":"\nThe repository contains damaged pack files. These damaged files must be removed to repair the repository. This can be done using the following commands. Please read the troubleshooting guide at https://restic.readthedocs.io/en/stable/077_troubleshooting.html first.\n\n"}
+{"message_type":"error","message":"restic repair packs 3c98d5094051fea95fcd5589ba7edb6639cbfa03637184b1cbcd281a8af70c21\nrestic repair snapshots --forget\n\n"}
+{"message_type":"error","message":"Damaged pack files can be caused by backend problems, hardware problems or bugs in restic. Please open an issue at https://github.com/restic/restic/issues/new/choose for further troubleshooting!\n"}
+{"message_type":"summary","num_errors":2,"broken_packs":["3c98d5094051fea95fcd5589ba7edb6639cbfa03637184b1cbcd281a8af70c21"],"suggest_repair_index":false,"suggest_prune":false}
+{"message_type":"exit_error","code":1,"message":"Fatal: repository contains errors"}

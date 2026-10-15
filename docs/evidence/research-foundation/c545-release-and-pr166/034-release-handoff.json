@@ -1,0 +1,29 @@
+{
+  "ServerOwnedMarketMigration": "separate full Option A task; workstation helper recovery does not meet it",
+  "AtUtc": "2026-10-13T06:01:26.2965712Z",
+  "HumanApprovalSource": "User chat: #166PR人工审查通过，继续推进这一部分",
+  "InstalledDigest": "60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961",
+  "PR": 166,
+  "Deferred": [
+    "real logon",
+    "outage",
+    "capacity",
+    "90-second shutdown"
+  ],
+  "Formal168h": "not required; on demand only",
+  "CI": "38248602251",
+  "ExpectedAWSBuild": "69515b79d2bc67303bfef9dee660dbca9bef41e3",
+  "FullGoal": "ACTIVE",
+  "Singleton": "duplicate_helper / exit 0",
+  "ExistingGuiPreserved": true,
+  "Candidate": "da6e8c778c2e6c78ea863f39591ed9c9be8b2378",
+  "HelperPid": 12688,
+  "GitHubAiCommentIsApproval": false,
+  "Schema": 1,
+  "RouteAcceptance": "Private HTTPS health verified 2026-10-13 06:31UTC exact69515b7/papertrue/livefalse; SSH extra-auth and remote11111 loopback acceptance still pending.",
+  "CandidateAndMergeTree": "39c4599bf53475464dbcfecd73e7fec6cbfc71c0",
+  "Merge": "7da320f7d6c3ac81cd7cb92b691e0b969bbcba48",
+  "StartupPreserved": true,
+  "OpenDPid": 28036,
+  "AWSRedeployed": false
+}

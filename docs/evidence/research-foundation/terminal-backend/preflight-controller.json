@@ -1,0 +1,51 @@
+{
+  "preflight": true,
+  "owned_setup_pid": 22173,
+  "setup_pidfd_before_release": true,
+  "first": {
+    "kind": "isolated",
+    "isolation": {
+      "pid": 1,
+      "uid": 0,
+      "uid_map": "0       1000          1",
+      "namespaces": {
+        "user": 4026532228,
+        "net": 4026532231,
+        "mnt": 4026532229,
+        "pid": 4026532230
+      },
+      "interfaces": [
+        "lo"
+      ],
+      "no_route": true,
+      "chroot": true,
+      "private_devpts": true,
+      "private_utmp": true,
+      "bare_home": true,
+      "no_new_privs": "NoNewPrivs:\t1"
+    }
+  },
+  "namespace_init_ownership": {
+    "kind": "manager-owned",
+    "host_pid": 22174,
+    "pidfd_before_candidate_release": true,
+    "retained_namespaces": {
+      "user": 4026532228,
+      "net": 4026532231,
+      "mnt": 4026532229,
+      "pid": 4026532230
+    }
+  },
+  "all_namespaces_differ_from_controller": true,
+  "result": {
+    "kind": "result",
+    "status": "passed",
+    "exit": 0
+  },
+  "namespace_init_terminal": true,
+  "raw_exit": 0,
+  "outside_sibling_survives": true,
+  "outside_sibling_exit": -9,
+  "elapsed_seconds_including_cleanup": 0.009149565999905462,
+  "within_90_seconds": true
+}

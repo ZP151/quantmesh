@@ -1,0 +1,1529 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                            [100%]
+================================== FAILURES ===================================
+______ test_native_identity_contains_actual_process_socket_and_artifact _______
+
+    def test_native_identity_contains_actual_process_socket_and_artifact():
+>       result = tool().collect_gateway_identity(profile(True), _proc=ProcFixture())
+                 ^^^^^^
+
+tests\test_server_market_witness.py:96: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[address-00000000] _
+
+field = 'address', value = '00000000'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[address-0100000A] _
+
+field = 'address', value = '0100000A'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[uid-0] _
+
+field = 'uid', value = 0
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[uid-986] _
+
+field = 'uid', value = 986
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/usr/sbin/sshd] _
+
+field = 'executable', value = '/usr/sbin/sshd'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/usr/sbin/tailscaled] _
+
+field = 'executable', value = '/usr/sbin/tailscaled'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/tmp/OpenD] _
+
+field = 'executable', value = '/tmp/OpenD'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/opt/quantmesh/opend/10.10.7008/OpenD (deleted)] _
+
+field = 'executable', value = '/opt/quantmesh/opend/10.10.7008/OpenD (deleted)'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[digest-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff] _
+
+field = 'digest'
+value = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[ipv6-True] _
+
+field = 'ipv6', value = True
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[missing-True] _
+
+field = 'missing', value = True
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[linux-False] _
+
+field = 'linux', value = False
+
+    @pytest.mark.parametrize("field,value", [
+        ("address", "00000000"), ("address", "0100000A"), ("uid", 0), ("uid", 986),
+        ("executable", "/usr/sbin/sshd"), ("executable", "/usr/sbin/tailscaled"),
+        ("executable", "/tmp/OpenD"), ("executable", ProcFixture.executable + " (deleted)"),
+        ("digest", "f" * 64), ("ipv6", True), ("missing", True), ("linux", False),
+    ])
+    def test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof(field, value):
+        proc = ProcFixture()
+        setattr(proc, field, value)
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:115: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__ test_concurrent_pid_or_socket_replacement_invalidates_identity[mutation0] __
+
+mutation = ('ticks', 54321)
+
+    @pytest.mark.parametrize("mutation", [("ticks", 54321), ("inode", "7890"), ("uid", 986)])
+    def test_concurrent_pid_or_socket_replacement_invalidates_identity(mutation):
+        proc = ProcFixture()
+        proc.mutate = mutation
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__ test_concurrent_pid_or_socket_replacement_invalidates_identity[mutation1] __
+
+mutation = ('inode', '7890')
+
+    @pytest.mark.parametrize("mutation", [("ticks", 54321), ("inode", "7890"), ("uid", 986)])
+    def test_concurrent_pid_or_socket_replacement_invalidates_identity(mutation):
+        proc = ProcFixture()
+        proc.mutate = mutation
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__ test_concurrent_pid_or_socket_replacement_invalidates_identity[mutation2] __
+
+mutation = ('uid', 986)
+
+    @pytest.mark.parametrize("mutation", [("ticks", 54321), ("inode", "7890"), ("uid", 986)])
+    def test_concurrent_pid_or_socket_replacement_invalidates_identity(mutation):
+        proc = ProcFixture()
+        proc.mutate = mutation
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:123: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__ test_current_blocked_profile_returns_pending_before_native_sdk_or_network __
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/red-temp/test_current_blocked_profile_r0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023FB780B100>
+
+    def test_current_blocked_profile_returns_pending_before_native_sdk_or_network(tmp_path, monkeypatch):
+        def forbidden(*args, **kwargs):
+            raise AssertionError("must not reach native/SDK/network")
+    
+>       monkeypatch.setattr(tool(), "collect_gateway_identity", forbidden)
+                            ^^^^^^
+
+tests\test_server_market_witness.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+________ test_saved_identity_claim_cannot_bypass_real_native_admission ________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/red-temp/test_saved_identity_claim_cann0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000023FB780B360>
+
+    def test_saved_identity_claim_cannot_bypass_real_native_admission(tmp_path, monkeypatch):
+        def native(*args, **kwargs):
+            raise tool().WitnessError("native_identity_unavailable")
+    
+>       monkeypatch.setattr(tool(), "collect_gateway_identity", native)
+                            ^^^^^^
+
+tests\test_server_market_witness.py:143: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence _
+
+    def test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence():
+>       result = tool().evaluate_samples(samples())
+                 ^^^^^^
+
+tests\test_server_market_witness.py:220: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_closed_latest_session_is_normal_coverage_with_live_acceptance_pending __
+
+    def test_closed_latest_session_is_normal_coverage_with_live_acceptance_pending():
+>       result = tool().evaluate_samples(samples(True))
+                 ^^^^^^
+
+tests\test_server_market_witness.py:229: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+________ test_unresolved_source_clocks_or_policy_cannot_pass[missing] _________
+
+change = 'missing'
+
+    @pytest.mark.parametrize("change", ["missing", "future", "unknown_delay", "unknown_calendar"])
+    def test_unresolved_source_clocks_or_policy_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "missing":
+                app["live"]["data_time"] = None
+            elif change == "future":
+                app["live"]["data_time"] = "2027-10-12T13:40:00+00:00"
+            elif change == "unknown_delay":
+                app["provider_delay_seconds"] = None
+            else:
+                app["calendar"] = "unknown"
+>       assert tool().evaluate_samples(value)["provider_application"] != "passed"
+               ^^^^^^
+
+tests\test_server_market_witness.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_________ test_unresolved_source_clocks_or_policy_cannot_pass[future] _________
+
+change = 'future'
+
+    @pytest.mark.parametrize("change", ["missing", "future", "unknown_delay", "unknown_calendar"])
+    def test_unresolved_source_clocks_or_policy_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "missing":
+                app["live"]["data_time"] = None
+            elif change == "future":
+                app["live"]["data_time"] = "2027-10-12T13:40:00+00:00"
+            elif change == "unknown_delay":
+                app["provider_delay_seconds"] = None
+            else:
+                app["calendar"] = "unknown"
+>       assert tool().evaluate_samples(value)["provider_application"] != "passed"
+               ^^^^^^
+
+tests\test_server_market_witness.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_____ test_unresolved_source_clocks_or_policy_cannot_pass[unknown_delay] ______
+
+change = 'unknown_delay'
+
+    @pytest.mark.parametrize("change", ["missing", "future", "unknown_delay", "unknown_calendar"])
+    def test_unresolved_source_clocks_or_policy_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "missing":
+                app["live"]["data_time"] = None
+            elif change == "future":
+                app["live"]["data_time"] = "2027-10-12T13:40:00+00:00"
+            elif change == "unknown_delay":
+                app["provider_delay_seconds"] = None
+            else:
+                app["calendar"] = "unknown"
+>       assert tool().evaluate_samples(value)["provider_application"] != "passed"
+               ^^^^^^
+
+tests\test_server_market_witness.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+____ test_unresolved_source_clocks_or_policy_cannot_pass[unknown_calendar] ____
+
+change = 'unknown_calendar'
+
+    @pytest.mark.parametrize("change", ["missing", "future", "unknown_delay", "unknown_calendar"])
+    def test_unresolved_source_clocks_or_policy_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "missing":
+                app["live"]["data_time"] = None
+            elif change == "future":
+                app["live"]["data_time"] = "2027-10-12T13:40:00+00:00"
+            elif change == "unknown_delay":
+                app["provider_delay_seconds"] = None
+            else:
+                app["calendar"] = "unknown"
+>       assert tool().evaluate_samples(value)["provider_application"] != "passed"
+               ^^^^^^
+
+tests\test_server_market_witness.py:248: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_____________ test_false_acceptance_evidence_fails_closed[ohlcv] ______________
+
+change = 'ohlcv'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_____________ test_false_acceptance_evidence_fails_closed[build] ______________
+
+change = 'build'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_____________ test_false_acceptance_evidence_fails_closed[paper] ______________
+
+change = 'paper'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+______________ test_false_acceptance_evidence_fails_closed[live] ______________
+
+change = 'live'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_____________ test_false_acceptance_evidence_fails_closed[depth] ______________
+
+change = 'depth'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+____________ test_false_acceptance_evidence_fails_closed[proposal] ____________
+
+change = 'proposal'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+____________ test_false_acceptance_evidence_fails_closed[license] _____________
+
+change = 'license'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+____________ test_false_acceptance_evidence_fails_closed[sequence] ____________
+
+change = 'sequence'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+___________ test_false_acceptance_evidence_fails_closed[synthetic] ____________
+
+change = 'synthetic'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_____________ test_false_acceptance_evidence_fails_closed[source] _____________
+
+change = 'source'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+___________ test_false_acceptance_evidence_fails_closed[raw_label] ____________
+
+change = 'raw_label'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__________ test_false_acceptance_evidence_fails_closed[no_revision] ___________
+
+change = 'no_revision'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_________ test_false_acceptance_evidence_fails_closed[no_boundaries] __________
+
+change = 'no_boundaries'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+____________ test_false_acceptance_evidence_fails_closed[too_few] _____________
+
+change = 'too_few'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+___________ test_false_acceptance_evidence_fails_closed[readiness] ____________
+
+change = 'readiness'
+
+    @pytest.mark.parametrize("change", [
+        "ohlcv", "build", "paper", "live", "depth", "proposal", "license", "sequence",
+        "synthetic", "source", "raw_label", "no_revision", "no_boundaries", "too_few", "readiness",
+    ])
+    def test_false_acceptance_evidence_fails_closed(change):
+        value = samples()
+        for sample in value["samples"]:
+            app = sample["symbols"]["AAPL"]["app"]
+            if change == "ohlcv":
+                app["bars"][0]["close"] = 102
+            elif change == "build":
+                sample["health"]["build_ref"] = "b" * 40
+            elif change == "paper":
+                sample["health"]["paper_mode"] = 1
+            elif change == "live":
+                sample["health"]["live_trading"] = True
+            elif change == "depth":
+                app["live"]["bid"] = 100
+            elif change == "proposal":
+                app["proposal_allowed"] = True
+            elif change == "license":
+                app["license"] = "public"
+            elif change == "sequence":
+                app["bars"][-1]["live_lineage"]["sequence_origin"] = "exchange"
+            elif change == "synthetic":
+                app["live"]["provenance"] = "synthetic"
+            elif change == "source":
+                app["source"] = "demo"
+            elif change == "raw_label":
+                app["bars"][-1]["live_lineage"]["provider_time_key"] = "2026-10-12 10:00:00"
+            elif change == "no_revision":
+                for side in ("before", "after"):
+                    sample["symbols"]["AAPL"][side]["rows"][-1]["volume"] = 100
+                app["bars"][-1]["volume"] = 100
+            elif change == "too_few":
+                app["bars"] = app["bars"][-3:]
+        if change == "no_boundaries":
+            value["samples"] = [copy.deepcopy(value["samples"][0]) for _ in range(6)]
+        if change == "readiness":
+            value = {"ready": True, "quote": True, "history": True, "native": True}
+>       result = tool().evaluate_samples(value)
+                 ^^^^^^
+
+tests\test_server_market_witness.py:291: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__________ test_json_reader_bounds_response_and_disallows_redirects ___________
+
+    def test_json_reader_bounds_response_and_disallows_redirects():
+        class Response:
+            status = 200
+            def read(self, count):
+                return b"x" * count
+    
+>       with pytest.raises(tool().WitnessError, match="output_limit"):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_owned_child_deadline_and_output_limit_are_enforced[hanging_child-child_timeout] _
+
+target = <function hanging_child at 0x0000023FB783A520>
+reason = 'child_timeout'
+
+    @pytest.mark.parametrize("target,reason", [(hanging_child, "child_timeout"),
+                                             (noisy_child, "output_limit")])
+    def test_owned_child_deadline_and_output_limit_are_enforced(target, reason):
+        started = time.monotonic()
+>       with pytest.raises(tool().WitnessError, match=reason):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_owned_child_deadline_and_output_limit_are_enforced[noisy_child-output_limit] _
+
+target = <function noisy_child at 0x0000023FB783A5C0>, reason = 'output_limit'
+
+    @pytest.mark.parametrize("target,reason", [(hanging_child, "child_timeout"),
+                                             (noisy_child, "output_limit")])
+    def test_owned_child_deadline_and_output_limit_are_enforced(target, reason):
+        started = time.monotonic()
+>       with pytest.raises(tool().WitnessError, match=reason):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:319: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+__________ test_cli_blocked_is_nonzero_and_archives_redacted_pending __________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/red-temp/test_cli_blocked_is_nonzero_an0')
+capsys = <_pytest.capture.CaptureFixture object at 0x0000023FB7941550>
+
+    def test_cli_blocked_is_nonzero_and_archives_redacted_pending(tmp_path, capsys):
+>       assert tool().main(["--profile", str(PROFILE), "--expected-build", BUILD,
+               ^^^^^^
+                            "--output", str(tmp_path / "new")]) == 2
+
+tests\test_server_market_witness.py:325: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_ test_output_directory_is_exclusive_and_does_not_overwrite_existing_evidence _
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/red-temp/test_output_directory_is_exclu0')
+
+    def test_output_directory_is_exclusive_and_does_not_overwrite_existing_evidence(tmp_path):
+        path = tmp_path / "existing"
+        path.mkdir()
+        (path / "summary.json").write_text("original")
+>       with pytest.raises(tool().WitnessError):
+                           ^^^^^^
+
+tests\test_server_market_witness.py:336: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+_________ test_invalid_build_and_profile_do_not_echo_untrusted_values _________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/red-temp/test_invalid_build_and_profile0')
+capsys = <_pytest.capture.CaptureFixture object at 0x0000023FB7845BD0>
+
+    def test_invalid_build_and_profile_do_not_echo_untrusted_values(tmp_path, capsys):
+        path = tmp_path / "profile.json"
+        path.write_text('{"password":"SECRET"}')
+>       assert tool().main(["--profile", str(path), "--expected-build", BUILD,
+               ^^^^^^
+                            "--output", str(tmp_path / "new")]) == 1
+
+tests\test_server_market_witness.py:344: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+    def tool():
+>       from tools import verify_server_market_source
+E       ImportError: cannot import name 'verify_server_market_source' from 'tools' (unknown location)
+
+tests\test_server_market_witness.py:21: ImportError
+=========================== short test summary info ===========================
+FAILED tests/test_server_market_witness.py::test_native_identity_contains_actual_process_socket_and_artifact
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[address-00000000]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[address-0100000A]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[uid-0]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[uid-986]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/usr/sbin/sshd]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/usr/sbin/tailscaled]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/tmp/OpenD]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[executable-/opt/quantmesh/opend/10.10.7008/OpenD (deleted)]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[digest-ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[ipv6-True]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[missing-True]
+FAILED tests/test_server_market_witness.py::test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof[linux-False]
+FAILED tests/test_server_market_witness.py::test_concurrent_pid_or_socket_replacement_invalidates_identity[mutation0]
+FAILED tests/test_server_market_witness.py::test_concurrent_pid_or_socket_replacement_invalidates_identity[mutation1]
+FAILED tests/test_server_market_witness.py::test_concurrent_pid_or_socket_replacement_invalidates_identity[mutation2]
+FAILED tests/test_server_market_witness.py::test_current_blocked_profile_returns_pending_before_native_sdk_or_network
+FAILED tests/test_server_market_witness.py::test_saved_identity_claim_cannot_bypass_real_native_admission
+FAILED tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+FAILED tests/test_server_market_witness.py::test_closed_latest_session_is_normal_coverage_with_live_acceptance_pending
+FAILED tests/test_server_market_witness.py::test_unresolved_source_clocks_or_policy_cannot_pass[missing]
+FAILED tests/test_server_market_witness.py::test_unresolved_source_clocks_or_policy_cannot_pass[future]
+FAILED tests/test_server_market_witness.py::test_unresolved_source_clocks_or_policy_cannot_pass[unknown_delay]
+FAILED tests/test_server_market_witness.py::test_unresolved_source_clocks_or_policy_cannot_pass[unknown_calendar]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[ohlcv]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[build]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[paper]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[live]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[depth]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[proposal]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[license]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[sequence]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[synthetic]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[source]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[raw_label]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[no_revision]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[no_boundaries]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[too_few]
+FAILED tests/test_server_market_witness.py::test_false_acceptance_evidence_fails_closed[readiness]
+FAILED tests/test_server_market_witness.py::test_json_reader_bounds_response_and_disallows_redirects
+FAILED tests/test_server_market_witness.py::test_owned_child_deadline_and_output_limit_are_enforced[hanging_child-child_timeout]
+FAILED tests/test_server_market_witness.py::test_owned_child_deadline_and_output_limit_are_enforced[noisy_child-output_limit]
+FAILED tests/test_server_market_witness.py::test_cli_blocked_is_nonzero_and_archives_redacted_pending
+FAILED tests/test_server_market_witness.py::test_output_directory_is_exclusive_and_does_not_overwrite_existing_evidence
+FAILED tests/test_server_market_witness.py::test_invalid_build_and_profile_do_not_echo_untrusted_values
+45 failed in 0.64s

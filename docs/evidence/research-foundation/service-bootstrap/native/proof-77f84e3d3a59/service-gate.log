@@ -1,0 +1,1 @@
+{"profile": "POSTGRES_REQUIRED", "postgres": "pending", "exit": 1, "failures": ["gate command 0 failed; inspect service-gate-0.log", "real owned disposable PostgreSQL evidence pending"], "tests": null}

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "dataset": "nvda-demo",
+  "source": "demo-synthetic",
+  "data_class": null,
+  "timezone": "UTC",
+  "license": "fixture",
+  "revision": 1,
+  "generated_at": "2026-09-02T20:00:00Z",
+  "coverage": [
+    {
+      "interval": "1d",
+      "venue": "moomoo",
+      "symbol": "NVDA",
+      "start": "2026-07-05T20:00:00Z",
+      "end": "2026-09-02T20:00:00Z",
+      "rows": 60
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "diagnostic_checks_passed": true,
+  "wire_qualified": false,
+  "attempt5_diagnostic_invalid": true,
+  "attempt6_7": {
+    "6": {
+      "elapsed_seconds": 81.083,
+      "send_bytes": 84,
+      "wire_qualified": false,
+      "normal_sdk_close": false,
+      "console": "1"
+    },
+    "7": {
+      "elapsed_seconds": 82.125,
+      "send_bytes": 84,
+      "wire_qualified": false,
+      "normal_sdk_close": false,
+      "console": "0"
+    }
+  },
+  "cause": "unresolved offline/pre-login gateway initialization; console mode alone did not resolve"
+}

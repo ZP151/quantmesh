@@ -1,0 +1,10 @@
+{
+  "archive_files_verified": 4457,
+  "hash_mismatches": 0,
+  "native_raw_exit": 0,
+  "elapsed_with_cleanup_seconds": 0.6794029349994162,
+  "namespace_init_terminal": true,
+  "outside_sibling_survived": true,
+  "all_production_source_auth_flags_false": true,
+  "handoff_sha256": "7032105e1b99ba2fbede3ffcf8aa1f19e9d2c8cb1132ddbf806b7e90b8cdd8de"
+}

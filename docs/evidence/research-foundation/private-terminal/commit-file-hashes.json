@@ -1,0 +1,9 @@
+{
+  "baseline": "5788cf7057b7d9670982a16cc9bd3aaae01b83c2",
+  "commit": "f99b020153a31d7d8a5265c9795edbd5a7884ddb",
+  "hashes": {
+    "tools/qualify_opend_private_terminal.py": "c18a81701ce432cb93e1ac2243b31add34f3ec10944dc381b92ff8e1d0133b63",
+    "tests/test_opend_private_terminal.py": "e6705346494dd1cceefa69d9f266c489b48a7451a31dfd834f303e5d6d5f9269",
+    "docs/runbooks/opend-private-terminal-qualification.md": "0fd26c7c0fc48f296c703592598605def423994d05ccbeadda11eb115cd6f763"
+  }
+}

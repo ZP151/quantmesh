@@ -1,0 +1,33 @@
+.............F..............                                             [100%]
+=================================== FAILURES ===================================
+__________ test_containment_rejects_existing_restore_target_and_links __________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/green-temp/test_containment_rejects_exist0')
+
+    def test_containment_rejects_existing_restore_target_and_links(tmp_path):
+        existing = tmp_path / "restore"
+        existing.mkdir()
+        with pytest.raises(ValueError):
+>           backup.fresh_directory(tmp_path, existing)
+
+tests/test_research_backup_qualification.py:54: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+tools/qualify_research_backup.py:91: in fresh_directory
+    path.mkdir(mode=0o700)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/green-temp/test_containment_rejects_exist0/restore')
+mode = 448, parents = False, exist_ok = False
+
+    def mkdir(self, mode=0o777, parents=False, exist_ok=False):
+        """
+        Create a new directory at this given path.
+        """
+        try:
+>           os.mkdir(self, mode)
+E           FileExistsError: [Errno 17] File exists: '/var/tmp/quantmesh-backup-gnel0hd8/green-temp/test_containment_rejects_exist0/restore'
+
+/usr/lib/python3.12/pathlib.py:1313: FileExistsError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_containment_rejects_existing_restore_target_and_links
+1 failed, 27 passed in 1.71s

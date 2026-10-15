@@ -1,0 +1,14 @@
+{
+  "scope": "OWNED_LOCAL_FIXTURE_ONLY",
+  "production_release_qualified": false,
+  "old_commit": "349d9695fd80258fcf45eb1e6d7c21ebbfaacf0e",
+  "red_expected_failure": true,
+  "pid": 12712,
+  "start_ticks": "267609",
+  "executable": "/usr/bin/python3.12",
+  "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+  "old_child_left_running": true,
+  "controller_cleanup_identity_checked": true,
+  "terminal_exit": -15,
+  "pid_absent": true
+}

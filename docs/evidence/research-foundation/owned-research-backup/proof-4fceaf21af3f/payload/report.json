@@ -1,0 +1,1 @@
+{"schema_version": 1, "request_digest": "74cddeb039ce4853e442299112c0980fbe401395f90ef746f06e9fa1eb45d874", "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276", "result": {"fixture": true, "metrics": {"return": 0.1}}}

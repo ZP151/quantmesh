@@ -1,0 +1,8 @@
+Cloning into '/var/tmp/quantmesh-backup-final-xvcv1u9k/checkout'...
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source2.bundle
+ * branch            HEAD       -> FETCH_HEAD
+HEAD is now at 349d969 fix: register owned backup children before deadline interruption
+{"log": "349d9695fd80-native-tests.log", "exit": 0}
+{"log": "349d9695fd80-preflight.log", "exit": 0}
+{"log": "349d9695fd80-fixture.log", "exit": 0}
+{"passed": true, "negatives": {"corrupt_cipher_copy": {"refused": true, "source_unchanged": true}, "missing_artifact": {"refused": true, "source_unchanged": true}, "substituted_artifact": {"refused": true, "source_unchanged": true}, "substituted_manifest": {"refused": true, "source_unchanged": true}, "unknown_schema": {"refused": true, "source_unchanged": true}, "wrong_key": {"refused": true, "source_unchanged": true}}, "clusters": [{"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-349d9695fd80/unknown-schema-cluster/data", "pid": 12505, "start_ticks": "240618", "stopped": true, "system_id": "7695920247203913940"}, {"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-349d9695fd80/restore/data", "pid": 12431, "start_ticks": "240399", "stopped": true, "system_id": "7695920237492252810"}, {"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-349d9695fd80/sibling/data", "pid": 11946, "start_ticks": "239696", "stopped": true, "system_id": "7695920207730294437"}, {"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-349d9695fd80/source/data", "pid": 11920, "start_ticks": "239644", "stopped": true, "system_id": "7695920205394484875"}]}

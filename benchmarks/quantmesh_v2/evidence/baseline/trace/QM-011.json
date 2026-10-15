@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00207140005659312,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        374,
+        "test_forecast_that_ages_after_preview_is_blocked_before_order"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.13270459999330342,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        374,
+        "test_forecast_that_ages_after_preview_is_blocked_before_order"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013539998326450586,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        374,
+        "test_forecast_that_ages_after_preview_is_blocked_before_order"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

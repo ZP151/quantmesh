@@ -1,0 +1,20 @@
+........................................................................ [ 61%]
+..............................................                           [100%]
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/utils/pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+tests/test_opend_staging_window.py: 12 warnings
+  /mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/deploy/aws/opend/stage_console.py:958: DeprecationWarning: This process (pid=63760) is multi-threaded, use of fork() may lead to deadlocks in the child.
+    pid = os.fork()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+118 passed, 17 warnings in 8.64s

@@ -1,0 +1,13 @@
+# Exact two-source notice fallback review
+
+Actual reviewed source SHA256: `F7B99F6393D4768D629E146B138179188E48E9DC9AF92B3EF7B71291C68F8BD8` (`output/inspect_aws_numeric_wheels.py`). The new inventory phase was unexecuted at review.
+
+Disposition: clear within this new fallback; no substantive P1/P2 found.
+
+Fallback is reached only after the wheel bytes and RECORD hashes are verified and no bundled named notice was found. Its allowlist contains only langsmith 0.14.7 and pyluach 2.3.0. It checks the exact wheel/version, one matching notice receipt entry, fixed body filename/size/digest, and the fixed source commit or sdist digest. The receipt must report successful intake, reaped worker and no source-to-wheel equivalence claim. The body itself is re-read through the existing canonical/no-link, nonblocking owned regular-file reader with UID/nlink/size, bounded bytes and stable descriptor/named identity checks; the exact body hash and size are then verified. An unlisted package without a bundled notice fails rather than receiving a generic supplement.
+
+The preserved supplemental body uses a fixed allowlisted flat filename, shares the existing aggregate notice limit and disk ledger, and is marked `bundled_in_wheel=False` with source provenance. Bundled package count and supplemental count remain separate. Supplement bodies do not enter the wheel file/RECORD inventory or change the wheel pins. Failures enter the existing failed worker receipt/partial-preservation path. No new code execution, import/install, download, Docker operation or certification permission is introduced.
+
+Inspected actual source-notice intake receipt `0038-aws-numeric-wheel-notice-supplements.json`: exit 0, worker reaped, exact two wheel/version/source/body associations and `source_to_wheel_equivalence_claimed=false`. Inspected existing `0038-aws-numeric-wheel-notice-binding.log/.exit`: seven software association cases/exit 0, including wrong wheel/version/source, body tampering/link and unlisted-package refusals. The accompanying tree-with-notices log records four expected outcomes/exit 0; the already reviewed tree guards were not re-audited here. These harness receipts explicitly limit production pin substitutions to tests and deny native certification.
+
+Read-only inspection only; this reviewer ran no tests, remote inventory, download, installation or native execution. The original AWS `bundled_notice_missing` failure and partials remain evidence, not a successful inventory claim. This review does not establish license-expression correctness, source-to-binary equivalence, complete ELF/native closure, numerical admission or Option A completion.

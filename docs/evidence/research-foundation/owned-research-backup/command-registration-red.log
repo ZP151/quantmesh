@@ -1,0 +1,52 @@
+..........................................FF                             [100%]
+=================================== FAILURES ===================================
+__________ test_command_kernel_identity_failure_is_registered_pending __________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-final-xvcv1u9k/command-registration-red-temp/test_command_kernel_identity_f0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79db5ed49580>
+
+    def test_command_kernel_identity_failure_is_registered_pending(tmp_path, monkeypatch):
+        import sys
+        commands = backup.Commands(tmp_path, tmp_path)
+        process = SimpleNamespace(pid=123456, poll=lambda: None,
+                                  terminate=lambda: pytest.fail("unknown command identity cannot stop"))
+        monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+        def unknown(pid):
+            raise OSError("kernel identity unavailable")
+        monkeypatch.setattr(backup, "process_ticks", unknown)
+        with pytest.raises((OSError, ValueError)):
+>           backup.bounded_process([sys.executable, "-c", "pass"], {}, tmp_path, 5, owner=commands)
+E           TypeError: bounded_process() got an unexpected keyword argument 'owner'
+
+tests/test_research_backup_qualification.py:412: TypeError
+___________ test_command_deadline_waits_for_registered_kernel_handle ___________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-final-xvcv1u9k/command-registration-red-temp/test_command_deadline_waits_fo0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79db5ed49c10>
+
+    def test_command_deadline_waits_for_registered_kernel_handle(tmp_path, monkeypatch):
+        import os
+        import signal
+        import sys
+        if sys.platform != "linux":
+            pytest.skip("native owned process timer")
+        commands = backup.Commands(tmp_path, tmp_path)
+        process = SimpleNamespace(pid=123456, poll=lambda: None)
+        monkeypatch.setattr(backup.subprocess, "Popen", lambda *a, **k: process)
+        def interrupted(pid):
+            os.kill(os.getpid(), signal.SIGALRM)
+            return "known-ticks"
+        monkeypatch.setattr(backup, "process_ticks", interrupted)
+        stopped = []
+        def stop(handle):
+            assert commands.command_processes == [handle]
+            stopped.append(handle.process)
+>       monkeypatch.setattr(backup.CommandProcess, "close", stop)
+                            ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'tools.qualify_research_backup' has no attribute 'CommandProcess'
+
+tests/test_research_backup_qualification.py:434: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_command_kernel_identity_failure_is_registered_pending
+FAILED tests/test_research_backup_qualification.py::test_command_deadline_waits_for_registered_kernel_handle
+2 failed, 42 passed in 1.74s

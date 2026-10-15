@@ -1,0 +1,14 @@
+release closure: 10 packages from closure.txt
+moomoo_api==10.10.7008  Apache-2.0
+numpy==2.5.2  0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib
+pandas==2.3.3  BSD-3-Clause
+protobuf==7.36.1  BSD-3-Clause
+pycryptodome==3.23.0  BSD-3-Clause
+python-dateutil==2.9.0.post0  BSD-3-Clause
+pytz==2026.3.post1  MIT
+simplejson==4.1.2  MIT (documented exception)
+six==1.17.0  MIT
+tzdata==2026.3  Apache-2.0 (documented exception)
+
+10 closure packages reviewed on this platform
+all licenses allowed (docs/licenses.md); environment is the release closure

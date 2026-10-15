@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import type { LiveState, LiveStatus, LiveView, MarketUpdate } from '@/lib/api'
 import { PreferencesProvider } from '@/lib/preferences'
+import { dateTime } from '@/lib/format'
 import { CockpitScreen } from './Cockpit'
 import { CockpitDetailScreen } from './CockpitDetail'
 
@@ -176,6 +177,46 @@ beforeEach(() => {
   mocked.replayExtent.mockRejectedValue(new Error('no replay lake attached'))
   mocked.priceTrail.mockResolvedValue({ trail: {} })
   mockedStream.mockReturnValue('live')
+})
+
+describe('calendar coverage stays separate from transport health', () => {
+  const coverage = {
+    market_state: 'closed' as const, data_state: 'latest_session' as const,
+    last_source_at: '2026-10-09T20:00:00Z', expected_last_bar_end: '2026-10-09T20:00:00Z',
+    next_open_at: '2026-10-12T13:30:00Z', calendar_version: 'XNYS:pinned',
+    reason: 'closed_latest_session_covered_without_latency_assumption',
+    policy_version: 'quantmesh:session-freshness:1', provider_delay_seconds: null,
+    opening_grace_seconds: 120,
+  }
+  function prepare() {
+    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-11T12:00:00Z'))
+    mocked.liveState.mockResolvedValue({ generated_at: '2026-10-11T12:00:00Z', instruments: {
+      'moomoo:AAPL': { venue: 'moomoo', instrument: 'AAPL', label: 'stale',
+        session_freshness: coverage, kinds: { metrics: view({ last: 300 }, {
+          kind: 'metrics', data_time: coverage.last_source_at, received_at: coverage.last_source_at,
+          label: 'stale', session_freshness: coverage,
+        }), status: view({}, { kind: 'status', label: 'unavailable' }) } },
+    } })
+    mocked.liveStatus.mockResolvedValue({ generated_at: '2026-10-11T12:00:00Z', venues: [
+      { venue: 'moomoo', connected: false, sources: [{ instrument: 'AAPL', state: 'disconnected',
+        note: 'connection lost', data_time: coverage.last_source_at,
+        received_at: coverage.last_source_at, age_ms: 100_000, session_freshness: coverage }] },
+    ] })
+  }
+  it('shows last-session data and a real disconnect independently in the cockpit', async () => {
+    prepare()
+    renderScreen()
+    await waitFor(() => expect(screen.getAllByText('Market closed · Last session').length).toBe(2))
+    expect(screen.getAllByText('disconnected')).toHaveLength(2)
+  })
+  it('uses the same session policy in instrument detail while keeping the source time', async () => {
+    prepare()
+    renderDetail('AAPL', 'moomoo')
+    await waitFor(() => expect(screen.getAllByText('Market closed · Last session').length).toBe(2))
+    expect(screen.getByText('Event time').nextElementSibling)
+      .toHaveTextContent(dateTime(coverage.last_source_at))
+    expect(screen.getByText('Source unavailable')).toBeInTheDocument()
+  })
 })
 
 describe('CockpitScreen', () => {

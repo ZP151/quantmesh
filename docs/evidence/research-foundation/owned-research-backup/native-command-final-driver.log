@@ -1,0 +1,8 @@
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source2.bundle
+ * branch            HEAD       -> FETCH_HEAD
+Previous HEAD position was 349d969 fix: register owned backup children before deadline interruption
+HEAD is now at 4fceaf2 fix: register and verify backup command children across interruption
+{"log": "4fceaf21af3f-native-tests.log", "exit": 0}
+{"log": "4fceaf21af3f-preflight.log", "exit": 0}
+{"log": "4fceaf21af3f-fixture.log", "exit": 0}
+{"passed": true, "negatives": {"corrupt_cipher_copy": {"refused": true, "source_unchanged": true}, "missing_artifact": {"refused": true, "source_unchanged": true}, "substituted_artifact": {"refused": true, "source_unchanged": true}, "substituted_manifest": {"refused": true, "source_unchanged": true}, "unknown_schema": {"refused": true, "source_unchanged": true}, "wrong_key": {"refused": true, "source_unchanged": true}}, "clusters": [{"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-4fceaf21af3f/unknown-schema-cluster/data", "pid": 13695, "start_ticks": "276976", "stopped": true, "system_id": "7695921808865236346"}, {"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-4fceaf21af3f/restore/data", "pid": 13619, "start_ticks": "276770", "stopped": true, "system_id": "7695921800061220142"}, {"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-4fceaf21af3f/sibling/data", "pid": 13133, "start_ticks": "276133", "stopped": true, "system_id": "7695921772590437192"}, {"data": "/var/tmp/quantmesh-backup-final-xvcv1u9k/proof-4fceaf21af3f/source/data", "pid": 13107, "start_ticks": "276082", "stopped": true, "system_id": "7695921770549859118"}]}

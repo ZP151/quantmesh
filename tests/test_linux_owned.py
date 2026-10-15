@@ -1,0 +1,1255 @@
+"""Command tests are not native OCI qualification."""
+
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import pytest
+
+from quantmesh.research import linux_bootstrap as bootstrap
+from quantmesh.research import linux_owned as owned
+from quantmesh.research.jobs import RunBudget
+
+
+@pytest.fixture
+def profile(tmp_path):
+    cli = tmp_path / "docker"
+    cli.write_text("fixture")
+    root = tmp_path / "fixtures"
+    root.mkdir()
+    return owned.LinuxExecutionProfile(
+        endpoint="unix:///var/run/docker.sock",
+        docker_cli=cli,
+        image_id="sha256:" + "a" * 64,
+        # A real POSIX ownership check stays enabled in these fake-engine tests.
+        # Non-root CI cannot assign an unrelated hardcoded container identity.
+        uid=(os.getuid() or 10001) if os.name == "posix" else 10001,
+        gid=(os.getgid() or 10001) if os.name == "posix" else 10001,
+        fixture_root=root,
+    )
+
+
+@pytest.fixture
+def paths(profile):
+    inputs = profile.fixture_root / "inputs"
+    inputs.mkdir()
+    return inputs, profile.fixture_root / "attempt"
+
+
+class Attach:
+    def __init__(self, ready):
+        self.ready = ready
+        self.sent = []
+        self.stopped = False
+
+    def receive(self, timeout):
+        return self.ready
+
+    def send(self, value):
+        self.sent.append(value)
+
+    def close(self):
+        self.stopped = True
+
+
+def _inspect_for_create(profile, create, nonce, state):
+    image_at = create.index(profile.image_id)
+    memory = int(create[create.index(next(a for a in create if a.startswith("--memory=")))][9:-1])
+    mounts = []
+    for arg in create:
+        if not arg.startswith("type=bind,src="):
+            continue
+        options = dict(part.split("=", 1) for part in arg.split(",") if "=" in part)
+        readonly = "readonly" in arg.split(",")
+        mounts.append(
+            {
+                "Type": "bind",
+                "Source": options["src"],
+                "Destination": options["dst"],
+                "Mode": "ro" if readonly else "rw",
+                "RW": not readonly,
+            }
+        )
+    security_opts = [
+        option.split("=", 1)[1] for option in create if option.startswith("--security-opt=")
+    ]
+    # Actual current Engine preserves the requested NNP string and Docker CLI
+    # expands a seccomp path to its exact JSON bytes before sending it.
+    security_opts = [
+        "seccomp=" + Path(option.split("=", 1)[1]).read_text(encoding="utf8")
+        if option.startswith("seccomp=")
+        else option
+        for option in security_opts
+    ]
+    return {
+        "Id": "b" * 64,
+        "Image": profile.image_id,
+        "Config": {
+            "Labels": {owned.OWNER_LABEL: nonce},
+            "Entrypoint": [create[create.index("--entrypoint") + 1]],
+            "Cmd": create[image_at + 1 :],
+            "User": create[create.index("--user") + 1],
+        },
+        "HostConfig": {
+            "NetworkMode": "none",
+            "Privileged": False,
+            "CapAdd": [],
+            "Devices": [],
+            "DeviceRequests": [],
+            "CgroupnsMode": "private",
+            "PidMode": "",
+            "IpcMode": "",
+            "UTSMode": "",
+            "UsernsMode": "",
+            "Cgroup": "",
+            "CgroupParent": "",
+            "CgroupRules": [],
+            "ReadonlyRootfs": True,
+            "CapDrop": ["ALL"],
+            "SecurityOpt": security_opts,
+            "PidsLimit": 128,
+            "NanoCpus": 1_000_000_000,
+            "Memory": memory * 1024 * 1024,
+            "MemorySwap": memory * 1024 * 1024,
+            "RestartPolicy": {"Name": "no"},
+            "Tmpfs": {
+                flag.split("=", 1)[1].split(":", 1)[0]: flag.split(":", 1)[1]
+                for flag in create
+                if flag.startswith("--tmpfs=")
+            },
+            "LogConfig": {"Type": "none"},
+        },
+        "Mounts": mounts,
+        "State": state,
+    }
+
+
+@pytest.fixture
+def engine(monkeypatch, profile):
+    calls = []
+    state = {"Running": True, "ExitCode": 0, "OOMKilled": False}
+    nonce = []
+    create_args = []
+    attach = Attach(
+        {
+            "event": "ready",
+            "bootstrap_sha256": owned.bootstrap_digest(),
+            "limits": {
+                "memory.max": "2147483648",
+                "memory.swap.max": "0",
+                "cpu.max": "100000 100000",
+                "pids.max": "128",
+            },
+        }
+    )
+
+    def invoke(self, args):
+        calls.append(args)
+        if args[0] == "info":
+            return json.dumps({"OSType": "linux", "CgroupVersion": "2", "ID": "fixture"})
+        if args[:2] == ["image", "inspect"]:
+            return json.dumps([{"Id": profile.image_id, "Os": "linux"}])
+        if args[0] == "create":
+            create_args[:] = args
+            nonce.append(args[args.index("--label") + 1].split("=", 1)[1])
+            return "b" * 64
+        if args[0] == "inspect":
+            return json.dumps([_inspect_for_create(profile, create_args, nonce[0], state)])
+        return ""
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", invoke)
+    monkeypatch.setattr(owned, "_attach", lambda *a: attach)
+    return calls, state, nonce, attach
+
+
+def test_fixed_creation_and_gated_start(profile, paths, engine):
+    calls, state, _, attach = engine
+    process = owned.LinuxOwnedProcess(
+        profile, ["/usr/local/bin/python3", "-V"], RunBudget(), *paths
+    )
+    create = next(a for a in calls if a[0] == "create")
+    for flag in [
+        "--pull=never",
+        "--network=none",
+        "--read-only",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--pids-limit=128",
+        "--cpus=1",
+        "--memory=2048m",
+        "--memory-swap=2048m",
+        "--restart=no",
+    ]:
+        assert flag in create
+    assert create.count("--mount") == 2
+    assert create[create.index(profile.image_id) + 1] == "-B"
+    assert create[create.index("--user") + 1] == f"{profile.uid}:{profile.gid}"
+    assert "readonly" in create[create.index("--mount") + 1]
+    assert attach.sent == ["go"]
+    process.pulse()
+    assert attach.sent[-1] == "pulse"
+    assert process.poll() is None
+    state.update(Running=False, ExitCode=7)
+    assert process.poll() == 7
+    process.close()
+    assert calls[-1] == ["rm", "--force", "b" * 64]
+
+
+def test_operator_security_policies_are_created_and_inspected(profile, paths, engine, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(
+        profile,
+        apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+        seccomp_path=seccomp,
+    )
+    calls, _, _, _ = engine
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+
+    create = next(args for args in calls if args[0] == "create")
+    assert "--security-opt=apparmor=qm-worker-9f7cdb6c9ce7b9c9516c" in create
+    assert f"--security-opt=seccomp={seccomp.resolve()}" in create
+    process.close()
+
+
+def test_kernel_blueprint_closes_writable_engine_mounts(profile, paths, engine, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "kernel.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    create = next(args for args in engine[0] if args[0] == "create")
+    assert "--tmpfs=/dev:rw,noexec,nosuid,size=8m,mode=755,dev" in create
+    observed = process._inspect()
+    mounts = {m["Destination"]: m for m in observed["Mounts"]}
+    for name in ("hostname", "hosts", "resolv.conf"):
+        mount = mounts[f"/etc/{name}"]
+        assert mount["RW"] is False
+        assert Path(mount["Source"]).parent == profile.fixture_root / ".kernel-network"
+        assert Path(mount["Source"]).stat().st_mode & 0o777 == 0o444
+    from copy import deepcopy
+
+    for field in ("dev", "extra", "source", "mode", "rw"):
+        changed = deepcopy(observed)
+        if field == "dev":
+            changed["HostConfig"]["Tmpfs"]["/dev"] = "rw,nosuid,size=8m,mode=755"
+        elif field == "extra":
+            changed["HostConfig"]["Tmpfs"]["/unexpected"] = "rw,noexec"
+        else:
+            network_mount = next(m for m in changed["Mounts"] if m["Destination"] == "/etc/hosts")
+            network_mount[{"source": "Source", "mode": "Mode", "rw": "RW"}[field]] = {
+                "source": str(tmp_path / "untrusted"),
+                "mode": "rw",
+                "rw": True,
+            }[field]
+        assert not owned._matches_owned_container(
+            changed,
+            container_id=process.container_id,
+            image_id=configured.image_id,
+            nonce=process.nonce,
+            command=process._expected_inspect_command,
+            user=f"{configured.uid}:{configured.gid}",
+            inputs=str(paths[0]),
+            output=str(paths[1]),
+            memory_mib=2048,
+            security_options=configured.security_options,
+            kernel_network=profile.fixture_root / ".kernel-network",
+        )
+    process.close()
+
+
+@pytest.mark.parametrize("change", ["symlink", "content", "mode"])
+def test_kernel_network_files_refuse_drift_before_create(profile, paths, engine, tmp_path, change):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "kernel.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    root = profile.fixture_root / ".kernel-network"
+    root.mkdir(mode=0o700)
+    target = root / "hostname"
+    if change == "symlink":
+        target.symlink_to(seccomp)
+    else:
+        target.write_text("tampered\n" if change == "content" else "quantmesh-worker\n")
+        target.chmod(0o444 if change == "content" else 0o666)
+    with pytest.raises(owned.LinuxContainmentError, match="unsafe_kernel_network"):
+        owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    assert not any(args[0] == "create" for args in engine[0])
+    assert engine[3].sent == []
+
+
+def test_operator_policy_expectation_binds_actual_json_content(profile, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "policy.json"
+    raw = '{"defaultAction":"SCMP_ACT_ERRNO"}\n'
+    seccomp.write_text(raw, encoding="utf8")
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    assert profile.security_options == ["no-new-privileges"]
+    assert configured.security_options == [
+        "no-new-privileges",
+        "apparmor=qm-worker-wire",
+        "seccomp=" + raw,
+    ]
+
+
+def test_changed_seccomp_file_refuses_before_go(profile, paths, engine, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "policy.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n', encoding="utf8")
+    seccomp.chmod(0o600)
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ALLOW"}\n', encoding="utf8")
+    with pytest.raises(owned.LinuxContainmentError, match="admission_failed"):
+        owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    assert engine[3].sent == []
+
+
+def test_non_utf8_seccomp_cannot_be_sent_to_engine(profile, tmp_path):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "policy.json"
+    seccomp.write_bytes('{"defaultAction":"SCMP_ACT_ERRNO"}'.encode("utf16"))
+    seccomp.chmod(0o600)
+    with pytest.raises(owned.LinuxContainmentError, match="unsafe_seccomp_policy"):
+        replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+
+
+@pytest.mark.parametrize("extra,accepted", [(0, True), (1, False)])
+def test_policy_bound_fits_current_inspect_transport(
+    profile, paths, engine, tmp_path, extra, accepted
+):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "bounded-policy.json"
+    prefix = '{"defaultAction":"SCMP_ACT_ERRNO","padding":"'
+    suffix = '"}'
+    raw = prefix + "x" * (16 * 1024 + extra - len(prefix) - len(suffix)) + suffix
+    seccomp.write_text(raw, encoding="utf8")
+    seccomp.chmod(0o600)
+    if not accepted:
+        with pytest.raises(owned.LinuxContainmentError, match="unsafe_seccomp_policy"):
+            replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+        return
+    configured = replace(profile, apparmor_profile="qm-worker-wire", seccomp_path=seccomp)
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    reply = configured.invoke(["inspect", process.container_id])
+    assert len(reply.encode()) < owned.CLI_BYTES
+    assert json.loads(reply)[0]["HostConfig"]["SecurityOpt"] == configured.security_options
+    process.close()
+
+
+@pytest.mark.parametrize(
+    "apparmor,seccomp",
+    [
+        ("qm-worker-9f7cdb6c9ce7b9c9516c", None),
+        (None, Path("/tmp/seccomp.json")),
+        ("default", Path("/tmp/seccomp.json")),
+        ("qm-worker-invalid/name", Path("/tmp/seccomp.json")),
+        ("qm-worker-" + "a" * 64, Path("/tmp/seccomp.json")),
+    ],
+)
+def test_profile_rejects_partial_or_unsafe_operator_security_policy(
+    profile, engine, apparmor, seccomp
+):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(profile, apparmor_profile=apparmor, seccomp_path=seccomp)
+    assert calls == []
+
+
+def test_profile_rejects_nonprivate_or_linked_seccomp_policy(profile, engine, tmp_path):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o644)
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(
+            profile,
+            apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+            seccomp_path=seccomp,
+        )
+    assert calls == []
+
+    seccomp.chmod(0o600)
+    linked = tmp_path / "linked.json"
+    try:
+        os.link(seccomp, linked)
+    except OSError:
+        pytest.skip("host cannot create hard links")
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(
+            profile,
+            apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+            seccomp_path=linked,
+        )
+    assert calls == []
+
+
+def test_profile_rejects_symlink_oversized_and_nonfile_seccomp_policy(profile, engine, tmp_path):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    linked = tmp_path / "symlink.json"
+    try:
+        linked.symlink_to(seccomp)
+    except OSError:
+        pytest.skip("host cannot create symlinks")
+    for path in (linked, tmp_path):
+        with pytest.raises(owned.LinuxContainmentError):
+            replace(
+                profile,
+                apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+                seccomp_path=path,
+            )
+    seccomp.write_bytes(b"x" * (256 * 1024 + 1))
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(
+            profile,
+            apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+            seccomp_path=seccomp,
+        )
+    assert calls == []
+
+
+def test_inspect_recheck_refuses_security_policy_drift(
+    profile, paths, engine, tmp_path, monkeypatch
+):
+    from dataclasses import replace
+
+    seccomp = tmp_path / "seccomp.json"
+    seccomp.write_text('{"defaultAction":"SCMP_ACT_ERRNO"}\n')
+    seccomp.chmod(0o600)
+    configured = replace(
+        profile,
+        apparmor_profile="qm-worker-9f7cdb6c9ce7b9c9516c",
+        seccomp_path=seccomp,
+    )
+    calls, _, _, _ = engine
+    process = owned.LinuxOwnedProcess(configured, ["/bin/true"], RunBudget(), *paths)
+    original = owned.LinuxExecutionProfile.invoke
+
+    def drifted(self, args):
+        result = original(self, args)
+        if args[0] == "inspect":
+            doc = json.loads(result)
+            doc[0]["HostConfig"]["SecurityOpt"] = ["no-new-privileges"]
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", drifted)
+    with pytest.raises(owned.LinuxContainmentError, match="ownership_mismatch"):
+        process.poll()
+    process.close()
+    assert ["rm", "--force", "b" * 64] in calls
+
+
+@pytest.mark.skipif(os.name != "posix", reason="real FIFO must not block policy validation")
+def test_private_seccomp_fifo_refuses_without_waiting_for_a_writer(tmp_path):
+    fifo = tmp_path / "policy.fifo"
+    os.mkfifo(fifo, 0o600)
+    code = (
+        "import sys;from pathlib import Path;"
+        "from quantmesh.research.linux_owned import _private_seccomp_path,LinuxContainmentError;"
+        "\ntry:_private_seccomp_path(Path(sys.argv[1]))"
+        "\nexcept LinuxContainmentError:sys.exit(0)"
+        "\nraise SystemExit(3)"
+    )
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", code, str(fifo)],
+        capture_output=True,
+        timeout=10,
+        check=False,
+    )
+    assert result.returncode == 0 and not result.stdout and not result.stderr
+
+
+def test_parent_binding_is_written_and_rechecked_before_exit(profile, paths, engine):
+    import hashlib
+
+    from quantmesh.research.worker_build import ParentBindingContract, encode_parent_binding
+
+    calls, _, nonce, attach = engine
+    prepared = []
+
+    def prepare(process, ready):
+        prepared.append((process.container_id, process.nonce, ready["limits"]))
+        contract = ParentBindingContract(
+            schema=1,
+            engine_id="fixture",
+            image_id=profile.image_id,
+            image_config_sha256="a" * 64,
+            container_id=process.container_id,
+            owner_nonce=process.nonce,
+            manifest_sha256="b" * 64,
+            inventory_sha256="c" * 64,
+            dependency_lock_sha256="d" * 64,
+            python_executable_sha256="e" * 64,
+            entry_sha256="f" * 64,
+            observer_sha256="0" * 64,
+            expected_prefix="/usr/local",
+            python_version="3.12.15",
+            kernel_profile_sha256="1" * 64,
+        )
+        encoded = encode_parent_binding(contract)
+        prepared.append(encoded)
+        return encoded
+
+    process = owned.LinuxOwnedProcess(
+        profile,
+        [
+            "/usr/local/bin/python3",
+            "-B",
+            "-I",
+            "-S",
+            "/opt/quantmesh/worker_entry.py",
+            "--binding",
+            "/inputs/parent-binding.json",
+            "--manifest",
+            "/opt/quantmesh/manifest.json",
+            "--inventory",
+            "/opt/quantmesh/inventory.json",
+        ],
+        RunBudget(),
+        *paths,
+        prepare_parent_binding=prepare,
+    )
+
+    raw, digest = prepared[1]
+    binding_path = paths[0] / "parent-binding.json"
+    assert prepared[0] == ("b" * 64, nonce[0], attach.ready["limits"])
+    assert binding_path.read_bytes() == raw
+    assert hashlib.sha256(binding_path.read_bytes()).hexdigest() == digest
+    mode = binding_path.stat().st_mode & 0o777
+    if os.name == "posix":
+        assert mode == 0o400
+    else:
+        assert mode & 0o222 == 0
+    assert attach.sent == [f"go:{digest}"]
+    assert process.evidence["parent_binding_sha256"] == digest
+    binding_path.chmod(0o600)
+    binding_path.write_bytes(raw + b" ")
+    with pytest.raises(owned.LinuxContainmentError):
+        process.poll()
+    process.close()
+    assert ["rm", "--force", "b" * 64] in calls
+
+
+def test_bootstrap_go_digest_is_forwarded_only_for_complete_worker_entry_command():
+    digest = "a" * 64
+    command = [
+        "/usr/local/bin/python3",
+        "-B",
+        "-I",
+        "-S",
+        "/opt/quantmesh/worker_entry.py",
+        "--binding",
+        "/inputs/parent-binding.json",
+        "--manifest",
+        "/opt/quantmesh/manifest.json",
+        "--inventory",
+        "/opt/quantmesh/inventory.json",
+    ]
+    assert bootstrap._bound_command(command, digest) == [
+        *command,
+        "--binding-sha256",
+        digest,
+    ]
+    with pytest.raises(ValueError):
+        bootstrap._bound_command(command, None)
+    for malformed in (
+        [*command, "--unexpected", "value"],
+        ["/usr/bin/python3", *command[1:]],
+        [*command[:6], "/inputs/other-binding.json", *command[7:]],
+    ):
+        with pytest.raises(ValueError):
+            bootstrap._bound_command(malformed, digest)
+
+
+def test_inspect_refuses_container_control_or_mount_drift():
+    from quantmesh.research.linux_owned import _matches_owned_container
+
+    expected = {
+        "container_id": "b" * 64,
+        "image_id": "sha256:" + "a" * 64,
+        "nonce": "c" * 32,
+        "command": ["-B", "-I", "/opt/qm-bootstrap.py", "2048", "300", "/worker"],
+        "user": "10001:10001",
+        "inputs": "/private/inputs",
+        "output": "/private/output",
+        "memory_mib": 2048,
+    }
+    doc = {
+        "Id": expected["container_id"],
+        "Image": expected["image_id"],
+        "Config": {
+            "Labels": {owned.OWNER_LABEL: expected["nonce"]},
+            "Entrypoint": [owned.PYTHON_PATH],
+            "Cmd": expected["command"],
+            "User": expected["user"],
+        },
+        "HostConfig": {
+            "NetworkMode": "none",
+            "Privileged": False,
+            "CapAdd": [],
+            "Devices": [],
+            "DeviceRequests": [],
+            "CgroupnsMode": "private",
+            "PidMode": "",
+            "IpcMode": "",
+            "UTSMode": "",
+            "UsernsMode": "",
+            "Cgroup": "",
+            "CgroupParent": "",
+            "CgroupRules": [],
+            "ReadonlyRootfs": True,
+            "CapDrop": ["ALL"],
+            "SecurityOpt": ["no-new-privileges"],
+            "PidsLimit": 128,
+            "NanoCpus": 1_000_000_000,
+            "Memory": 2048 * 1024 * 1024,
+            "MemorySwap": 2048 * 1024 * 1024,
+            "RestartPolicy": {"Name": "no"},
+            "Tmpfs": {"/tmp": "rw,noexec,nosuid,size=16m"},
+            "LogConfig": {"Type": "none"},
+        },
+        "Mounts": [
+            {
+                "Type": "bind",
+                "Source": expected["inputs"],
+                "Destination": "/inputs",
+                "Mode": "ro",
+                "RW": False,
+            },
+            {
+                "Type": "bind",
+                "Source": expected["output"],
+                "Destination": "/output",
+                "Mode": "rw",
+                "RW": True,
+            },
+        ],
+    }
+    assert _matches_owned_container(doc, **expected)
+    private_ipc = {**doc, "HostConfig": {**doc["HostConfig"], "IpcMode": "private"}}
+    assert _matches_owned_container(private_ipc, **expected)
+
+    empty_output_mode = {**doc, "Mounts": [*doc["Mounts"]]}
+    empty_output_mode["Mounts"][1] = {**doc["Mounts"][1], "Mode": ""}
+    assert _matches_owned_container(empty_output_mode, **expected)
+
+    # Docker --mount readonly has an empty Mode; RW is the authoritative flag.
+    empty_input_mode = {**doc, "Mounts": [*doc["Mounts"]]}
+    empty_input_mode["Mounts"][0] = {**doc["Mounts"][0], "Mode": ""}
+    assert _matches_owned_container(empty_input_mode, **expected)
+    for changed_mount in (
+        {**empty_input_mode["Mounts"][0], "RW": True},
+        {**empty_input_mode["Mounts"][0], "Mode": "rw"},
+    ):
+        changed = {**empty_input_mode, "Mounts": [changed_mount, doc["Mounts"][1]]}
+        assert not _matches_owned_container(changed, **expected)
+
+    mutations = (
+        ("command", ["-B", "-I", "/opt/other.py", "2048", "300", "/worker"]),
+        ("inputs", "/private/other-inputs"),
+        ("output", "/private/other-output"),
+        ("user", "0:0"),
+    )
+    for field, wrong in mutations:
+        changed = {**doc}
+        if field == "command":
+            changed["Config"] = {**doc["Config"], "Cmd": wrong}
+        elif field == "user":
+            changed["Config"] = {**doc["Config"], "User": wrong}
+        elif field in ("inputs", "output"):
+            mount_index = 0 if field == "inputs" else 1
+            mounts = list(doc["Mounts"])
+            mounts[mount_index] = {**mounts[mount_index], "Source": wrong}
+            changed["Mounts"] = mounts
+        assert not _matches_owned_container(changed, **expected)
+
+    for field, wrong in (
+        ("NetworkMode", "bridge"),
+        ("ReadonlyRootfs", False),
+        ("CapDrop", []),
+        ("PidsLimit", 0),
+        ("MemorySwap", 0),
+    ):
+        changed = {**doc, "HostConfig": {**doc["HostConfig"], field: wrong}}
+        assert not _matches_owned_container(changed, **expected)
+
+    for field, wrong in (
+        ("Privileged", True),
+        ("CapAdd", ["SYS_ADMIN"]),
+        ("Devices", [{"PathOnHost": "/dev/kvm"}]),
+        ("DeviceRequests", [{"Capabilities": [["gpu"]]}]),
+        ("PidMode", "host"),
+        ("IpcMode", "host"),
+        ("IpcMode", "shareable"),
+        ("IpcMode", "container:" + "d" * 64),
+    ):
+        changed = {**doc, "HostConfig": {**doc["HostConfig"], field: wrong}}
+        assert not _matches_owned_container(changed, **expected)
+
+
+def test_explicit_bytecode_env_image_admission(profile, paths, engine, monkeypatch):
+    original = profile.invoke
+
+    def with_bytecode(self, args):
+        result = original(args)
+        if args[:2] == ["image", "inspect"]:
+            doc = json.loads(result)
+            doc[0]["Config"] = {"Env": ["PYTHONDONTWRITEBYTECODE=1"]}
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", with_bytecode)
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    process.close()
+
+
+@pytest.mark.parametrize(
+    "signer,accepted",
+    [
+        ("GPG_KEY=7169605F62C751356D054A26A821E680E5FA6305", True),
+        ("GPG_KEY=unknown", False),
+        ("GPG_KEY", False),
+        ("GPG_PRIVATE_KEY=fixture", False),
+    ],
+)
+def test_image_allows_only_exact_measured_public_python_signer(
+    profile, engine, monkeypatch, signer, accepted
+):
+    # Actual immutable Python image carries this public build signer. An
+    # arbitrary GPG value, private-key variable or job input cannot admit it.
+    original = profile.invoke
+
+    def changed(self, args):
+        result = original(args)
+        if args[:2] == ["image", "inspect"]:
+            value = json.loads(result)
+            value[0]["Config"] = {"Env": ["PYTHONDONTWRITEBYTECODE=1", signer]}
+            return json.dumps(value)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", changed)
+    if accepted:
+        assert profile.prerequisites()["image_id"] == profile.image_id
+    else:
+        with pytest.raises(owned.LinuxContainmentError, match="^unqualified_runtime$"):
+            profile.prerequisites()
+
+
+@pytest.mark.parametrize("entry", ["owner", "native_sibling"])
+def test_qualification_python_launch_disables_bytecode(profile, tmp_path, monkeypatch, entry):
+    module = _qualification_module()
+    seen = []
+
+    class Stop(RuntimeError):
+        pass
+
+    def capture(profile, command, *args):
+        seen.append(command)
+        raise Stop
+
+    monkeypatch.setattr(module, "LinuxOwnedProcess", capture)
+    output = profile.fixture_root / "qualification"
+    output.mkdir()
+    with pytest.raises(Stop):
+        if entry == "owner":
+            monkeypatch.setattr(module, "load_profile", lambda path: profile)
+            module._owner(tmp_path / "profile", output)
+        else:
+            module.native_checks(profile, output, tmp_path / "profile", {})
+    assert seen[0][1] == "-B"
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="real standalone child env check")
+def test_standalone_child_has_fixed_ephemeral_home(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "sentinel-never-inherit")
+
+    class Pulse:
+        def read(self, timeout):
+            time.sleep(0.01)
+            return []
+
+        def close(self):
+            pass
+
+    workload = (
+        "import os;from pathlib import Path;"
+        "assert Path.home()==Path('/tmp');"
+        "assert set(os.environ)=={'PATH','LANG','HOME','PYTHONDONTWRITEBYTECODE'}"
+    )
+    assert bootstrap.supervise(
+        [sys.executable, "-B", "-I", "-S", "-c", workload],
+        tmp_path,
+        3,
+        control=Pulse(),
+    ) == 0
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="real standalone child env check")
+def test_standalone_child_has_clean_bytecode_environment(tmp_path):
+    (tmp_path / "local_fixture.py").write_text("value=1\n")
+    workload = (
+        "import os,sys,local_fixture;assert sys.dont_write_bytecode;"
+        "assert os.environ.get('PYTHONDONTWRITEBYTECODE')=='1'"
+    )
+    command = [sys.executable, "-B", "-c", workload]
+    script = (
+        "import sys;from pathlib import Path;"
+        "from quantmesh.research.linux_bootstrap import supervise;"
+        f"sys.exit(supervise({command!r},Path({str(tmp_path)!r}),3))"
+    )
+    process = subprocess.Popen([sys.executable, "-B", "-c", script], stdin=subprocess.PIPE)
+    try:
+        assert process.wait(timeout=5) == 0
+        assert not (tmp_path / "__pycache__").exists()
+    finally:
+        process.stdin.close()
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or os.geteuid() == 0,
+    reason="requires the real non-root POSIX ownership boundary",
+)
+def test_unassignable_output_owner_refuses_before_container_create(profile, paths, engine):
+    from dataclasses import replace
+
+    calls, _, _, _ = engine
+    foreign = replace(profile, uid=profile.uid + 1)
+    with pytest.raises(PermissionError):
+        owned.LinuxOwnedProcess(foreign, ["/bin/true"], RunBudget(), *paths)
+    assert not any(args[0] == "create" for args in calls)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("image_id", "python:latest"),
+        ("endpoint", "tcp://localhost:2375"),
+        ("endpoint", "ssh://root@server"),
+        ("uid", 0),
+        ("gid", 0),
+    ],
+)
+def test_profile_refuses_unsafe_identity(profile, field, value):
+    from dataclasses import replace
+
+    with pytest.raises(owned.LinuxContainmentError):
+        replace(profile, **{field: value})
+
+
+def test_clean_cli_environment(profile, monkeypatch):
+    monkeypatch.setenv("DOCKER_HOST", "tcp://secret")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
+    env = profile.cli_environment()
+    assert "DOCKER_HOST" not in env and "AWS_SECRET_ACCESS_KEY" not in env
+    assert "HOME" not in env and "DOCKER_CONTEXT" not in env
+    assert profile.argv(["info"])[1:3] == ["--host", profile.endpoint]
+
+
+def test_creation_failure_never_guesses_container(profile, paths, engine, monkeypatch):
+    calls, _, _, _ = engine
+    original = profile.invoke
+
+    def fail(self, args):
+        if args[0] == "create":
+            raise owned.LinuxContainmentError("engine_command_failed")
+        return original(args)
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", fail)
+    with pytest.raises(owned.LinuxContainmentError):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    assert not any(a[0] == "rm" for a in calls)
+
+
+def test_output_limit_is_failure(profile, paths, engine, monkeypatch):
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    monkeypatch.setattr(owned, "output_size", lambda p: owned.MAX_OUTPUT_BYTES + 1)
+    assert process.poll() == 125
+    assert process.evidence["controller_failure"] == "output_limit"
+
+
+@pytest.mark.parametrize("unsafe", ["oversized", "symlink"])
+def test_terminal_output_cannot_succeed(profile, paths, engine, monkeypatch, unsafe):
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    engine[1].update(Running=False, ExitCode=0)
+
+    def output_size(path):
+        if unsafe == "symlink":
+            raise ValueError("unsafe_output")
+        return owned.MAX_OUTPUT_BYTES + 1
+
+    monkeypatch.setattr(owned, "output_size", output_size)
+    assert process.poll() == 125
+    process.close()
+
+
+def test_transient_cleanup_can_retry_exact_ownership(profile, paths, engine, monkeypatch):
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    original = profile.invoke
+    failures = [True]
+
+    def remove(self, args):
+        if args[0] == "rm" and failures.pop():
+            raise owned.LinuxContainmentError("engine_unavailable")
+        return original(args)
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", remove)
+    with pytest.raises(owned.LinuxContainmentError):
+        process.close()
+    assert process.closed is False
+    failures.append(False)
+    process.close()
+    assert process.closed is True
+    assert engine[0][-2:] == [["inspect", "b" * 64], ["rm", "--force", "b" * 64]]
+
+
+def test_owned_container_with_control_drift_is_still_removed(profile, paths, engine, monkeypatch):
+    calls, _, _, _ = engine
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    original = profile.invoke
+
+    def drifted(self, args):
+        result = original(args)
+        if args[0] == "inspect":
+            doc = json.loads(result)
+            doc[0]["HostConfig"]["Privileged"] = True
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", drifted)
+    with pytest.raises(owned.LinuxContainmentError, match="ownership_mismatch"):
+        process.poll()
+    process.close()
+    assert ["rm", "--force", "b" * 64] in calls
+
+
+def test_hung_pulse_write_has_deadline(monkeypatch):
+    import threading
+
+    transport = object.__new__(owned._Transport)
+    transport.overflow = threading.Event()
+
+    class Stdin:
+        def write(self, value):
+            time.sleep(0.3)
+
+        def flush(self):
+            pass
+
+    class Process:
+        stdin = Stdin()
+
+        def poll(self):
+            return None
+
+        def kill(self):
+            pass
+
+    transport.process = Process()
+    monkeypatch.setattr(owned, "CONTROL_WRITE_SECONDS", 0.05, raising=False)
+    start = time.monotonic()
+    with pytest.raises(owned.LinuxContainmentError):
+        transport.send("pulse")
+    assert time.monotonic() - start < 0.2
+
+
+def _qualification_module():
+    spec = importlib.util.spec_from_file_location("qualify", "tools/qualify_linux_worker.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_native_timeout_requires_actual_container_exit(monkeypatch):
+    module = _qualification_module()
+
+    class Worker:
+        def poll(self):
+            return 124  # Host rescue is not a native PID1 timeout certificate.
+
+        def _inspect(self):
+            return {"State": {"Running": True, "ExitCode": 0, "OOMKilled": False}}
+
+        def pulse(self):
+            pass
+
+    ticks = iter([0, 1, 26])
+    monkeypatch.setattr(module.time, "monotonic", lambda: next(ticks))
+    monkeypatch.setattr(module.time, "sleep", lambda s: None)
+    with pytest.raises(owned.LinuxContainmentError, match="witness_timeout"):
+        module._wait(Worker(), Worker())
+
+
+def test_native_hung_attachment_is_required():
+    assert "hung_attach" in _qualification_module().REQUIRED
+
+
+@pytest.mark.parametrize(
+    "lines,buffer,parent_binding_sha256",
+    [
+        (["go", "pulse"], b"", None),
+        (["go"], b"pul", None),
+        (["go:" + "a" * 64], b"", "a" * 64),
+    ],
+)
+def test_pid1_go_preserves_pulses_and_passes_parent_digest(
+    tmp_path, monkeypatch, lines, buffer, parent_binding_sha256
+):
+    # Protocol unit only: mocked PID1/cgroup admission is never native evidence.
+    for key, value in {
+        "memory.max": "67108864",
+        "memory.swap.max": "0",
+        "cpu.max": "100000 100000",
+        "pids.max": "128",
+    }.items():
+        (tmp_path / key).write_text(value)
+    monkeypatch.setattr(bootstrap, "CGROUP", tmp_path)
+    monkeypatch.setattr(bootstrap.os, "getpid", lambda: 1)
+    monkeypatch.setattr(bootstrap.os, "getuid", lambda: 10001, raising=False)
+    monkeypatch.setattr(bootstrap.sys, "platform", "linux")
+    monkeypatch.setattr(bootstrap.sys, "argv", ["bootstrap", "64", "20", "/bin/true"])
+
+    class Control:
+        def __init__(self):
+            self.buffer = buffer
+
+        def read(self, timeout):
+            return lines
+
+        def close(self):
+            pass
+
+    observed, controls = [], []
+    monkeypatch.setattr(bootstrap, "Control", Control)
+
+    def supervise(*args, **kwargs):
+        observed.append(kwargs.get("parent_binding_sha256"))
+        controls.append(kwargs.get("control"))
+        return 0
+
+    monkeypatch.setattr(bootstrap, "supervise", supervise)
+    assert bootstrap.main() == 0
+    assert observed == [parent_binding_sha256]
+    assert controls and controls[0].buffer == buffer
+
+
+def test_qualification_missing_profile_is_nonzero(tmp_path):
+    spec = importlib.util.spec_from_file_location("qualify", "tools/qualify_linux_worker.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    output = tmp_path / "evidence"
+    assert module.main(["--profile", str(tmp_path / "absent.json"), "--output", str(output)]) != 0
+    result = json.loads((output / "qualification.json").read_text())
+    assert result["status"] == "pending"
+    assert result["native_qualified"] is False
+
+
+@pytest.mark.parametrize(
+    "property,value", [("Volumes", {"/secret": {}}), ("Env", ["AWS_SECRET_ACCESS_KEY=secret"])]
+)
+def test_unsafe_image_refused(profile, paths, engine, monkeypatch, property, value):
+    original = profile.invoke
+
+    def changed(self, args):
+        result = original(args)
+        if args[:2] == ["image", "inspect"]:
+            doc = json.loads(result)
+            doc[0]["Config"] = {property: value}
+            return json.dumps(doc)
+        return result
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", changed)
+    with pytest.raises(owned.LinuxContainmentError):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+
+
+@pytest.mark.parametrize("reason", ["engine", "image", "fractional", "missing", "overlap"])
+def test_refusal_before_create(profile, paths, engine, monkeypatch, reason):
+    calls, _, _, _ = engine
+    budget = RunBudget()
+    inputs, output = paths
+    original = profile.invoke
+    if reason in {"engine", "image"}:
+
+        def broken(self, args):
+            if args[0] == ("info" if reason == "engine" else "image"):
+                raise owned.LinuxContainmentError("prerequisite_unavailable")
+            return original(args)
+
+        monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", broken)
+    elif reason == "fractional":
+        budget = RunBudget(cpu_limit=0.5)
+    elif reason == "missing":
+        inputs = inputs / "missing"
+    else:
+        output = inputs / "attempt"
+    with pytest.raises(owned.LinuxContainmentError):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], budget, inputs, output)
+    assert not any(a[0] == "create" for a in calls)
+
+
+@pytest.mark.parametrize("failure", ["cgroup", "digest", "attach", "nonce", "id"])
+def test_admission_and_owned_cleanup(profile, paths, engine, monkeypatch, failure):
+    calls, _, nonce, attach = engine
+    if failure == "cgroup":
+        attach.ready["limits"]["memory.max"] = "max"
+    elif failure == "digest":
+        attach.ready["bootstrap_sha256"] = "0" * 64
+    elif failure == "attach":
+
+        def fail(*args):
+            raise owned.LinuxContainmentError("attach_failed")
+
+        monkeypatch.setattr(owned, "_attach", fail)
+    else:
+        original = profile.invoke
+
+        def changed(self, args):
+            result = original(args)
+            if args[0] == "inspect":
+                doc = json.loads(result)
+                if failure == "nonce":
+                    doc[0]["Config"]["Labels"][owned.OWNER_LABEL] = "other"
+                else:
+                    doc[0]["Id"] = "c" * 64
+                return json.dumps(doc)
+            return result
+
+        monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", changed)
+    with pytest.raises(owned.LinuxContainmentError):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    assert "go" not in attach.sent
+    assert any(a[0] == "rm" for a in calls) == (failure not in {"nonce", "id"})
+
+
+def test_actual_oom_is_failure(profile, paths, engine):
+    _, state, _, _ = engine
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    state.update(Running=False, ExitCode=0, OOMKilled=True)
+    assert process.poll() != 0
+    assert process.evidence["oom_killed"] is True
+    process.close()
+
+
+def test_existing_output_and_symlink_refused(profile, paths, engine):
+    inputs, output = paths
+    output.mkdir()
+    with pytest.raises(owned.LinuxContainmentError):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), inputs, output)
+    link = profile.fixture_root / "link"
+    try:
+        link.symlink_to(inputs, target_is_directory=True)
+    except OSError:
+        pytest.skip("host cannot create symlinks; native mount witness remains required")
+    with pytest.raises(owned.LinuxContainmentError):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), link, output / "new")
+
+
+@pytest.mark.parametrize(
+    "key,bad",
+    [
+        ("memory.max", "max"),
+        ("memory.swap.max", "max"),
+        ("cpu.max", "max 100000"),
+        ("pids.max", "max"),
+    ],
+)
+def test_cgroup_admission(key, bad):
+    values = {
+        "memory.max": "67108864",
+        "memory.swap.max": "0",
+        "cpu.max": "100000 100000",
+        "pids.max": "128",
+    }
+    bootstrap.verify_limits(values, 64)
+    values[key] = bad
+    with pytest.raises(ValueError):
+        bootstrap.verify_limits(values, 64)
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="standalone Linux controller only")
+@pytest.mark.parametrize(
+    "mode,expected", [("normal", 0), ("nonzero", 7), ("eof", 124), ("silent", 124), ("output", 125)]
+)
+def test_standalone_controller(tmp_path, mode, expected):
+    # No fake cgroups: test the controller loop separately from native admission/PID1.
+    workload = {
+        "normal": "pass",
+        "nonzero": "raise SystemExit(7)",
+        "eof": "import time;time.sleep(20)",
+        "silent": "import time;time.sleep(20)",
+        "output": 'print("x"*200000)',
+    }[mode]
+    command = [sys.executable, "-B", "-c", workload]
+    script = (
+        "import sys;from pathlib import Path;"
+        "from quantmesh.research.linux_bootstrap import supervise;"
+        f"sys.exit(supervise({command!r},"
+        f"Path({str(tmp_path)!r}),2,watchdog_seconds=0.3,max_output_bytes=100000))"
+    )
+    p = subprocess.Popen(
+        [sys.executable, "-B", "-c", script],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if mode == "eof":
+        p.stdin.close()
+        p.stdin = None
+    try:
+        assert p.wait(timeout=5) == expected
+    finally:
+        if p.stdin is not None:
+            p.stdin.close()
+        p.stdout.close()
+        p.stderr.close()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="standalone Linux controller only")
+def test_standalone_reparented_descendant_and_sibling(tmp_path):
+    sibling = subprocess.Popen([sys.executable, "-B", "-c", "import time;time.sleep(20)"])
+    workload = (
+        "import os,time;from pathlib import Path;pid=os.fork();"
+        "Path('descendant.pid').write_text(str(pid)) if pid else time.sleep(20)"
+    )
+    script = (
+        "import sys;from pathlib import Path;"
+        "from quantmesh.research.linux_bootstrap import supervise;"
+        f"sys.exit(supervise({[sys.executable, '-B', '-c', workload]!r},Path({str(tmp_path)!r}),2))"
+    )
+    controller = subprocess.Popen([sys.executable, "-B", "-c", script], stdin=subprocess.PIPE)
+    try:
+        assert controller.wait(timeout=5) == 0
+        pid = int((tmp_path / "descendant.pid").read_text())
+        status = Path(f"/proc/{pid}/stat")
+        assert not status.exists() or status.read_text().split()[2] == "Z"
+        assert sibling.poll() is None
+    finally:
+        controller.stdin.close()
+        sibling.kill()
+        sibling.wait(timeout=5)

@@ -1,0 +1,29 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+__________ test_market_projection_refuses_non_us_instrument_identity __________
+
+    def test_market_projection_refuses_non_us_instrument_identity():
+        app = samples()["samples"][0]["symbols"]["AAPL"]["app"]
+        history = market_history(app)
+        history["primary"]["instrument"]["metadata"]["market"] = "HK"
+        for bar in history["primary"]["bars"]:
+            bar["instrument"]["metadata"]["market"] = "HK"
+        state = {"instruments": {"moomoo:AAPL": {
+            "venue": "moomoo", "instrument": "AAPL", "kinds": {"metrics": {
+                "payload": {"last": 101}, "provenance": "real",
+                "data_time": "2026-10-12T13:40:10Z", "received_at": "2026-10-12T13:40:10Z"}},
+            "session_freshness": {"provider_delay_seconds": None}}}}
+>       with pytest.raises(tool().WitnessError):
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       Failed: DID NOT RAISE WitnessError
+
+tests\test_server_market_witness.py:858: Failed
+============================== warnings summary ===============================
+tests/test_server_market_witness.py::test_market_projection_refuses_non_us_instrument_identity
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_server_market_witness.py::test_market_projection_refuses_non_us_instrument_identity
+1 failed, 72 deselected, 1 warning in 1.87s

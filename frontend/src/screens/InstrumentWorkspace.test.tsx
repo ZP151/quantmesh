@@ -841,6 +841,29 @@ describe('InstrumentWorkspaceScreen', () => {
     expect(screen.getByText(/Comparison limitation: Comparison uses a shared 1d resolution fallback/)).toBeInTheDocument()
   })
 
+  it('treats closed-session coverage normally while preserving proposal restrictions', async () => {
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-11T12:00:00Z'))
+    mockedWorkspace.mockResolvedValue({ ...workspace, live: { ...workspace.live,
+      provenance: 'real', label: 'stale', status: 'degraded', age_ms: 144_000_000,
+      data_time: '2026-10-09T20:00:00Z', received_at: '2026-10-09T20:00:01Z',
+      reason: 'last trade is display-only, not an executable quote; bid/ask depth is absent',
+      session_freshness: { market_state: 'closed', data_state: 'latest_session',
+        last_source_at: '2026-10-09T20:00:00Z', expected_last_bar_end: '2026-10-09T20:00:00Z',
+        next_open_at: '2026-10-12T13:30:00Z', calendar_version: 'XNYS:pinned',
+        reason: 'closed_latest_session_covered_without_latency_assumption',
+        policy_version: 'quantmesh:session-freshness:1', provider_delay_seconds: null,
+        opening_grace_seconds: 120,
+      },
+    }, proposal: { ...workspace.proposal, allowed: false, blockers: ['no bid/ask depth'] } })
+    try {
+      renderWorkspace()
+      expect(await screen.findByText('Market closed · Last session')).toBeInTheDocument()
+      expect(screen.getByText('Live evidence has limitations')).toBeInTheDocument()
+      expect(screen.queryByText('Stale market evidence')).not.toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Create paper proposal' })).toBeDisabled()
+    } finally { clock.mockRestore() }
+  })
+
   it('refreshes authoritative quote, position and risk truth for matching live updates', async () => {
     mockedWorkspace
       .mockResolvedValueOnce(workspace)

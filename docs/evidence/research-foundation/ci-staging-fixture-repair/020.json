@@ -1,0 +1,16 @@
+{
+  "snapshots": [
+    {
+      "node": "tests/test_live_moomoo.py::test_pump_shutdown_closes_owned_loop_and_executor",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    }
+  ],
+  "exit": 1
+}

@@ -1,0 +1,200 @@
+.............FF.................                                         [100%]
+=================================== FAILURES ===================================
+______ test_full_pytest_command_is_exhaustive_with_duration_reporting[nt] ______
+
+tmp_path = PosixPath('/var/tmp/quantmesh-portfolio-runtime-aihe1p21/ci-diagnostic-green-tmp/test_full_pytest_command_is_ex0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f332a182690>
+platform = 'nt'
+
+    @pytest.mark.parametrize("platform", ["nt", "posix"])
+    def test_full_pytest_command_is_exhaustive_with_duration_reporting(
+        tmp_path: Path,
+        monkeypatch,
+        platform,
+    ) -> None:
+        gate_root = tmp_path / "gate-root"
+        gate_root.mkdir()
+        commands: dict[str, list[str]] = {}
+    
+        def fake_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+            del cwd
+            if args == ["status", "--porcelain"]:
+                return subprocess.CompletedProcess(["git", *args], 0, stdout="")
+            if args == ["rev-parse", "--abbrev-ref", "HEAD"]:
+                return subprocess.CompletedProcess(["git", *args], 0, stdout="test-branch\n")
+            return subprocess.CompletedProcess(["git", *args], 0, stdout="a" * 40 + "\n")
+    
+        def fake_run_step(
+            name: str,
+            cmd: list[str],
+            cwd: Path,
+            logs: Path,
+            timeout: int,
+        ) -> tuple[bool, float]:
+            del cwd, logs, timeout
+            commands[name] = cmd
+            return True, 0.0
+    
+        monkeypatch.setattr(release_gate.tempfile, "mkdtemp", lambda prefix: str(gate_root))
+        monkeypatch.setattr(release_gate, "_git", fake_git)
+        monkeypatch.setattr(release_gate, "run_step", fake_run_step)
+        monkeypatch.setattr(sys, "argv", ["release_gate.py", "--keep"])
+        node_command = release_gate._node_command
+        monkeypatch.setattr(
+            release_gate, "_node_command", lambda argv: node_command(argv, platform=platform)
+        )
+    
+        assert release_gate.main() == 0
+        prefix = ["cmd", "/c"] if platform == "nt" else []
+        assert commands["npm ci (frontend deps)"] == prefix + ["npm", "ci"]
+        assert commands["npm audit --audit-level=high"] == prefix + [
+            "npm",
+            "audit",
+            "--audit-level=high",
+        ]
+        assert commands["frontend unit tests (vitest)"] == prefix + ["npx", "vitest", "run"]
+        full_pytest = commands["full pytest suite"]
+        pytest_index = full_pytest.index("pytest")
+>       assert full_pytest[pytest_index:] == [
+            "pytest",
+            "-vv",
+            "--durations=50",
+            "--basetemp",
+            str(gate_root / "pytest-tmp"),
+        ]
+E       AssertionError: assert ['pytest', '-...t/pytest-tmp'] == ['pytest', '-...t/pytest-tmp']
+E         
+E         At index 1 diff: '-q' != '-vv'
+E         Use -v to get more diff
+
+tests/test_release_gate.py:126: AssertionError
+----------------------------- Captured stdout call -----------------------------
+release gate over test-branch @ aaaaaaaaaaaa — source checkout clean, proceeding with a fresh deterministic environment
+
+=== release gate summary ===
+branch: test-branch   commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+source checkout clean at start: yes
+  PASS      0.0s  clone current commit
+  PASS      0.0s  release version consistent (metadata, notes, tag)
+  PASS      0.0s  fresh venv
+  PASS      0.0s  install release extras .[dev,research,e2e,moomoo]
+  PASS      0.0s  ruff check src tests tools
+  PASS      0.0s  trusted data tooling installed
+  PASS      0.0s  license review (closure contract)
+  PASS      0.0s  audit venv (isolated tooling)
+  PASS      0.0s  install pip-audit (isolated)
+  PASS      0.0s  pip-audit over requirements-audit.txt
+  PASS      0.0s  npm ci (frontend deps)
+  PASS      0.0s  frontend license review (locked closure)
+  PASS      0.0s  npm audit --audit-level=high
+  PASS      0.0s  frontend bundle current (build_frontend --check)
+  PASS      0.0s  frontend unit tests (vitest)
+  PASS      0.0s  full pytest suite
+  PASS      0.0s  golden path (walk)
+  PASS      0.0s  clean-checkout proof
+clone clean at end (no generated state): yes
+  playwright browser cache: absent (E2E tests skipped)
+
+RELEASE GATE PASSED — the release is verified in a fresh deterministic environment.
+temporary gate root kept (/var/tmp/quantmesh-portfolio-runtime-aihe1p21/ci-diagnostic-green-tmp/test_full_pytest_command_is_ex0/gate-root)
+____ test_full_pytest_command_is_exhaustive_with_duration_reporting[posix] _____
+
+tmp_path = PosixPath('/var/tmp/quantmesh-portfolio-runtime-aihe1p21/ci-diagnostic-green-tmp/test_full_pytest_command_is_ex1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f332a181550>
+platform = 'posix'
+
+    @pytest.mark.parametrize("platform", ["nt", "posix"])
+    def test_full_pytest_command_is_exhaustive_with_duration_reporting(
+        tmp_path: Path,
+        monkeypatch,
+        platform,
+    ) -> None:
+        gate_root = tmp_path / "gate-root"
+        gate_root.mkdir()
+        commands: dict[str, list[str]] = {}
+    
+        def fake_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+            del cwd
+            if args == ["status", "--porcelain"]:
+                return subprocess.CompletedProcess(["git", *args], 0, stdout="")
+            if args == ["rev-parse", "--abbrev-ref", "HEAD"]:
+                return subprocess.CompletedProcess(["git", *args], 0, stdout="test-branch\n")
+            return subprocess.CompletedProcess(["git", *args], 0, stdout="a" * 40 + "\n")
+    
+        def fake_run_step(
+            name: str,
+            cmd: list[str],
+            cwd: Path,
+            logs: Path,
+            timeout: int,
+        ) -> tuple[bool, float]:
+            del cwd, logs, timeout
+            commands[name] = cmd
+            return True, 0.0
+    
+        monkeypatch.setattr(release_gate.tempfile, "mkdtemp", lambda prefix: str(gate_root))
+        monkeypatch.setattr(release_gate, "_git", fake_git)
+        monkeypatch.setattr(release_gate, "run_step", fake_run_step)
+        monkeypatch.setattr(sys, "argv", ["release_gate.py", "--keep"])
+        node_command = release_gate._node_command
+        monkeypatch.setattr(
+            release_gate, "_node_command", lambda argv: node_command(argv, platform=platform)
+        )
+    
+        assert release_gate.main() == 0
+        prefix = ["cmd", "/c"] if platform == "nt" else []
+        assert commands["npm ci (frontend deps)"] == prefix + ["npm", "ci"]
+        assert commands["npm audit --audit-level=high"] == prefix + [
+            "npm",
+            "audit",
+            "--audit-level=high",
+        ]
+        assert commands["frontend unit tests (vitest)"] == prefix + ["npx", "vitest", "run"]
+        full_pytest = commands["full pytest suite"]
+        pytest_index = full_pytest.index("pytest")
+>       assert full_pytest[pytest_index:] == [
+            "pytest",
+            "-vv",
+            "--durations=50",
+            "--basetemp",
+            str(gate_root / "pytest-tmp"),
+        ]
+E       AssertionError: assert ['pytest', '-...t/pytest-tmp'] == ['pytest', '-...t/pytest-tmp']
+E         
+E         At index 1 diff: '-q' != '-vv'
+E         Use -v to get more diff
+
+tests/test_release_gate.py:126: AssertionError
+----------------------------- Captured stdout call -----------------------------
+release gate over test-branch @ aaaaaaaaaaaa — source checkout clean, proceeding with a fresh deterministic environment
+
+=== release gate summary ===
+branch: test-branch   commit: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+source checkout clean at start: yes
+  PASS      0.0s  clone current commit
+  PASS      0.0s  release version consistent (metadata, notes, tag)
+  PASS      0.0s  fresh venv
+  PASS      0.0s  install release extras .[dev,research,e2e,moomoo]
+  PASS      0.0s  ruff check src tests tools
+  PASS      0.0s  trusted data tooling installed
+  PASS      0.0s  license review (closure contract)
+  PASS      0.0s  audit venv (isolated tooling)
+  PASS      0.0s  install pip-audit (isolated)
+  PASS      0.0s  pip-audit over requirements-audit.txt
+  PASS      0.0s  npm ci (frontend deps)
+  PASS      0.0s  frontend license review (locked closure)
+  PASS      0.0s  npm audit --audit-level=high
+  PASS      0.0s  frontend bundle current (build_frontend --check)
+  PASS      0.0s  frontend unit tests (vitest)
+  PASS      0.0s  full pytest suite
+  PASS      0.0s  golden path (walk)
+  PASS      0.0s  clean-checkout proof
+clone clean at end (no generated state): yes
+  playwright browser cache: absent (E2E tests skipped)
+
+RELEASE GATE PASSED — the release is verified in a fresh deterministic environment.
+temporary gate root kept (/var/tmp/quantmesh-portfolio-runtime-aihe1p21/ci-diagnostic-green-tmp/test_full_pytest_command_is_ex1/gate-root)
+=========================== short test summary info ============================
+FAILED tests/test_release_gate.py::test_full_pytest_command_is_exhaustive_with_duration_reporting[nt]
+FAILED tests/test_release_gate.py::test_full_pytest_command_is_exhaustive_with_duration_reporting[posix]
+2 failed, 30 passed in 13.69s

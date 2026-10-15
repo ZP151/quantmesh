@@ -1,0 +1,32 @@
+{
+  "started_at": "2026-10-12T21:31:06.101065+00:00",
+  "result": "observed",
+  "exit": 0,
+  "system": {
+    "observed_at": "2026-10-12T21:31:06.799239+00:00",
+    "hostname": "ip-172-26-4-60",
+    "machine_identity_sha256": "a6645ff4a0ce2ff2625300b3d084e4ed878ce0b3a8cd9a7bd30f0f7126085191",
+    "platform": "Linux",
+    "architecture": "x86_64",
+    "python_version": "3.12.3",
+    "uid": 1000,
+    "visible_cpus": 2,
+    "memory": {
+      "MemTotal_kib": 8003864,
+      "MemAvailable_kib": 3128128,
+      "SwapTotal_kib": 0,
+      "SwapFree_kib": 0
+    },
+    "disk": {
+      "path": "/var/lib",
+      "total_bytes": 165295407104,
+      "free_bytes": 142649958400
+    },
+    "candidate_executable_exists": false,
+    "candidate_profile_exists": false,
+    "docker_cli_exists": false,
+    "postgres_client_exists": false,
+    "scope": "read-only-system-resource-intake; no-market-or-vendor-state",
+    "runtime_and_source_acceptance": false
+  }
+}

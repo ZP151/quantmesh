@@ -1,0 +1,82 @@
+.................................................FFF.F                   [100%]
+=================================== FAILURES ===================================
+_____ test_generated_configuration_has_fixed_direct_guard_and_no_recording _____
+
+    def test_generated_configuration_has_fixed_direct_guard_and_no_recording():
+        config = stage._tmux_config(stage.StagingWindow(permit())).decode()
+        assert "new-session -d -s opend /usr/bin/python3 -I -S -B " in config
+        assert "--pane --nonce " + "a" * 32 in config
+        for setting in [
+            "history-limit 0",
+            "set-clipboard off",
+            "buffer-limit 1",
+            "exit-unattached off",
+            "unbind-key -a",
+        ]:
+>           assert setting in config
+E           AssertionError: assert 'buffer-limit 1' in 'set-option -g history-limit 0\nset-option -s buffer-limit 0\nset-option -s message-limit 0\nset-option -s set-clipboa...pend /usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --pane --nonce aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n'
+
+tests/test_opend_staging_window.py:231: AssertionError
+___________ test_registry_is_retained_before_interrupt_is_unblocked ____________
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="native registry interruption")
+    def test_registry_is_retained_before_interrupt_is_unblocked():
+        registry = []
+        with pytest.raises(stage.StageDenied, match="registration_interrupted") as caught:
+>           stage._spawn_gated(None, fixture=True, seconds=2,
+                               failure="registered_then_interrupt", registry=registry)
+E           TypeError: _spawn_gated() got an unexpected keyword argument 'registry'
+
+tests/test_opend_staging_window.py:240: TypeError
+_____________ test_no_effect_check_window_redacts_unexpected_error _____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7fb4a3bea390>
+capsys = <_pytest.capture.CaptureFixture object at 0x7fb4a3be94f0>
+
+    def test_no_effect_check_window_redacts_unexpected_error(monkeypatch, capsys):
+        def denied(*args):
+            raise RuntimeError("noncredential-fixture-marker")
+        monkeypatch.setattr(stage, "load_staging_window", denied)
+>       assert stage.main(["--check-window", "--nonce", "a" * 32]) == 2
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_opend_staging_window.py:251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+deploy/aws/opend/stage_console.py:1057: in main
+    window = load_staging_window()
+             ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ()
+
+    def denied(*args):
+>       raise RuntimeError("noncredential-fixture-marker")
+E       RuntimeError: noncredential-fixture-marker
+
+tests/test_opend_staging_window.py:249: RuntimeError
+______________ test_nonce_claim_is_exclusive_and_survives_reopen _______________
+
+tmp_path = PosixPath('/mnt/c/Users/15492/.codex-clean/worktrees/4836/QuantMesh/output/169-staging-window/native-temp/test_nonce_claim_is_exclusive_0')
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="native durable nonce claim")
+    def test_nonce_claim_is_exclusive_and_survives_reopen(tmp_path):
+        window = stage.StagingWindow(permit())
+        fd = os.open(tmp_path, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            stage._claim(window, fd)
+            with pytest.raises(stage.StageDenied, match="duplicate_nonce"):
+                stage._claim(window, fd)
+>           assert (tmp_path / window.nonce).stat().st_mode & 0o777 == 0o600
+E           AssertionError: assert (33279 & 511) == 384
+E            +  where 33279 = os.stat_result(st_mode=33279, st_ino=1970324845655697, st_dev=67, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1791849601, st_mtime=1791849601, st_ctime=1791849601).st_mode
+E            +    where os.stat_result(st_mode=33279, st_ino=1970324845655697, st_dev=67, st_nlink=1, st_uid=1000, st_gid=1000, st_size=0, st_atime=1791849601, st_mtime=1791849601, st_ctime=1791849601) = stat()
+E            +      where stat = (PosixPath('/mnt/c/Users/15492/.codex-clean/worktrees/4836/QuantMesh/output/169-staging-window/native-temp/test_nonce_claim_is_exclusive_0') / 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa').stat
+E            +        where 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' = StagingWindow(claims={'schema_version': 1, 'purpose': 'opend_initialization_qualification', 'nonce': 'aaaaaaaaaaaaaaaa...on': 'success', 'operator_window_approved': True, 'new_device_approved': True, 'market_right_transfer_approved': True}).nonce
+
+tests/test_opend_staging_window.py:279: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_opend_staging_window.py::test_generated_configuration_has_fixed_direct_guard_and_no_recording
+FAILED tests/test_opend_staging_window.py::test_registry_is_retained_before_interrupt_is_unblocked
+FAILED tests/test_opend_staging_window.py::test_no_effect_check_window_redacts_unexpected_error
+FAILED tests/test_opend_staging_window.py::test_nonce_claim_is_exclusive_and_survives_reopen
+4 failed, 50 passed in 6.50s

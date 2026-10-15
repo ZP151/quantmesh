@@ -68,9 +68,7 @@ def _upd(
         received_at=received_at,
         # STATUS updates carry no payload (contract validator); the rest
         # of the kinds default to a valid quote shape.
-        payload=(
-            payload if payload is not None else {"bid": 100.0, "ask": 100.5}
-        )
+        payload=(payload if payload is not None else {"bid": 100.0, "ask": 100.5})
         if kind is not UpdateKind.STATUS
         else {},
         state=state,
@@ -89,9 +87,9 @@ def _port_in_use() -> bool:
     return False
 
 
-def _wait_for_server() -> None:
+def _wait_for_server(server: uvicorn.Server) -> None:
     for _ in range(400):
-        if _port_in_use():
+        if server.started:
             return
         threading.Event().wait(0.1)
     raise AssertionError(f"uvicorn never came up on {SSE_HOST}:{SSE_PORT}")
@@ -112,7 +110,7 @@ def sse_env(tmp_path_factory):
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()
     try:
-        _wait_for_server()
+        _wait_for_server(server)
         yield SSE_BASE_URL, feed
     finally:
         server.should_exit = True
@@ -129,6 +127,27 @@ def live_app(tmp_path):
     )
     with TestClient(app) as client:
         yield client, app, feed
+
+
+def test_sse_readiness_does_not_compete_for_the_server_port(tmp_path_factory, monkeypatch):
+    initial_port_check = _port_in_use
+    calls = 0
+
+    def port_check():
+        nonlocal calls
+        calls += 1
+        assert calls == 1, "readiness must not bind the server's listening port"
+        return initial_port_check()
+
+    monkeypatch.setattr(__name__ + "._port_in_use", port_check)
+    fixture = sse_env.__wrapped__(tmp_path_factory)
+    try:
+        base_url, _feed = next(fixture)
+        with httpx.Client(timeout=5.0) as client:
+            assert client.get(base_url + "/api/live/state").status_code == 200
+        assert calls == 1
+    finally:
+        fixture.close()
 
 
 @pytest.fixture()
@@ -181,26 +200,16 @@ class TestStateEndpoint:
         assert kinds["quote"]["age_ms"] >= 30_000
         assert kinds["trade"]["label"] == "synthetic"
 
-    def test_root_and_api_mounts_agree(self, live_app) -> None:
+    def test_root_and_api_mounts_agree(self, live_app, monkeypatch) -> None:
         client, _app, feed = live_app
         feed.publish_threadsafe(_upd())
-        # generated_at and age_ms are wall-clock measurements taken per
-        # request, so they legitimately differ by milliseconds between
-        # the two calls — everything else is the same payload.
-        def without_clock(snapshot: dict) -> dict:
-            return {
-                instrument: {
-                    **summary,
-                    "kinds": {
-                        kind: {key: view[key] for key in view if key != "age_ms"}
-                        for kind, view in summary["kinds"].items()
-                    },
-                }
-                for instrument, summary in snapshot["instruments"].items()
-            }
-
-        root_mount = without_clock(client.get("/live/state").json())
-        api_mount = without_clock(client.get("/api/live/state").json())
+        # Both mounts evaluate the complete payload at the same test clock;
+        # generated_at, age_ms and nested freshness timestamps are all checked.
+        evaluated_at = datetime.now(UTC)
+        latest_state = feed.latest_state
+        monkeypatch.setattr(feed, "latest_state", lambda: latest_state(now=evaluated_at))
+        root_mount = client.get("/live/state").json()
+        api_mount = client.get("/api/live/state").json()
         assert root_mount == api_mount
 
     def test_openapi_lists_both_mounts(self, live_app) -> None:
@@ -418,9 +427,7 @@ class TestReplayEndpoint:
         assert response.status_code == 404
         assert response.json()["detail"] == "the replay lake holds no recorded updates yet"
 
-    def test_replay_returns_updates_in_append_order_with_provenance(
-        self, live_app
-    ) -> None:
+    def test_replay_returns_updates_in_append_order_with_provenance(self, live_app) -> None:
         client, _app, feed = live_app
         # The second append carries an older received_at — append order
         # (local_seq) must still win, exactly like the live cache fold.
@@ -446,9 +453,7 @@ class TestReplayEndpoint:
         assert updates[1]["sequence_gap"] is True
         # The lake stores UTC instants; the wire may render them with a
         # trailing Z instead of +00:00 — same instant either way.
-        assert datetime.fromisoformat(
-            updates[1]["received_at"].replace("Z", "+00:00")
-        ) == T0
+        assert datetime.fromisoformat(updates[1]["received_at"].replace("Z", "+00:00")) == T0
 
     def test_replay_window_bounds_filter_on_received_at(self, live_app) -> None:
         client, _app, feed = live_app
@@ -557,9 +562,7 @@ class TestPriceTrail:
         t0 = T0
         for i, close in enumerate([100.0, 101.0, 102.0, 103.0]):
             feed.publish_threadsafe(self._candle("BTC", close, at=t0 + timedelta(seconds=60 * i)))
-        response = client.get(
-            "/api/live/price-trail?identities=hyperliquid:BTC&limit=10"
-        )
+        response = client.get("/api/live/price-trail?identities=hyperliquid:BTC&limit=10")
         assert response.status_code == 200
         assert response.json()["trail"]["hyperliquid:BTC"] == [
             100.0,
@@ -575,9 +578,7 @@ class TestPriceTrail:
             feed.publish_threadsafe(
                 self._candle("BTC", 100.5 + i, at=t0 + timedelta(seconds=60 * i))
             )
-        response = client.get(
-            "/api/live/price-trail?identities=hyperliquid:BTC&limit=20"
-        )
+        response = client.get("/api/live/price-trail?identities=hyperliquid:BTC&limit=20")
         assert response.status_code == 200
         assert len(response.json()["trail"]["hyperliquid:BTC"]) == 20
 
@@ -586,34 +587,22 @@ class TestPriceTrail:
         t0 = T0
         feed.publish_threadsafe(_upd())  # quote, not candle — must be ignored
         feed.publish_threadsafe(self._candle("BTC", 100.5, at=t0))
-        response = client.get(
-            "/api/live/price-trail?identities=hyperliquid:BTC&limit=10"
-        )
+        response = client.get("/api/live/price-trail?identities=hyperliquid:BTC&limit=10")
         assert response.status_code == 200
         assert response.json()["trail"]["hyperliquid:BTC"] == [100.5]
 
     def test_missing_symbol_returns_empty_list(self, live_app) -> None:
         client, _app, _feed = live_app
-        response = client.get(
-            "/api/live/price-trail?identities=hyperliquid:GHOST&limit=10"
-        )
+        response = client.get("/api/live/price-trail?identities=hyperliquid:GHOST&limit=10")
         assert response.status_code == 200
         assert response.json()["trail"]["hyperliquid:GHOST"] == []
 
-    def test_vanished_duplicate_venue_cannot_contaminate_remaining_trail(
-        self, live_app
-    ) -> None:
+    def test_vanished_duplicate_venue_cannot_contaminate_remaining_trail(self, live_app) -> None:
         client, _app, feed = live_app
-        feed.publish_threadsafe(
-            self._candle("BTC", 100.0, at=T0, venue=Venue.HYPERLIQUID)
-        )
-        feed.publish_threadsafe(
-            self._candle("BTC", 200.0, at=T0, venue=Venue.MOOMOO)
-        )
+        feed.publish_threadsafe(self._candle("BTC", 100.0, at=T0, venue=Venue.HYPERLIQUID))
+        feed.publish_threadsafe(self._candle("BTC", 200.0, at=T0, venue=Venue.MOOMOO))
 
-        response = client.get(
-            "/api/live/price-trail?identities=hyperliquid:BTC&limit=10"
-        )
+        response = client.get("/api/live/price-trail?identities=hyperliquid:BTC&limit=10")
 
         assert response.status_code == 200
         assert response.json()["trail"] == {"hyperliquid:BTC": [100.0]}
@@ -624,9 +613,7 @@ class TestPriceTrail:
             account=PaperAccount(cash=100_000.0), live_feed=feed, host="127.0.0.1"
         )
         with TestClient(app) as client:
-            response = client.get(
-                "/api/live/price-trail?identities=hyperliquid:BTC"
-            )
+            response = client.get("/api/live/price-trail?identities=hyperliquid:BTC")
         assert response.status_code == 404
         assert response.json()["detail"] == "no replay lake is attached"
 
@@ -640,9 +627,7 @@ class TestPriceTrail:
         client, _app, _feed = live_app
         response = client.get("/api/live/price-trail?identities=BTC&limit=10")
         assert response.status_code == 422
-        assert response.json()["detail"] == (
-            "identities must use canonical venue:instrument form"
-        )
+        assert response.json()["detail"] == ("identities must use canonical venue:instrument form")
 
     def test_legacy_symbols_parameter_is_not_accepted(self, live_app) -> None:
         client, _app, _feed = live_app
@@ -653,12 +638,8 @@ class TestPriceTrail:
     def test_mounts_agree(self, live_app) -> None:
         client, _app, feed = live_app
         feed.publish_threadsafe(self._candle("BTC", 100.5, at=T0))
-        root = client.get(
-            "/live/price-trail?identities=hyperliquid:BTC"
-        ).json()
-        api = client.get(
-            "/api/live/price-trail?identities=hyperliquid:BTC"
-        ).json()
+        root = client.get("/live/price-trail?identities=hyperliquid:BTC").json()
+        api = client.get("/api/live/price-trail?identities=hyperliquid:BTC").json()
         assert root == api
 
 

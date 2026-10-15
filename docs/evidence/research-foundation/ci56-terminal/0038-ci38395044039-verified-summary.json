@@ -1,0 +1,34 @@
+{
+  "run": 38395044039,
+  "head": "56d95cfeaea74f3faeba33f3621fbeafbf582df0",
+  "conclusion": "success",
+  "completed_at": "2026-10-13T13:06:34Z",
+  "actual_checkout": "db7d2b31df7150b590bc32e7cb89b0d1836fcc80",
+  "tree": "86b871043c72e0ddf7468c3333ea60fb0aebee53",
+  "trees_match": true,
+  "full_release_steps": 18,
+  "full_pytest": {
+    "passed": 4557,
+    "skipped": 139,
+    "seconds": 3259.1
+  },
+  "frontend_passed": 419,
+  "independent_service": {
+    "passed": 202,
+    "skipped": 5,
+    "total": 207,
+    "licensed_packages": 81,
+    "profile": "OFFLINE_SCRIPTED_ONLY"
+  },
+  "required_jobs": [
+    "classify",
+    "fast",
+    "python",
+    "release",
+    "research_service"
+  ],
+  "old_CI_rerun": false,
+  "production_deployed": false,
+  "numerical_certificate": false,
+  "full_option_A_complete": false
+}

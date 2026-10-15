@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0019592000171542168,
+      "location": [
+        "tests\\test_live_buffer.py",
+        667,
+        "TestLatest.test_latest_uses_bounded_memory_for_a_large_lake"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.270000737160444e-05,
+      "location": [
+        "tests\\test_live_buffer.py",
+        667,
+        "TestLatest.test_latest_uses_bounded_memory_for_a_large_lake"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012900005094707012,
+      "location": [
+        "tests\\test_live_buffer.py",
+        667,
+        "TestLatest.test_latest_uses_bounded_memory_for_a_large_lake"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

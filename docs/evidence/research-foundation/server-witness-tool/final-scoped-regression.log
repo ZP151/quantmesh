@@ -1,0 +1,22 @@
+........................................................................ [ 29%]
+........................................................................ [ 59%]
+........................................................................ [ 89%]
+..........................                                               [100%]
+============================== warnings summary ===============================
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+tests/test_server_market_witness.py::test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\utils\pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+242 passed, 6 warnings in 12.11s

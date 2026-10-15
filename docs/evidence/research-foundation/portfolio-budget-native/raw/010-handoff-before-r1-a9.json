@@ -1,0 +1,2669 @@
+{
+  "schema_version": 2,
+  "status": "ACTUAL_WITNESS_REVIEW_READY",
+  "implementation_complete": true,
+  "task_2_complete": false,
+  "review_pending": true,
+  "workspace": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh",
+  "branch": "codex/0038-portfolio-verifier-native",
+  "baseline": "216b378192bbc0a1742a28b7a1fc75a86ae2fda9",
+  "reviewed_implementation": "b10762883edc1bbad164951d1a1adfb9f0f7457c",
+  "head": "a9b9ec693218069dc11dcacfc8f16e65cd77a4f5",
+  "head_tree": "9ee4379d520d55f44685e1d26ac3da07ad7b8489",
+  "main_preserved": "c74ea03f16c9159e96861c0fb60a7af560bc52eb",
+  "plan": "C:/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/docs/superpowers/plans/2026-10-13-research-portfolio-budgets.md",
+  "files": [
+    {
+      "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\docs\\runbooks\\portfolio-budget-qualification.md",
+      "sha256": "8f2d54d768eb00d7c6d50e32b82c420aaca7e194b1249193ecbae6f0662e6aa1"
+    },
+    {
+      "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\tests\\test_portfolio_budget_qualification.py",
+      "sha256": "424187c0aca37966c283adc2ee930126eae10d141a3203132eada40d65c3fd23"
+    },
+    {
+      "path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\tools\\qualify_portfolio_budgets.py",
+      "sha256": "f7ccd7bf41fe45fd5b1c98cba22be6a4bfdd77d053d2efa4fda07b3314d6475c"
+    }
+  ],
+  "source_scope": "Exactly three leaf-file delta from reviewed b107; service/core/locks/historical qualifiers unchanged by verifier.",
+  "native_root": {
+    "root": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m",
+    "profile": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/profile-final.json",
+    "checkout": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout",
+    "candidate_build": "a9b9ec693218069dc11dcacfc8f16e65cd77a4f5",
+    "reviewed_implementation": "b10762883edc1bbad164951d1a1adfb9f0f7457c",
+    "interpreter": "/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python",
+    "dependency_RECORD_entries": 6669,
+    "licensed_packages": 81,
+    "bytecode_files": 0,
+    "pg_prefix_entries": 748,
+    "pg_prefix_manifest_sha256": "f54df012fca9e020ad14fcfc66555ab4daf0bbca02812b5410f67f0f2bcea3c4",
+    "python_binary_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "builder_imported": false,
+    "pg_started": false
+  },
+  "tests": {
+    "preparation_history": {
+      "initial_attempt": "red.stdout retained:24 setup assertion errors, corrected test fixture before implementation",
+      "red_confirmed": {
+        "count": 24,
+        "outcome": "failed missing verifier",
+        "exit": 1,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red-confirmed.json"
+      },
+      "first_green": {
+        "count": 24,
+        "exit": 0,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation.json"
+      },
+      "final_green": {
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0,
+        "seconds": 1.57,
+        "exit": 0,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence.json"
+      },
+      "ruff_exit": 0,
+      "format_exit": 0,
+      "diff_exit": 0,
+      "source_admission": "Windows source import via /mnt/c for unit preparation only; not a native qualifying checkout",
+      "resumed_contract_red": {
+        "failed": 2,
+        "passed": 26,
+        "native_skipped": 2,
+        "exit": 1,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-contract-red.json"
+      },
+      "resumed_contract_green": {
+        "passed": 28,
+        "native_skipped": 2,
+        "exit": 0,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-admission-green.json"
+      },
+      "executor_cleanup_red": {
+        "failed": 2,
+        "passed": 28,
+        "native_skipped": 2,
+        "exit": 1,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-red.json"
+      },
+      "executor_cleanup_green": {
+        "passed": 30,
+        "native_skipped": 2,
+        "exit": 0,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-green.json",
+        "cluster_double_scope": "SYNTHETIC_EXECUTOR_CONTROL_FLOW_UNIT"
+      },
+      "credential_cli_red": {
+        "failed": 1,
+        "passed": 31,
+        "native_skipped": 2,
+        "exit": 1,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red-confirmed.json"
+      },
+      "executor_current_unit_green": {
+        "passed": 32,
+        "native_skipped": 2,
+        "exit": 0,
+        "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-final-pre-native.json",
+        "qualification": false
+      },
+      "no_bytecode_child_flags": "Actual Python child stdout demonstrates [sys.dont_write_bytecode=True,PYTHONDONTWRITEBYTECODE=1]; controlled worker paths exclude build-tools."
+    },
+    "first_native": {
+      "build": "bb9f59dc5b5073dd073177a46c047443e98c5333",
+      "passed": 34,
+      "skipped": 0,
+      "exit": 0,
+      "seconds": 18.44,
+      "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-first.json"
+    },
+    "final_native": {
+      "build": "a9b9ec693218069dc11dcacfc8f16e65cd77a4f5",
+      "passed": 35,
+      "skipped": 0,
+      "failed": 0,
+      "exit": 0,
+      "seconds": 15.66,
+      "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final.json",
+      "junit": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\native-final.junit.xml"
+    },
+    "targeted_only": true,
+    "full_service_or_core_suite_run": false,
+    "ruff_exit": 0,
+    "format_exit": 0,
+    "diff_exit": 0,
+    "fresh_output_red_green": {
+      "red": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-red.json",
+      "green": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-green.json"
+    }
+  },
+  "native_witness": {
+    "success": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\witness.json",
+    "success_sha256": "250b113fef18395f71faf53644adb478ac95c1e187712af405af9ee390ba6652",
+    "failure_injection": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\witness.json",
+    "failure_injection_sha256": "1b0ef189c97351dbcf40a83c36aeae6fe16df0a4ae3824e20277033bd5354461",
+    "scope": "OWNED_LOCAL_POSTGRES_SCRIPTED_PORTFOLIO_ONLY",
+    "source_build": "a9b9ec693218069dc11dcacfc8f16e65cd77a4f5",
+    "source_hashes": {
+      "services/research_agent/src/qm_research_agent/accounting.py": "eae4766dc8b7ae94a98bd1e0b6a928939362886705cd1e0d60448d89a4c9d55e",
+      "services/research_agent/src/qm_research_agent/budgets.py": "cf599bd8bea3e7c492491a882f12cd66a1e9beb818ca1412af0dc96bf2f30986",
+      "services/research_agent/src/qm_research_agent/runtime.py": "2348a562e0627ffbaa150b6dc49ed5f407a7a0810dd9923d849c7e8a801bd8a0",
+      "services/research_agent/src/qm_research_agent/store.py": "bbce6bc86098e6890653d8861b69f197ab3c5344f124a887f4699012ac7a16e2",
+      "src/quantmesh/research/job_store.py": "3d56ded5118da9a1783481bfb769853a4f2def4545fd40a635950e78e6d3a989",
+      "src/quantmesh/research/jobs.py": "fd6abdb293a8092fba65b5239abdf4410ebb2e0cf4b8e5294f9c21dd53981812",
+      "tools/qualify_owned_postgres.py": "ee6f1f2306d7864f2b616aecadae5b4028bce05981ec3474a978b11a2bf9dbb3",
+      "tools/qualify_portfolio_budgets.py": "f7ccd7bf41fe45fd5b1c98cba22be6a4bfdd77d053d2efa4fda07b3314d6475c",
+      "tools/qualify_research_backup.py": "01bbee995c7a7bdad82c92908e92e44d69f061fed369bc987a07b6fad206b089"
+    },
+    "race": {
+      "denied_scripted_invocations": 0,
+      "independent_processes": 2,
+      "observer_sha256": "ea09e14f96f7dd8b72cd33aed843582f696a5cba9994a77aa714224666c9bcee",
+      "results": [
+        {
+          "admitted": true,
+          "invocations": 1,
+          "job_id": "2e750b0838d842f58b59a115fef3fae4",
+          "observer_sha256": "ea09e14f96f7dd8b72cd33aed843582f696a5cba9994a77aa714224666c9bcee",
+          "pid": 44841
+        },
+        {
+          "admitted": false,
+          "invocations": 0,
+          "job_id": "b8f4869a7ecb4bb6945ce1fa7f1db8ad",
+          "observer_sha256": null,
+          "pid": 44842
+        }
+      ],
+      "winning_scripted_invocations": 1
+    },
+    "restore": {
+      "complete_state_equal": true,
+      "dump_sha256": "7ecfeb1830409897c506dd6a2b63ac00cd54e88fe72e1357f9ea2093a9ac9ea3",
+      "same_fixture_store_clock": true,
+      "snapshot_id": "00000026-00000002-1",
+      "source_and_restored_categories_exhausted": true,
+      "source_reopened": true,
+      "tables": [
+        "analysis_outbox",
+        "jobs",
+        "model_effects",
+        "qm_portfolio_policy",
+        "qm_portfolio_reservations",
+        "qm_portfolio_schema",
+        "qm_schema"
+      ]
+    },
+    "negative_witnesses": {
+      "atomic_rollback": {
+        "both_inserts_observed_inside_transaction": true,
+        "scripted_invocations": 0
+      },
+      "backward_clock": {
+        "denied": true,
+        "fixture_clock_test": true,
+        "scripted_invocations": 0
+      },
+      "malformed_amount": {
+        "denied": true,
+        "scripted_invocations": 0
+      },
+      "malformed_history": {
+        "denied": true,
+        "only_new_restored_cluster_mutated": true,
+        "scripted_invocations": 0
+      },
+      "mismatched_policy": {
+        "denied": true,
+        "scripted_invocations": 0
+      },
+      "missing_policy": {
+        "denied": true,
+        "scripted_invocations": 0
+      },
+      "unknown_accounting_version": {
+        "denied": true,
+        "scripted_invocations": 0
+      }
+    },
+    "clusters": [
+      {
+        "data": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/source/data",
+        "pid": 44563,
+        "start_ticks": "1484114",
+        "system_id": "7695973655032790542",
+        "terminal_exit": 0
+      },
+      {
+        "data": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/sibling/data",
+        "pid": 44589,
+        "start_ticks": "1484163",
+        "system_id": "7695973657314455080",
+        "terminal_exit": 0
+      },
+      {
+        "data": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/restored/data",
+        "pid": 45074,
+        "start_ticks": "1484685",
+        "system_id": "7695973679743291405",
+        "terminal_exit": 0
+      }
+    ],
+    "children": [
+      {
+        "binary_sha256": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/initdb",
+        "pid": 44550,
+        "start_ticks": "1484070",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_controldata",
+        "pid": 44574,
+        "start_ticks": "1484119",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/initdb",
+        "pid": 44576,
+        "start_ticks": "1484121",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_controldata",
+        "pid": 44600,
+        "start_ticks": "1484169",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+        "executable": "/usr/bin/python3.12",
+        "pid": 44841,
+        "start_ticks": "1484227",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+        "executable": "/usr/bin/python3.12",
+        "pid": 44842,
+        "start_ticks": "1484228",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "137cf7c068b3459f5205f97f27cd206b537228e031d721f52535daf29c0ab6f8",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_dump",
+        "pid": 45059,
+        "start_ticks": "1484639",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/initdb",
+        "pid": 45061,
+        "start_ticks": "1484644",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_controldata",
+        "pid": 45085,
+        "start_ticks": "1484691",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "cb92c83f39bf0087f9ba1b65cd2763d86ac6695a8f46e343db9505ee88f1bf29",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_restore",
+        "pid": 45088,
+        "start_ticks": "1484694",
+        "terminal_exit": 0
+      }
+    ],
+    "failure_clusters": [
+      {
+        "data": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/source/data",
+        "pid": 45236,
+        "start_ticks": "1485155",
+        "system_id": "7695973699936366767",
+        "terminal_exit": 0
+      },
+      {
+        "data": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/sibling/data",
+        "pid": 45262,
+        "start_ticks": "1485204",
+        "system_id": "7695973701954822345",
+        "terminal_exit": 0
+      }
+    ],
+    "failure_children": [
+      {
+        "binary_sha256": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/initdb",
+        "pid": 45223,
+        "start_ticks": "1485113",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_controldata",
+        "pid": 45247,
+        "start_ticks": "1485161",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/initdb",
+        "pid": 45249,
+        "start_ticks": "1485162",
+        "terminal_exit": 0
+      },
+      {
+        "binary_sha256": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff",
+        "executable": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/prefix/bin/pg_controldata",
+        "pid": 45273,
+        "start_ticks": "1485210",
+        "terminal_exit": 0
+      }
+    ],
+    "cleanup_failures": [],
+    "sibling_survived_individual_cleanup": true,
+    "sibling_survived_failure_cleanup": true,
+    "known_private_input_files_remaining": [],
+    "all_known_handles_terminal": true,
+    "observer_pid_is_distinct_from_two_contenders": true,
+    "report_profile": "SCRIPTED_CONTRACT_FIXTURE_ONLY",
+    "provider_profile": "SCRIPTED_LOCAL_RECEIPT_NO_NETWORK",
+    "clock_profile": "actual-UTC-minted held store fixture clock; persisted authority never reset; not real lease-expiry/monthly soak evidence"
+  },
+  "default_preflight": {
+    "receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight-cwd-corrected.json",
+    "exit": 0,
+    "output_directory_absent": true,
+    "original_wrong_cwd_refusal_preserved": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight.json",
+    "original_exit": 2,
+    "reason": "Wrapper initially launched from Windows-backed cwd; corrected to exact native checkout, unchanged admission."
+  },
+  "dependency_admission": {
+    "qualified_for_owned_fixture": true,
+    "interpreter": "/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python",
+    "binary_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "lock_sha256": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a",
+    "verified_RECORD_entries": 6669,
+    "packages_and_licenses": 81,
+    "bytecode_before_first": 0,
+    "bytecode_after_first": 0,
+    "bytecode_before_final": 0,
+    "bytecode_after_final": 0,
+    "before_final_receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-source-admission-setup.json",
+    "after_final_receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-independent-inspection.json",
+    "builder_excluded": true,
+    "parent_and_all_children_no_bytecode": true,
+    "verifier_environment_install_or_mutation": false,
+    "rejected_environments_history": {
+      "qualified": false,
+      "original_rejection": "runtime_unqualified",
+      "bytecode_files": 1311,
+      "unhashed_executable_entries": 1311,
+      "same_files_counted_twice": true,
+      "original_diagnostic_extra_lexical_outside_entries": 22,
+      "corrected_actual_outside_entries": 0,
+      "cause": "unknown",
+      "borrowed_environment_modified": false,
+      "original_raw": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis.stdout",
+      "corrected_raw": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis-confirmed.stdout",
+      "root_continuation": "Root will provide NEW exact-lock no-compile admitted environment; no installation/deletion by verifier.",
+      "resumed_root_receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-portfolio-runtime\\quantmesh-portfolio-runtime-aihe1p21\\checked.json",
+      "resumed_independent_recheck": {
+        "interpreter": "/var/tmp/quantmesh-portfolio-runtime-aihe1p21/venv/bin/python",
+        "error": "runtime_unqualified",
+        "before_native_root_allocation": true,
+        "bytecode_files": 1311,
+        "RECORD_changed": 0,
+        "outside_entries": 0,
+        "cause": "unknown",
+        "borrowed_environment_modified": false,
+        "setup_exit": 1,
+        "setup_receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-setup.json",
+        "diagnostic_receipt": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\new-runtime-readonly-diagnosis.json"
+      }
+    }
+  },
+  "pg_admission": {
+    "prefix_entries": 748,
+    "prefix_manifest_sha256": "f54df012fca9e020ad14fcfc66555ab4daf0bbca02812b5410f67f0f2bcea3c4",
+    "binary_sha256": {
+      "initdb": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+      "pg_controldata": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff",
+      "pg_ctl": "4122dcb4375873bca2dcd2f83242614c21f28d4ebd872d06ab702a0ab26ae159",
+      "pg_dump": "137cf7c068b3459f5205f97f27cd206b537228e031d721f52535daf29c0ab6f8",
+      "pg_restore": "cb92c83f39bf0087f9ba1b65cd2763d86ac6695a8f46e343db9505ee88f1bf29",
+      "postgres": "4cd5ef0c0632e8da70fd6d7a62a9e02a6df00f3517b1b5720511db199d825d08"
+    },
+    "source_sha256": "555610c24d53e4316da5b7d3fc25c279d96856d5e0e23ee308c328c5fa881d9f",
+    "build_receipt_sha256": "d5738b4e60b94cc5462ec66adaca9a500cf584434af54e53cda98654bf41e06c",
+    "copyright_sha256": "3d6af92ff8a4c2cdf69afb1cf44edea727922f5cd0cf8b5f72b11cdecac8fdfd",
+    "original_prefix_entries": 1881,
+    "excluded_build_tool_entries": 1133,
+    "reused_cluster": false
+  },
+  "frozen_sources": {
+    "tools/qualify_owned_postgres.py": {
+      "sha256": "ee6f1f2306d7864f2b616aecadae5b4028bce05981ec3474a978b11a2bf9dbb3",
+      "unchanged_from_baseline": true
+    },
+    "tools/qualify_research_backup.py": {
+      "sha256": "01bbee995c7a7bdad82c92908e92e44d69f061fed369bc987a07b6fad206b089",
+      "unchanged_from_baseline": true
+    },
+    "services/research_agent/requirements.linux-cp312.lock": {
+      "sha256": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a",
+      "unchanged_from_baseline": true
+    },
+    "src/quantmesh/research/job_store.py": {
+      "sha256": "3d56ded5118da9a1783481bfb769853a4f2def4545fd40a635950e78e6d3a989",
+      "unchanged_from_baseline": true
+    },
+    "src/quantmesh/research/jobs.py": {
+      "sha256": "fd6abdb293a8092fba65b5239abdf4410ebb2e0cf4b8e5294f9c21dd53981812",
+      "unchanged_from_baseline": true
+    },
+    "services/research_agent/src/qm_research_agent/store.py": {
+      "sha256": "bbce6bc86098e6890653d8861b69f197ab3c5344f124a887f4699012ac7a16e2",
+      "unchanged_from_baseline": true
+    }
+  },
+  "flags": {
+    "owned_local_native_pg_qualified": true,
+    "owned_local_dump_restore_qualified": true,
+    "native_numerical_worker_qualified": false,
+    "real_model_calls": 0,
+    "paid_calls": 0,
+    "real_provider_billing_qualified": false,
+    "production_tls_qualified": false,
+    "offhost_backup_qualified": false,
+    "source_host_qualified": false,
+    "server_or_source_host_operations": false,
+    "production_release_qualified": false,
+    "live_trading": false,
+    "subagents_used": false,
+    "pr_created": false,
+    "pushed": false,
+    "merged": false,
+    "deployed": false
+  },
+  "review": "Root supplies at most two-round final Spec/Standards review of exact candidate plus actual native witness; no early preparation review occurred.",
+  "pending": "Independent final two-axis review and parent integration; numerical Worker/Engine/provider/protected-host/production/offhost/p95/human/release remain parent-owned and unqualified.",
+  "raw_evidence": {
+    "output/portfolio-budget-preparation/actual-native-archive.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\actual-native-archive.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/actual-native-archive.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\actual-native-archive.json",
+      "size": 510,
+      "sha256": "e240c09282ec2f077065e094edf2cd5bdff1a2e24c646bde9f07d3c4ef640f22"
+    },
+    "output/portfolio-budget-preparation/actual-native-archive.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\actual-native-archive.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/actual-native-archive.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\actual-native-archive.stdout",
+      "size": 385,
+      "sha256": "d43879fb06be82b51b13835f7c53cebe5b2661e61523750a84e6af92a1ee881f"
+    },
+    "output/portfolio-budget-preparation/archive-child-evidence.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\archive-child-evidence.py",
+      "size": 885,
+      "sha256": "6cc65dd6f346c4e76cef2d5327a82f94f1d76e9a7b3dab393c2f249d02cf0d17"
+    },
+    "output/portfolio-budget-preparation/check-prefix.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\check-prefix.py",
+      "size": 832,
+      "sha256": "f9ec4bdb707fc40e97fa2493d518645519a2b3dfd71741ae36fb39bacb5753e6"
+    },
+    "output/portfolio-budget-preparation/child-evidence-archive.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\child-evidence-archive.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/child-evidence-archive.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\child-evidence-archive.json",
+      "size": 460,
+      "sha256": "126864f42ce651cca79cfeb4e30d3a0009b408621d15e76e83c0e7b8fbed1dbb"
+    },
+    "output/portfolio-budget-preparation/child-evidence-archive.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\child-evidence-archive.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/child-evidence-archive.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\child-evidence-archive.stdout",
+      "size": 15322,
+      "sha256": "652d2ae15c0edcef75960fc23c5879d8192f4c6ed72be1b425b91df9a968055d"
+    },
+    "output/portfolio-budget-preparation/credential-cli-green.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-green.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/credential-cli-green.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-green.json",
+      "size": 1097,
+      "sha256": "1a99e8f347b8c34c6803988052b9a5854d78ebad953da540571e5d4087061311"
+    },
+    "output/portfolio-budget-preparation/credential-cli-green.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-green.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/credential-cli-green.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-green.stdout",
+      "size": 110,
+      "sha256": "f6f116c9056abc471cd78fa8bc3b659df93702ae9803b7bb33c499b7ee0727a6"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red-confirmed.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red-confirmed.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red-confirmed.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red-confirmed.json",
+      "size": 1105,
+      "sha256": "da758ec2c8e7c567b1fb0d6efc41796f15321934492f77f1c38d9e3e0bc97338"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red-confirmed.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red-confirmed.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red-confirmed.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red-confirmed.stdout",
+      "size": 1381,
+      "sha256": "6bc6ad6d5828ca7465dcd394bdf8f1a2dd9506f8d238f13e18db8c978d9705b1"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red.json",
+      "size": 1095,
+      "sha256": "35a1217e68d72df1935cc50634fcff41c8cdf944acec18417bcbc91d5aa74be4"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/credential-cli-red.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\credential-cli-red.stdout",
+      "size": 2588,
+      "sha256": "01199da263c22f9c3078f23d2a87a5d60aa7ec87a563cd8a5134eda2bd8aa127"
+    },
+    "output/portfolio-budget-preparation/dependencies.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependencies.py",
+      "size": 1592,
+      "sha256": "5e0ff49f67a2aea484efde3ba94356d2ef04515c8130dece810ce40d5e3634a3"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis-confirmed.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis-confirmed.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis-confirmed.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis-confirmed.json",
+      "size": 459,
+      "sha256": "9207d34509d2d95c75715a4e35f7fa6c372efd702c91987ce7390dac3554fd31"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis-confirmed.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis-confirmed.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis-confirmed.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis-confirmed.stdout",
+      "size": 495045,
+      "sha256": "32380b40b3049d11031490fde87121d6b3dc038c236527bf57af4c183961fc70"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis.json",
+      "size": 459,
+      "sha256": "d82c9e7ab48aacde1bc1b8fa7a8c41013587e0e15f44691f6132257892edc2d1"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/dependency-diagnosis.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\dependency-diagnosis.stdout",
+      "size": 498290,
+      "sha256": "37426b1ada0cf66e96a505ec3383487cf1f268555867430d1fd60a348d0f4675"
+    },
+    "output/portfolio-budget-preparation/diagnose-dependencies.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diagnose-dependencies.py",
+      "size": 1800,
+      "sha256": "2476727a21dbdc9a94af2871a6ca61494f8d20989e96aa327b9f3f700c390468"
+    },
+    "output/portfolio-budget-preparation/diagnose-prefix.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diagnose-prefix.py",
+      "size": 591,
+      "sha256": "6f0f217f0bb00da1614ee906d3b0f403fd9937d405b4492b7b397c7a3b6f1837"
+    },
+    "output/portfolio-budget-preparation/diff-final-corrected.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final-corrected.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/diff-final-corrected.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final-corrected.json",
+      "size": 269,
+      "sha256": "3885b5adac85d70318f549fbd72f332f78c515e61bc6ef8305ec9164f0a05af1"
+    },
+    "output/portfolio-budget-preparation/diff-final-corrected.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final-corrected.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/diff-final-corrected.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final-corrected.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/diff-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/diff-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final.json",
+      "size": 269,
+      "sha256": "3885b5adac85d70318f549fbd72f332f78c515e61bc6ef8305ec9164f0a05af1"
+    },
+    "output/portfolio-budget-preparation/diff-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/diff-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\diff-final.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-admission-green.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-admission-green.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-admission-green.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-admission-green.json",
+      "size": 1101,
+      "sha256": "f19912236a66e28f2e92bdeaa8b4eeb168b77390051a1395828838bfdbd7d6ff"
+    },
+    "output/portfolio-budget-preparation/executor-admission-green.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-admission-green.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-admission-green.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-admission-green.stdout",
+      "size": 110,
+      "sha256": "f315c32537b23bfe1acf4986d4e15740bdfd8fca4d98fd53c6f88add369a381a"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-green.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-green.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-green.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-green.json",
+      "size": 1099,
+      "sha256": "be96b97e7132945cbe399efcf045ac43974e64bca61c359891ec830bda0dd47d"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-green.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-green.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-green.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-green.stdout",
+      "size": 110,
+      "sha256": "a1dc17c7385bbd34465ee6763a752b6d0a00cd2ec1926c56412bd65deaae8dbc"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-red.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-red.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-red.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-red.json",
+      "size": 1097,
+      "sha256": "acec18f3f56f95d639c2ccc857788b36d33fd09b57e46e864febf29946ab8143"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-red.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-red.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-cleanup-red.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-cleanup-red.stdout",
+      "size": 6316,
+      "sha256": "c9fa25bbd5004582291878fba5a45d9139fa4376a924068346f01a324201a6d7"
+    },
+    "output/portfolio-budget-preparation/executor-contract-red.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-contract-red.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/executor-contract-red.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-contract-red.json",
+      "size": 1098,
+      "sha256": "e6535c5d3878e0ffedc7463862ecf4f66c135a58b62e3c96098f03f7f37aca07"
+    },
+    "output/portfolio-budget-preparation/executor-contract-red.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-contract-red.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-contract-red.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-contract-red.stdout",
+      "size": 2325,
+      "sha256": "c433b2072714082067a19647d495bf5db4a92e7c7c170ccb8d9521a5a9c2163b"
+    },
+    "output/portfolio-budget-preparation/executor-diff-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-diff-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-diff-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-diff-final.json",
+      "size": 269,
+      "sha256": "3885b5adac85d70318f549fbd72f332f78c515e61bc6ef8305ec9164f0a05af1"
+    },
+    "output/portfolio-budget-preparation/executor-diff-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-diff-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-diff-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-diff-final.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-final-pre-native.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-final-pre-native.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-final-pre-native.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-final-pre-native.json",
+      "size": 1102,
+      "sha256": "33e85164d409bd9d142c07497b9db22ec6436667d2a701141045e9075fbcb1ff"
+    },
+    "output/portfolio-budget-preparation/executor-final-pre-native.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-final-pre-native.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-final-pre-native.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-final-pre-native.stdout",
+      "size": 110,
+      "sha256": "41e8ef17573e9de1eb1df39eb81e86e641f894f48fe9844b08eeb5a1a44d6ea6"
+    },
+    "output/portfolio-budget-preparation/executor-format-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-format-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-format-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-format-final.json",
+      "size": 561,
+      "sha256": "b5543ab29a66ebff2724ef1faebb73496457990adccd015f61903f6ea70ee15a"
+    },
+    "output/portfolio-budget-preparation/executor-format-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-format-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-format-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-format-final.stdout",
+      "size": 26,
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "output/portfolio-budget-preparation/executor-guard-commit.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-commit.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-guard-commit.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-commit.json",
+      "size": 326,
+      "sha256": "a0e6c70913e4790aa3e62ff1f41967fbd2c5415cb00105f2e16c2ee100d0df40"
+    },
+    "output/portfolio-budget-preparation/executor-guard-commit.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-commit.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-guard-commit.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-commit.stdout",
+      "size": 167,
+      "sha256": "a382b1a36712deaaf9efb18d2f28aa890f449bf8249652c4031fee0ed3fe9c92"
+    },
+    "output/portfolio-budget-preparation/executor-guard-diff.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-diff.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-guard-diff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-diff.json",
+      "size": 269,
+      "sha256": "3885b5adac85d70318f549fbd72f332f78c515e61bc6ef8305ec9164f0a05af1"
+    },
+    "output/portfolio-budget-preparation/executor-guard-diff.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-diff.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-guard-diff.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-diff.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-guard-format.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-format.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-guard-format.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-format.json",
+      "size": 561,
+      "sha256": "b5543ab29a66ebff2724ef1faebb73496457990adccd015f61903f6ea70ee15a"
+    },
+    "output/portfolio-budget-preparation/executor-guard-format.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-format.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-guard-format.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-format.stdout",
+      "size": 26,
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "output/portfolio-budget-preparation/executor-guard-ruff.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-ruff.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-guard-ruff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-ruff.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/executor-guard-ruff.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-ruff.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-guard-ruff.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-guard-ruff.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/executor-ruff-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-ruff-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff-final.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/executor-ruff-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-ruff-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff-final.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/executor-ruff.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-ruff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/executor-ruff.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-ruff.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-ruff.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/executor-source-checkpoint.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-source-checkpoint.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-source-checkpoint.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-source-checkpoint.json",
+      "size": 334,
+      "sha256": "76c30e1400731ed12102e70324249f0c185f09f4dc45013833e9ab8caee59da6"
+    },
+    "output/portfolio-budget-preparation/executor-source-checkpoint.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-source-checkpoint.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-source-checkpoint.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-source-checkpoint.stdout",
+      "size": 177,
+      "sha256": "adb0f8d9b9a8e35c78de77d23f5a20482a35df0a2e1d071b08662f5bdb407273"
+    },
+    "output/portfolio-budget-preparation/executor-unit-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-unit-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/executor-unit-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-unit-final.json",
+      "size": 1096,
+      "sha256": "a65d41ab3875b096812dc304374b0e2285188ababb91c11ca4f597fa74df7eca"
+    },
+    "output/portfolio-budget-preparation/executor-unit-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-unit-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/executor-unit-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\executor-unit-final.stdout",
+      "size": 110,
+      "sha256": "7421894a24d9b8ad19811b0118409c6ff18323b5e5c082af913b77d5fba4ecb5"
+    },
+    "output/portfolio-budget-preparation/extended-tests.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/extended-tests.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests.json",
+      "size": 1091,
+      "sha256": "87193e8491309c98643424676a57beb94d39c7a1fc3e98263cedb07a7ef06000"
+    },
+    "output/portfolio-budget-preparation/extended-tests.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/extended-tests.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests.stdout",
+      "size": 99,
+      "sha256": "ecab564d2ec62eef244dc5c9951cff271b2ae2df6fc5ca1778416f421e9d4c8d"
+    },
+    "output/portfolio-budget-preparation/format-final-evidence.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final-evidence.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/format-final-evidence.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final-evidence.json",
+      "size": 561,
+      "sha256": "b5543ab29a66ebff2724ef1faebb73496457990adccd015f61903f6ea70ee15a"
+    },
+    "output/portfolio-budget-preparation/format-final-evidence.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final-evidence.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/format-final-evidence.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final-evidence.stdout",
+      "size": 26,
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "output/portfolio-budget-preparation/format-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/format-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final.json",
+      "size": 561,
+      "sha256": "b5543ab29a66ebff2724ef1faebb73496457990adccd015f61903f6ea70ee15a"
+    },
+    "output/portfolio-budget-preparation/format-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/format-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\format-final.stdout",
+      "size": 26,
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-green.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-green.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-green.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-green.json",
+      "size": 1102,
+      "sha256": "10f2ded9ed4ed88e54d61a80606ded88d001306a90b7db40a5ab5af6dff6e013"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-green.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-green.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-green.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-green.stdout",
+      "size": 110,
+      "sha256": "8ed192ea1f58fb86ac8e85522022d991fb0355d5ecce5afc66deb6436851e367"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-red.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-red.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-red.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-red.json",
+      "size": 1100,
+      "sha256": "38fc08f9b26c576d43209c72e45a1eca8f9200c3497b09c3b7ea5f19a94589b2"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-red.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-red.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/fresh-native-output-red.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\fresh-native-output-red.stdout",
+      "size": 1964,
+      "sha256": "acae9b9b0e7b91ecd8dbe57a727118ac5c5a1e626143d134da63145142ebb28d"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence.json",
+      "size": 1097,
+      "sha256": "1035ee1b4cd67106a0af63ce297f3af43034f7b936305038ac38030fafa6ec77"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence.stdout",
+      "size": 99,
+      "sha256": "8aa9d31d633b1a2ef6a9e182b08eade352929e74e8b1e0f5ccb9b160b81f3877"
+    },
+    "output/portfolio-budget-preparation/green-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/green-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final.json",
+      "size": 1088,
+      "sha256": "40a3552a70a82ae3c749e5fdab5ab9fdc63007f150e04dcc7c92a69f36b68d2f"
+    },
+    "output/portfolio-budget-preparation/green-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final.stdout",
+      "size": 99,
+      "sha256": "ecab564d2ec62eef244dc5c9951cff271b2ae2df6fc5ca1778416f421e9d4c8d"
+    },
+    "output/portfolio-budget-preparation/green-preparation.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/green-preparation.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation.json",
+      "size": 1094,
+      "sha256": "66ee0313e0635e3f5b037e73aacce76db02cc69321c26162ecfc1d87a9763fbe"
+    },
+    "output/portfolio-budget-preparation/green-preparation.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-preparation.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation.stdout",
+      "size": 99,
+      "sha256": "f43ecb1e9f4af25e57e94be0408eae8f44ebd4d00aa9c01bff840ae940d23dbc"
+    },
+    "output/portfolio-budget-preparation/native-clean-setup.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-clean-setup.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/native-clean-setup.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-clean-setup.json",
+      "size": 507,
+      "sha256": "588ff879a691728e09936c92e3ba1dec4bc1d30cf6791475deaebac296d7ede8"
+    },
+    "output/portfolio-budget-preparation/native-clean-setup.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-clean-setup.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/native-clean-setup.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-clean-setup.stdout",
+      "size": 799,
+      "sha256": "14b96f6c625b6a50cbf097ad17985d044559cf7a66db0be572ec2bdbeba834d0"
+    },
+    "output/portfolio-budget-preparation/native-final-independent-inspection.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-independent-inspection.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/native-final-independent-inspection.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-independent-inspection.json",
+      "size": 510,
+      "sha256": "c6a9e1b1ae94fe37ff6df169b3fa63adc51d98d414bbb4fa4099cc1609fbb6af"
+    },
+    "output/portfolio-budget-preparation/native-final-independent-inspection.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-independent-inspection.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/native-final-independent-inspection.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-independent-inspection.stdout",
+      "size": 9684,
+      "sha256": "3eb3f0ffae3389031a044ed4a75529432a14aae1c07ea054f635a9f5c9262dae"
+    },
+    "output/portfolio-budget-preparation/native-final-source-admission-setup.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-source-admission-setup.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/native-final-source-admission-setup.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-source-admission-setup.json",
+      "size": 515,
+      "sha256": "b357f5df6184f51ca158ed3078e3020cf14db26a3f6dcbe13a91033ab7ea15e6"
+    },
+    "output/portfolio-budget-preparation/native-final-source-admission-setup.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-source-admission-setup.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/native-final-source-admission-setup.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-final-source-admission-setup.stdout",
+      "size": 268,
+      "sha256": "1fb3f80417056dc44384325292f7de1be08debfad6af8dc94425a0197925ab97"
+    },
+    "output/portfolio-budget-preparation/native-first-independent-inspection.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-first-independent-inspection.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/native-first-independent-inspection.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-first-independent-inspection.json",
+      "size": 510,
+      "sha256": "0a8b8e92f25c949dc3e8104dfd75b6832032afbcda453d9ad01c629caea74624"
+    },
+    "output/portfolio-budget-preparation/native-first-independent-inspection.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-first-independent-inspection.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/native-first-independent-inspection.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-first-independent-inspection.stdout",
+      "size": 4794,
+      "sha256": "098621ea3725522bf39d52d61ed5a43a3f47f2b25463c5860b8e0e0538ac1a47"
+    },
+    "output/portfolio-budget-preparation/native-root.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-root.json",
+      "size": 54,
+      "sha256": "235ada5df568f1d4d886725bc65b9dfe52685fe502c560f968bc764c1f7493c6"
+    },
+    "output/portfolio-budget-preparation/native-setup.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-setup.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/native-setup.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-setup.json",
+      "size": 446,
+      "sha256": "10927e8342d0c066dbb5e89de50f0593432acf3ebc7f5960942075b77c356f49"
+    },
+    "output/portfolio-budget-preparation/native-setup.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-setup.stderr",
+      "size": 805,
+      "sha256": "f5205957c4d41791c25270b08b36793d7b73b51a104146e1be76d351da167e94"
+    },
+    "output/portfolio-budget-preparation/native-setup.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\native-setup.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/new-runtime-readonly-diagnosis.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\new-runtime-readonly-diagnosis.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/new-runtime-readonly-diagnosis.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\new-runtime-readonly-diagnosis.json",
+      "size": 467,
+      "sha256": "0df598f832721a0b4094e89301fb58d8915b569a7a311f660365d3e43c155079"
+    },
+    "output/portfolio-budget-preparation/new-runtime-readonly-diagnosis.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\new-runtime-readonly-diagnosis.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/new-runtime-readonly-diagnosis.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\new-runtime-readonly-diagnosis.stdout",
+      "size": 250859,
+      "sha256": "d848a1638a4b3a86ee167a584cdc2e268b26853d61572ffbdcbd6be6d5bb41ef"
+    },
+    "output/portfolio-budget-preparation/pg-proof-subset.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pg-proof-subset.py",
+      "size": 1546,
+      "sha256": "bf2947af1e4192a82025517a2f719f2efad0aff54a0021b809c2d411464ff765"
+    },
+    "output/portfolio-budget-preparation/pg-proof.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pg-proof.py",
+      "size": 1025,
+      "sha256": "1d1b12044fdb24de9e36fa5b6b2cada7f1440ab4496945151905df7b6674cf54"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-diff.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-diff.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-diff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-diff.json",
+      "size": 269,
+      "sha256": "3885b5adac85d70318f549fbd72f332f78c515e61bc6ef8305ec9164f0a05af1"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-diff.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-diff.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-diff.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-diff.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-format.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-format.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-format.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-format.json",
+      "size": 561,
+      "sha256": "b5543ab29a66ebff2724ef1faebb73496457990adccd015f61903f6ea70ee15a"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-format.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-format.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-format.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-format.stdout",
+      "size": 26,
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-ruff.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-ruff.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-ruff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-ruff.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-ruff.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-ruff.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/pre-final-native-ruff.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\pre-final-native-ruff.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/prefix-inventory-diagnosis.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\prefix-inventory-diagnosis.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/prefix-inventory-diagnosis.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\prefix-inventory-diagnosis.json",
+      "size": 453,
+      "sha256": "05adef5661e923b5906b52fb948a483ac8ef5a698cd426507d32dc5bc5489302"
+    },
+    "output/portfolio-budget-preparation/prefix-inventory-diagnosis.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\prefix-inventory-diagnosis.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/prefix-inventory-diagnosis.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\prefix-inventory-diagnosis.stdout",
+      "size": 59526,
+      "sha256": "9890180117b5a91d9a57d8fa2c532e71d675e01c5b0b16951b767ec33dfd3e1e"
+    },
+    "output/portfolio-budget-preparation/preparation-commit-corrected.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit-corrected.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/preparation-commit-corrected.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit-corrected.json",
+      "size": 272,
+      "sha256": "1f4c205d97269ed9ef6a49df496225d0dfa16c82811d0a188ed24c8fe5a3e4ec"
+    },
+    "output/portfolio-budget-preparation/preparation-commit-corrected.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit-corrected.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/preparation-commit-corrected.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit-corrected.stdout",
+      "size": 379,
+      "sha256": "654bf8f7e0ff0182f10029aa971b8a4492817e57f79f98cc16ea7a5f792cd066"
+    },
+    "output/portfolio-budget-preparation/preparation-commit.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/preparation-commit.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit.json",
+      "size": 327,
+      "sha256": "07315979fa4834054d4119553102bf79a7058ea83959fb5623dc3ce29d01371a"
+    },
+    "output/portfolio-budget-preparation/preparation-commit.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/preparation-commit.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\preparation-commit.stdout",
+      "size": 341,
+      "sha256": "781d9f3ecc6b1ab47c5d3bc5d23fb3474606fe378e04f8800a725c29b5df53e1"
+    },
+    "output/portfolio-budget-preparation/progress.md": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\progress.md",
+      "size": 1251,
+      "sha256": "f453acff9f03632e619895b9054a850859b9315bb3d69617899cd0e73820aa10"
+    },
+    "output/portfolio-budget-preparation/readonly-dependencies.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-dependencies.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/readonly-dependencies.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-dependencies.json",
+      "size": 450,
+      "sha256": "8e6637c9766bb5cee16b91db6a86c70dc04a2f127980e56f090d89e65c47ea08"
+    },
+    "output/portfolio-budget-preparation/readonly-dependencies.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-dependencies.stderr",
+      "size": 605,
+      "sha256": "46816939109f7dc32b4b22747791bc0fb96cb9ed0605fd1428276db188c7d403"
+    },
+    "output/portfolio-budget-preparation/readonly-dependencies.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-dependencies.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-prefix.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-prefix.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-prefix.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-prefix.json",
+      "size": 446,
+      "sha256": "a509903b88198d9d5ac3d3a5248482309f87973e889454d1e4e07dc705ed20b7"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-prefix.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-prefix.stderr",
+      "size": 513,
+      "sha256": "413727c2ea5a9de5893aba43cdaee6d19278d2f284b1ad9755378ba67795accf"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-prefix.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-prefix.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-subset-confirmed.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-subset-confirmed.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-subset-confirmed.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-subset-confirmed.json",
+      "size": 453,
+      "sha256": "b4e618f3e8ab61a463e77c105bc817b9a8b9843d044ec1c2a78e346fc3121d4d"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-subset-confirmed.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-subset-confirmed.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/readonly-pg-subset-confirmed.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\readonly-pg-subset-confirmed.stdout",
+      "size": 1527,
+      "sha256": "366fc239f77c116524b4206e5f9596a5885815173eaf80592b1172a00fbb2a72"
+    },
+    "output/portfolio-budget-preparation/red-confirmed.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red-confirmed.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/red-confirmed.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red-confirmed.json",
+      "size": 1090,
+      "sha256": "5d5765f02419be536bcc24e92b9b8438455476a06e19e964300f250ca6fb260d"
+    },
+    "output/portfolio-budget-preparation/red-confirmed.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red-confirmed.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/red-confirmed.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red-confirmed.stdout",
+      "size": 33750,
+      "sha256": "743e348ab98d36a154f3fbc9570c949faa62e76871bf26e248a9e6c52948bacf"
+    },
+    "output/portfolio-budget-preparation/red.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red.exit",
+      "size": 3,
+      "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+    },
+    "output/portfolio-budget-preparation/red.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red.json",
+      "size": 1080,
+      "sha256": "41678d86d51d42f275a3c41adfe20450613318075c4d943d18db7b86d319914c"
+    },
+    "output/portfolio-budget-preparation/red.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/red.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\red.stdout",
+      "size": 16744,
+      "sha256": "e5afb3f2c10b623c8925077b6929c04cb5d64a1b233fe74fc91b3018f9216db5"
+    },
+    "output/portfolio-budget-preparation/resumed-format.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-format.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/resumed-format.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-format.json",
+      "size": 561,
+      "sha256": "b5543ab29a66ebff2724ef1faebb73496457990adccd015f61903f6ea70ee15a"
+    },
+    "output/portfolio-budget-preparation/resumed-format.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-format.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/resumed-format.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-format.stdout",
+      "size": 26,
+      "sha256": "3bc53bf3e981a98a34a852e175bf9b77af841edea74fca595d9aedcbaf9a4938"
+    },
+    "output/portfolio-budget-preparation/resumed-ruff.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-ruff.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/resumed-ruff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-ruff.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/resumed-ruff.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-ruff.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/resumed-ruff.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\resumed-ruff.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/ruff-final-evidence.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final-evidence.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/ruff-final-evidence.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final-evidence.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/ruff-final-evidence.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final-evidence.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/ruff-final-evidence.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final-evidence.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/ruff-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-preparation/ruff-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final.json",
+      "size": 544,
+      "sha256": "c785c0ade9d3e786e27b948d7958c8a1a62f27d45f1b9904932b456551301399"
+    },
+    "output/portfolio-budget-preparation/ruff-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/ruff-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\ruff-final.stdout",
+      "size": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "output/portfolio-budget-preparation/run-command.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\run-command.py",
+      "size": 630,
+      "sha256": "809d16baa437909ded07c1612f91424ccc0e33095ca5ec14e16cccd233cf49e4"
+    },
+    "output/portfolio-budget-preparation/run-tests.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\run-tests.py",
+      "size": 1491,
+      "sha256": "8bde895da3877fa60da27f54350d80474777b2a4363ce21b1345496736cf7d4e"
+    },
+    "output/portfolio-budget-preparation/update-pg-proof.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\update-pg-proof.py",
+      "size": 873,
+      "sha256": "4fb176f5e4ed2150156b49a2e551e704bccb1a917678555b5639f63a48b89a1e"
+    },
+    "output/portfolio-budget-preparation/write-handoff.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\write-handoff.py",
+      "size": 5638,
+      "sha256": "deb3796adc0f5a84f27cc84d18b85138756f531474a3f8b7666702672db14719"
+    },
+    "output/portfolio-budget-preparation/green-preparation-native-child-evidence/test_failed_owned_child_is_rea0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.json",
+      "size": 266,
+      "sha256": "b1ef2f587ed8eede9f29377ffd5956d36962b9684dabab285104a46cad472837"
+    },
+    "output/portfolio-budget-preparation/green-preparation-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-preparation-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-preparation-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.json",
+      "size": 264,
+      "sha256": "a24c4c5792be86d33b52aea6aed14daf23386821d7e1598121648928f5935577"
+    },
+    "output/portfolio-budget-preparation/green-preparation-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stderr",
+      "size": 8,
+      "sha256": "055f9e97128e6b6e2d6b813c0516949297c96c043284c5065c6d58414fc682fe"
+    },
+    "output/portfolio-budget-preparation/green-preparation-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-preparation-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stdout",
+      "size": 8,
+      "sha256": "2601136449d0bddc406432e97cd439ac8d82adb7cdd525d335eeb5b967c70d3d"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_failed_owned_child_is_rea0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.json",
+      "size": 266,
+      "sha256": "957076b2a90579faed05cf42916c8127114324a0045c871c8ed9d9624a9725c0"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.json",
+      "size": 266,
+      "sha256": "0653aa4c1488b9cf5b6ed0fda4e4bb233e9e053178c220c81401b2e480f05e68"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.stdout",
+      "size": 2097152,
+      "sha256": "6932fd31e5daf4739b9fa78ff777b2831b0995cc1d0b0093cac80601902013bc"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.json",
+      "size": 264,
+      "sha256": "ccd9b6ab5356c4744369a3ac6035853f47f8a4e4cc30d3dde59896c7f57e1a1e"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stderr",
+      "size": 8,
+      "sha256": "055f9e97128e6b6e2d6b813c0516949297c96c043284c5065c6d58414fc682fe"
+    },
+    "output/portfolio-budget-preparation/green-final-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stdout",
+      "size": 8,
+      "sha256": "2601136449d0bddc406432e97cd439ac8d82adb7cdd525d335eeb5b967c70d3d"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_failed_owned_child_is_rea0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.json",
+      "size": 266,
+      "sha256": "0572b236c5a3d9f2ea4d04586dfa2482ab6b3d5f2eb68e7ada304541e21b3af0"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_failed_owned_child_is_rea0/unit-cleanup.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_failed_owned_child_is_rea0\\unit-cleanup.json",
+      "size": 217,
+      "sha256": "fe12dfaad2f4f8a7d4ba81ceb61d58205641206b9258657a35e6ececcfeacfc4"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.json",
+      "size": 266,
+      "sha256": "76e18392966a9f1486866e34f258eb45067f93ace67cbb12f677c97416e9b026"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.stdout",
+      "size": 2097152,
+      "sha256": "6932fd31e5daf4739b9fa78ff777b2831b0995cc1d0b0093cac80601902013bc"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.json",
+      "size": 264,
+      "sha256": "074fb62c53a8af20b87ccc3d95d7780b32fcc24218b024bf46839cbbd47a4239"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stderr",
+      "size": 8,
+      "sha256": "055f9e97128e6b6e2d6b813c0516949297c96c043284c5065c6d58414fc682fe"
+    },
+    "output/portfolio-budget-preparation/green-final-evidence-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\green-final-evidence-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stdout",
+      "size": 8,
+      "sha256": "2601136449d0bddc406432e97cd439ac8d82adb7cdd525d335eeb5b967c70d3d"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_failed_owned_child_is_rea0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.json",
+      "size": 266,
+      "sha256": "28a03dfc96cb3b04f356d5ba10337248a336a251ac0800714a42d1dabfeef838"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_failed_owned_child_is_rea0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_failed_owned_child_is_rea0\\command-001.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.json",
+      "size": 266,
+      "sha256": "7de30ff1a9bff99074f795885b9dea686e5578959a1bb94ad646bec7231636f6"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_output_exhaustion_reaps_o0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_output_exhaustion_reaps_o0\\command-001.stdout",
+      "size": 2097152,
+      "sha256": "6932fd31e5daf4739b9fa78ff777b2831b0995cc1d0b0093cac80601902013bc"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.json",
+      "size": 264,
+      "sha256": "8a8ab14f75a9b6056c447a9f18a68c83d6333bb73e2239e3e373f1544b7f9152"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stderr",
+      "size": 8,
+      "sha256": "055f9e97128e6b6e2d6b813c0516949297c96c043284c5065c6d58414fc682fe"
+    },
+    "output/portfolio-budget-preparation/extended-tests-native-child-evidence/test_stdout_stderr_and_nonzero0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-preparation\\extended-tests-native-child-evidence\\test_stdout_stderr_and_nonzero0\\command-001.stdout",
+      "size": 8,
+      "sha256": "2601136449d0bddc406432e97cd439ac8d82adb7cdd525d335eeb5b967c70d3d"
+    },
+    "output/portfolio-budget-native/actual-native-inventory.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native-inventory.json",
+      "size": 77536,
+      "sha256": "ced0d4b80b4262cf0562271fe1ee95dd82d5c3bf59c39a3a8871c2970f9b96e8"
+    },
+    "output/portfolio-budget-native/archive-native.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\archive-native.py",
+      "size": 3104,
+      "sha256": "9f83510bf29b0381b9ac3cc47c162e0ce1a4ada9cb945fd1638d8cb0ee68c2e0"
+    },
+    "output/portfolio-budget-native/check-preflight-corrected.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\check-preflight-corrected.py",
+      "size": 1340,
+      "sha256": "fbe7982292fa298cd4cdb32182801090f905099571bc1f5a4fee0b61401298a7"
+    },
+    "output/portfolio-budget-native/check-preflight.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\check-preflight.py",
+      "size": 1302,
+      "sha256": "026edbfb02018896041fd18afe7fed14b302b78470d52148af12b603fee8ee3b"
+    },
+    "output/portfolio-budget-native/inspect-native.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\inspect-native.py",
+      "size": 1650,
+      "sha256": "4d252355633945de0a7c8aa092eadf6ee415632642f614b3c1b30e61b707e86b"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight-cwd-corrected.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight-cwd-corrected.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight-cwd-corrected.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight-cwd-corrected.json",
+      "size": 925,
+      "sha256": "809d99d2c1218dc0fe4519f75aec0644734fc19f5d7aeae818d06e0d344e00a9"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight-cwd-corrected.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight-cwd-corrected.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight-cwd-corrected.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight-cwd-corrected.stdout",
+      "size": 2605,
+      "sha256": "99306297393053dbd7121d59646962062132f18276301dcf018c6bc9036c714c"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight.exit",
+      "size": 3,
+      "sha256": "df4e26a04a444901b95afef44e4a96cfae34690fff2ad2c66389c70079cdff2b"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight.json",
+      "size": 849,
+      "sha256": "c500b025426ea83565a25fc2116ae72ea6a42eabdb180b409de83be1b826fe4e"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/native-final-default-preflight.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final-default-preflight.stdout",
+      "size": 120,
+      "sha256": "5771eb0335affed073cc8d5657f6021072fac31d60f612a521567541b605ecbd"
+    },
+    "output/portfolio-budget-native/native-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-native/native-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final.json",
+      "size": 1322,
+      "sha256": "db2a92a159ecc788f848c49194f204625de353e21bfdb00c1e1b10a40a7aa8a2"
+    },
+    "output/portfolio-budget-native/native-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/native-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-final.stdout",
+      "size": 100,
+      "sha256": "71e414fe79592debd7e4d970a16f5955027732b83748be60b84b8d913dc51937"
+    },
+    "output/portfolio-budget-native/native-first.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-first.exit",
+      "size": 3,
+      "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+    },
+    "output/portfolio-budget-native/native-first.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-first.json",
+      "size": 1326,
+      "sha256": "57806b8f2fd07acc0b5f127beaa0b85156c4d7fc184362865e1253875b2e62e1"
+    },
+    "output/portfolio-budget-native/native-first.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-first.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/native-first.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-first.stdout",
+      "size": 100,
+      "sha256": "8174db3580ceac3af3a09f47ce59a762f58b8e3c014a286c205610f91e4904c8"
+    },
+    "output/portfolio-budget-native/native-root.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\native-root.json",
+      "size": 795,
+      "sha256": "bd32d618fe3d41475f886bcd217a6de23a4881764ab2c0901e9f95586301bc73"
+    },
+    "output/portfolio-budget-native/pre-native-handoff.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\pre-native-handoff.json",
+      "size": 89554,
+      "sha256": "0bfa210c83a46c61167911879db69a39cc0943043681aff15f0a0dc4356d9450"
+    },
+    "output/portfolio-budget-native/preparation-handoff-cebc5db.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\preparation-handoff-cebc5db.json",
+      "size": 54889,
+      "sha256": "f77607cc61dc9fb1eabf19b1d1bb4e8d84650fb6b4199c20e5e02b0bc2abdec4"
+    },
+    "output/portfolio-budget-native/prepare-clean-setup.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\prepare-clean-setup.py",
+      "size": 465,
+      "sha256": "c184ba4c5da26985f9d0505278de8e7dc09e50de65fe7d3e277fc75264ce638b"
+    },
+    "output/portfolio-budget-native/prepare-preflight-correction.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\prepare-preflight-correction.py",
+      "size": 400,
+      "sha256": "47262add9b84a8e80de6781bf5d2596d236f6a23813ab0db5c8ef534d591d4ca"
+    },
+    "output/portfolio-budget-native/progress.md": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\progress.md",
+      "size": 650,
+      "sha256": "4e76b67cbcdb057805d6a282e42e144be49c6dcfe71f5fdd5240b052bdaa9fe9"
+    },
+    "output/portfolio-budget-native/run-native-tests.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\run-native-tests.py",
+      "size": 1296,
+      "sha256": "764034f2735bec26a3750655f5d5b1d7a4e558df11469f51b7e032cb1fe42b5f"
+    },
+    "output/portfolio-budget-native/setup-clean.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\setup-clean.py",
+      "size": 2875,
+      "sha256": "14ce2484a1e01e92cfb8a7b7ef67a3c72c8289b727fbc4c42648d600183386a3"
+    },
+    "output/portfolio-budget-native/setup-receipt.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\setup-receipt.json",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/setup.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\setup.py",
+      "size": 2825,
+      "sha256": "0b9b1fd5667da8b88335e68c8f2de2b89fc574441d0137745b6b57a1cf914cbd"
+    },
+    "output/portfolio-budget-native/update-executor-handoff.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\update-executor-handoff.py",
+      "size": 3336,
+      "sha256": "3ea3300e34fb1240a9d9a44c04b70b8d69a15ea14598aa285e19e5efae1e52fb"
+    },
+    "output/portfolio-budget-native/update-handoff.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\update-handoff.py",
+      "size": 3502,
+      "sha256": "2ba70f4b21a62162f4cb30f1f65da42076419f9be70b8e548c53866de1bc8414"
+    },
+    "output/portfolio-budget-native/update-native-final.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\update-native-final.py",
+      "size": 1931,
+      "sha256": "2d61f6dc6fa45243920f31a4e6b65ed294085b1fad12e5f397c6771c5dccdf98"
+    },
+    "output/portfolio-budget-native/write-final-handoff.py": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\write-final-handoff.py",
+      "size": 8895,
+      "sha256": "b6fb95fc4ad3248075ff539f742e8db24406d27ef9f6c57116f64c482e113eb7"
+    },
+    "output/portfolio-budget-native/actual-native/checkout-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\checkout-final.exit",
+      "size": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "output/portfolio-budget-native/actual-native/checkout-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\checkout-final.stderr",
+      "size": 195,
+      "sha256": "e734ce0c117e4100ec197ba42e02e9fe3750e6975e49181c9c354ebd80cbcd0c"
+    },
+    "output/portfolio-budget-native/actual-native/checkout-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\checkout-final.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/checkout.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\checkout.exit",
+      "size": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "output/portfolio-budget-native/actual-native/checkout.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\checkout.stderr",
+      "size": 89,
+      "sha256": "a59fe4892702a29c81cf4bc39fcd8847ac07ed87325d18ef0a3f8b82fd0a8a00"
+    },
+    "output/portfolio-budget-native/actual-native/checkout.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\checkout.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/clone.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\clone.exit",
+      "size": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "output/portfolio-budget-native/actual-native/clone.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\clone.stderr",
+      "size": 73,
+      "sha256": "8441a5e9674b66a89c350dbeffe15ace66f923ca149980a759bba8a1bf72c43f"
+    },
+    "output/portfolio-budget-native/actual-native/clone.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\clone.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/fetch-final.exit": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\fetch-final.exit",
+      "size": 1,
+      "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    },
+    "output/portfolio-budget-native/actual-native/fetch-final.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\fetch-final.stderr",
+      "size": 159,
+      "sha256": "3b624161ad92076395c32dec35994a88294b9db08d094b27329b9f833ab6c9c4"
+    },
+    "output/portfolio-budget-native/actual-native/fetch-final.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\fetch-final.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/native-final.junit.xml": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\native-final.junit.xml",
+      "size": 3815,
+      "sha256": "f4d58a9e9e3a69a6de7e14d420807aadf9f85e075593ad94f57f76a768283c47"
+    },
+    "output/portfolio-budget-native/actual-native/native-first.junit.xml": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\native-first.junit.xml",
+      "size": 3716,
+      "sha256": "695449a310c7c61472a2b8fef7a79f7d71134762c552d2bef88fa28d0fb1848d"
+    },
+    "output/portfolio-budget-native/actual-native/profile-candidate.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\profile-candidate.json",
+      "size": 204,
+      "sha256": "7fc60a8fd316e77798770e34fb43880f53b2b45a0f668d9481fbbc94aa25b525"
+    },
+    "output/portfolio-budget-native/actual-native/profile-final.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\profile-final.json",
+      "size": 204,
+      "sha256": "1962ee1cba72703d8a33899d0dd54043a9679acb958c285ee0157515000b6166"
+    },
+    "output/portfolio-budget-native/actual-native/setup.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\setup.json",
+      "size": 741,
+      "sha256": "6973ecc450ebc88b0ed653499ed76c28ea88f0f9c6d87cb5402c2df5b0e5ae73"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-001.json",
+      "size": 264,
+      "sha256": "00d7bfb04f3aed9234bc03ea6b2138a3c2a0d2d37f4130a36989da0391a5777c"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-001.stdout",
+      "size": 1091,
+      "sha256": "e1409515282703a7c7fe28247431ffcd3e971e690d4498a4b6c2c95c9c9d7106"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-002.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-002.json",
+      "size": 272,
+      "sha256": "40a1b9621b3ce0c07ae434d13dd01e8f353405d53108d089ebcffe751ae27006"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-002.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-002.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-002.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-002.stdout",
+      "size": 2317,
+      "sha256": "076774da6e9a674ff11266e0553639ce46d1ba4e1d8ecaca84bc92c01ac0ef23"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-003.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-003.json",
+      "size": 264,
+      "sha256": "318210e364eff03e1842ef21af0f3ef9156166c95555377d8dfad8bf8e04243d"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-003.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-003.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-003.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-003.stdout",
+      "size": 1093,
+      "sha256": "99f07971cfdf35611b3623b2da53e10574da345e7584b5a01299f277655b2cca"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-004.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-004.json",
+      "size": 272,
+      "sha256": "a3b88474dd7af3aad785adb0a5d0ab560711db12dc68f50fd4585a413a9a1095"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-004.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-004.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/command-004.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\command-004.stdout",
+      "size": 2317,
+      "sha256": "d416f78f3f997e27fa3c9895f5f2f3f821aa315ece80aa3076930ed708c50edf"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/witness.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\witness.json",
+      "size": 5385,
+      "sha256": "1b0ef189c97351dbcf40a83c36aeae6fe16df0a4ae3824e20277033bd5354461"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-001.json",
+      "size": 264,
+      "sha256": "a1fc437aa3b69f6f6178a72f5fc2ded5464a5f3d43a1eb66ce7062a9c1f35e23"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-001.stdout",
+      "size": 1091,
+      "sha256": "bd328b5cdf00faf2a065b1f7f4fb467c08eb5cf3aac5c27287941501def39abb"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-002.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-002.json",
+      "size": 272,
+      "sha256": "4caf1d0958d2aa3d03964dd2c6f5a1dfbf15306060976ca5f8be46a717fb3930"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-002.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-002.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-002.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-002.stdout",
+      "size": 2317,
+      "sha256": "167802ea92d5602a0f8e3049368069f0a7cd59818455b7c7f8538991739a2f19"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-003.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-003.json",
+      "size": 264,
+      "sha256": "93cb376804acac258a118bd1d0b9b7df12096389f64fbb953cd7542cc8e48fbb"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-003.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-003.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-003.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-003.stdout",
+      "size": 1093,
+      "sha256": "e587746efbf19d6489cded32fcadd780dcd3c7c3f002ddb1a04460a61af4d98b"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-004.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-004.json",
+      "size": 272,
+      "sha256": "dfea24264c2d11bf392db8dce28205593ec128d6c3bc13d81094e96202d3648a"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-004.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-004.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-004.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-004.stdout",
+      "size": 2317,
+      "sha256": "fcd3635c24b91993be12767d68fee754077712f8ebbde4b2db58709a41538455"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-005.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-005.json",
+      "size": 288,
+      "sha256": "afd2814dbc79dd26a89c0e6f718eb7b55849572700d6ffefe5eb3f9ddae35a20"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-005.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-005.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-005.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-005.stdout",
+      "size": 184,
+      "sha256": "028feb4c7dd70bb61a907032417b13faa60f251cbf62910793d13d4f95da33fa"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-006.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-006.json",
+      "size": 288,
+      "sha256": "8ed9ee673a638c092f8a03ffa88e70edb8c83ee160dc42d82ff3494baa81def7"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-006.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-006.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-006.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-006.stdout",
+      "size": 123,
+      "sha256": "b946bd3165850912f271a9cfc28cd914c959047a67675a1eb73e0f535802b6b5"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-007.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-007.json",
+      "size": 265,
+      "sha256": "7bdad150886f17eb85fc4d0010407ffe6dc374debd3eb047fedaf00dd3e623dc"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-007.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-007.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-007.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-007.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-008.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-008.json",
+      "size": 264,
+      "sha256": "f33ed5efcb225f044365a06763003e268708d220420274ae803db76e47352a3e"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-008.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-008.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-008.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-008.stdout",
+      "size": 1095,
+      "sha256": "50afb0dc2fa6fdb0bf5d7feba51abf1cb46414e4c28036ca88b544ab185b797f"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-009.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-009.json",
+      "size": 272,
+      "sha256": "728572e517bb3770501012b074362bb6da2054e2d90538db3090a25802d95920"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-009.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-009.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-009.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-009.stdout",
+      "size": 2317,
+      "sha256": "f33f96b0339fec0296070f5a073850e157c8231ce2db8cac61d6780483e6b94c"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-010.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-010.json",
+      "size": 268,
+      "sha256": "ca2aa38a610fa8655de608f9b6bea98d2b2937b9c54ce65cb45320afa1c057b9"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-010.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-010.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/command-010.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\command-010.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/first-admission.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\first-admission.json",
+      "size": 112,
+      "sha256": "794281ebcac93df99501db23f9fa92e1880b5cd7a4c63ea2a1109fb01daa793a"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/first-ready.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\first-ready.json",
+      "size": 81,
+      "sha256": "afc2d4a405876526c6396a0c0cb74452baedaaa45953ccdb472a5b43481f6ad4"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/negative-state.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\negative-state.json",
+      "size": 12272,
+      "sha256": "0b9785d2bcfe655c1e29f43bf12f2b7ee51ca2e90e223733e613d774fc971c85"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/observer-gate.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\observer-gate.json",
+      "size": 206,
+      "sha256": "599ba4678ad40b0da0735acd92410f4be7b47b8d83ca923778faf7866cf4a347"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/observer.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\observer.json",
+      "size": 5650,
+      "sha256": "ea09e14f96f7dd8b72cd33aed843582f696a5cba9994a77aa714224666c9bcee"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/race-start.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\race-start.json",
+      "size": 60,
+      "sha256": "f98bea673edd2e8a024b31c33956436c03af7d085f1fb7237acdb04d8f883dce"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/research.dump": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\research.dump",
+      "size": 18086,
+      "sha256": "7ecfeb1830409897c506dd6a2b63ac00cd54e88fe72e1357f9ea2093a9ac9ea3"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/restored-before-replay.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\restored-before-replay.json",
+      "size": 5836,
+      "sha256": "e9ed057e786dc3f6df3ece0764f00ca7b26fbc79143c72d7c4c487d8752e1041"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/scripted-invocation.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\scripted-invocation.json",
+      "size": 265,
+      "sha256": "066a6bedf7094c90f87f4543d8e96ba3da13b4cfbf3cecbff4397ae0c80acdb5"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/second-admission.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\second-admission.json",
+      "size": 113,
+      "sha256": "acad920a827ab3aa9c665e622ac63c445fe66aec0fead1dc266001cea3db3eac"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/second-ready.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\second-ready.json",
+      "size": 81,
+      "sha256": "11e1a8dc99e1cdd07caa43bd3f4510fa18bd4b0ceaf8117c020b06c0bdd892cd"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/source-captured.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\source-captured.json",
+      "size": 5836,
+      "sha256": "e9ed057e786dc3f6df3ece0764f00ca7b26fbc79143c72d7c4c487d8752e1041"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/witness.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\witness.json",
+      "size": 10063,
+      "sha256": "250b113fef18395f71faf53644adb478ac95c1e187712af405af9ee390ba6652"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-001.json",
+      "size": 264,
+      "sha256": "c320b00f76dc06249a9ea065a4c2ff79a2befd101266f9c115d57c02ca3838e2"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-001.stdout",
+      "size": 1025,
+      "sha256": "656532ec971c27e5dc7da9512b9129e0118512826a59fc4a986fde6dbae3b8bc"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-002.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-002.json",
+      "size": 272,
+      "sha256": "ad6584882067e431d3888c273b9fc146cb057ac0b358fb01a212ae5b5300e156"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-002.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-002.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-002.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-002.stdout",
+      "size": 2317,
+      "sha256": "c15bbfa9e4810a22b636512bb4243f1a9dbabc835f18d9797fc0a8ed5f2d1847"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-003.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-003.json",
+      "size": 264,
+      "sha256": "368a30c8235880e77d43849269a76fb38fcbb1243bb6e46d6361982e533c5ee5"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-003.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-003.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-003.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-003.stdout",
+      "size": 1027,
+      "sha256": "2752ac9a53d46e4e460793924cb5f329eda8700c0f930204af31f6f6ace2a31a"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-004.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-004.json",
+      "size": 272,
+      "sha256": "58f8a73c5ecb967fda5da6283f0c54a74dc31c11c25a1bd9fd8679d1a6a62c2b"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-004.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-004.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-004.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-004.stdout",
+      "size": 2317,
+      "sha256": "389243a9637722c8367add7df063db3a44a2c1d76917439ec0d56e1b5522c196"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-005.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-005.json",
+      "size": 288,
+      "sha256": "4e144cfc358e61bfc2d66810ba726cee117b088953e3992c992dd50f5206998e"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-005.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-005.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-005.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-005.stdout",
+      "size": 123,
+      "sha256": "f5aafff9eea2f77134c0b7569fc80e3790fcb898d93193f0e59a6b7c229e4f64"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-006.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-006.json",
+      "size": 288,
+      "sha256": "fdf0042ac3704cb5e5567c993c36c4d4751565ffdf46db83b2c8d7d0a779a453"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-006.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-006.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-006.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-006.stdout",
+      "size": 184,
+      "sha256": "5e8821fbddcc5077b3a80fd42c39fd91680c4ddc75b8412dbb09f5f1780272de"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-007.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-007.json",
+      "size": 265,
+      "sha256": "f3e0ed9863fdf6ebc77f99cb36eb0405075cb0cab1b269110a60b763a56a21d0"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-007.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-007.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-007.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-007.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-008.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-008.json",
+      "size": 264,
+      "sha256": "3748f75910dc2aea8eb8e99d53c731d1f852ce867fb1e07664f024d4340a435d"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-008.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-008.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-008.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-008.stdout",
+      "size": 1029,
+      "sha256": "78929adb652461921292c13b236e44d49bdd23141b06a4e702c0c9b75d2a4c99"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-009.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-009.json",
+      "size": 272,
+      "sha256": "0ebda0e0be3f966ee6cb653c08685fc2b1f37a74f90955c9d15a26253131d7ac"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-009.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-009.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-009.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-009.stdout",
+      "size": 2317,
+      "sha256": "34502a74fa692dab2fc613c9dbddae9b50744b45f28dc469f475362a6f271ace"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-010.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-010.json",
+      "size": 268,
+      "sha256": "71cf47323612711e2be53e1c465cc4cec767896dd5c30b5063371cfe843b56ec"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-010.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-010.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/command-010.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\command-010.stdout",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/first-admission.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\first-admission.json",
+      "size": 113,
+      "sha256": "3088f964689cfb17a3e68d736b7f1b3dd39980d5de690d9b932c89d29ef7623f"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/first-ready.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\first-ready.json",
+      "size": 81,
+      "sha256": "af7a71e4e3540cc40b38cef91f07faab46ad2fdeef39430a19c76d21ea59697a"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/negative-state.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\negative-state.json",
+      "size": 12272,
+      "sha256": "3fb9ac5ef8e2a9ed5d5460a1f72031d02e339856dc85a4485444cddfe5803bbd"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/observer-gate.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\observer-gate.json",
+      "size": 206,
+      "sha256": "75cfae69a9762b415e19b880d71c95db5c6b967c1b87f4119885499afc4b96c6"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/observer.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\observer.json",
+      "size": 5650,
+      "sha256": "fad2ff554577921effc5e71639a7ef990216a91570005e45771d40faa4b653b1"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/race-start.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\race-start.json",
+      "size": 60,
+      "sha256": "de3a61f57536285b026eabb8bdc5fc1ec3058ca7ee32d8d9c25b2f0186e22542"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/research.dump": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\research.dump",
+      "size": 18086,
+      "sha256": "913f6bbbe7a5c2064ce392483144c688ba71b6d15f40ce437051b4659d7d48c2"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/restored-before-replay.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\restored-before-replay.json",
+      "size": 5836,
+      "sha256": "4c084a89c971a57e27147511562eff6d20bd522f2afacc881f34fb5a735a01fe"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/scripted-invocation.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\scripted-invocation.json",
+      "size": 265,
+      "sha256": "40fa64d7cf9766372dfb01e0afaa47858248310aacb6a3679b8076253a1a7943"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/second-admission.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\second-admission.json",
+      "size": 112,
+      "sha256": "b6fa9ec5e9d755261d7ee6034c907c485d720d6aa1ed0142676d1d08cedc2db9"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/second-ready.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\second-ready.json",
+      "size": 81,
+      "sha256": "c5cff732fa57a5d9a4dc4a4d1732596b6a63e9137cede7f95899edb491ad30e8"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/source-captured.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\source-captured.json",
+      "size": 5836,
+      "sha256": "4c084a89c971a57e27147511562eff6d20bd522f2afacc881f34fb5a735a01fe"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/witness.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\witness.json",
+      "size": 9964,
+      "sha256": "933d18bd03f7e636033b748967a8a7d19d28bb7f512201444b3fda521b2fd87d"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-001.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-001.json",
+      "size": 264,
+      "sha256": "2e00db5642b8d9b45ab5982c4eda3ef633f96987eba303aacab896722842c89b"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-001.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-001.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-001.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-001.stdout",
+      "size": 1025,
+      "sha256": "f999bad88e7c29cd5eff6e5ace6094deec3c5c8a0dd39475883ebe2a104b7c00"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-002.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-002.json",
+      "size": 272,
+      "sha256": "adc1e9fa4bced594b4f7ad675e3720f1803d4cc2a629c3878e7eea8e7c5d5ab4"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-002.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-002.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-002.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-002.stdout",
+      "size": 2317,
+      "sha256": "77f2edb0e1e7a4321a06160c414f03cad79bfc46f3710ce268a791cd5bf2defc"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-003.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-003.json",
+      "size": 264,
+      "sha256": "f009ebc4de775e7589ba1391834b0f4bfcba85917a681984e9ab2c6b584b3d29"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-003.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-003.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-003.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-003.stdout",
+      "size": 1027,
+      "sha256": "fb76d18faaf0592aecefd2c59c563b6b657e644ed6bf222beaa781c30abb8c66"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-004.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-004.json",
+      "size": 272,
+      "sha256": "4c3b1198f71ef3cb85703c78ab9ea9be551ce2ab4bbd0748151544f1ce8aafb6"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-004.stderr": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-004.stderr",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/command-004.stdout": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\command-004.stdout",
+      "size": 2317,
+      "sha256": "cc1d81784ddf976dac72a2c6c6074b1623305ea7975d3382ffdd1c2ce188e6ad"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/witness.json": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\witness.json",
+      "size": 5319,
+      "sha256": "a79cf1e093b069d8caee6c0cb4984871ff3d4e7dbc4cbaff1b123b8eecca8c6d"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/sibling/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\sibling\\postgres.log",
+      "size": 1228,
+      "sha256": "4250c53897cccd44b5c3c87a435acac842651094e5da04bbc39b419b209ec760"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_pg_failure_reaps_o0/source/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_pg_failure_reaps_o0\\source\\postgres.log",
+      "size": 1228,
+      "sha256": "ddce8100bb11d8cae41df4bbcff1adcb53c3cc39c9a1d352609b319bbb1b56de"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/restored/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\restored\\postgres.log",
+      "size": 1234,
+      "sha256": "208f39de3edbeb22fb5361c15ff2d1eb57d07bbf59da19ad110c0d37066b569d"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/sibling/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\sibling\\postgres.log",
+      "size": 1228,
+      "sha256": "e014ff12a4b1730967df6f3ef41ef4d289aa26441d6a57fa2a49932596f4ac79"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-test_actual_owned_pg_race_obse0/source/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-test_actual_owned_pg_race_obse0\\source\\postgres.log",
+      "size": 1235,
+      "sha256": "14d35650709187ec91566096c28b7a0cca33684c5cb77b27a059d07979cf0af1"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/restored/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\restored\\postgres.log",
+      "size": 1234,
+      "sha256": "40d25548700b620839ab0cb00380f2999c1c17ee1037854e23d7f9a20aa1c2c5"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/sibling/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\sibling\\postgres.log",
+      "size": 1228,
+      "sha256": "8284ff8340b4e86a92e5a2f3c8506702a47dad3a1ac1a5a49a87b67fa544d160"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0/source/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-d65035deab4543f8b12c91539afb424d-test_actual_owned_pg_race_obse0\\source\\postgres.log",
+      "size": 1235,
+      "sha256": "02849eafe402f3c6b75345e70e6471fca7e78f80e3ed0adfbf3cce97a000a0bb"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/sibling/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\sibling\\postgres.log",
+      "size": 1228,
+      "sha256": "2074b10253158aa05458f57613f8159e5b6ee04668284e30876fae74146694fa"
+    },
+    "output/portfolio-budget-native/actual-native/test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0/source/postgres.log": {
+      "absolute_path": "C:\\Users\\15492\\.codex-clean\\worktrees\\b7a1\\QuantMesh\\output\\portfolio-budget-native\\actual-native\\test-witness-11b05ebd3e184c7a8369998755b229da-test_actual_pg_failure_reaps_o0\\source\\postgres.log",
+      "size": 1228,
+      "sha256": "437f4ff6d4644c859b8a6b5d5f6786f9128b8868dc8a2d7dd9bb75a09b4dee2b"
+    }
+  },
+  "actual_native_archive_file_count": 139
+}

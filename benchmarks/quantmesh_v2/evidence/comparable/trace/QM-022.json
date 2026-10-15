@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00022689998149871826,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        31,
+        "test_disguised_loopback_origin_is_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.00023210002109408379,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        31,
+        "test_disguised_loopback_origin_is_refused"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "A DNS hostname beginning with 127. must not pass the browser-origin guard\nassert not True\n +  where True = <function _is_allowed_browser_origin at 0x000001A47156E3E0>('https://127.attacker.example')\n +    where <function _is_allowed_browser_origin at 0x000001A47156E3E0> = workstation._is_allowed_browser_origin"
+      }
+    },
+    {
+      "nodeid": "benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013370008673518896,
+      "location": [
+        "benchmarks\\quantmesh_v2\\test_audit_badcases.py",
+        31,
+        "test_disguised_loopback_origin_is_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

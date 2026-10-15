@@ -1,0 +1,341 @@
+Collecting annotated-doc==0.0.5 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 3))
+  Downloading annotated_doc-0.0.5-py3-none-any.whl (5.3 kB)
+Collecting annotated-types==0.8.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 4))
+  Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Collecting anyio==4.15.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 5))
+  Downloading anyio-4.15.0-py3-none-any.whl (131 kB)
+Collecting asn1crypto==1.5.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 6))
+  Downloading asn1crypto-1.5.1-py2.py3-none-any.whl (105 kB)
+Collecting certifi==2026.7.22 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 7))
+  Downloading certifi-2026.7.22-py3-none-any.whl (136 kB)
+Collecting cffi==2.1.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 8))
+  Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+Collecting charset-normalizer==3.5.2 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 9))
+  Downloading charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (257 kB)
+Collecting click==8.5.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 10))
+  Downloading click-8.5.0-py3-none-any.whl (125 kB)
+Collecting cryptography==50.0.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 11))
+  Downloading cryptography-50.0.0-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 18.2 MB/s  0:00:00
+Collecting distro==1.9.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 12))
+  Downloading distro-1.9.0-py3-none-any.whl (20 kB)
+Collecting duckdb==1.5.5 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 13))
+  Downloading duckdb-1.5.5-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (21.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 21.5/21.5 MB 28.9 MB/s  0:00:00
+Collecting exchange-calendars==4.13.2 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 14))
+  Downloading exchange_calendars-4.13.2-py3-none-any.whl (213 kB)
+Collecting fastapi==0.141.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 15))
+  Downloading fastapi-0.141.1-py3-none-any.whl (131 kB)
+Collecting h11==0.16.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 16))
+  Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+Collecting httpcore==1.0.9 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 17))
+  Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+Collecting httpcore2==2.13.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 18))
+  Downloading httpcore2-2.13.1-py3-none-any.whl (83 kB)
+Collecting httptools==0.8.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 19))
+  Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (523 kB)
+Collecting httpx==0.28.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 20))
+  Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+Collecting httpx2==2.13.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 21))
+  Downloading httpx2-2.13.1-py3-none-any.whl (95 kB)
+Collecting idna==3.19 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 22))
+  Downloading idna-3.19-py3-none-any.whl (68 kB)
+Collecting iniconfig==2.3.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 23))
+  Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+Collecting jaraco-classes==3.4.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 24))
+  Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+Collecting jaraco-context==6.1.2 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 25))
+  Downloading jaraco_context-6.1.2-py3-none-any.whl (7.9 kB)
+Collecting jaraco-functools==4.6.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 26))
+  Downloading jaraco_functools-4.6.0-py3-none-any.whl (11 kB)
+Collecting jeepney==0.9.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 27))
+  Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+Collecting jinja2==3.1.6 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 28))
+  Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+Collecting jsonpatch==1.35 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 29))
+  Downloading jsonpatch-1.35-py3-none-any.whl (17 kB)
+Collecting jsonpointer==3.2.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 30))
+  Downloading jsonpointer-3.2.1-py3-none-any.whl (8.3 kB)
+Collecting keyring==25.7.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 31))
+  Downloading keyring-25.7.0-py3-none-any.whl (39 kB)
+Collecting korean-lunar-calendar==0.4.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 32))
+  Downloading korean_lunar_calendar-0.4.0-py3-none-any.whl (11 kB)
+Collecting langchain-core==1.6.10 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 33))
+  Downloading langchain_core-1.6.10-py3-none-any.whl (573 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 573.3/573.3 kB 41.0 MB/s  0:00:00
+Collecting langchain-protocol==0.0.19 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 34))
+  Downloading langchain_protocol-0.0.19-py3-none-any.whl (7.3 kB)
+Collecting langgraph==1.2.12 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 35))
+  Downloading langgraph-1.2.12-py3-none-any.whl (250 kB)
+Collecting langgraph-checkpoint==4.2.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 36))
+  Downloading langgraph_checkpoint-4.2.0-py3-none-any.whl (56 kB)
+Collecting langgraph-prebuilt==1.1.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 37))
+  Downloading langgraph_prebuilt-1.1.0-py3-none-any.whl (41 kB)
+Collecting langgraph-sdk==0.4.6 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 38))
+  Downloading langgraph_sdk-0.4.6-py3-none-any.whl (162 kB)
+Collecting langsmith==0.14.7 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 39))
+  Downloading langsmith-0.14.7-py3-none-any.whl (861 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 862.0/862.0 kB 31.4 MB/s  0:00:00
+Collecting markupsafe==3.0.3 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 40))
+  Downloading markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (22 kB)
+Collecting more-itertools==11.1.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 41))
+  Downloading more_itertools-11.1.0-py3-none-any.whl (72 kB)
+Collecting numpy==2.5.2 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 42))
+  Downloading numpy-2.5.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 34.0 MB/s  0:00:00
+Collecting orjson==3.13.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 43))
+  Downloading orjson-3.13.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (130 kB)
+Collecting ormsgpack==1.12.2 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 44))
+  Downloading ormsgpack-1.12.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (212 kB)
+Collecting packaging==26.3 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 45))
+  Downloading packaging-26.3-py3-none-any.whl (129 kB)
+Collecting pandas==2.3.3 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 46))
+  Downloading pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (12.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.4/12.4 MB 32.2 MB/s  0:00:00
+Collecting pg8000==1.31.5 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 47))
+  Downloading pg8000-1.31.5-py3-none-any.whl (57 kB)
+Collecting pluggy==1.6.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 48))
+  Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+Collecting pycparser==3.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 49))
+  Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Collecting pydantic==2.13.5 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 50))
+  Downloading pydantic-2.13.5-py3-none-any.whl (472 kB)
+Collecting pydantic-core==2.46.5 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 51))
+  Downloading pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 20.7 MB/s  0:00:00
+Collecting pydantic-settings==2.15.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 52))
+  Downloading pydantic_settings-2.15.0-py3-none-any.whl (69 kB)
+Collecting pygments==2.21.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 53))
+  Downloading pygments-2.21.0-py3-none-any.whl (1.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 18.6 MB/s  0:00:00
+Collecting pyluach==2.3.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 54))
+  Downloading pyluach-2.3.0-py3-none-any.whl (25 kB)
+Collecting pytest==9.1.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 55))
+  Downloading pytest-9.1.1-py3-none-any.whl (386 kB)
+Collecting pytest-asyncio==1.4.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 56))
+  Downloading pytest_asyncio-1.4.0-py3-none-any.whl (16 kB)
+Collecting python-dateutil==2.9.0.post0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 57))
+  Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+Collecting python-dotenv==1.2.3 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 58))
+  Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Collecting python-multipart==0.0.32 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 59))
+  Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+Collecting pytz==2026.3.post1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 60))
+  Downloading pytz-2026.3.post1-py2.py3-none-any.whl (508 kB)
+Collecting pyyaml==6.0.3 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 61))
+  Downloading pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (807 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 807.9/807.9 kB 35.5 MB/s  0:00:00
+Collecting requests==2.34.2 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 62))
+  Downloading requests-2.34.2-py3-none-any.whl (73 kB)
+Collecting requests-toolbelt==1.0.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 63))
+  Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+Collecting ruff==0.16.6 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 64))
+  Downloading ruff-0.16.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (10.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.3/10.3 MB 34.9 MB/s  0:00:00
+Collecting scramp==1.4.17 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 65))
+  Downloading scramp-1.4.17-py3-none-any.whl (16 kB)
+Collecting secretstorage==3.5.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 66))
+  Downloading secretstorage-3.5.0-py3-none-any.whl (15 kB)
+Collecting six==1.17.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 67))
+  Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Collecting sniffio==1.3.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 68))
+  Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Collecting starlette==1.6.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 69))
+  Downloading starlette-1.6.0-py3-none-any.whl (75 kB)
+Collecting tenacity==9.2.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 70))
+  Downloading tenacity-9.2.1-py3-none-any.whl (32 kB)
+Collecting toolz==1.1.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 71))
+  Downloading toolz-1.1.0-py3-none-any.whl (58 kB)
+Collecting truststore==0.10.4 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 72))
+  Downloading truststore-0.10.4-py3-none-any.whl (18 kB)
+Collecting typing-extensions==4.16.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 73))
+  Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Collecting typing-inspection==0.4.4 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 74))
+  Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Collecting tzdata==2026.3 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 75))
+  Downloading tzdata-2026.3-py2.py3-none-any.whl (348 kB)
+Collecting urllib3==2.8.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 76))
+  Downloading urllib3-2.8.0-py3-none-any.whl (135 kB)
+Collecting uuid-utils==0.17.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 77))
+  Downloading uuid_utils-0.17.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (323 kB)
+Collecting uvicorn==0.52.4 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 78))
+  Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+Collecting uvloop==0.22.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 79))
+  Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 33.4 MB/s  0:00:00
+Collecting watchfiles==1.2.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 80))
+  Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+Collecting websockets==16.1.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 81))
+  Downloading websockets-16.1.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (187 kB)
+Collecting xxhash==4.0.1 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 82))
+  Downloading xxhash-4.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (261 kB)
+Collecting zstandard==0.25.0 (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 83))
+  Downloading zstandard-0.25.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.5 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.5/5.5 MB 35.3 MB/s  0:00:00
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/annotated_doc-0.0.5-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/annotated_types-0.8.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/anyio-4.15.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/asn1crypto-1.5.1-py2.py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/certifi-2026.7.22-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/click-8.5.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/cryptography-50.0.0-cp311-abi3-manylinux_2_34_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/distro-1.9.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/duckdb-1.5.5-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/exchange_calendars-4.13.2-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/fastapi-0.141.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/h11-0.16.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpcore-1.0.9-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpcore2-2.13.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpx-0.28.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpx2-2.13.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/idna-3.19-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/iniconfig-2.3.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jaraco.classes-3.4.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jaraco_context-6.1.2-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jaraco_functools-4.6.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jeepney-0.9.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jinja2-3.1.6-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jsonpatch-1.35-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/jsonpointer-3.2.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/keyring-25.7.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/korean_lunar_calendar-0.4.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langchain_core-1.6.10-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langsmith-0.14.7-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pydantic-2.13.5-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/tenacity-9.2.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/typing_extensions-4.16.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/uuid_utils-0.17.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langchain_protocol-0.0.19-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph-1.2.12-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph_checkpoint-4.2.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph_prebuilt-1.1.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph_sdk-0.4.6-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/websockets-16.1.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/more_itertools-11.1.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/numpy-2.5.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/orjson-3.13.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/ormsgpack-1.12.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/packaging-26.3-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pg8000-1.31.5-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pluggy-1.6.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pycparser-3.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pydantic_settings-2.15.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pygments-2.21.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pyluach-2.3.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pytest-9.1.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pytest_asyncio-1.4.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/python_dateutil-2.9.0.post0-py2.py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/python_dotenv-1.2.3-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/python_multipart-0.0.32-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/pytz-2026.3.post1-py2.py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/requests-2.34.2-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/urllib3-2.8.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/requests_toolbelt-1.0.0-py2.py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/ruff-0.16.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/scramp-1.4.17-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/secretstorage-3.5.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/six-1.17.0-py2.py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/sniffio-1.3.1-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/starlette-1.6.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/toolz-1.1.0-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/truststore-0.10.4-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/typing_inspection-0.4.4-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/tzdata-2026.3-py2.py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/uvicorn-0.52.4-py3-none-any.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/xxhash-4.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+Saved /var/tmp/quantmesh-backup-gnel0hd8/wheels/zstandard-0.25.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+Successfully downloaded annotated-doc annotated-types anyio asn1crypto certifi cffi charset-normalizer click cryptography distro duckdb exchange-calendars fastapi h11 httpcore httpcore2 httptools httpx httpx2 idna iniconfig jaraco-classes jaraco-context jaraco-functools jeepney jinja2 jsonpatch jsonpointer keyring korean-lunar-calendar langchain-core langsmith pydantic pyyaml tenacity typing-extensions uuid-utils langchain-protocol langgraph langgraph-checkpoint langgraph-prebuilt langgraph-sdk websockets markupsafe more-itertools numpy orjson ormsgpack packaging pandas pg8000 pluggy pycparser pydantic-core pydantic-settings pygments pyluach pytest pytest-asyncio python-dateutil python-dotenv python-multipart pytz requests urllib3 requests-toolbelt ruff scramp secretstorage six sniffio starlette toolz truststore typing-inspection tzdata uvicorn uvloop watchfiles xxhash zstandard
+Looking in links: /var/tmp/quantmesh-backup-gnel0hd8/wheels
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/annotated_doc-0.0.5-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 3))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/annotated_types-0.8.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 4))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/anyio-4.15.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 5))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/asn1crypto-1.5.1-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 6))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/certifi-2026.7.22-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 7))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 8))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 9))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/click-8.5.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 10))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/cryptography-50.0.0-cp311-abi3-manylinux_2_34_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 11))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/distro-1.9.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 12))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/duckdb-1.5.5-cp312-cp312-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 13))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/exchange_calendars-4.13.2-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 14))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/fastapi-0.141.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 15))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/h11-0.16.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 16))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpcore-1.0.9-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 17))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpcore2-2.13.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 18))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 19))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpx-0.28.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 20))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/httpx2-2.13.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 21))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/idna-3.19-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 22))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/iniconfig-2.3.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 23))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jaraco.classes-3.4.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 24))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jaraco_context-6.1.2-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 25))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jaraco_functools-4.6.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 26))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jeepney-0.9.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 27))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jinja2-3.1.6-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 28))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jsonpatch-1.35-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 29))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/jsonpointer-3.2.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 30))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/keyring-25.7.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 31))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/korean_lunar_calendar-0.4.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 32))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langchain_core-1.6.10-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 33))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langchain_protocol-0.0.19-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 34))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph-1.2.12-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 35))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph_checkpoint-4.2.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 36))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph_prebuilt-1.1.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 37))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langgraph_sdk-0.4.6-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 38))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/langsmith-0.14.7-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 39))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 40))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/more_itertools-11.1.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 41))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/numpy-2.5.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 42))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/orjson-3.13.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 43))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/ormsgpack-1.12.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 44))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/packaging-26.3-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 45))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 46))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pg8000-1.31.5-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 47))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pluggy-1.6.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 48))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pycparser-3.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 49))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pydantic-2.13.5-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 50))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pydantic_core-2.46.5-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 51))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pydantic_settings-2.15.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 52))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pygments-2.21.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 53))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pyluach-2.3.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 54))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pytest-9.1.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 55))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pytest_asyncio-1.4.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 56))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/python_dateutil-2.9.0.post0-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 57))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/python_dotenv-1.2.3-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 58))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/python_multipart-0.0.32-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 59))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pytz-2026.3.post1-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 60))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 61))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/requests-2.34.2-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 62))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/requests_toolbelt-1.0.0-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 63))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/ruff-0.16.6-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 64))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/scramp-1.4.17-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 65))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/secretstorage-3.5.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 66))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/six-1.17.0-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 67))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/sniffio-1.3.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 68))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/starlette-1.6.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 69))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/tenacity-9.2.1-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 70))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/toolz-1.1.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 71))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/truststore-0.10.4-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 72))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/typing_extensions-4.16.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 73))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/typing_inspection-0.4.4-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 74))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/tzdata-2026.3-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 75))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/urllib3-2.8.0-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 76))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/uuid_utils-0.17.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 77))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/uvicorn-0.52.4-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 78))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 79))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 80))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/websockets-16.1.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 81))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/xxhash-4.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 82))
+Processing /var/tmp/quantmesh-backup-gnel0hd8/wheels/zstandard-0.25.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/services/research_agent/requirements.linux-cp312.lock (line 83))
+Installing collected packages: pytz, asn1crypto, zstandard, xxhash, websockets, uvloop, uuid-utils, urllib3, tzdata, typing-extensions, truststore, toolz, tenacity, sniffio, six, scramp, ruff, pyyaml, python-multipart, python-dotenv, pyluach, pygments, pycparser, pluggy, packaging, ormsgpack, orjson, numpy, more-itertools, markupsafe, korean-lunar-calendar, jsonpointer, jeepney, jaraco-context, iniconfig, idna, httptools, h11, duckdb, distro, click, charset-normalizer, certifi, annotated-types, annotated-doc, uvicorn, typing-inspection, requests, python-dateutil, pytest, pydantic-core, langchain-protocol, jsonpatch, jinja2, jaraco-functools, jaraco-classes, httpcore2, httpcore, cffi, anyio, watchfiles, starlette, requests-toolbelt, pytest-asyncio, pydantic, pg8000, pandas, httpx2, httpx, cryptography, secretstorage, pydantic-settings, langsmith, fastapi, exchange-calendars, langchain-core, keyring, langgraph-sdk, langgraph-checkpoint, langgraph-prebuilt, langgraph
+
+Successfully installed annotated-doc-0.0.5 annotated-types-0.8.0 anyio-4.15.0 asn1crypto-1.5.1 certifi-2026.7.22 cffi-2.1.1 charset-normalizer-3.5.2 click-8.5.0 cryptography-50.0.0 distro-1.9.0 duckdb-1.5.5 exchange-calendars-4.13.2 fastapi-0.141.1 h11-0.16.0 httpcore-1.0.9 httpcore2-2.13.1 httptools-0.8.0 httpx-0.28.1 httpx2-2.13.1 idna-3.19 iniconfig-2.3.0 jaraco-classes-3.4.0 jaraco-context-6.1.2 jaraco-functools-4.6.0 jeepney-0.9.0 jinja2-3.1.6 jsonpatch-1.35 jsonpointer-3.2.1 keyring-25.7.0 korean-lunar-calendar-0.4.0 langchain-core-1.6.10 langchain-protocol-0.0.19 langgraph-1.2.12 langgraph-checkpoint-4.2.0 langgraph-prebuilt-1.1.0 langgraph-sdk-0.4.6 langsmith-0.14.7 markupsafe-3.0.3 more-itertools-11.1.0 numpy-2.5.2 orjson-3.13.0 ormsgpack-1.12.2 packaging-26.3 pandas-2.3.3 pg8000-1.31.5 pluggy-1.6.0 pycparser-3.0 pydantic-2.13.5 pydantic-core-2.46.5 pydantic-settings-2.15.0 pygments-2.21.0 pyluach-2.3.0 pytest-9.1.1 pytest-asyncio-1.4.0 python-dateutil-2.9.0.post0 python-dotenv-1.2.3 python-multipart-0.0.32 pytz-2026.3.post1 pyyaml-6.0.3 requests-2.34.2 requests-toolbelt-1.0.0 ruff-0.16.6 scramp-1.4.17 secretstorage-3.5.0 six-1.17.0 sniffio-1.3.1 starlette-1.6.0 tenacity-9.2.1 toolz-1.1.0 truststore-0.10.4 typing-extensions-4.16.0 typing-inspection-0.4.4 tzdata-2026.3 urllib3-2.8.0 uuid-utils-0.17.1 uvicorn-0.52.4 uvloop-0.22.1 watchfiles-1.2.0 websockets-16.1.1 xxhash-4.0.1 zstandard-0.25.0

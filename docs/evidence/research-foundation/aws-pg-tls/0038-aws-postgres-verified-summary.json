@@ -1,0 +1,23 @@
+{
+  "scope": "actual approved research-host disposable PG18.6 prerequisite only",
+  "protocol_checks": 15,
+  "protocol_exit": 0,
+  "tls": "TLSv1.3",
+  "bits": 256,
+  "dedicated_SCRAM_role": true,
+  "wrong_CA_name_plain_password_ACL_refused": true,
+  "rejected_fixture_counterexample": "actual RED write / GREEN no write; no PG started",
+  "actual_capture_failure_exit": 1,
+  "capture_failure_cleaned": true,
+  "owned_postmaster_stopped": true,
+  "private_tailnet_after": true,
+  "whole_host_introduced_bytes": 831553536,
+  "host_free_bytes": 161431252992,
+  "source_sha256": "555610c24d53e4316da5b7d3fc25c279d96856d5e0e23ee308c328c5fa881d9f",
+  "protocol_script_sha256": "66668da480d767a40809b5eaf58692cd31aa6027dbae954bd401670b14682aea",
+  "production_services_enabled": false,
+  "service_store_qualified": false,
+  "actual_reports_restored": false,
+  "numerical_certificate": false,
+  "full_option_A_complete": false
+}

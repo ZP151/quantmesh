@@ -1,0 +1,38 @@
+{
+  "analysis_requested": false,
+  "budget": {
+    "cpu_limit": 1.0,
+    "max_estimated_model_usd": 1.0,
+    "max_model_calls": 12,
+    "memory_mib": 2048,
+    "timeout_seconds": 900
+  },
+  "costs": {
+    "fee_bps": 1.0,
+    "half_spread_bps": 2.0,
+    "slippage_bps": 3.0
+  },
+  "dataset": {
+    "dataset_id": "equities",
+    "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+    "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+    "permission_class": "fixture",
+    "revision": 1
+  },
+  "interval": "1h",
+  "parameters": {},
+  "schema_version": 1,
+  "strategy_id": "momentum",
+  "strategy_version": "1",
+  "universe": [
+    {
+      "symbol": "AAA",
+      "venue": "moomoo"
+    }
+  ],
+  "window_spec": {
+    "step_bars": 5,
+    "test_bars": 5,
+    "train_bars": 10
+  }
+}

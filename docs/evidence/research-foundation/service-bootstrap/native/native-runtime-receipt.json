@@ -1,0 +1,473 @@
+{
+  "actual_build": "97f53d046faaa6293edea2497836d1ed69819637",
+  "executable": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+  "git_status": "",
+  "implementation": "CPython",
+  "licensed_wheels": 81,
+  "licenses": [
+    {
+      "license": "MIT",
+      "name": "annotated-doc",
+      "version": "0.0.5"
+    },
+    {
+      "license": "MIT",
+      "name": "annotated-types",
+      "version": "0.8.0"
+    },
+    {
+      "license": "MIT",
+      "name": "anyio",
+      "version": "4.15.0"
+    },
+    {
+      "license": "MIT",
+      "name": "asn1crypto",
+      "version": "1.5.1"
+    },
+    {
+      "license": "MPL-2.0 (documented exception)",
+      "name": "certifi",
+      "version": "2026.7.22"
+    },
+    {
+      "license": "MIT-0",
+      "name": "cffi",
+      "version": "2.1.1"
+    },
+    {
+      "license": "MIT",
+      "name": "charset-normalizer",
+      "version": "3.5.2"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "click",
+      "version": "8.5.0"
+    },
+    {
+      "license": "Apache-2.0 | BSD-3-Clause",
+      "name": "cryptography",
+      "version": "50.0.0"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "distro",
+      "version": "1.9.0"
+    },
+    {
+      "license": "MIT",
+      "name": "duckdb",
+      "version": "1.5.5"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "exchange-calendars",
+      "version": "4.13.2"
+    },
+    {
+      "license": "MIT",
+      "name": "fastapi",
+      "version": "0.141.1"
+    },
+    {
+      "license": "MIT",
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "httpcore",
+      "version": "1.0.9"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "httpcore2",
+      "version": "2.13.1"
+    },
+    {
+      "license": "MIT",
+      "name": "httptools",
+      "version": "0.8.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "httpx",
+      "version": "0.28.1"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "httpx2",
+      "version": "2.13.1"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "idna",
+      "version": "3.19"
+    },
+    {
+      "license": "MIT",
+      "name": "iniconfig",
+      "version": "2.3.0"
+    },
+    {
+      "license": "MIT",
+      "name": "jaraco-classes",
+      "version": "3.4.0"
+    },
+    {
+      "license": "MIT",
+      "name": "jaraco-context",
+      "version": "6.1.2"
+    },
+    {
+      "license": "MIT",
+      "name": "jaraco-functools",
+      "version": "4.6.0"
+    },
+    {
+      "license": "MIT",
+      "name": "jeepney",
+      "version": "0.9.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "jsonpatch",
+      "version": "1.35"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "jsonpointer",
+      "version": "3.2.1"
+    },
+    {
+      "license": "MIT",
+      "name": "keyring",
+      "version": "25.7.0"
+    },
+    {
+      "license": "MIT",
+      "name": "korean-lunar-calendar",
+      "version": "0.4.0"
+    },
+    {
+      "license": "MIT",
+      "name": "langchain-core",
+      "version": "1.6.10"
+    },
+    {
+      "license": "MIT",
+      "name": "langchain-protocol",
+      "version": "0.0.19"
+    },
+    {
+      "license": "MIT",
+      "name": "langgraph",
+      "version": "1.2.12"
+    },
+    {
+      "license": "MIT",
+      "name": "langgraph-checkpoint",
+      "version": "4.2.0"
+    },
+    {
+      "license": "MIT",
+      "name": "langgraph-prebuilt",
+      "version": "1.1.0"
+    },
+    {
+      "license": "MIT",
+      "name": "langgraph-sdk",
+      "version": "0.4.6"
+    },
+    {
+      "license": "MIT",
+      "name": "langsmith",
+      "version": "0.14.7"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "markupsafe",
+      "version": "3.0.3"
+    },
+    {
+      "license": "MIT",
+      "name": "more-itertools",
+      "version": "11.1.0"
+    },
+    {
+      "license": "0BSD | BSD-3-Clause | CC0-1.0 | MIT | Zlib",
+      "name": "numpy",
+      "version": "2.5.2"
+    },
+    {
+      "license": "MPL-2.0 AND Apache-2.0",
+      "name": "orjson",
+      "version": "3.13.0"
+    },
+    {
+      "license": "Apache-2.0 | MIT",
+      "name": "ormsgpack",
+      "version": "1.12.2"
+    },
+    {
+      "license": "Apache-2.0 | BSD-2-Clause",
+      "name": "packaging",
+      "version": "26.3"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "pandas",
+      "version": "2.3.3"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "pg8000",
+      "version": "1.31.5"
+    },
+    {
+      "license": "MIT",
+      "name": "pluggy",
+      "version": "1.6.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "pycparser",
+      "version": "3.0"
+    },
+    {
+      "license": "MIT",
+      "name": "pydantic",
+      "version": "2.13.5"
+    },
+    {
+      "license": "MIT",
+      "name": "pydantic-core",
+      "version": "2.46.5"
+    },
+    {
+      "license": "MIT",
+      "name": "pydantic-settings",
+      "version": "2.15.0"
+    },
+    {
+      "license": "BSD-2-Clause",
+      "name": "pygments",
+      "version": "2.21.0"
+    },
+    {
+      "license": "MIT",
+      "name": "pyluach",
+      "version": "2.3.0"
+    },
+    {
+      "license": "MIT",
+      "name": "pytest",
+      "version": "9.1.1"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "pytest-asyncio",
+      "version": "1.4.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "python-dateutil",
+      "version": "2.9.0.post0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "python-dotenv",
+      "version": "1.2.3"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "python-multipart",
+      "version": "0.0.32"
+    },
+    {
+      "license": "MIT",
+      "name": "pytz",
+      "version": "2026.3.post1"
+    },
+    {
+      "license": "MIT",
+      "name": "pyyaml",
+      "version": "6.0.3"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "requests",
+      "version": "2.34.2"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "requests-toolbelt",
+      "version": "1.0.0"
+    },
+    {
+      "license": "MIT",
+      "name": "ruff",
+      "version": "0.16.6"
+    },
+    {
+      "license": "MIT-0",
+      "name": "scramp",
+      "version": "1.4.17"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "secretstorage",
+      "version": "3.5.0"
+    },
+    {
+      "license": "MIT",
+      "name": "six",
+      "version": "1.17.0"
+    },
+    {
+      "license": "MIT",
+      "name": "sniffio",
+      "version": "1.3.1"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "starlette",
+      "version": "1.6.0"
+    },
+    {
+      "license": "Apache-2.0",
+      "name": "tenacity",
+      "version": "9.2.1"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "toolz",
+      "version": "1.1.0"
+    },
+    {
+      "license": "MIT",
+      "name": "truststore",
+      "version": "0.10.4"
+    },
+    {
+      "license": "PSF-2.0",
+      "name": "typing-extensions",
+      "version": "4.16.0"
+    },
+    {
+      "license": "MIT",
+      "name": "typing-inspection",
+      "version": "0.4.4"
+    },
+    {
+      "license": "Apache-2.0 (documented exception)",
+      "name": "tzdata",
+      "version": "2026.3"
+    },
+    {
+      "license": "MIT",
+      "name": "urllib3",
+      "version": "2.8.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "uuid-utils",
+      "version": "0.17.1"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "uvicorn",
+      "version": "0.52.4"
+    },
+    {
+      "license": "MIT",
+      "name": "uvloop",
+      "version": "0.22.1"
+    },
+    {
+      "license": "MIT",
+      "name": "watchfiles",
+      "version": "1.2.0"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "websockets",
+      "version": "16.1.1"
+    },
+    {
+      "license": "BSD-2-Clause",
+      "name": "xxhash",
+      "version": "4.0.1"
+    },
+    {
+      "license": "BSD-3-Clause",
+      "name": "zstandard",
+      "version": "0.25.0"
+    }
+  ],
+  "loaded_modules": [
+    {
+      "module": "qm_research_agent.runtime",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/qm_research_agent/runtime.py",
+      "sha256": "e15b27454504d9370b98a0aa6d72cb2da563856fceff675574c488302b575397"
+    },
+    {
+      "module": "qm_research_agent.app",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/qm_research_agent/app.py",
+      "sha256": "07838ee0289ee73e3f744769900ba428dc6e6669b4c807056f5da634869fcc2f"
+    },
+    {
+      "module": "qm_research_agent.store",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/services/research_agent/src/qm_research_agent/store.py",
+      "sha256": "bbce6bc86098e6890653d8861b69f197ab3c5344f124a887f4699012ac7a16e2"
+    },
+    {
+      "module": "quantmesh.research.jobs",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/src/quantmesh/research/jobs.py",
+      "sha256": "fd6abdb293a8092fba65b5239abdf4410ebb2e0cf4b8e5294f9c21dd53981812"
+    },
+    {
+      "module": "quantmesh.research.job_store",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/checkout/src/quantmesh/research/job_store.py",
+      "sha256": "3d56ded5118da9a1783481bfb769853a4f2def4545fd40a635950e78e6d3a989"
+    },
+    {
+      "module": "pydantic",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/pydantic/__init__.py",
+      "sha256": "e62127278c07bf5384cdd2903f368a69929f3b8a524000bae4e0eb608ebf4bc6"
+    },
+    {
+      "module": "pg8000",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/pg8000/__init__.py",
+      "sha256": "d4820a08c270b227d1b6b8f0bc844694a56fb7983d535b72e72194c84ba51fd0"
+    },
+    {
+      "module": "uvicorn",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/uvicorn/__init__.py",
+      "sha256": "d47fc9857b620dc0302aa3d4fdb29639cdf52e7de836ad3143386fded24574cc"
+    },
+    {
+      "module": "fastapi",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/fastapi/__init__.py",
+      "sha256": "036406d9f615d215ac92794c38c799eee6b498935659ce0335debfd47815d7b9"
+    },
+    {
+      "module": "langgraph.graph",
+      "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/langgraph/graph/__init__.py",
+      "sha256": "b357457698c9603ae999a295d082c2c55319a7e03517e012135f6813e6a71a52"
+    }
+  ],
+  "lock_sha256": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a",
+  "machine": "x86_64",
+  "prefix": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv",
+  "protocol_digest": "454cce6bd355465e48a59cb61fbbacb775776cb28c41826e54aff554cf2ccae1",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "schema_digest": "a645a8bde2b439587f736a6a6875e4ffae77265cdcc2900d0b2def43f5f0de18",
+  "system": "Linux"
+}

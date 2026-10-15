@@ -1,0 +1,86 @@
+{
+  "label": "LOCAL_FIXTURE_ONLY",
+  "source_head": "b9daa42830ac240dc8354e457485a6f0e87ca297",
+  "worker_runtime": {
+    "build_digest": "83325a8e0b3447632cb890c771c9d475dbb05860cabc8f0c897099c9e0a649d9",
+    "dependency_digest": "e87ed74200e774edd442cb012a07d9951eca896b3a3c26b771263265c07387a7",
+    "git_commit": "b9daa42830ac240dc8354e457485a6f0e87ca297",
+    "python_executable_digest": "41b0358d661a6be6c3ab18409016f353a20a236b2322df4639f99f1b9879bf26",
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]"
+  },
+  "job_id": "71688feb832e4d498ef1324f07ea6647",
+  "baseline": "risk_parity",
+  "request_digest": "967a30e60922a195a4956419135d40f0a95b3daf69925521a01ce67b0c0cff57",
+  "implementation_digest": "4ad795a698ccbf5737e3730f3821970067d032f991546e5fdc400450b2522824",
+  "report_sha256": "124f692e0bfff4c11fb15e725d800b37dc63052c5c69b2a51ce72d4b35db2566",
+  "report_bytes": 3641,
+  "windows": 10,
+  "costs": {
+    "fee_bps": 1.0,
+    "half_spread_bps": 2.0,
+    "slippage_bps": 3.0
+  },
+  "analysis": {
+    "job_id": "71688feb832e4d498ef1324f07ea6647",
+    "report_digest": "124f692e0bfff4c11fb15e725d800b37dc63052c5c69b2a51ce72d4b35db2566",
+    "state": "unavailable",
+    "provider": null,
+    "model": null,
+    "prompt_digest": null,
+    "output_digest": null,
+    "output_artifact": null,
+    "citations": [],
+    "verdict": "unavailable",
+    "usage": {
+      "elapsed_seconds": null,
+      "peak_memory_mib": null,
+      "model_calls": null,
+      "input_tokens": null,
+      "output_tokens": null,
+      "estimated_model_usd": null
+    },
+    "estimated_price_version": null,
+    "error_code": "model_unavailable"
+  },
+  "download_byte_equal": true,
+  "total_fixture_jobs": 3,
+  "jobs": [
+    {
+      "job_id": "63165bb4809e4efb8d19eb0444004260",
+      "state": "succeeded",
+      "baseline": "momentum"
+    },
+    {
+      "job_id": "9dd067854858409292e72382c57b8725",
+      "state": "cancelled",
+      "baseline": "mean_reversion"
+    },
+    {
+      "job_id": "71688feb832e4d498ef1324f07ea6647",
+      "state": "succeeded",
+      "baseline": "risk_parity"
+    }
+  ],
+  "availability": {
+    "/api/research/job-options": 503,
+    "/api/research/jobs/71688feb832e4d498ef1324f07ea6647": 503,
+    "/api/markets": 200
+  },
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "document_scroll_width": 375
+  },
+  "browser_snapshots": [
+    "browser-reviewed-queued.txt",
+    "browser-reviewed-report.txt",
+    "browser-reviewed-service-down.txt",
+    "browser-reviewed-keyboard.txt"
+  ],
+  "screenshots": [
+    "LOCAL_FIXTURE_ONLY-reviewed-report-desktop.png",
+    "LOCAL_FIXTURE_ONLY-reviewed-service-down.png",
+    "LOCAL_FIXTURE_ONLY-reviewed-mobile-status.png",
+    "LOCAL_FIXTURE_ONLY-reviewed-mobile-report.png"
+  ]
+}

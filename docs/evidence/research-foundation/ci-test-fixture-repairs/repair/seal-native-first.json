@@ -1,0 +1,1 @@
+{"exit": 1, "stage": "patch_capture_after_successful_dependency_and_ruff_checks", "error": "native Git cannot resolve Windows worktree pointer", "correction": "Windows Git captures the same working-tree diff; no test or dependency rerun", "qualifies_runtime": false}

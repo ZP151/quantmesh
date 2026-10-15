@@ -1,0 +1,22 @@
+{
+    "ObserverTreeClosed":  true,
+    "Health":  {
+                   "status":  "ok",
+                   "project":  "QuantMesh",
+                   "version":  "0.1.1rc1",
+                   "paper_mode":  true,
+                   "live_trading":  false,
+                   "deployment":  {
+                                      "environment":  "staging",
+                                      "build_ref":  "69515b79d2bc67303bfef9dee660dbca9bef41e3"
+                                  },
+                   "runtime_mode":  "live"
+               },
+    "ObserverPid":  38012,
+    "AuthenticationUrls":  [
+
+                           ],
+    "Finished":  true,
+    "AtUtc":  "2026-10-13T08:27:31.3125407Z",
+    "ExitCode":  0
+}

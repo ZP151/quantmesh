@@ -1,0 +1,61 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+___ test_orphan_reservation_from_incomplete_import_fails_closed[activation] ___
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x000001DF0A5A1940>, WindowsPath('C:/Users/15492/.codex-clean/..._orphan_reservation_from_i0/lake'), [datetime.datetime(2026, 10, 13, 1, 48, 48, 574014, tzinfo=datetime.timezone.utc)])
+boundary = 'activation'
+
+    @pytest.mark.parametrize("boundary", ["activation", "admission"])
+    def test_orphan_reservation_from_incomplete_import_fails_closed(local, boundary):
+        pairs = jobs(local)
+        effects = ledger(local, operating="0.6")
+        assert reserve(effects, pairs[0])
+        # Simulate an incomplete import using a separate fixture-only connection.
+        # Service transactions retain their existing foreign-key enforcement.
+        with sqlite3.connect(local[0].path) as imported:
+            assert imported.execute("PRAGMA foreign_keys").fetchone()[0] == 0
+            imported.execute(
+                "DELETE FROM model_effects WHERE job_id=? AND digest='a'", (pairs[0][0].job_id,)
+            )
+        if boundary == "activation":
+>           with pytest.raises(ValueError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE ValueError
+
+services\research_agent\tests\test_portfolio_budgets.py:381: Failed
+___ test_orphan_reservation_from_incomplete_import_fails_closed[admission] ____
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x000001DF0A531BD0>, WindowsPath('C:/Users/15492/.codex-clean/..._orphan_reservation_from_i1/lake'), [datetime.datetime(2026, 10, 13, 1, 48, 49, 108788, tzinfo=datetime.timezone.utc)])
+boundary = 'admission'
+
+    @pytest.mark.parametrize("boundary", ["activation", "admission"])
+    def test_orphan_reservation_from_incomplete_import_fails_closed(local, boundary):
+        pairs = jobs(local)
+        effects = ledger(local, operating="0.6")
+        assert reserve(effects, pairs[0])
+        # Simulate an incomplete import using a separate fixture-only connection.
+        # Service transactions retain their existing foreign-key enforcement.
+        with sqlite3.connect(local[0].path) as imported:
+            assert imported.execute("PRAGMA foreign_keys").fetchone()[0] == 0
+            imported.execute(
+                "DELETE FROM model_effects WHERE job_id=? AND digest='a'", (pairs[0][0].job_id,)
+            )
+        if boundary == "activation":
+            with pytest.raises(ValueError):
+                ledger(local, operating="0.6")
+        else:
+>           assert not reserve(effects, pairs[1])
+E           AssertionError: assert not True
+E            +  where True = reserve(<qm_research_agent.budgets.EffectLedger object at 0x000001DF0A531E50>, (JobRecord(job_id='27d2987fa05140eba238fa835f4911a9', operator_id='operator', idempotency_key='portfolio-1', request=R...8788, tzinfo=datetime.timezone.utc), report_digest='a01da1bbf53a161ca14a17152ad99fcfcd5fc33e5ebc9e338be9684057d97fe4')))
+
+services\research_agent\tests\test_portfolio_budgets.py:384: AssertionError
+============================== warnings summary ===============================
+..\..\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_orphan_reservation_from_incomplete_import_fails_closed[activation]
+FAILED services\research_agent\tests\test_portfolio_budgets.py::test_orphan_reservation_from_incomplete_import_fails_closed[admission]
+2 failed, 45 deselected, 1 warning in 0.96s

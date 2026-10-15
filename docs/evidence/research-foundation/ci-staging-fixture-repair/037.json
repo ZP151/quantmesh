@@ -1,0 +1,8 @@
+{
+  "codes": {
+    "ruff": 0,
+    "dependency-after": 1
+  },
+  "bytecode_after": 0,
+  "scope": "DEPENDENCY_ADMISSION_AND_TWO_TEST_FILE_LINT_ONLY"
+}

@@ -1,0 +1,201 @@
+release	Certify exact checkout	﻿2026-10-13T01:02:03.6474373Z ##[group]Run python tools/release_gate.py
+release	Certify exact checkout	2026-10-13T01:02:03.6474747Z ^[[36;1mpython tools/release_gate.py^[[0m
+release	Certify exact checkout	2026-10-13T01:02:03.6537352Z shell: /usr/bin/bash -e {0}
+release	Certify exact checkout	2026-10-13T01:02:03.6537605Z env:
+release	Certify exact checkout	2026-10-13T01:02:03.6537900Z   QUANTMESH_GATE_LOGS: /home/runner/work/_temp/quantmesh-gate-logs
+release	Certify exact checkout	2026-10-13T01:02:03.6538345Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T01:02:03.6538794Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+release	Certify exact checkout	2026-10-13T01:02:03.6539230Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T01:02:03.6539634Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T01:02:03.6540018Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T01:02:03.6540412Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+release	Certify exact checkout	2026-10-13T01:02:03.6540741Z ##[endgroup]
+release	Certify exact checkout	2026-10-13T01:02:03.9298197Z release gate over HEAD @ 1313c77aae39 — source checkout clean, proceeding with a fresh deterministic environment
+release	Certify exact checkout	2026-10-13T01:02:03.9302802Z == clone current commit ==
+release	Certify exact checkout	2026-10-13T01:02:03.9311920Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/01-clone-current-commit.log","name":"clone current commit","pid":3144,"timeout_seconds":600,"timestamp":"2026-10-13T01:02:03.930Z"}
+release	Certify exact checkout	2026-10-13T01:02:04.9321018Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/01-clone-current-commit.log","name":"clone current commit","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:04.931Z"}
+release	Certify exact checkout	2026-10-13T01:02:04.9322768Z ok — 0:01
+release	Certify exact checkout	2026-10-13T01:02:04.9323145Z == release version consistent (metadata, notes, tag) ==
+release	Certify exact checkout	2026-10-13T01:02:04.9329388Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/02-release-version-consistent-(metadata,-notes,-tag).log","name":"release version consistent (metadata, notes, tag)","pid":3157,"timeout_seconds":120,"timestamp":"2026-10-13T01:02:04.932Z"}
+release	Certify exact checkout	2026-10-13T01:02:05.9337717Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/02-release-version-consistent-(metadata,-notes,-tag).log","name":"release version consistent (metadata, notes, tag)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:05.933Z"}
+release	Certify exact checkout	2026-10-13T01:02:05.9340214Z ok — 0:01
+release	Certify exact checkout	2026-10-13T01:02:05.9340496Z == fresh venv ==
+release	Certify exact checkout	2026-10-13T01:02:05.9343825Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/03-fresh-venv.log","name":"fresh venv","pid":3160,"timeout_seconds":600,"timestamp":"2026-10-13T01:02:05.934Z"}
+release	Certify exact checkout	2026-10-13T01:02:08.9354280Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/03-fresh-venv.log","name":"fresh venv","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:08.934Z"}
+release	Certify exact checkout	2026-10-13T01:02:08.9355976Z ok — 0:03
+release	Certify exact checkout	2026-10-13T01:02:08.9356456Z == install release extras .[dev,research,e2e,moomoo] ==
+release	Certify exact checkout	2026-10-13T01:02:08.9363219Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log","name":"install release extras .[dev,research,e2e,moomoo]","pid":3185,"timeout_seconds":1800,"timestamp":"2026-10-13T01:02:08.935Z"}
+release	Certify exact checkout	2026-10-13T01:02:39.9434692Z {"elapsed_seconds":31.008,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log","name":"install release extras .[dev,research,e2e,moomoo]","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:39.942Z"}
+release	Certify exact checkout	2026-10-13T01:02:39.9437241Z ok — 0:31
+release	Certify exact checkout	2026-10-13T01:02:39.9437556Z == ruff check src tests tools ==
+release	Certify exact checkout	2026-10-13T01:02:39.9442473Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/05-ruff-check-src-tests-tools.log","name":"ruff check src tests tools","pid":3241,"timeout_seconds":600,"timestamp":"2026-10-13T01:02:39.943Z"}
+release	Certify exact checkout	2026-10-13T01:02:40.9448753Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/05-ruff-check-src-tests-tools.log","name":"ruff check src tests tools","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:40.944Z"}
+release	Certify exact checkout	2026-10-13T01:02:40.9450887Z ok — 0:01
+release	Certify exact checkout	2026-10-13T01:02:40.9451169Z == trusted data tooling installed ==
+release	Certify exact checkout	2026-10-13T01:02:40.9457834Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/06-trusted-data-tooling-installed.log","name":"trusted data tooling installed","pid":3251,"timeout_seconds":120,"timestamp":"2026-10-13T01:02:40.945Z"}
+release	Certify exact checkout	2026-10-13T01:02:42.9468480Z {"elapsed_seconds":2.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/06-trusted-data-tooling-installed.log","name":"trusted data tooling installed","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:42.946Z"}
+release	Certify exact checkout	2026-10-13T01:02:42.9469848Z ok — 0:02
+release	Certify exact checkout	2026-10-13T01:02:42.9470142Z == license review (closure contract) ==
+release	Certify exact checkout	2026-10-13T01:02:42.9475999Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/07-license-review-(closure-contract).log","name":"license review (closure contract)","pid":3258,"timeout_seconds":600,"timestamp":"2026-10-13T01:02:42.947Z"}
+release	Certify exact checkout	2026-10-13T01:02:43.9486340Z {"elapsed_seconds":1.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/07-license-review-(closure-contract).log","name":"license review (closure contract)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:43.948Z"}
+release	Certify exact checkout	2026-10-13T01:02:43.9488069Z ok — 0:01
+release	Certify exact checkout	2026-10-13T01:02:43.9488419Z == audit venv (isolated tooling) ==
+release	Certify exact checkout	2026-10-13T01:02:43.9494932Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/08-audit-venv-(isolated-tooling).log","name":"audit venv (isolated tooling)","pid":3259,"timeout_seconds":600,"timestamp":"2026-10-13T01:02:43.949Z"}
+release	Certify exact checkout	2026-10-13T01:02:46.9505717Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/08-audit-venv-(isolated-tooling).log","name":"audit venv (isolated tooling)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:46.950Z"}
+release	Certify exact checkout	2026-10-13T01:02:46.9508426Z ok — 0:03
+release	Certify exact checkout	2026-10-13T01:02:46.9508728Z == install pip-audit (isolated) ==
+release	Certify exact checkout	2026-10-13T01:02:46.9514717Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/09-install-pip-audit-(isolated).log","name":"install pip-audit (isolated)","pid":3284,"timeout_seconds":600,"timestamp":"2026-10-13T01:02:46.951Z"}
+release	Certify exact checkout	2026-10-13T01:02:50.9527680Z {"elapsed_seconds":4.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/09-install-pip-audit-(isolated).log","name":"install pip-audit (isolated)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:50.952Z"}
+release	Certify exact checkout	2026-10-13T01:02:50.9529302Z ok — 0:04
+release	Certify exact checkout	2026-10-13T01:02:50.9529628Z == pip-audit over requirements-audit.txt ==
+release	Certify exact checkout	2026-10-13T01:02:50.9537250Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/10-pip-audit-over-requirements-audit.txt.log","name":"pip-audit over requirements-audit.txt","pid":3308,"timeout_seconds":900,"timestamp":"2026-10-13T01:02:50.953Z"}
+release	Certify exact checkout	2026-10-13T01:02:52.9547403Z {"elapsed_seconds":2.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/10-pip-audit-over-requirements-audit.txt.log","name":"pip-audit over requirements-audit.txt","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:52.954Z"}
+release	Certify exact checkout	2026-10-13T01:02:52.9549003Z ok — 0:02
+release	Certify exact checkout	2026-10-13T01:02:52.9549293Z == npm ci (frontend deps) ==
+release	Certify exact checkout	2026-10-13T01:02:52.9555145Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/11-npm-ci-(frontend-deps).log","name":"npm ci (frontend deps)","pid":3311,"timeout_seconds":1800,"timestamp":"2026-10-13T01:02:52.955Z"}
+release	Certify exact checkout	2026-10-13T01:02:59.9579560Z {"elapsed_seconds":7.003,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/11-npm-ci-(frontend-deps).log","name":"npm ci (frontend deps)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:02:59.957Z"}
+release	Certify exact checkout	2026-10-13T01:02:59.9582182Z ok — 0:07
+release	Certify exact checkout	2026-10-13T01:02:59.9582716Z == frontend license review (locked closure) ==
+release	Certify exact checkout	2026-10-13T01:02:59.9588936Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/12-frontend-license-review-(locked-closure).log","name":"frontend license review (locked closure)","pid":3369,"timeout_seconds":120,"timestamp":"2026-10-13T01:02:59.958Z"}
+release	Certify exact checkout	2026-10-13T01:03:00.9595807Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/12-frontend-license-review-(locked-closure).log","name":"frontend license review (locked closure)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:03:00.959Z"}
+release	Certify exact checkout	2026-10-13T01:03:00.9597653Z ok — 0:01
+release	Certify exact checkout	2026-10-13T01:03:00.9597968Z == npm audit --audit-level=high ==
+release	Certify exact checkout	2026-10-13T01:03:00.9604231Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/13-npm-audit---audit-level=high.log","name":"npm audit --audit-level=high","pid":3370,"timeout_seconds":600,"timestamp":"2026-10-13T01:03:00.960Z"}
+release	Certify exact checkout	2026-10-13T01:03:01.9613970Z {"elapsed_seconds":1.001,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/13-npm-audit---audit-level=high.log","name":"npm audit --audit-level=high","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:03:01.960Z"}
+release	Certify exact checkout	2026-10-13T01:03:01.9617160Z ok — 0:01
+release	Certify exact checkout	2026-10-13T01:03:01.9617577Z == frontend bundle current (build_frontend --check) ==
+release	Certify exact checkout	2026-10-13T01:03:01.9622801Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/14-frontend-bundle-current-(build_frontend---check).log","name":"frontend bundle current (build_frontend --check)","pid":3381,"timeout_seconds":1800,"timestamp":"2026-10-13T01:03:01.961Z"}
+release	Certify exact checkout	2026-10-13T01:03:10.9663173Z {"elapsed_seconds":9.005,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/14-frontend-bundle-current-(build_frontend---check).log","name":"frontend bundle current (build_frontend --check)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:03:10.965Z"}
+release	Certify exact checkout	2026-10-13T01:03:10.9666178Z ok — 0:09
+release	Certify exact checkout	2026-10-13T01:03:10.9666751Z == frontend unit tests (vitest) ==
+release	Certify exact checkout	2026-10-13T01:03:10.9671853Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/15-frontend-unit-tests-(vitest).log","name":"frontend unit tests (vitest)","pid":3429,"timeout_seconds":900,"timestamp":"2026-10-13T01:03:10.966Z"}
+release	Certify exact checkout	2026-10-13T01:03:37.9929932Z {"elapsed_seconds":27.027,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/15-frontend-unit-tests-(vitest).log","name":"frontend unit tests (vitest)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:03:37.992Z"}
+release	Certify exact checkout	2026-10-13T01:03:37.9933225Z ok — 0:27
+release	Certify exact checkout	2026-10-13T01:03:37.9933650Z == full pytest suite ==
+release	Certify exact checkout	2026-10-13T01:03:37.9945834Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log","name":"full pytest suite","pid":3864,"timeout_seconds":10800,"timestamp":"2026-10-13T01:03:37.994Z"}
+release	Certify exact checkout	2026-10-13T01:04:15.0056228Z {"elapsed_seconds":37.012,"event":"step_failure_seen","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log","name":"full pytest suite","timestamp":"2026-10-13T01:04:15.005Z"}
+release	Certify exact checkout	2026-10-13T01:13:38.1644770Z {"elapsed_seconds":600.171,"event":"step_progress","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log","log_size_bytes":623,"name":"full pytest suite","pytest_percentage":11,"timestamp":"2026-10-13T01:13:38.164Z"}
+release	Certify exact checkout	2026-10-13T01:23:38.3281224Z {"elapsed_seconds":1200.335,"event":"step_progress","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log","log_size_bytes":649,"name":"full pytest suite","pytest_percentage":12,"timestamp":"2026-10-13T01:23:38.327Z"}
+release	Certify exact checkout	2026-10-13T01:33:38.4916408Z {"elapsed_seconds":1800.498,"event":"step_progress","log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log","log_size_bytes":769,"name":"full pytest suite","pytest_percentage":14,"timestamp":"2026-10-13T01:33:38.491Z"}
+release	Certify exact checkout	2026-10-13T01:43:13.6526355Z {"elapsed_seconds":2375.659,"event":"step_finished","exit_code":-1,"log_path":"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log","name":"full pytest suite","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T01:43:13.652Z"}
+release	Certify exact checkout	2026-10-13T01:43:13.6528455Z FAILED after 39:35; exit code -1; last output:
+release	Certify exact checkout	2026-10-13T01:43:13.6528967Z ........................................................................ [  1%]
+release	Certify exact checkout	2026-10-13T01:43:13.6529475Z ........................................................................ [  3%]
+release	Certify exact checkout	2026-10-13T01:43:13.6529954Z ........................................................................ [  4%]
+release	Certify exact checkout	2026-10-13T01:43:13.6530421Z ........................................................................ [  6%]
+release	Certify exact checkout	2026-10-13T01:43:13.6530892Z ........................................................................ [  7%]
+release	Certify exact checkout	2026-10-13T01:43:13.6531365Z ........................................................................ [  9%]
+release	Certify exact checkout	2026-10-13T01:43:13.6532160Z .........................F.............................................. [ 11%]
+release	Certify exact checkout	2026-10-13T01:43:13.6532650Z ........................................................................ [ 12%]
+release	Certify exact checkout	2026-10-13T01:43:13.6533106Z ........................................................................ [ 14%]
+release	Certify exact checkout	2026-10-13T01:43:13.6533576Z ........................................................................ [ 15%]
+release	Certify exact checkout	2026-10-13T01:43:13.6534048Z ........................................................................ [ 17%]
+release	Certify exact checkout	2026-10-13T01:43:13.6534511Z ........................................................................ [ 18%]
+release	Certify exact checkout	2026-10-13T01:43:13.6534984Z ........................................................................ [ 20%]
+release	Certify exact checkout	2026-10-13T01:43:13.6535449Z ........................................................................ [ 22%]
+release	Certify exact checkout	2026-10-13T01:43:13.6535923Z .......sss.............................................................. [ 23%]
+release	Certify exact checkout	2026-10-13T01:43:13.6536399Z ........................................................................ [ 25%]
+release	Certify exact checkout	2026-10-13T01:43:13.6536877Z ........................................................................ [ 26%]
+release	Certify exact checkout	2026-10-13T01:43:13.6537618Z ........................................................................ [ 28%]
+release	Certify exact checkout	2026-10-13T01:43:13.6538080Z ........................................................................ [ 29%]
+release	Certify exact checkout	2026-10-13T01:43:13.6538528Z ........................................................................ [ 31%]
+release	Certify exact checkout	2026-10-13T01:43:13.6538976Z ........................................................................ [ 33%]
+release	Certify exact checkout	2026-10-13T01:43:13.6539429Z ........................................................................ [ 34%]
+release	Certify exact checkout	2026-10-13T01:43:13.6539877Z ........................................................................ [ 36%]
+release	Certify exact checkout	2026-10-13T01:43:13.6540327Z ......................................................sss............... [ 37%]
+release	Certify exact checkout	2026-10-13T01:43:13.6540780Z ........................................................................ [ 39%]
+release	Certify exact checkout	2026-10-13T01:43:13.6541266Z ..............F......FFFFF.............FFFFFF........................... [ 41%]
+release	Certify exact checkout	2026-10-13T01:43:13.6541915Z ...................................s.................................... [ 42%]
+release	Certify exact checkout	2026-10-13T01:43:13.6542422Z .........sssssss........................................................ [ 44%]
+release	Certify exact checkout	2026-10-13T01:43:13.6542909Z ........................................................................ [ 45%]
+release	Certify exact checkout	2026-10-13T01:43:13.6543362Z ........................................................................ [ 47%]
+release	Certify exact checkout	2026-10-13T01:43:13.6543846Z .............sssss..........F........................................... [ 48%]
+release	Certify exact checkout	2026-10-13T01:43:13.6544332Z ........................................................................ [ 50%]
+release	Certify exact checkout	2026-10-13T01:43:13.6544930Z ........................................................................ [ 52%]
+release	Certify exact checkout	2026-10-13T01:43:13.6545821Z ........................................................................ [ 53%]
+release	Certify exact checkout	2026-10-13T01:43:13.6546908Z ........................................................................ [ 55%]
+release	Certify exact checkout	2026-10-13T01:43:13.6547760Z ........................................................................ [ 56%]
+release	Certify exact checkout	2026-10-13T01:43:13.6548609Z ........................................................................ [ 58%]
+release	Certify exact checkout	2026-10-13T01:43:13.6549454Z .....................................s.................................. [ 59%]
+release	Certify exact checkout	2026-10-13T01:43:13.6550297Z ........................................................................ [ 61%]
+release	Certify exact checkout	2026-10-13T01:43:13.6551144Z ........................................................................ [ 63%]
+release	Certify exact checkout	2026-10-13T01:43:13.6551993Z ..................................
+release	Certify exact checkout	2026-10-13T01:43:13.8631857Z 
+release	Certify exact checkout	2026-10-13T01:43:13.8632281Z === release gate summary ===
+release	Certify exact checkout	2026-10-13T01:43:13.8632754Z branch: HEAD   commit: 1313c77aae39e76c3f168b25810926258c676d49
+release	Certify exact checkout	2026-10-13T01:43:13.8633180Z source checkout clean at start: yes
+release	Certify exact checkout	2026-10-13T01:43:13.8633495Z   PASS      1.0s  clone current commit
+release	Certify exact checkout	2026-10-13T01:43:13.8633901Z   PASS      1.0s  release version consistent (metadata, notes, tag)
+release	Certify exact checkout	2026-10-13T01:43:13.8634278Z   PASS      3.0s  fresh venv
+release	Certify exact checkout	2026-10-13T01:43:13.8634627Z   PASS     31.0s  install release extras .[dev,research,e2e,moomoo]
+release	Certify exact checkout	2026-10-13T01:43:13.8635011Z   PASS      1.0s  ruff check src tests tools
+release	Certify exact checkout	2026-10-13T01:43:13.8635355Z   PASS      2.0s  trusted data tooling installed
+release	Certify exact checkout	2026-10-13T01:43:13.8635720Z   PASS      1.0s  license review (closure contract)
+release	Certify exact checkout	2026-10-13T01:43:13.8636072Z   PASS      3.0s  audit venv (isolated tooling)
+release	Certify exact checkout	2026-10-13T01:43:13.8636422Z   PASS      4.0s  install pip-audit (isolated)
+release	Certify exact checkout	2026-10-13T01:43:13.8636805Z   PASS      2.0s  pip-audit over requirements-audit.txt
+release	Certify exact checkout	2026-10-13T01:43:13.8637176Z   PASS      7.0s  npm ci (frontend deps)
+release	Certify exact checkout	2026-10-13T01:43:13.8637550Z   PASS      1.0s  frontend license review (locked closure)
+release	Certify exact checkout	2026-10-13T01:43:13.8637927Z   PASS      1.0s  npm audit --audit-level=high
+release	Certify exact checkout	2026-10-13T01:43:13.8638325Z   PASS      9.0s  frontend bundle current (build_frontend --check)
+release	Certify exact checkout	2026-10-13T01:43:13.8638719Z   PASS     27.0s  frontend unit tests (vitest)
+release	Certify exact checkout	2026-10-13T01:43:13.8639273Z   FAIL   2375.7s  full pytest suite
+release	Certify exact checkout	2026-10-13T01:43:13.8639613Z clone clean at end (no generated state): yes
+release	Certify exact checkout	2026-10-13T01:43:13.8639893Z   pytest: 
+release	Certify exact checkout	2026-10-13T01:43:13.8640182Z   playwright browser cache: absent (E2E tests skipped)
+release	Certify exact checkout	2026-10-13T01:43:13.8640426Z 
+release	Certify exact checkout	2026-10-13T01:43:13.8641063Z RELEASE GATE FAILED — diagnostics kept at /tmp/qmesh-release-gate-3q6l4o3h
+release	Certify exact checkout	2026-10-13T01:43:13.8736170Z ##[error]Process completed with exit code 1.
+python	Require successful selected gates	﻿2026-10-13T01:43:21.2012882Z ##[group]Run python - <<'PY'
+python	Require successful selected gates	2026-10-13T01:43:21.2013608Z ^[[36;1mpython - <<'PY'^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2014155Z ^[[36;1mimport json^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2014959Z ^[[36;1mimport os^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2015591Z ^[[36;1mresults = json.loads(os.environ["GATE_RESULTS"])^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2016408Z ^[[36;1mrequired = ("classify", "fast", "research_service")^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2017320Z ^[[36;1mfailed = any(results[name]["result"] != "success" for name in required)^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2018254Z ^[[36;1mfailed |= any(value["result"] not in {"success", "skipped"}^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2019040Z ^[[36;1m              for value in results.values())^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2019721Z ^[[36;1mraise SystemExit(1 if failed else 0)^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2020318Z ^[[36;1mPY^[[0m
+python	Require successful selected gates	2026-10-13T01:43:21.2281586Z shell: /usr/bin/bash -e {0}
+python	Require successful selected gates	2026-10-13T01:43:21.2282392Z env:
+python	Require successful selected gates	2026-10-13T01:43:21.2283159Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T01:43:21.2284427Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+python	Require successful selected gates	2026-10-13T01:43:21.2286000Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T01:43:21.2287138Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T01:43:21.2288272Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T01:43:21.2289686Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+python	Require successful selected gates	2026-10-13T01:43:21.2304359Z   GATE_RESULTS: {
+python	Require successful selected gates	  "classify": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {
+python	Require successful selected gates	      "decision": "{\"domains\":[],\"frontend\":false,\"pytest_targets\":[],\"reasons\":[\"safety:.github/workflows/ci.yml\",\"safety:docs/evidence/research-foundation/owned-research-backup/public-audit/go.mod\",\"safety:docs/evidence/research-foundation/owned-research-backup/public-audit/go.sum\",\"safety:frontend/src/components/live-data-badge.test.tsx\",\"safety:frontend/src/components/live-data-badge.tsx\",\"safety:frontend/src/components/live-market-list.tsx\",\"safety:frontend/src/lib/live-session.test.ts\",\"safety:frontend/src/lib/live.ts\",\"safety:src/quantmesh/instruments/contracts.py\",\"safety:src/quantmesh/instruments/workspace.py\",\"safety:src/quantmesh/live/feed.py\",\"safety:src/quantmesh/live/fence.py\",\"safety:src/quantmesh/live/session_freshness.py\",\"safety:src/quantmesh/research/job_store.py\",\"safety:tests/test_ai_acceptance.py\",\"safety:tests/test_live_fence.py\",\"safety:tests/test_live_session_consumers.py\",\"safety:tests/test_live_session_freshness.py\",\"safety:tests/test_owned_postgres_fixture.py\",\"safety:tests/test_research_job_store.py\",\"safety:tools/eval_harness/README.md\",\"safety:tools/eval_harness/__init__.py\",\"safety:tools/eval_harness/__main__.py\",\"safety:tools/eval_harness/core.py\",\"safety:tools/eval_harness/pytest_plugin.py\",\"safety:tools/eval_harness/runner.py\",\"safety:tools/gate_policy.py\",\"safety:tools/qualify_linux_worker.py\",\"safety:tools/qualify_opend_private_terminal.py\",\"safety:tools/qualify_owned_postgres.py\",\"safety:tools/qualify_research_backup.py\",\"safety:tools/quality_gate.py\",\"safety:tools/release_gate.py\",\"safety:tools/research_job.py\",\"safety:tools/research_service_gate.py\",\"safety:tools/server_market_inventory.py\",\"safety:tools/verify_server_market_source.py\"],\"tier\":\"release\"}",
+python	Require successful selected gates	      "domains": "[]",
+python	Require successful selected gates	      "frontend": "false",
+python	Require successful selected gates	      "run_browser": "false",
+python	Require successful selected gates	      "tier": "release"
+python	Require successful selected gates	    }
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "fast": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "domain": {
+python	Require successful selected gates	    "result": "skipped",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "browser": {
+python	Require successful selected gates	    "result": "skipped",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "release": {
+python	Require successful selected gates	    "result": "failure",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "research_service": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  }
+python	Require successful selected gates	}
+python	Require successful selected gates	2026-10-13T01:43:21.2317801Z ##[endgroup]
+python	Require successful selected gates	2026-10-13T01:43:21.2993846Z ##[error]Process completed with exit code 1.

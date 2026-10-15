@@ -1,0 +1,552 @@
+FFFFFFFFFFFFFFFFF.                                                       [100%]
+================================== FAILURES ===================================
+______________ test_fixture_rejects_nonliteral_loopback[0.0.0.0] ______________
+
+host = '0.0.0.0'
+
+    @pytest.mark.parametrize("host", ["0.0.0.0", "::", "localhost", "192.168.1.2"])
+    def test_fixture_rejects_nonliteral_loopback(host):
+        with pytest.raises(ValueError, match="loopback"):
+>           helper().validate_bind(host)
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+________________ test_fixture_rejects_nonliteral_loopback[::] _________________
+
+host = '::'
+
+    @pytest.mark.parametrize("host", ["0.0.0.0", "::", "localhost", "192.168.1.2"])
+    def test_fixture_rejects_nonliteral_loopback(host):
+        with pytest.raises(ValueError, match="loopback"):
+>           helper().validate_bind(host)
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+_____________ test_fixture_rejects_nonliteral_loopback[localhost] _____________
+
+host = 'localhost'
+
+    @pytest.mark.parametrize("host", ["0.0.0.0", "::", "localhost", "192.168.1.2"])
+    def test_fixture_rejects_nonliteral_loopback(host):
+        with pytest.raises(ValueError, match="loopback"):
+>           helper().validate_bind(host)
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+____________ test_fixture_rejects_nonliteral_loopback[192.168.1.2] ____________
+
+host = '192.168.1.2'
+
+    @pytest.mark.parametrize("host", ["0.0.0.0", "::", "localhost", "192.168.1.2"])
+    def test_fixture_rejects_nonliteral_loopback(host):
+        with pytest.raises(ValueError, match="loopback"):
+>           helper().validate_bind(host)
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:19: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+_________________ test_fixture_accepts_only_literal_loopback __________________
+
+    def test_fixture_accepts_only_literal_loopback():
+>       assert helper().validate_bind("127.0.0.1") == "127.0.0.1"
+               ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:23: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+________________ test_profile_rejects_external_authority[dsn] _________________
+
+key = 'dsn'
+
+    @pytest.mark.parametrize("key", ["dsn", "password", "command", "data_dir", "DATABASE_URL"])
+    def test_profile_rejects_external_authority(key):
+        with pytest.raises(ValueError, match="profile fields"):
+>           helper().Profile.from_mapping({key: "external"})
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+______________ test_profile_rejects_external_authority[password] ______________
+
+key = 'password'
+
+    @pytest.mark.parametrize("key", ["dsn", "password", "command", "data_dir", "DATABASE_URL"])
+    def test_profile_rejects_external_authority(key):
+        with pytest.raises(ValueError, match="profile fields"):
+>           helper().Profile.from_mapping({key: "external"})
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+______________ test_profile_rejects_external_authority[command] _______________
+
+key = 'command'
+
+    @pytest.mark.parametrize("key", ["dsn", "password", "command", "data_dir", "DATABASE_URL"])
+    def test_profile_rejects_external_authority(key):
+        with pytest.raises(ValueError, match="profile fields"):
+>           helper().Profile.from_mapping({key: "external"})
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+______________ test_profile_rejects_external_authority[data_dir] ______________
+
+key = 'data_dir'
+
+    @pytest.mark.parametrize("key", ["dsn", "password", "command", "data_dir", "DATABASE_URL"])
+    def test_profile_rejects_external_authority(key):
+        with pytest.raises(ValueError, match="profile fields"):
+>           helper().Profile.from_mapping({key: "external"})
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+____________ test_profile_rejects_external_authority[DATABASE_URL] ____________
+
+key = 'DATABASE_URL'
+
+    @pytest.mark.parametrize("key", ["dsn", "password", "command", "data_dir", "DATABASE_URL"])
+    def test_profile_rejects_external_authority(key):
+        with pytest.raises(ValueError, match="profile fields"):
+>           helper().Profile.from_mapping({key: "external"})
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:29: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+_________________ test_profile_rejects_wrong_official_source __________________
+
+    def test_profile_rejects_wrong_official_source():
+        raw = {
+            "root": "/var/tmp/quantmesh-owned-pg-example",
+            "source_url": "https://example.com/arbitrary.tar.bz2",
+            "source_sha256": "0" * 64,
+            "binaries": {},
+            "license_sha256": "0" * 64,
+            "configure": [],
+            "packages": [],
+        }
+        with pytest.raises(ValueError, match="official source"):
+>           helper().Profile.from_mapping(raw)
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+___________ test_owned_path_refuses_borrowed_directory_and_symlink ____________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-red/test_owned_path_refuses_borrow0')
+
+    def test_owned_path_refuses_borrowed_directory_and_symlink(tmp_path):
+        owned = tmp_path / "owned"
+        borrowed = tmp_path / "borrowed"
+        owned.mkdir()
+        borrowed.mkdir()
+        with pytest.raises(ValueError, match="owned path"):
+>           helper().owned_child(owned, borrowed)
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:52: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+___________ test_environment_has_no_ambient_credentials_or_tracing ____________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-red/test_environment_has_no_ambien0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000022739539BA0>
+
+    def test_environment_has_no_ambient_credentials_or_tracing(tmp_path, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "synthetic-must-not-leak")
+        monkeypatch.setenv("DATABASE_URL", "synthetic-must-not-leak")
+        monkeypatch.setenv("LANGSMITH_TRACING", "true")
+>       env = helper().private_environment(tmp_path)
+              ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+______________ test_password_file_private_and_removed_after_use _______________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-red/test_password_file_private_and0')
+
+    def test_password_file_private_and_removed_after_use(tmp_path):
+>       with helper().password_input(tmp_path, "synthetic-password") as path:
+             ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:70: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+__________________ test_output_redacts_password_and_raw_dsn ___________________
+
+    def test_output_redacts_password_and_raw_dsn():
+        secret = "synthetic-password"
+        dsn = "postgresql://fixture:" + secret + "@127.0.0.1:55432/postgres?sslmode=disable"
+>       output = helper().redact("failure " + dsn + " password=" + secret, secret, dsn)
+                 ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+____________ test_cleanup_rejects_pid_data_or_executable_mismatch _____________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/c7be/QuantMesh/output/171-owned-postgres/pytest-red/test_cleanup_rejects_pid_data_0')
+
+    def test_cleanup_rejects_pid_data_or_executable_mismatch(tmp_path):
+        with pytest.raises(ValueError, match="ownership"):
+>           helper().verify_process_identity(os.getpid(), tmp_path, Path(sys.executable), "bad")
+            ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:85: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+____________________ test_collision_fails_without_fallback ____________________
+
+    def test_collision_fails_without_fallback():
+        import socket
+    
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            listener.listen()
+            with pytest.raises(ValueError, match="port collision"):
+>               helper().admit_port(listener.getsockname()[1])
+                ^^^^^^^^
+
+tests\test_owned_postgres_fixture.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_owned_postgres_fixture.py:13: in helper
+    return importlib.import_module("tools.qualify_owned_postgres")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<frozen importlib._bootstrap>:1387: in _gcd_import
+    ???
+<frozen importlib._bootstrap>:1360: in _find_and_load
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'tools.qualify_owned_postgres'
+import_ = <function _gcd_import at 0x0000022735D304A0>
+
+>   ???
+E   ModuleNotFoundError: No module named 'tools.qualify_owned_postgres'
+
+<frozen importlib._bootstrap>:1324: ModuleNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/test_owned_postgres_fixture.py::test_fixture_rejects_nonliteral_loopback[0.0.0.0]
+FAILED tests/test_owned_postgres_fixture.py::test_fixture_rejects_nonliteral_loopback[::]
+FAILED tests/test_owned_postgres_fixture.py::test_fixture_rejects_nonliteral_loopback[localhost]
+FAILED tests/test_owned_postgres_fixture.py::test_fixture_rejects_nonliteral_loopback[192.168.1.2]
+FAILED tests/test_owned_postgres_fixture.py::test_fixture_accepts_only_literal_loopback
+FAILED tests/test_owned_postgres_fixture.py::test_profile_rejects_external_authority[dsn]
+FAILED tests/test_owned_postgres_fixture.py::test_profile_rejects_external_authority[password]
+FAILED tests/test_owned_postgres_fixture.py::test_profile_rejects_external_authority[command]
+FAILED tests/test_owned_postgres_fixture.py::test_profile_rejects_external_authority[data_dir]
+FAILED tests/test_owned_postgres_fixture.py::test_profile_rejects_external_authority[DATABASE_URL]
+FAILED tests/test_owned_postgres_fixture.py::test_profile_rejects_wrong_official_source
+FAILED tests/test_owned_postgres_fixture.py::test_owned_path_refuses_borrowed_directory_and_symlink
+FAILED tests/test_owned_postgres_fixture.py::test_environment_has_no_ambient_credentials_or_tracing
+FAILED tests/test_owned_postgres_fixture.py::test_password_file_private_and_removed_after_use
+FAILED tests/test_owned_postgres_fixture.py::test_output_redacts_password_and_raw_dsn
+FAILED tests/test_owned_postgres_fixture.py::test_cleanup_rejects_pid_data_or_executable_mismatch
+FAILED tests/test_owned_postgres_fixture.py::test_collision_fails_without_fallback
+17 failed, 1 passed in 0.39s

@@ -1,0 +1,766 @@
+{
+  "actual_build": "0f8b71e16cc09d416030448bec8852d7ea18cc80",
+  "checks": {
+    "api_restart_durable_cancelled": {
+      "detail": {
+        "analysis": null,
+        "analysis_state": "not_requested",
+        "artifacts": [],
+        "attempt": 0,
+        "cancel_requested": true,
+        "created_at": "2026-10-12T21:38:59.354997Z",
+        "error_code": "cancelled",
+        "finished_at": "2026-10-12T21:39:04.566705Z",
+        "idempotency_key": "owned-bootstrap-replay",
+        "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+        "job_id": "fc973ce58e3c431c8cde61c2bcea12b3",
+        "lease_expires_at": null,
+        "lease_owner": null,
+        "operator_id": "operator",
+        "request": {
+          "analysis_requested": false,
+          "budget": {
+            "cpu_limit": 1.0,
+            "max_estimated_model_usd": 1.0,
+            "max_model_calls": 12,
+            "memory_mib": 2048,
+            "timeout_seconds": 900
+          },
+          "costs": {
+            "fee_bps": 1.0,
+            "half_spread_bps": 2.0,
+            "slippage_bps": 3.0
+          },
+          "dataset": {
+            "dataset_id": "equities",
+            "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+            "permission_class": "fixture",
+            "revision": 1
+          },
+          "interval": "1h",
+          "parameters": {},
+          "schema_version": 1,
+          "strategy_id": "momentum",
+          "strategy_version": "1",
+          "universe": [
+            {
+              "symbol": "AAA",
+              "venue": "moomoo"
+            }
+          ],
+          "window_spec": {
+            "step_bars": 5,
+            "test_bars": 5,
+            "train_bars": 10
+          }
+        },
+        "request_digest": "7d0c388073d4b016504830fe56f015781365f33634701a45cbbc4c096b08050c",
+        "state": "cancelled",
+        "updated_at": "2026-10-12T21:39:04.566705Z",
+        "usage": {
+          "elapsed_seconds": null,
+          "estimated_model_usd": null,
+          "input_tokens": null,
+          "model_calls": null,
+          "output_tokens": null,
+          "peak_memory_mib": null
+        }
+      },
+      "passed": true
+    },
+    "api_restart_durable_queued": {
+      "detail": {
+        "analysis": null,
+        "analysis_state": "not_requested",
+        "artifacts": [],
+        "attempt": 0,
+        "cancel_requested": false,
+        "created_at": "2026-10-12T21:38:59.354997Z",
+        "error_code": null,
+        "finished_at": null,
+        "idempotency_key": "owned-bootstrap-replay",
+        "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+        "job_id": "fc973ce58e3c431c8cde61c2bcea12b3",
+        "lease_expires_at": null,
+        "lease_owner": null,
+        "operator_id": "operator",
+        "request": {
+          "analysis_requested": false,
+          "budget": {
+            "cpu_limit": 1.0,
+            "max_estimated_model_usd": 1.0,
+            "max_model_calls": 12,
+            "memory_mib": 2048,
+            "timeout_seconds": 900
+          },
+          "costs": {
+            "fee_bps": 1.0,
+            "half_spread_bps": 2.0,
+            "slippage_bps": 3.0
+          },
+          "dataset": {
+            "dataset_id": "equities",
+            "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+            "permission_class": "fixture",
+            "revision": 1
+          },
+          "interval": "1h",
+          "parameters": {},
+          "schema_version": 1,
+          "strategy_id": "momentum",
+          "strategy_version": "1",
+          "universe": [
+            {
+              "symbol": "AAA",
+              "venue": "moomoo"
+            }
+          ],
+          "window_spec": {
+            "step_bars": 5,
+            "test_bars": 5,
+            "train_bars": 10
+          }
+        },
+        "request_digest": "7d0c388073d4b016504830fe56f015781365f33634701a45cbbc4c096b08050c",
+        "state": "queued",
+        "updated_at": "2026-10-12T21:38:59.354997Z",
+        "usage": {
+          "elapsed_seconds": null,
+          "estimated_model_usd": null,
+          "input_tokens": null,
+          "model_calls": null,
+          "output_tokens": null,
+          "peak_memory_mib": null
+        }
+      },
+      "passed": true
+    },
+    "api_restart_replay_same_job": {
+      "detail": null,
+      "passed": true
+    },
+    "auth_401": {
+      "detail": null,
+      "passed": true
+    },
+    "cancelled_fixture": {
+      "detail": {
+        "analysis": null,
+        "analysis_state": "not_requested",
+        "artifacts": [],
+        "attempt": 0,
+        "cancel_requested": true,
+        "created_at": "2026-10-12T21:38:59.354997Z",
+        "error_code": "cancelled",
+        "finished_at": "2026-10-12T21:39:04.566705Z",
+        "idempotency_key": "owned-bootstrap-replay",
+        "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+        "job_id": "fc973ce58e3c431c8cde61c2bcea12b3",
+        "lease_expires_at": null,
+        "lease_owner": null,
+        "operator_id": "operator",
+        "request": {
+          "analysis_requested": false,
+          "budget": {
+            "cpu_limit": 1.0,
+            "max_estimated_model_usd": 1.0,
+            "max_model_calls": 12,
+            "memory_mib": 2048,
+            "timeout_seconds": 900
+          },
+          "costs": {
+            "fee_bps": 1.0,
+            "half_spread_bps": 2.0,
+            "slippage_bps": 3.0
+          },
+          "dataset": {
+            "dataset_id": "equities",
+            "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+            "permission_class": "fixture",
+            "revision": 1
+          },
+          "interval": "1h",
+          "parameters": {},
+          "schema_version": 1,
+          "strategy_id": "momentum",
+          "strategy_version": "1",
+          "universe": [
+            {
+              "symbol": "AAA",
+              "venue": "moomoo"
+            }
+          ],
+          "window_spec": {
+            "step_bars": 5,
+            "test_bars": 5,
+            "train_bars": 10
+          }
+        },
+        "request_digest": "7d0c388073d4b016504830fe56f015781365f33634701a45cbbc4c096b08050c",
+        "state": "cancelled",
+        "updated_at": "2026-10-12T21:39:04.566705Z",
+        "usage": {
+          "elapsed_seconds": null,
+          "estimated_model_usd": null,
+          "input_tokens": null,
+          "model_calls": null,
+          "output_tokens": null,
+          "peak_memory_mib": null
+        }
+      },
+      "passed": true
+    },
+    "configured_fixture_options": {
+      "detail": {
+        "datasets": [
+          {
+            "dataset": {
+              "dataset_id": "equities",
+              "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+              "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+              "permission_class": "fixture",
+              "revision": 1
+            },
+            "interval": "1h",
+            "minimum_available_bars": 60,
+            "universe": [
+              {
+                "symbol": "AAA",
+                "venue": "moomoo"
+              },
+              {
+                "symbol": "BBB",
+                "venue": "moomoo"
+              },
+              {
+                "symbol": "CCC",
+                "venue": "moomoo"
+              }
+            ]
+          }
+        ],
+        "reason": null,
+        "schema_version": 1,
+        "status": "configured",
+        "strategies": [
+          {
+            "cost_policy_id": "baseline-bps-v1",
+            "dataset_requirements": {
+              "bars": "aligned-positive-chronological",
+              "manifest_schema": 1,
+              "minimum": "train_bars+test_bars",
+              "permission": "fixture"
+            },
+            "family": "momentum",
+            "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+            "parameters_schema": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            },
+            "strategy_id": "momentum",
+            "supported_intervals": [
+              "1m",
+              "5m",
+              "15m",
+              "30m",
+              "1h",
+              "1d"
+            ],
+            "supported_markets": [
+              "moomoo",
+              "internal"
+            ],
+            "version": "1"
+          },
+          {
+            "cost_policy_id": "baseline-bps-v1",
+            "dataset_requirements": {
+              "bars": "aligned-positive-chronological",
+              "manifest_schema": 1,
+              "minimum": "train_bars+test_bars",
+              "permission": "fixture"
+            },
+            "family": "mean_reversion",
+            "implementation_digest": "d29812630078b51d2ce8dc0382f9e1f0392e8df2a5d3bff4be29de9762302256",
+            "parameters_schema": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            },
+            "strategy_id": "mean_reversion",
+            "supported_intervals": [
+              "1m",
+              "5m",
+              "15m",
+              "30m",
+              "1h",
+              "1d"
+            ],
+            "supported_markets": [
+              "moomoo",
+              "internal"
+            ],
+            "version": "1"
+          },
+          {
+            "cost_policy_id": "baseline-bps-v1",
+            "dataset_requirements": {
+              "bars": "aligned-positive-chronological",
+              "manifest_schema": 1,
+              "minimum": "train_bars+test_bars",
+              "permission": "fixture"
+            },
+            "family": "risk_parity",
+            "implementation_digest": "4ad795a698ccbf5737e3730f3821970067d032f991546e5fdc400450b2522824",
+            "parameters_schema": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            },
+            "strategy_id": "risk_parity",
+            "supported_intervals": [
+              "1m",
+              "5m",
+              "15m",
+              "30m",
+              "1h",
+              "1d"
+            ],
+            "supported_markets": [
+              "moomoo",
+              "internal"
+            ],
+            "version": "1"
+          }
+        ]
+      },
+      "passed": true
+    },
+    "control_matches_sql": {
+      "detail": null,
+      "passed": true
+    },
+    "durable_get": {
+      "detail": {
+        "analysis": null,
+        "analysis_state": "not_requested",
+        "artifacts": [],
+        "attempt": 0,
+        "cancel_requested": false,
+        "created_at": "2026-10-12T21:38:59.354997Z",
+        "error_code": null,
+        "finished_at": null,
+        "idempotency_key": "owned-bootstrap-replay",
+        "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+        "job_id": "fc973ce58e3c431c8cde61c2bcea12b3",
+        "lease_expires_at": null,
+        "lease_owner": null,
+        "operator_id": "operator",
+        "request": {
+          "analysis_requested": false,
+          "budget": {
+            "cpu_limit": 1.0,
+            "max_estimated_model_usd": 1.0,
+            "max_model_calls": 12,
+            "memory_mib": 2048,
+            "timeout_seconds": 900
+          },
+          "costs": {
+            "fee_bps": 1.0,
+            "half_spread_bps": 2.0,
+            "slippage_bps": 3.0
+          },
+          "dataset": {
+            "dataset_id": "equities",
+            "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+            "permission_class": "fixture",
+            "revision": 1
+          },
+          "interval": "1h",
+          "parameters": {},
+          "schema_version": 1,
+          "strategy_id": "momentum",
+          "strategy_version": "1",
+          "universe": [
+            {
+              "symbol": "AAA",
+              "venue": "moomoo"
+            }
+          ],
+          "window_spec": {
+            "step_bars": 5,
+            "test_bars": 5,
+            "train_bars": 10
+          }
+        },
+        "request_digest": "7d0c388073d4b016504830fe56f015781365f33634701a45cbbc4c096b08050c",
+        "state": "queued",
+        "updated_at": "2026-10-12T21:38:59.354997Z",
+        "usage": {
+          "elapsed_seconds": null,
+          "estimated_model_usd": null,
+          "input_tokens": null,
+          "model_calls": null,
+          "output_tokens": null,
+          "peak_memory_mib": null
+        }
+      },
+      "passed": true
+    },
+    "five_real_pg_cases": {
+      "detail": null,
+      "passed": true
+    },
+    "fresh_full_service_exit": {
+      "detail": 0,
+      "passed": true
+    },
+    "full_service_zero_skips_errors_failures": {
+      "detail": {
+        "errors": 0,
+        "failures": 0,
+        "skipped": 0,
+        "tests": 83
+      },
+      "passed": true
+    },
+    "genuine_owned_sql_identity": {
+      "detail": [
+        "fixture_1b2a8cb6b817",
+        "postgres",
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/cluster-4b65f146fa381df4",
+        "127.0.0.1",
+        "54459",
+        "7695899059242407210"
+      ],
+      "passed": true
+    },
+    "genuine_service_gate_exit": {
+      "detail": 1,
+      "passed": false
+    },
+    "health_real_db_actual_build": {
+      "detail": {
+        "actual_build": "0f8b71e16cc09d416030448bec8852d7ea18cc80",
+        "advisory_only": true,
+        "capabilities": {
+          "model": "unavailable",
+          "worker": "pending_containment"
+        },
+        "schema_version": 1
+      },
+      "passed": true
+    },
+    "idempotent_replay": {
+      "detail": {
+        "analysis": null,
+        "analysis_state": "not_requested",
+        "artifacts": [],
+        "attempt": 0,
+        "cancel_requested": false,
+        "created_at": "2026-10-12T21:38:59.354997Z",
+        "error_code": null,
+        "finished_at": null,
+        "idempotency_key": "owned-bootstrap-replay",
+        "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+        "job_id": "fc973ce58e3c431c8cde61c2bcea12b3",
+        "lease_expires_at": null,
+        "lease_owner": null,
+        "operator_id": "operator",
+        "request": {
+          "analysis_requested": false,
+          "budget": {
+            "cpu_limit": 1.0,
+            "max_estimated_model_usd": 1.0,
+            "max_model_calls": 12,
+            "memory_mib": 2048,
+            "timeout_seconds": 900
+          },
+          "costs": {
+            "fee_bps": 1.0,
+            "half_spread_bps": 2.0,
+            "slippage_bps": 3.0
+          },
+          "dataset": {
+            "dataset_id": "equities",
+            "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+            "permission_class": "fixture",
+            "revision": 1
+          },
+          "interval": "1h",
+          "parameters": {},
+          "schema_version": 1,
+          "strategy_id": "momentum",
+          "strategy_version": "1",
+          "universe": [
+            {
+              "symbol": "AAA",
+              "venue": "moomoo"
+            }
+          ],
+          "window_spec": {
+            "step_bars": 5,
+            "test_bars": 5,
+            "train_bars": 10
+          }
+        },
+        "request_digest": "7d0c388073d4b016504830fe56f015781365f33634701a45cbbc4c096b08050c",
+        "state": "queued",
+        "updated_at": "2026-10-12T21:38:59.354997Z",
+        "usage": {
+          "elapsed_seconds": null,
+          "estimated_model_usd": null,
+          "input_tokens": null,
+          "model_calls": null,
+          "output_tokens": null,
+          "peak_memory_mib": null
+        }
+      },
+      "passed": true
+    },
+    "initdb": {
+      "detail": null,
+      "passed": true
+    },
+    "measured_preflight_build": {
+      "detail": {
+        "actual_build": "0f8b71e16cc09d416030448bec8852d7ea18cc80",
+        "advisory_only": true,
+        "capabilities": {
+          "model": "unavailable",
+          "worker": "pending_containment"
+        },
+        "live": false,
+        "lock_sha256": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a",
+        "mode": "preflight",
+        "paper": true,
+        "runtime": "linux-cp312-x86_64",
+        "schema_version": 1
+      },
+      "passed": true
+    },
+    "no_secret_response_11": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_13": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_15": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_17": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_19": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_21": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_23": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_25": {
+      "detail": null,
+      "passed": true
+    },
+    "no_secret_response_8": {
+      "detail": null,
+      "passed": true
+    },
+    "pg_binary_rehash": {
+      "detail": null,
+      "passed": true
+    },
+    "preflight_exit": {
+      "detail": 0,
+      "passed": true
+    },
+    "preflight_no_db_creation": {
+      "detail": null,
+      "passed": true
+    },
+    "preflight_no_listener": {
+      "detail": null,
+      "passed": true
+    },
+    "queued_submit": {
+      "detail": {
+        "analysis": null,
+        "analysis_state": "not_requested",
+        "artifacts": [],
+        "attempt": 0,
+        "cancel_requested": false,
+        "created_at": "2026-10-12T21:38:59.354997Z",
+        "error_code": null,
+        "finished_at": null,
+        "idempotency_key": "owned-bootstrap-replay",
+        "implementation_digest": "c65ac3513029cf4da7e15fc4c19a89110782ba7f00042816da8b57c4fd08f276",
+        "job_id": "fc973ce58e3c431c8cde61c2bcea12b3",
+        "lease_expires_at": null,
+        "lease_owner": null,
+        "operator_id": "operator",
+        "request": {
+          "analysis_requested": false,
+          "budget": {
+            "cpu_limit": 1.0,
+            "max_estimated_model_usd": 1.0,
+            "max_model_calls": 12,
+            "memory_mib": 2048,
+            "timeout_seconds": 900
+          },
+          "costs": {
+            "fee_bps": 1.0,
+            "half_spread_bps": 2.0,
+            "slippage_bps": 3.0
+          },
+          "dataset": {
+            "dataset_id": "equities",
+            "export_digest": "d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501",
+            "manifest_digest": "befa69ef7a7c6c2624b950ac91f2ba8effd45c19f0b77e82ab685f2434daba85",
+            "permission_class": "fixture",
+            "revision": 1
+          },
+          "interval": "1h",
+          "parameters": {},
+          "schema_version": 1,
+          "strategy_id": "momentum",
+          "strategy_version": "1",
+          "universe": [
+            {
+              "symbol": "AAA",
+              "venue": "moomoo"
+            }
+          ],
+          "window_spec": {
+            "step_bars": 5,
+            "test_bars": 5,
+            "train_bars": 10
+          }
+        },
+        "request_digest": "7d0c388073d4b016504830fe56f015781365f33634701a45cbbc4c096b08050c",
+        "state": "queued",
+        "updated_at": "2026-10-12T21:38:59.354997Z",
+        "usage": {
+          "elapsed_seconds": null,
+          "estimated_model_usd": null,
+          "input_tokens": null,
+          "model_calls": null,
+          "output_tokens": null,
+          "peak_memory_mib": null
+        }
+      },
+      "passed": true
+    },
+    "sql_one_authoritative_cancelled_job": {
+      "detail": [
+        1,
+        "cancelled",
+        "cancelled"
+      ],
+      "passed": true
+    }
+  },
+  "cleanup": [
+    {
+      "exit": -15,
+      "owned_identity_checked": true,
+      "pid": 5580
+    },
+    {
+      "exit": -15,
+      "owned_identity_checked": true,
+      "pid": 5929
+    },
+    {
+      "exit": -15,
+      "owned_identity_checked": true,
+      "pid": 6074
+    },
+    {
+      "exit": 0,
+      "owned_identity_checked": true,
+      "pid": 5423
+    }
+  ],
+  "failure_category": "AssertionError",
+  "processes": [
+    {
+      "argv": [
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/prefix/bin/postgres",
+        "-D",
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/cluster-4b65f146fa381df4"
+      ],
+      "executable": "/var/tmp/quantmesh-bootstrap-krfg8kx6/prefix/bin/postgres",
+      "pid": 5423,
+      "sha256": "4cd5ef0c0632e8da70fd6d7a62a9e02a6df00f3517b1b5720511db199d825d08",
+      "start_ticks": "18908",
+      "uid": 1000
+    },
+    {
+      "argv": [
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+        "-B",
+        "-m",
+        "qm_research_agent",
+        "--config",
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/config.json",
+        "--serve"
+      ],
+      "executable": "/usr/bin/python3.12",
+      "pid": 5580,
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "start_ticks": "19135",
+      "uid": 1000
+    },
+    {
+      "argv": [
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+        "-B",
+        "-m",
+        "qm_research_agent",
+        "--config",
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/config.json",
+        "--serve"
+      ],
+      "executable": "/usr/bin/python3.12",
+      "pid": 5929,
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "start_ticks": "19681",
+      "uid": 1000
+    },
+    {
+      "argv": [
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+        "-B",
+        "-m",
+        "qm_research_agent",
+        "--config",
+        "/var/tmp/quantmesh-bootstrap-krfg8kx6/config.json",
+        "--serve"
+      ],
+      "executable": "/usr/bin/python3.12",
+      "pid": 6074,
+      "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+      "start_ticks": "20201",
+      "uid": 1000
+    }
+  ],
+  "proof": "/var/tmp/quantmesh-bootstrap-krfg8kx6/proof-77f84e3d3a59",
+  "root": "/var/tmp/quantmesh-bootstrap-krfg8kx6",
+  "schema_version": 1,
+  "status": "FAIL"
+}

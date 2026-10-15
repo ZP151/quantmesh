@@ -1,0 +1,17 @@
+{
+  "scope": "NEW local DuckDB policy diagnostic, NOT qualified",
+  "first_exit": 11,
+  "second_exit": 11,
+  "first_observation": "InvalidInputException: Cannot change allowed_directories when enable_external_access is disabled; OpenBLAS thread warnings and crash",
+  "second_observation": "process exit11; no policy receipt; direct cause UNKNOWN",
+  "first_stderr_in_tool_transcript_only": true,
+  "first_stdout_log_created": false,
+  "actual_core_pattern": "|/wsl-capture-crash %t %E %p %s",
+  "workspace_core_files_observed": 0,
+  "crash_handler_output_attribution": "NOT_PROVEN/no deletion or global scan",
+  "settings_or_native_admission_qualified": false,
+  "extension_INSTALL_or_LOAD_exercised": false,
+  "network_requested": false,
+  "broader_local_retries_authorized": false,
+  "next": "Use the canonical AWS no-network cgroup profile after authentication and candidate materialization; no per-type native exemption"
+}

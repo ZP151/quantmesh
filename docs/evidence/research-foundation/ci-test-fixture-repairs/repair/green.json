@@ -1,0 +1,31 @@
+{
+  "phase": "green",
+  "exit": 0,
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-c",
+    "/dev/null",
+    "-p",
+    "pytest_asyncio.plugin",
+    "-p",
+    "no:cacheprovider",
+    "--confcutdir",
+    "/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests",
+    "/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_linux_owned.py",
+    "/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_live_router.py",
+    "--basetemp",
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/ci-test-repairs-green-tmp",
+    "--junitxml",
+    "/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/output/0038-ci-test-repairs/green.xml",
+    "-q"
+  ],
+  "production_source_head": "bf64883f0a18e3d4e1e07c83522cbc41276abf7e",
+  "tests_origin": "/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh",
+  "scope": "OWNED_UNIT_AND_CONTROLLER_ONLY_NO_OCI_OR_REAL_FEED",
+  "bytecode_files_after": 0,
+  "model_calls": 0,
+  "daemon_calls": 0
+}

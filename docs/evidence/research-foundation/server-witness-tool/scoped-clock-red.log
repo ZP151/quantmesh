@@ -1,0 +1,50 @@
+F                                                                        [100%]
+================================== FAILURES ===================================
+________ test_scoped_candle_receipt_clock_caps_completed_bar_freshness ________
+
+    def test_scoped_candle_receipt_clock_caps_completed_bar_freshness():
+        value = samples()
+        for sample in value["samples"]:
+            for symbol in ("AAPL", "NVDA"):
+                evidence = sample["symbols"][symbol]
+                for side in ("before", "after"):
+                    for row in evidence[side]["rows"]:
+                        row["time_key"] = (
+                            datetime.strptime(row["time_key"], "%Y-%m-%d %H:%M:%S")
+                            - timedelta(minutes=1)
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+                for bar in evidence["app"]["bars"]:
+                    stamp = datetime.fromisoformat(bar["timestamp"]) - timedelta(minutes=1)
+                    bar["timestamp"] = stamp.isoformat()
+                    if bar["live_lineage"]:
+                        lineage = bar["live_lineage"]
+                        for key in ("data_time", "predecessor_data_time", "received_at", "freshness_time"):
+                            lineage[key] = stamp.isoformat()
+                        lineage["provider_end"] = (stamp + timedelta(minutes=1)).isoformat()
+                        lineage["provider_time_key"] = evidence["before"]["rows"][-1]["time_key"]
+                        lineage["age_ms"] = int((datetime.fromisoformat(sample["app_at"])
+                                                  - stamp).total_seconds() * 1000)
+        result = tool().evaluate_samples(value)
+>       assert result["status"] == "failed"
+E       AssertionError: assert 'pending' == 'failed'
+E         
+E         - failed
+E         + pending
+
+tests\test_server_market_witness.py:897: AssertionError
+============================== warnings summary ===============================
+tests/test_server_market_witness.py::test_scoped_candle_receipt_clock_caps_completed_bar_freshness
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_server_market_witness.py::test_scoped_candle_receipt_clock_caps_completed_bar_freshness
+tests/test_server_market_witness.py::test_scoped_candle_receipt_clock_caps_completed_bar_freshness
+tests/test_server_market_witness.py::test_scoped_candle_receipt_clock_caps_completed_bar_freshness
+tests/test_server_market_witness.py::test_scoped_candle_receipt_clock_caps_completed_bar_freshness
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\utils\pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_server_market_witness.py::test_scoped_candle_receipt_clock_caps_completed_bar_freshness
+1 failed, 73 deselected, 5 warnings in 1.61s

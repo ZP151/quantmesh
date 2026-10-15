@@ -1,0 +1,26 @@
+{
+  "AtUtc": "2026-10-13T08:25:17.6950283Z",
+  "PacketSha256": "8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01",
+  "Baseline": "042fb0b491c13f4535bddbb61290b191d29b1790",
+  "Verification": "output/0038-linux-native-admission/root-task2-proposal-verified.json",
+  "Decision": "construction/runtime design accepted for bounded software implementation; no image/runtime materialization authorization",
+  "Constraints": [
+    "WorkerRunner construction-only private ContextVar wrapper; public four args/9storemethods/schema/costs/WalkForward unchanged",
+    "Actual container poll/pulse/close; no CLI exit success inference, pulse1s with store fences and heartbeat15s",
+    "Read-only job/runtime/dataset bundle separate nonoverlap writable output; DEVNULL child stdin",
+    "Manifest measured source/dependency/Python/libs, five runtime fields from actual container, external immutable image binding; no final-ID/self-hash loop",
+    "Full base filesystem/notices retention; nine unresolved SPDX declarations/actualDebian copyright/ELF edges remain admission gates",
+    "Same-image exact direct engine and repeated canonical equality; cross-env all-fields numeric tolerance rel1e-9/abs1e-12, truthful runtime digests",
+    "Parent validates owner/attempt/runtime/contained bounded regular receipt/status/cgroups before existing publication fences",
+    "No new Docker pulls/builds/containers/env/clones/bulky tests until resource gate resolves; small source/targeted tests on existing resources only"
+  ],
+  "SoftwareScope": "Task2 source, focused tests and prepare/admission-tool source; actual image/numerical/native<=90s/production remain pending",
+  "ResourceGate": "unresolved wholeC12.93GB attribution; not waived; existing disk question pending",
+  "OtherGates": [
+    "fresh SSH authentication",
+    "real OpenAI key/egress/activation",
+    "paid AWS concrete operator deployment",
+    "server-owned sources",
+    "private PG-TLS/offhost actual report/p95/user loop"
+  ]
+}

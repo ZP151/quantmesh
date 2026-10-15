@@ -1,466 +1,454 @@
-# Active Goal
+# Active Goal — iteration0038 Option A
 
-Status: product development ACTIVE, updated2026-10-12 Singapore. The user
-explicitly makes formal168h NOT REQUIRED for current work, on-demand only.
-Preserve historical failures; this does not mark the soak passed. Prioritize
-feature iterations. Capacity/recovery drills stay in later acceptance, not
-the current development frontier. The 0035 AWS real-chart and 8 GB migration's
-short acceptance are complete. PR #161 is merged/deployed; live API passes.
-PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
-acceptance pass. Source-backed equity minute charts are implemented on
-`codex/0037-equity-minute-charts`, checked through PR #163 and deployed at
-`69515b79d2bc67303bfef9dee660dbca9bef41e3`. Four AWS equity entry paths and
-reload pass with supplier-matching closed bars. The October 8 regular-session
-acceptance now proves actual revisions and two new minute boundaries in both
-the API and browser; all four stock entry paths and crypto regressions pass.
-The user explicitly prioritized development and deferred observation
-to later acceptance. On 2026-09-23 UTC (September 24 Singapore), the user
-explicitly restored CI and authorized merge/private deployment after all checks pass.
+## Advisory report compatibility repair prepared (2026-10-15)
 
-PR #164 is checked and merged as `c4ebee4d80c7c3cd162a1f5b3d17ba5553f21f2d`.
-The exact reviewed Windows startup helper is installed for the current user;
-hidden helper PID53020 holds the singleton and duplicate launch exits0.
-OpenD PID28036 and original tunnel session75590 remain alive. AWS continues
-to serve `69515b7`, paper=true/live=false; Windows changes need no app redeploy.
-Next actual Windows login/outage remains pending; equity open-session acceptance
-is complete. The evidence branch `codex/0037-release-acceptance` starts from
-origin/main c4ebee4, preserving divergent local main.
+The user's latest necessary-fix instruction advances the real-report blocker.
+Only the verified report's complete execution_profile_{id,version,digest} trio
+at result.evidence maps to inert profile{id,version,digest}; require fixed id,
+exact int1/lowercase SHA256 and original fixture/unverified claims. Other fields
+and values still pass the unchanged common secret/order filter. Original report
+bytes/citation/effect identity stay intact; no authority or provider is enabled.
+Captured synthetic3503B fixtureSHA173f770... preserves the actual report schema.
+Native RED2fail14pass, then16pass/12.19s; full Agent service218pass/5skip/101.18s.
+Ruff/format/diff pass; one bounded independent automatic review has no P1/P2.
+Default Windows Python missing-langgraph collection error is retained; no install
+was performed, existing WSL CPython3.12 service environment provided actual tests.
+Evidence output/0038-advisory-report-projection/{red-native,green-native,
+affected-native,checked-summary} and narrow-review.txt; no secret/model/network/
+cloud/service effect. Preserve prior successful Worker/browser/image proof;
+this service-source repair does not retrospectively alter its measured bytes.
 
-## 8 GB capacity handoff — later acceptance work
+Prepare one integration checkpoint; do not cancel live PR73921ba CI38717227840.
+Keep the PR branch at73921ba while it runs, push the tested source to the existing
+integration branch, then advance the PR normally after terminal CI and require
+fresh final-head gates. Two independent human reviews are user-confirmed; their
+prior-head Request Changes is not current-source approval. Full Option A remains
+ACTIVE. Next: delegated aggregate model-tree containment, fail-closed runner
+wiring, then gated persistent deployment/recovery and actual bounded advisory.
 
-The authoritative private origin is now
-`https://quantmesh-staging-8gb.tail99d23c.ts.net`, serving exact merged build
-`69515b79d2bc67303bfef9dee660dbca9bef41e3` after PR #163.
-Previous `c8e1813` and `db3d18f` remain retained for rollback. The original
-migration checkpoint used retained rollback build `33aa0521`. The restored dataset passed archive
-hash, WAL recovery, JSON payload validation, 13-check read-only smoke, chart
-entry-path, and controlled restart checks. The host currently reports about
-6.0 GiB available RAM, no swap, an active service and zero automatic restarts.
-These are the completed migration facts recorded in [PR #159](https://github.com/ZP151/quantmesh/pull/159);
-the PR remains open after its earlier CI cancellation. Resuming CI for the
-equity repair does not itself merge this separate migration-evidence PR.
+## Human Request Changes received for prior head (2026-10-15)
 
-The migration did not fill the old collection gap (the stopped source ends on
-2026-09-17 and the new collector resumes on 2026-09-22), and it did not prove
-the old 90-second shutdown behavior. A local, read-only observer started on
-2026-09-22 16:21:42 UTC records five-minute smoke, quote/candle freshness,
-health safety flags, service restarts, memory, swap, disk and recent journal
-lines for 24 hours. The observation gate remains open until the complete log
-is reviewed. No later provider or UI acceptance may treat this short sample as
-indefinite availability.
+The user supplied an explicitly human technical review of d65e003 with conclusion
+REQUEST_CHANGES; keep PR175 Draft. The user subsequently confirms this report
+consolidates TWO independent human reviews; this satisfies the recorded review
+count and must not be described as zero received human reviews. Its disposition
+is still Request Changes on d65e003, not approval of73921ba. No separate named
+safety-owner approval is inferred from a Request Changes conclusion. The report's
+limited static/accessible-CI scope does not certify all2744files or production.
+Six ordering regressions, the old two-field receipt fixture and real retention
+clock race were corrected in73921ba with113Linux/39Windows targeted passes;
+no validator/assertion or production error/retention/calendar was weakened.
+Current CI38717227840 release still running, fast/service/classifier pass;
+prior failed CI retained. Required humans and actual production/model/Worker/
+backup/source acceptance remain OPEN. No repeat full tests, merge or deployment.
+Finding-by-finding response: output/0038-release-readiness/
+human-review-d65e003-request-changes.json. Small review-state note awaits the
+next coherent checkpoint; do not cancel live CI for this record alone.
 
-The later operational acceptance checklist retains the following; these are
-not prerequisites to developing the next provider slice:
+## Current release CI regression repair (2026-10-15)
 
-- every sample keeps build `33aa0521`, `paper_mode=true` and
-  `live_trading=false`;
-- BTC, ETH and SOL quote/candle observations remain real and under the
-  observer's 60-second freshness limit;
-- the service stays active with no automatic restarts, OOM evidence or swap
-  activity, and capacity/disk trends are reviewed;
-- an operator-approved old-host rollback rehearsal and a new-host reboot test
-  are separately completed or explicitly deferred with a recorded reason;
-- the evidence is mirrored into iteration 0036 before its closeout.
+PR175 d65e003 CI38709107533 completed FAILURE09:50UTC: 5132passed,
+142skipped,8failed/3075.96s. Diagnostics are retained at
+output/0038-ci38709107533-diagnostics and release-readiness/ci38709107533-failed.log.
+No old CI rerun or local full suite. Six failures expose job decoding occurring
+before runtime fingerprint/metadata refusal; one receipt fixture supplies only
+legacy two-field identity; one replay fixture uses an unfrozen retention clock.
 
-The old origin is retained as a rollback resource and is not deleted. The
-historical gap remains an explicit limitation; any backfill must use a
-source-backed, lineage-preserving dataset and cannot be inferred from the
-live replay.
+Narrow repair restores runtime measurement and held runtime.json verification
+before JobRecord decoding, then keeps job identity/registered selection before
+FixtureReader or numerical inputs. No admission/schema/limit is weakened. Receipt
+test supplies the existing five-field contract; replay test uses the established
+freeze_buffer_clock and explicitly runs genuine prune_if_due for all four states.
+Existing native runner RED7/4pass and deterministic retention RED3/1pass retained.
+Final affected WSL CPython3.12 checks113pass/21skip/39.59s; actual Windows
+39pass/33skip/7.54s; Ruff/format/diff green. One narrow automatic diff review has
+no P1/P2; this is not a repeated structural profile review or human approval.
 
-## Iteration 0037 development checkpoint — private Moomoo/OpenD readiness
+The initial affected run's1failure/110pass/21skip is a local WSL Windows-worktree
+Git path error, preserved. Test-process GIT_DIR/GIT_COMMON_DIR point to the actual
+same repository; independent rev-parse matches d65e003. No product workaround.
+All four owned WSL test phases remain retained (~154MiB), separate from prior
+browser1MiB QA and original FAILED129MB estimate; no package/image/cloud effect.
+New commit needs fresh exact-head CI and Class C human reviews before release.
+Real-report advisory projection refusal, aggregate Agent containment, explicit
+runner wiring, persistent services/recovery and server sources remain pending.
+Evidence output/0038-ci38709107533-fix/{runner-red,clock-red,green,affected,windows}
+logs/exit/resource records. Full Option A remains ACTIVE, paper=true/live=false.
 
-The current feature branch repairs and extends `quantmesh-moomoo readiness
---json` command for issue [#156](https://github.com/ZP151/quantmesh/issues/156).
-It checks the private TCP route before SDK use, uses dedicated quote-only
-capability discovery, subscribes to SDK QUOTE data before snapshot reads,
-and validates daily history for `US.AAPL` and `US.NVDA`. A hard worker deadline
-and allowlisted typed diagnostics protect the operator command. It never
-opens an order context or persists quote/account rows. Plan and acceptance
-details are in [iteration 0037](../iterations/0037-moomoo-opend-readiness.md).
+## Requested automated release/advisory audit (2026-10-15)
 
-The direct AWS-to-Windows OpenD port was closed. On 2026-09-23 the user
-completed SSH revalidation and OpenD login. A reverse Tailscale SSH tunnel now
-connects AWS `127.0.0.1:11111` to Windows `127.0.0.1:11111`; both listeners
-remain loopback-only. Isolated AWS readiness and actual polling pass, with
-AAPL/NVDA source clocks advancing at 15:46 UTC. PR #161 subsequently enabled
-the reviewed SDK/watchlist profile on AWS at 17:17 UTC; 18 smoke checks and
-four samples of five progressing real source clocks passed at 17:18 UTC. The tunnel requires
-the Windows machine, OpenD and SSH process to remain running; it is not yet
-a reboot-persistent service. Previous readiness-only local verification is
-green (`121 passed, 1 skipped`); complete file coverage after corrective
-reruns totals `3567 passed, 61 skipped`. Ruff, diff checks and independent
-review pass, as recorded in iteration 0037. This earlier code checkpoint was not a
-deployment, merge or real-equity acceptance claim.
+Two user-requested read-only agents checked release evidence and advisory
+activation readiness. They are automated checks, not the two Class C human
+reviews. Current d65e003 release CI38709107533 remains running; fast/service/
+classifier pass, no unresolved inline thread, zero human reviews. Fixture-only
+browser/report/API+PG restart bytes and distinct API/Worker source claims agree.
+Remote response browser_verified=false is deliberately coordinator-owned
+(child.py.gz line679); browser.json plus independent-checked.json are the actual
+browser witness. Raw evidence remains unchanged.
 
-The [live-polling follow-up](../superpowers/plans/2026-09-23-moomoo-live-polling-repair.md)
-now fixes quote-only connect, TICKER subscription, Linux worker HOME restoration
-and an opt-in, constrained SDK deployment profile. Its two independent review
-rounds have no actionable findings; final broad verification covers all 149
-files with 3582 passed and 61 skipped. Ruff and diff checks pass.
-Release checkpoint: PR #161 / CI35887627930 passed 3591 Python tests
-(56 skipped), 365 frontend tests and all preceding gates, then merged as
-`db3d18fdb5a241826c7276760af59a49c2fc679d`; merge and candidate trees match.
-Do not redeploy that completed release. Browser inspection confirmed the real
-BTC chart, but equity list cells omitted metrics.last. The bounded follow-up
-uses Last trade plus its own clock/age in Markets and Watchlist, retaining
-truthful stale/disconnected labels and all order gates. It passed 379 frontend
-tests, type/lint/build consistency, 27 Python asset/identity checks and an
-independent review with no actionable findings. Local browser preview against
-the actual private AWS feed shows both prices and progressing source times;
-this is candidate evidence, not a follow-up production-deployment claim.
-Release follow-up: PR #162 / CI35896206023 passed 3591 Python tests
-(56 skipped) and 379 frontend tests. Normal squash merge at 18:27:52 UTC
-produced `c8e1813c15d4837d8b0a7480ea376bbca5839161`, with the same tree
-`b96aae511fa48b15a62ee6bfaf1559b0cac26e2e` as candidate `8229a7e`.
-The exact release was deployed and passed 18 API checks plus five advancing
-real sources. Markets/Watchlist now show Last trade, Real and moving source
-clocks for AAPL/NVDA. Do not redeploy either completed release.
-Next implement source-backed equity minute candles (existing poller emits
-metrics/trades only). Review the deferred capacity/drill evidence later.
-The prior Basic-data error is not proof of a paid entitlement requirement:
-the old transport omitted the SDK subscription call. Actual subscription
-acceptance is now proven for these two symbols in the recorded open-session
-sample. It is not evidence of broader rights, every session or all markets.
+Root independently reproduces the real saved report being rejected by approved()
+for result.evidence.execution_profile_{digest,id,version}, before any key/model
+use. Next narrow advisory work must safely project approved report fields rather
+than weaken the secret/order filter. Aggregate invocation-tree containment and
+explicit fail-closed runner wiring remain unimplemented/ungated activation work;
+no actual provider call or persistent deployment occurred. Audit record:
+output/0038-release-readiness/automated-audit.json; approval packet/handoff updated.
 
-## Accepted user loop
+## Operator secret configuration confirmed (2026-10-15)
 
-Markets and Watchlist open BTC/ETH/SOL full charts with1D/Line defaults and
-actual Hyperliquid observations. The current minute revises, new minutes append,
-and reload retains recorded coverage. Source, time, age and5m->1m fallback stay
-visible. This is bounded observed history, not qualified full-day history or
-tick-by-tick rendering. Automatic workspace reads wait5s after completion.
-
-- Issue: https://github.com/ZP151/quantmesh/issues/144
-- PR149 merged11:20:26UTC as76203e03476b120e149a0c06d9932849bb4d8e14.
-- Candidatee23ab82, CI checkoutb4b6adc and squash merge share fulltree
-  6e43a7754040bd35b2cef5b8094922fd90157e14. CI34751913362 passed3524Python
-  tests/56skipped/9warnings,365frontend tests and all preceding gates.
-- Exact private AWS deployment exited0. PID45254 started11:24:24UTC,
-  loopback8765/runtime live/papertrue/live executionfalse. User's two existing
-  QuantMesh IAB tabs were reloaded. Session59488 is terminal; do not redeploy it.
-- Actual paired witness passed601.662s/175samples per page, six entry paths,
-  11tailminutes per coin,62/55/53 BTC/ETH/SOL DOM changes matched to earlier
-  own-page real frames. Reload/settled API history, keyboard/1440/390px passed.
-- 296native workspace requests completed, no errors/timeouts/pending/censored
-  requests. Max latency BTC5.743/ETH6.278/SOL5.737s; p95 2.579/3.450/3.000s.
-  All21health observations had exact build/papertrue/livefalse. Orders/risk
-  unchanged. Independent offline raw-evidence audit has no findings.
-- Longest-lived sampling document loaders show minimum response-end-to-next-read
-  spacing5.002073/5.002328/5.002287s, independently recomputed by root.
-- Actual session97072 exited0 at12:07:43UTC; do not poll or rerun it.
-  Artifacts: output/playwright/0035-aws-76203e0/attempt-2, verifier-audit.json,
-  refresh-spacing.json and screenshots. HelperSHA256:
-  9a3a26014624a33855824f3ae1d29990bd70c78f827b95b159390ee51a88dcff.
-
-## Current recovery checkpoint
-
-- Local Tailscale is healthy: backend Running, UDP/IPv4 available, Singapore
-  DERP latency 6 ms.
-- `quantmesh-staging.tail99d23c.ts.net` resolves to `100.90.189.16`; after a
-  cold stop/start of the existing Lightsail instance, the peer is online and
-  accepts private TCP 443.
-- HTTPS `/health` reports build
-  `76203e03476b120e149a0c06d9932849bb4d8e14`, runtime `live`, `paper_mode=true`
-  and `live_trading=false`.
-- The earlier Tailscale Machines snapshot and public-address checks captured the
-  pre-recovery outage: the console showed **Machine not connected** and TCP
-  22/443 timed out. After the cold start, local `tailscale status` shows the
-  peer `active` with a direct IPv6 path; no public ingress was added.
-- The instance initially looped on startup because its 1.9 GiB host had no swap
-  while the 2.4 GiB live DuckDB lake held about 3.7M rows. Kernel OOM logs
-  identified `quantmesh-workstation` as the killed process. A persistent 2 GiB
-  swapfile on the existing disk restored startup; this is an operational
-  mitigation pending a source-level retention guard.
-- `tools/live_smoke.py --watchlist BTC,ETH,SOL` passed 13 read-only checks in
-  0.9s. `/live/state` contains current real Hyperliquid quote/trade/metrics/L2
-  and candle observations for all three instruments, and `/live/status` reports
-  each source connected.
-- Browser acceptance at the deployed BTC 1D/Line path showed `Live proven`,
-  source `hyperliquid`, `real · real`, WebSocket stream and about 3s age while
-  current-minute OHLC rows advanced.
-- Recovery issue: [#135](https://github.com/ZP151/quantmesh/issues/135).
-- Active iteration: [0036 staging recovery](../iterations/0036-staging-recovery.md).
-- Plan: [2026-09-17 staging recovery plan](../superpowers/plans/2026-09-17-staging-recovery.md).
-
-The recovery gate is now superseded operationally by the 8 GB host, but the
-capacity observation above is still open. The agent must not treat a short
-smoke, extra RAM or the former swap mitigation as a permanent stability claim.
-
-Local OpenD and the reverse SSH route are now proven by the PR #161 deployed
-five-instrument witness. The earlier Basic-subscription rejection below was
-resolved by registering the SDK subscription; it did not establish that a paid
-subscription was necessary. The tunnel remains dependent on this Windows host,
-OpenD and SSH process; persistent recovery is still later operational work.
-
-## Retention evidence and limits
-
-Existing replay-window API reports1074523rows through12:11:55UTC, with earliest
-receipt2026-09-12 10:47:14UTC; previous direct snapshot896780rows is preserved.
-Chart reload retained covered observations from09:44 through12:07UTC. A new
-stable file-copy attempt exhausted10tries while the lake was being written;
-session90210 exited1, primary unchanged. No pause, truncation, unverified copy
-read or retry followed. Current growth is proven through the existing in-process
-read-only API. Last direct quarantine/index check remains09:56UTC: four old
-quarantines and lookup index present; do not claim a new direct count.
-
-Earlier failures remain in the iteration ledger. In particular76203e0 attempt1
-was inconclusive for an old-document request, not a proven backend20s timeout.
-Planner reset the measurement slice; native document identities,18pure controls
-and two review rounds resolved it. The passing actual run censored zero requests.
-A ten-minute witness does not certify indefinite availability.
-
-The recovery found the production failure mode behind that limit: the running
-service opened the full DuckDB lake before any production prune call, and the
-old host had no swap. The retention setting, bounded latest-state lookup and
-startup deadline are now in merged `33aa0521`; the new host's sustained
-observation is the remaining evidence gate. The old swapfile remains a
-reversible host mitigation and is not part of the new-host acceptance.
-
-## Next frontier after migration
-
-Proceed with the current product development slice while observation, rollback
-and reboot work stays in later acceptance. Preserve the old release and
-verified backups. The existing licensed host, private AWS route and two-symbol open-session
-source progression are now established; finish the visible list-price repair
-and then the separate real-minute-chart slice. No
-credentials are needed in chat. Windows localhost probes cannot establish remote absence. An
-open-session real-data witness and truthful delayed/closed/unavailable labels
-are required; existing five-second polling is not native tick push. Then
-prediction venues and qualified historical evidence follow sequentially in
-docs/ITERATION_PLAN.md.
-
-Keep0021soak and issues135/132/127 independent. No public OpenD exposure, paid
-subscriptions, orders, strategy promotion or opportunistic maintenance changes.
-Standing reviewed merge/private-deployment authority remains in the user's
-request and .codex/prompts/goal.md; no further confirmation for this scope.
+User completed private OpenAI key input, including the explicit replacement
+helper. Fresh metadata-only SSH check passes: ubuntu owner,0700 directory,
+0600 single regular file. Contents were NOT read/echoed/hashed and no model/API
+call occurred; account/model availability remains unverified. Do not ask the
+user to provide/configure the key again without an actual missing/invalid result.
+Evidence output/0038-secret-replacement/configured-metadata.json; handoff updated.
+Current PR175 candidate d65e003/CI38709107533 has fast/research_service green;
+release still running. This operator-state note is awaiting the next coherent
+evidence commit; it does not alter the tested runtime or advance release gates.
 
 
-## October 8 continuation
+## Current real browser/report/API restart witness (2026-10-15)
 
-Execute the tracked `2026-10-08-moomoo-minute-charts.md` plan. SDK, polling,
-private replay and metrics-only workspace display are implemented, with source
-samples across two real minute boundaries. Independent review resolved the
-one mixed-watchlist compatibility finding; no trading authority changed.
-Full Python run completed (output/0037-minute-full-suite.log and .exit), with
-17 failures diagnosed and final affected reruns recorded separately. Never repeat the full run without a
-new failure/changed boundary. Existing reverse Tailscale SSH tunnel is running;
-keep it and user OpenD alive. AWS still serves c8e1813, not the candidate.
-After checked release and four-entry/reload acceptance, proceed to the user's
-requested OpenD self-start and private tunnel recovery. Account authentication
-remains handled in the vendor UI, no password storage or disclosure. The
-old capacity/shutdown and migration PR159 remain outside the product slice.
+Actual ubuntu private SSH and current372c2ff Worker image06bfff6e now complete
+one REAL existing-page submission, job375c232057454d5288c1292a9185042f. Its
+3503B immutable reportSHA173f770ee5d2b25ea6042b3a46fe240a92068b6911498abc47a737db143c5beb
+matches real browser DOM, downloaded JSON and fresh held server artifact bytes.
+Momentum1/equities r1/AAA+BBB+CCC/train10/test5/step5/6bps uses the existing
+engine; canonical comparisonSHA84b978294770bf6ea7994e279236b1e002a23fbca862231069a3cb9f0bc27b28
+passes. Explicit fixture-only / opaque native cache unverified claims remain;
+synthetic statistics are not strategy performance or arbitrary Python admission.
+Authenticated REAL HTTPS API passes; unauthenticated options401. Owned nonroot
+API PID87833->90193, then actual page reload, authoritative refresh and API report
+reopen preserve the same job/ref/SHA/bytes. Real PG87750->90253 clean restart also
+retains the same report. Whole bounded operation186.366s/exit0. One-shot Worker
+completed normally; persistent Worker crash recovery is not claimed.
 
-PR #163 first-head CI37655740964 failed the frontend dependency audit before
-tests. The release gate is retained. Bounded dependency remediation now passes
-the high/critical audit and isolated frontend checks; two automated correctness
-findings were reproduced and fixed (reconnect dedupe, atomic metrics capture),
-with 123 affected tests green. The completed broad Python job started before
-these corrective changes and reads this mutable worktree; its result must be
-reported with that limitation. Final new-head CI must verify the complete
-candidate. AWS remains c8e1813 until checked merge and exact deployment.
+API/SPA is the already qualified immutable parent checkouteb880b2; the current
+372c2ff source identity applies to pinned Worker modules/image, not a claimed
+full372c2ff service deployment. The temporary dispatcher reuses both real apps,
+with no replacement page/MockTransport/local-store submission. First failures
+(route registration race, self MagicDNS disabled, initial certificate handshake
+latency) remain retained in output/0038-browser-profile[-2,-3,-4]. Exact foreground
+route readiness and actual verified TLS warmup fix QA setup only; product timeouts
+and certificate validation remain. Temporary Tailnet DNS was restored to prior
+CorpDNS=false; production private-service DNS configuration remains a release item.
 
-The broad run finished with 3649 passed / 61 skipped / 17 failed. One failure
-is the old in-memory 646-entry assertion against the corrected 362-entry lock.
-The other 16 exposed a real scope regression: the private 1m freshness clock
-also affected existing daily/other-interval Moomoo candles. Restrict the rule
-to interval=1m, preserving the previous receipt clock elsewhere. The six-file
-affected suite now passes 162 tests, including every failed file and two new
-nonminute controls. Treat this as consolidated coverage plus targeted recovery,
-not a clean exact-head local full run. Await final new-head CI before release.
+Independent fresh cleanup/read checker exits0: exact CID/profile/mount absent,
+API/PG PIDs absent,41543/8110/8120 free,Serve{},prior DNSfalse. No cleanup performed
+by checker. Original PG-inclusive cloud delta2973900800B<=5GB, parent541962240B<=1GB,
+free159288905728B. New1MiB local QA phase carries all failed attempts/DOM/PNGs;
+prior129MB estimate remains FAILED and whole-C attribution pending. Evidence:
+output/0038-browser-profile-5/{response,browser,independent-checked,resource}.json,
+report-before/after-restart.json, downloaded JSON and verified-page.png.
 
-Exact-head CI37664362155 completed with 3674 passed / 56 skipped / 2 failed;
-the historical regressions are resolved. Both remaining failures concern the
-installed simplejson 4.2.0 text license, previously inspected only at 4.1.x.
-The official tag license and Linux/Windows wheels were verified against registry
-hashes; add only the exact 4.2.0 MIT-choice text exception. Safety/license
-regressions pass 29 tests, including unknown-version/changed-license refusals.
-No dependency pin, generic parser, threshold or CI gate changes. Await the next
-complete head CI before merge/deployment; AWS still serves c8e1813.
+Next exact-head broad gates/PR175 integration and required human release reviews;
+no persistent deployment or full Option A completion. Server-owned OpenD activation,
+real Agent aggregate containment/approved egress and paid witness, durable backup/
+recovery remain pending. The user has privately configured the owner-only
+OpenAI key; metadata-only verification passes, contents not read. Account/model
+availability remains unverified; no model call. paper=true/live=false;
+168h NOT_REQUIRED. Do not request key input again without an actual failure.
 
-## Checked minute-chart release — October 8 Singapore
 
-PR #163 is merged at 69515b79d2bc67303bfef9dee660dbca9bef41e3 (20:08:37 UTC
-October 7). Final CI37672213223 passed 3677 Python tests / 56 skipped and
-380 frontend tests; both automated review threads are resolved. Candidate
-260571e and merged release share tree fa470ee5d8737f6822af30df79f85cdfb3f05e37.
-Reviewed exact deployment succeeded; c8e1813 is retained for rollback. Do not
-merge or deploy #163 again. Local main remains preserved; subsequent work
-starts on codex/0037-opend-startup from origin/main.
+## Actual fixed-profile numerical report now passes (current)
 
-Exact build, paper=true/live=false and 18 smoke checks pass. BTC/ETH/SOL
-source clocks advance. Both stocks are closed/stale with source time near
-20:00 UTC; the five-symbol progression helper exits nonzero for those two
-stocks only. The minute witness has six source-bracketed samples: both
-390-row histories match recent closed provider OHLCV. It exits nonzero because
-two appends are unproven. This is a pending open-session acceptance gate,
-not a full live-chart success or a reason to roll back a healthy closed session.
-All four actual AWS Markets/Watchlist AAPL/NVDA entries, both stock reloads, disabled
-paper proposal and BTC/ETH/SOL chart regressions pass. Keep real-time revisions
-and two minute boundaries pending until the next regular session.
+Source372c2ff, image06bfff6e/current OCI6ae6cf50/81metadata8e6b3e1d.
+Real PG TLSv1.3 submit/claim -> enforcing isolated momentum1 fixture computation
+-> immutable3421B report succeeded in46.503s. Jobf0ac1c6ca8814db4a76dee081fd2bb11,
+reportSHAfc326e9b151a48204035213d6e18cf0d14bdbbb4262bac4d58893fc9b05bee23.
+Same-engine/config/6bps canonical comparison passes;10 windows, workflow/test
+fixture only, opaque native cache state unverified. PG restarted with new real
+PID and samejob/ref/SHA/bytes reopened. ASGI authenticated report read passes;
+BROWSER/REAL NETWORK API still pending, not full user-loop or production release.
+Fresh independent artifact read verifies SHA/numerical schema/profile/6bps;
+fresh own cleanup verifies no CID/profile/postmasters/41543, cloud delta2972282880
+within original5GB. Existing research Serve config empty,8110/8120 free.
+Next actual browser submit/report via fixed private HTTPS API and owned service
+restart, then exact-head broad gates. No repeated static OpenD preparation.
+Evidence output/0038-worker-profile/{job-response,actual-report,actual-report-
+checked,actual-cleanup}.json. Full scope retained; no model/public/trading fees.
 
-Evidence: output/0037-minute-ci37672213223-success.log,
-0037-minute-deploy-69515b7.log/.exit, 0037-deployed-market-witness.json,
-0037-aws-minute-witness/witness.json, 0037-aws-minute-browser.json and
-0037-aws-aapl-minute-chart*.png. The ignored acceptance helper's initial
-strict-Python-vs-JSON and missing adapter metadata errors were corrected;
-retain their logs without treating them as product regressions.
 
-Continue the authorized OpenD self-start/private tunnel recovery slice while
-closed-session real-time acceptance waits. The installed vendor-signed GUI
-is 10.10.7008 at C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe.
-No existing OpenD startup task or Run entry was found; only ChatGPT is in the
-current-user Startup folder. Keep OpenD and reverse tunnel session75590 alive.
-Do not read vendor credential files, change remembered-login settings, restart
-Windows, open public ingress or enable trading.
+Development RESUMED (2026-10-15 Singapore); scheduler tool remains blocked. Deliver the original full A scope: PR175 gates, real Linux
+Worker/Reader→numerical report and reopen, durable private PostgreSQL/jobs/
+backup recovery, advisory Agent/Eval and PC-independent server market feeds.
+paper=true/live=false;168h NOT_REQUIRED; login/outage/capacity drills on demand.
+Three approved AWS resources retained; no added cost or permission expansion.
 
-The startup plan is tracked at `docs/superpowers/plans/2026-10-08-opend-startup.md`.
-Fresh implementer `opend_startup` owns only Task1 scripts/native tests; root
-owns docs/verification. Independent review precedes persistent installation.
-Current-user execution policy remains RemoteSigned through LocalMachine, with
-no Process/User override; local generated files need no policy weakening.
-Actual next-logon/reconnect witness remains separate from installing files.
+## Resumed after verified user review-and-advance instruction
 
-Startup Task1 now has recovery/provisioning scripts plus 26 native Windows
-PowerShell 5.1 behavior tests. Root's isolated final run passes 26 in 27.23s,
-with whole-tree Ruff/diff clean. Default pytest temp cleanup hit an existing
-pytest-current permission error after the 26 test bodies; original log retained,
-then a fresh workspace-owned --basetemp run exits0. Do not delete global temp
-trees to work around it. Actual ObserveOnly exits0/existing_private_tunnel after
-repairing the Tailscale host-first argument order. Independent review and final
-CI remain ahead of installation; no startup configuration is installed yet.
+Read actual user request in audit chat01a13ad1 and blocker-review-2026-10-15.md.
+Implement the fixed registered-fixture profile with all four review amendments
+in the existing delivery plan. No release/human gate waiver. Goal API has no
+resume operation: do not replace objective or claim tool status changed.
+Task1 exact versioned binding/profile codec, then parent/entry/report chain.
+Prior blocker audit below is historical, no longer a development stop.
 
-Startup PR #164 is open at 2348d76, with first CI37684316455 in progress.
-Independent Spec and Standards round1 each reports one P2 (the same defect):
-an established owned tunnel can be killed after a subsequent unknown probe,
-because startup timeout only remembers start time. The fresh implementer is
-reproducing and fixing it with ChildEstablished lifetime state, retaining
-established children on unknown/absent probes and resetting on a new child.
-Installation stays blocked on this finding and final new-head CI. No changes
-to the existing actual OpenD or tunnel have been made. After targeted green,
-push the corrected head and cancel the superseded first CI; second independent
-review is the final structural round. No repeated full local Python suite.
+## Historical resumption gate: three consecutive genuine impasse turns
 
-The P2 is reproduced with two failing native transitions (unknown/absent).
-ChildEstablished now preserves an established child and resets after exit/new
-launch; uncertain probes never trigger termination. The native affected suite
-passes29, root's targeted reset/transitions pass3, Ruff/diff pass, and actual
-ObserveOnly still returns existing_private_tunnel. Second review remains ahead
-of installation. Corrected CI must complete on the final pushed head.
+Goal tool status BLOCKED after third current-state audit. Full Option A scope
+is preserved, not completed or replaced by preparation. Primary: user decision
+on the written registered-fixture sandbox proposal remains absent. Existing
+native cache refusal stays intact; no repeated Worker runs. Independent safe
+preparation is exhausted; real OpenD requires Class C reviews/CI/operator window.
+Fresh PR175 remains draft/head370a745/zero human reviews, existing checks all
+terminal; no live handle justifies an automatic wait. Resume after actual human
+decision or release-state change; reset blocked audit for that resumed run.
+Evidence output/0038-worker-origin/impasse-audit.json; a9be4c0 preparation retained.
 
-Final independent Spec/Standards round2 for c416513 has no P1/P2. GitHub's
-automated comments on old2348d76 reiterate the fixed lifecycle issue and add
-auxiliary status-file IO failure escaping recovery. Planner keeps this within
-the existing narrow boundary: status persistence is best effort and never a
-connection-control dependency. Missing-directory and locked-status native
-cases reproduce escape/child stop; catch only auxiliary persistence failures,
-without changing process/route authority. No third structural review or
-architecture expansion is opened; final CI/review-thread gates still apply.
+## Actual static OpenD dependency inspection — activation still pending
 
-Final native suite after status-IO isolation passes31/31.88s, Ruff/diff green
-(output/0037-opend-startup/status-green.log/.exit). Two automated findings are
-covered by established-child and status-write regressions. Keep actual Startup
-installation pending final head CI. Windows-only changes need no AWS redeploy.
+Read-only staging SSH as ubuntu, 2026-10-14 23:46:59 UTC, exit0/6.026s.
+Held the existing owned0400 archive, rechecked archive/CLI SHA, parsed ELF in
+memory without extraction or vendor execution. PT_INTERP /lib64/ld-linux-x86-64.so.2
+exists; host glibc2.39.18 direct DT_NEEDED names:10 present in the actual x86-64
+host linker cache;8 absent from that cache but same-named archive candidates
+exist (7 libf3c libraries plus libprotobuf.so.32). DT_RPATH starts with $ORIGIN.
+The future protected installation must preserve the vendor library bundle;
+copying only OpenD is insufficient. Name/path availability is NOT transitive ABI,
+actual resolution, startup, authentication or SDK qualification. No ldd, package
+install, remote write, account/unit/permit/vendor state/login/source switch.
+Evidence output/0038-worker-origin/opend-dependencies-{request,response,checked}.json
+and host.gz/.exit; saved consistency checker exit0, all qualification flags false.
+Primary registered-fixture sandbox decision remains pending; no repeated Worker
+run or cache whitelist. Actual PR175 still draft/head370a745/0human reviews,
+existing checks green with domain/browser skipped; they do not certify newer
+worker-kernel commits. Full Option A stays ACTIVE; no new cost or model call.
 
-Startup CI37685852546 completed at 21:49:39 UTC with 3676 passed, 87 skipped,
-one failure in the existing valid-30m replay fixture. The isolated case and
-34-test history file pass without a tick, but an explicit retention sweep
-reproduces deletion of all four September fixture rows and the same 404.
-Planner narrows this CI correction to test clock isolation: reuse the existing
-freeze_buffer_clock helper and explicitly run the actual retention sweep in
-all eight preferred/fallback cases. Retention and application code remain
-unchanged. The forced-sweep test first fails (retention-test-red.log/.exit);
-final targeted history/native verification and new-head CI precede installation.
+## Current user loop and primary obstruction
 
-Verifier: corrected history/native two-file run passes65 / 40.31s, exit0
-(retention-and-native-green.log/.exit); whole-tree Ruff and diff checks pass.
-All eight replay candidates now run real retention at their fixture clock.
-Await the new exact-head full CI; no Startup files have been installed.
+Independent source preparation now progressed: FIXED target is application
+staging machinea6645ff4, not research. Actual11111 owner tailscaled1923; native
+OpenD/11112/dedicated account absent. Fixed reviewed vendor archive466932458B
+actually prepared on staging (fresh ubuntu0700 root), SHA72eaa6e4/CLIe05b901d/
+x86-64 match,9.515s. This is archive/ELF metadata only: no extraction/vendor
+execution/account/unit/permit/login/SDK/cutover. Remains blocked for activation
+by existing ClassC/CI/operator-window gates. Primary registered-profile decision
+still pending; no repeated unchanged Worker task. Full A ACTIVE/no new fees.
 
-## Windows startup release and configuration acceptance — 2026-10-07 UTC
+PRIMARY: actual jobb96376a1/imagef5585dda/source6b2d979 identifies native cache
+_cython_3_2_9 rejected by existing general loaded-module origin gate at compute.
+No report/artifact/UI/reopen. Proposed registered fixture sandbox boundary in
+current plan awaits user decision; do not waive caches or repeat same task.
+All exact own cleanup confirmed by current SSH and saved independent checker.
+Reader ancestor-root O_PATH repair independent of that decision: RED3/affected
+5pass0.25s, drift/link refusal retained; not yet in actual image. Read-only
+server-feed audit confirms managed native OpenD absent; next separate operations
+work is bounded candidate installation/private operator terminal qualification,
+then actual server source acceptance, preserving Windows route until cutover.
+Full A ACTIVE; no extra fees/secret needs now/formal168h revival.
 
-Final CI37692512030 completes successfully at 22:47:02 UTC: 3677 Python
-passed/87 skipped/8 warnings, 3113.60s, and380 frontend passed. Linux skips
-31 native Windows cases; the actual Windows run above passed31 and final
-history/native run passed65. Normal match-head squash merges PR #164 at
-22:50:18 UTC as c4ebee4. Candidate00be634 and merged trees both equal
-47407bc9ad88f300e8a57f2a56865dbc6d5ad462; no force/admin merge.
+Latest real job1cb0c686/24.916s on image09af77ba reaches compute; no report.
+Fixed compute errorworker_failed now needs exact inner runtime classification.
+Passive import confirms opaque Cython caches, but inline diagnostic's __main__
+itself hits606, so do not claim that identifies actual failing module. Entry
+code/module-only diagnostic for exact runtime refusal prepared, native RED1/
+affected6pass. Next actual updated entry, then bounded profile design decision
+if general native-state gate blocks trusted baseline; no cache waiver allowed.
 
-Only exact committed scripts are extracted to an ignored reviewed directory.
-Installation verifies signed existing GUI and writes current-user
-LocalAppData/QuantMesh/OpenDRecovery plus the fixed Startup shortcut.
-Installed supervisor SHA256:
-9D9E19F735096EF32A3BA28B816ED348CC20D127029CCC97ECE24DF9CD20DE9B.
-Shortcut executable/arguments/working directory match the owned manifest.
-The hidden helper stays alive with mutex held; a second launch returns
-duplicate_helper/exit0. Initial Start-Process witness could not observe the
-exit code; direct owned .NET Process observation corrects the fixture without
-changing runtime scripts or launching another long-running helper.
+Latest actual jobf33bc774/17.322s passes binding/source after O_PATH repair,
+rejects project_import. Exact clean environment reproduces Settings Path.home
+RuntimeError; UID10001 lacks passwd home and HOME was missing. Minimal controller
+HOME=/tmp repair keeps clean env/no credentials and noexec ephemeral backing.
+Native RED1/GREEN1/affected10pass0.96s; numerical report/page/reopen still open.
+Next updated immutable image/current exact pins→real registered report task.
 
-Actual OpenD PID28036 and all pre-existing CLI processes are preserved;
-session75590 remains running. ObserveOnly confirms AWS loopback11111 and
-health confirms exact69515b7/paper=true/live=false after installation.
-An isolated real-shortcut install/uninstall/reinstall/removal witness passes,
-mocking only its lack of a helper; actual current-user Startup stays installed.
-Vendor auto-login is unchanged; a future human login may still be required.
-No Windows logoff/reboot or true network outage is manufactured.
+Actual updated-image job74f0450a rejects at binding stage. Exact binding decodes;
+actual same-policy read gets EACCES opening root O_RDONLY (line88). Repair root
+traversal anchors only to O_PATH in entry/provenance, without relaxing policy or
+read/byte/nofollow checks. RED4/GREEN4/full Linux entry41pass0.27s,158144B retained.
+Next immutable updated source/current metadata→real job→report/page/reopen;
+no numerical/report qualification yet. Evidence output/0038-entry-stage/.
+Original129MB stays via explicit unspent forecast reserve allocation; prior
+FAILED subcaps/peaks retained. Whole A ACTIVE; no auth/new fee is needed now.
 
-Evidence under output/0037-opend-startup/: ci37692512030-success.log,
-reviewed-merge.json, actual-installed.json, actual-launch.json,
-actual-startup-witness.json, actual-aws-after.json and
-isolated-reinstall-witness.json. Configuration acceptance is complete;
-actual next-login/outage and equity open-session revisions/two new minute
-boundaries are pending. Do not repeat merge/install/deploy while waiting.
+Entry diagnostic source ready (not yet in actual image): fixed <=256B
+schema1/stage/code/qualifiedfalse under own no-follow0700 /output/exclusive0600;
+no exception/input text, IO failure cannot mask existing stderr/exit2. RED3,
+targeted7pass and full entry37pass4.06s/Ruff/diff green. Full native test root
+156058B exceeds32KB and phase60KB: FAILED/retained, no repeat/deletion. Planner
+reconciles previously unspent wire80000future plus50000 remainingdocs reserve
+once; base128606191/phase190000/20000docsGit remain, same original129MB/5GB.
+NEXT exact committed source-layer update on existing81-wheel base, current
+metadata/pins, one real Worker call to classify actual entry refusal. No report
+claim, native whitelist/third structure review, paid resource or deployment.
 
-## October 8 regular-session acceptance — complete user loop
+CURRENT actuala29780f0/10.987s: private PG TLS/ASGI submit/claim, current parent
+image/kernel/livePID/cgroup/mount binding now reached; UID10001/0400 binding
+written and fixed child launched after GO. Child stderr "worker entry rejected",
+no error/result/report: job14c6f374 FAILED, inner entry stage still UNKNOWN.
+This is progress beyond preGO, NOT numerical/report/UI/reopen qualification.
+All exact own CID/policy/mount/PG/port cleanup pass. Independent saved checker
+exit0 verifies failure/cleanup consistency, not runtime success. Evidence
+output/0038-first-whole-job/{cgroup-fixed-actual,worker-output,independent-checked,
+resource-current}.json. Sources58f63d6 on branch, childa0abb2dc/sourcee34 unchanged.
+Primary NEXT diagnose pinned entry's rejection before another unchanged job;
+preserve fixed entry/source/Reader/publication guards, no opaque-helper waiver.
+Resource named phase194006B +2000tail/base128796191=>128992197<=129MB, original
+100KB and all previous subcaps FAILED/retained, whole-C PENDING. Cloud original
+PG-inclusive delta2882220032<=5GB/free159380586496B. Full A ACTIVE/no new fee.
 
-The13:56–14:03 UTC witness completes stock minute acceptance on exact
-69515b79d2bc67303bfef9dee660dbca9bef41e3. Both read-only helpers exit0:
-18smoke/five real advancing source clocks and six source-bracketed minute
-samples. Browser Markets/Watchlist AAPL/NVDA1DLine1m paths, same-minute
-revisions,13:58→13:59→14:00 appends and reload retention pass. Thirty closed
-bars survive each reload; recent four closed OHLCV match supplier brackets.
-Raw labels remain in API live_lineage; private license/local sequence limits
-are visible. No bid/ask keeps stocks degraded and paper proposal disabled.
-BTC/ETH/SOL current charts pass; paper=true/live=false.
+Latest d9ad9fd1/4cbc2680 reaches real controller ready, then binding refuses
+_verify_cgroup: cgroupfs stat-size0 differs from its actual limit bytes. Ordinary
+file reader was incorrectly reused. Root narrow repair uses held no-follow
+cgroup directory + existing bounded virtual reader, only four root-owned size0
+limit files/4096B; ordinary file gates unchanged. Real Linux API RED/GREEN2,
+whole provider14pass4.11s/Ruff/diff green,202B fixture retained. All actual own
+containers/policies/mounts/PG/ports cleaned. Next complete same registered job
+with corrected committed provider; no report/page/reopen claim. Original129MB
+unchanged: consume prior30KB future-call and20KB of prior150KB docs/Git reserve
+once for connected tail, keep130KB docs/Git reserved/base128796191 and all old
+failures/peaks. See plan arithmetic; whole-C PENDING/full A ACTIVE.
 
-Evidence: output/0037-open-session-20261008/ progression/minutes logs and
-exit0, raw JSON, browser.json, checked-summary.json, DOMs and PNGs. Earlier
-closed-session failures remain preserved. Integrate the documentation-only
-evidence PR after required CI/review gates, then pause the release heartbeat.
-Do not redeploy the app or mark the whole goal complete. Actual Windows
-login/outage,24hcapacity,shutdown/reboot drills and PR #159 remain separate.
+Actual private PG/ASGI job submit and Worker claim now proven, TLSv1.3/256bit,
+qm_research least-privilege SCRAM, fixture only/budget0; job44622a77 FAILED before
+GO/no report. Noncecfb51975/10.398s; owned PG stopped/port released. Ubuntu could
+not read root0600 cleanup record; privileged exact-nonce reconciliation confirms
+CID absent and removes only owned policy/mount. Earlier startup58004b5f failed:
+Unix socket197B too long, corrected to existing verified TLS loopback TCP only.
+Real NEVER-started inspect proves readonly --mount Mode empty/RWfalse. Narrow
+parent matcher repair accepts empty/ro only with strict RWfalse, refusing rw or
+RWtrue; pure affected security-axis RED1/GREEN1/Ruff/diff green. No child image
+rebuild, third structural review, input-link waiver or old proof rerun. Next ONE
+same DB/fixture, new idempotent baseline job with corrected committed parent.
+Operational100KB subcap FAILED/retained; actual136,139B carries128,846,191B =>
+128,982,330B<=129MB. Old failures/peaks/whole-C PENDING retained; no new fee.
+Evidence output/0038-first-whole-job/; numerical report/UI/reopen remain open.
 
-## October 12 high-priority blocker repair
+Actual current parent image/runtime/policy admission PASS: nonce596d0b93,
+4.767s, candidatefd29672/currenta0abb2dc/sourcee34d22f, recomputed fivefields,
+current loaded compiled bytes matched. Exact temporary profile removed; NO
+container/SQL/service started or live-process/whole numerical Worker/report
+accepted. Two earlier kernel-reference failures/cleanup retained; fixed kernel
+API reader repaired, ordinary-link refusals unchanged/no third proof family.
+Wholeprovider13pass3.63s/Ruff/diff green. Evidence output/0038-concrete-admission/
+current-parent-independent-checked.json. NEXT privatePG→complete registered
+Worker/Reader numerical job→immutable report→page→samejob/ref restart/reopen.
+SSH ubuntu. Phase949,413B<=1MB/cumulative128,846,191B<=129MB; original FAILED
+453,924B/45962B subcaps and earlier peaks retained, whole-C PENDING. Original
+PG-inclusive cloud delta2,855,387,136B<=5GB/free159,407,419,392B/no new fee.
 
-The user now authorizes repair of the current high-priority blockers, with no
-live trading. Read-only health confirms deployed69515b7, paper=true/live=false
-and fresh crypto. Both installed source/helper processes are alive. A fresh
-SSH attempt actually requests Tailscale human check-mode authentication; do
-not reuse old URLs or change authentication policy. The user subsequently
-completed that check: actual ObserveOnly existing_private_tunnel and AWS
-quote-only readiness exit0/ready,250 daily rows per stock/order_checked=false.
-OpenD28036/helper53020 and installed digest stay unchanged; no exact orphan
-probe roots remain after scoped cleanup. One host sample shows4705MiB available
-RAM, no swap and NRestarts0; it does not establish sustained capacity.
+### Earlier metadata/software checkpoint (closed)
 
-New branch codex/0037-opend-probe-cleanup starts from origin/main745a231,
-preserving local main. Native RED reproduces orphaned probe descendants and
-unbounded output draining. Gated anonymous job containment fixes only probe
-ownership; focused3 and complete native33/54.05s pass, Ruff/diff clean. Spec
-and Standards round1 have no P1/P2; CI/install/real-source gates stay open.
-See the tracked2026-10-12-opend-probe-cleanup plan and iteration0037. Do not
-replace/restart the installed helper or affect old tunnels implicitly.
+Current real image metadata prepared/checked nonce79cf75d4,81distributions,
+162rawfiles, private snapshot; exact NEVER-startedCID removed/Engine5images0.
+No kernel load, Worker admission or numerical report. Connected opt-in kernel
+blueprint now /dev noexec and3fixedreadonly/etc binds, default unchanged;
+RED4/GREEN4/affected33pass plus5drift refusals, scopedreview clear.
+Root80KBaffected fixture subcap FAILED453,924B retained; overall1MBforecast
+884,223B/cumulative128,781,001B still<=129MB, whole-C pending. Evidence
+output/0038-concrete-admission/independent-checked.json. Primary next:
+concrete provider review/current effective policy and noexec backings→whole
+registered job→PG/report/page/reopen. No new proof family or repeated oldphase.
 
-Independent maintenance audit: disabled soak tasks point to a nonexistent
-runner. Maintained candidateb6f5cdb is pushed but has no PR/check runs; v5
-admission must verify the real source, disabled task installation and a full
-fresh daily cycle before enabling cadence. No formal168h clock has started.
-The old24h observer has only51 freshness samples over4h10m on33aa0521 and
-one missing host metric sample. Preserve it as partial evidence; start a new
-current-build observer only after connection/source preflight. These elapsed
-time gates, disruptive operator acceptance and firewall review remain open.
+### Previous direct-wire checkpoint (closed software phase)
 
-Subsequent explicit operator priority: formal168h is NOT REQUIRED / ON DEMAND.
-Do not start v5, enable/publish retired soak cadence or revive its heartbeat
-implicitly. Keep partial evidence unaccepted. Feature development takes
-priority; strategy simulation is the next proposed bounded research loop.
+Direct real-Engine compatibility repair: current bare NNP is preserved as bare,
+and seccomp filenames become exact JSON payloads in inspect. Fresh two owned
+NEVER-started current-image CIDs prove this, then both removed/Engine5/0. Source
+matcher now uses those real wire values and captures stable private UTF8 policy
+bytes at profile construction, refusing changed-file-before-GO. Cap16KiB leaves
+room in64KiB inspect transport, current policy9,624B fits. RED5/GREEN81 and
+boundaryRED1/GREEN2, Ruff/diff and scoped2-round correction review pass. This
+does not grant kernel/Worker admission; no report was produced.
+Evidence security-wire.json, wire-independent-checked.json and wire*.log/.exit.
+Software forecast3,965,174B/current cumulative127,896,778B carries every original
+peak/error/fixture and reserves; original129MB/5GB limits unchanged.
+
+Latest checkpoint: paired parent policy fields reviewed/affected78pass; actual
+server private venv preparation exit0/81 frozen packages/CPython3.12.3,
+no download/pth/bytecode/service. Evidence output/0038-parent-integration/.
+Exact shallow candidate eb880b2/treee7f6eb69 is now actually present on native
+server filesystem:3,923blob/43,953,107B fully checked;6,669installed RECORD files
+and existing _admit_runtime source/81lock/license/nonroot-venv gate pass11.201s.
+This is candidate qualification only, no SQL/listener/production deployment.
+Concrete Worker remains pending; no server numerical report yet. Kernel
+configuration is not kernel admission.
+Preparation's optional Labels failure retained; real fixed call7.592s and own
+never-started cleanup/Engine5images0containers passed. Software4MB carries
+original implementer1MB-cap FAILED peak1,198,755B plus all root tests/errors;
+cumulative129MB and original whole-host5GB/free50GB remain, no extra fee.
+Initial checkout's actual Git eol=crlf conversion of3PowerShell blobs is retained;
+SSH nonzero was UNKNOWN then exact private receipt re-read proves known failure.
+Same phase/pack reused, three before-images archived and exact canonical Git
+blob bytes restored; full byte check and existing runtime admission then pass.
+Evidence parent-checkout-eol-corrected.json/.exit and reconciliation files.
+Next implement the missing concrete WorkerImageAdmission against CURRENT actual
+image/policy/CID/mounts before GO and again before publication, then connect the
+registered fixture/PG/Worker/report. Reuse closed source/native phases. Existing
+policy receipt093b is historical and unloaded; no cached admission boolean.
+
+Users already have the local fixture submit/report/page/recovery loop. The
+research-server equivalent is NOT demonstrated. Priority1 is one registered
+momentum1 fixture job→PG→isolated compute→immutable report→page→same job/ref
+after service restart; Agent is optional and cannot block a basic report.
+
+Current source: integration branch codex/0038-worker-kernel, implementatione34d22f.
+Actual Linux3.12.15 imagea0abb2dc; raw OCI config7c78d260; application source
+e34d22f; frozen81 lock07f4e7ec/base093b4734 unchanged. Complete actual public
+source preflight passes positive/four negatives in6.913s; owned CID removed.
+The previous40s stall's real10s stack identified repeated Path conversion;
+the same membership set is now built once, preserving full byte checks.
+Actual Linux RED3/GREEN3/affected104 pass and scoped correctness review clear.
+Fresh Engine read confirms5images/0containers; original receipt mistakenly
+emitted constant4 despite its5-image guard. Erratum/RED/GREEN retained; no rerun.
+Primary next obstruction: wire concrete parent/admission and the existing
+Worker to the private PG→report→page/reopen loop. Numerical admission and a
+server user report remain UNPROVEN; source-only success is not full activation.
+Do not introduce another proof family or declare an empty log a success.
+
+## Frozen delivery rules and next action
+
+Canonical contract and real interface examples:
+[server report delivery](../superpowers/plans/2026-10-15-server-report-delivery.md).
+Root is integration owner.24–48h demo slice, max2 structural review rounds.
+No demo after timebox/second unresolved structural round → precise architecture
+blocker, risk/cost/acceptance decision; stop automatic prerequisite expansion.
+Reuse existing fixture/math/store/artifact/page; arbitrary user Python remains
+out of scope and existing license/isolation/source/release gates remain.
+
+Next action: continue the existing fixed Worker parent/entry/bundle contract,
+actual different-UID/noexec enforcing admission and the one registered report.
+Reuse actual source success; no more source probes or old image rebuilds.
+`python -B output/dispatch_source_preflight_membership.py` already exits0;
+its nonce40c750c6/CID4f8c5626/request/bytes/OCI are independently checked.
+Do not poll ended handles or repeat the accepted source-only phase.
+Native numerical/cache, different-UID/noexec/kernel/parent and concrete provider
+remain unaccepted. Parent-only software now accepts the exact measured public
+Python signer row and private IPC; arbitrary GPG/private values and host/shared
+IPC still refuse. RED2→GREEN68 plus narrow review pass; actual parent invocation
+is pending. Do not rebuild/reprobe the accepted numerical source for this alone.
+Fresh fixed-path intake finds no /home/ubuntu/qm-research runtime/credentials/data
+or8110/5432 listeners. Provision the frozen private service/report chain;
+this metadata-only read does not imply no other software exists on the host.
+
+## Release and later slices
+
+PR175 actual recheck: OPEN/DRAFT head370a745, selected CI38595332643 SUCCESS,
+domain/browser classified skips,0 human reviews. Class C requires2 humans
+including safety owner plus explicit operator acceptance; no admin/force.
+No staging redeploy. Existing69515b7 paper deployment and rollback preserved.
+After deterministic server report: real cancellation/lease/reclaim/backup,
+server-owned market/session-calendar acceptance, optional OpenAI advisory/Eval.
+Human auth/payment/model secret requirements are raised before those actions.
+
+## Evidence and history
+
+Current source/OCI/preflight evidence: output/0038-worker-source-image/;
+latest preflight request/receipt, namespaceRED/GREEN and owncleanup retained.
+Planner now allocates8MB to this source/performance correction, still within
+existing cumulative129MB and original5GB/free50GB constraints; no paid capacity.
+Carry114,179,067B, old source packet/failures, and new1,132,924B Linux fixtures.
+Last source forecast7,843,566B/cumulative122,022,633B carries retained new packet,
+all fixtures/logs and350KB docs/git+400KB future reserve. New unrelated Worker
+phase needs an explicit allocation/forecast, not silent8MB expansion.
+Cloud original5GB/free50GB/source100MB stays; latest free159,830,958,080B.
+Whole-C attribution PENDING and historical SSE overrun FAILED remain disclosed.
+Parent-compat software allocation2MB carries completed conservative122,022,633B
+frontier within129MB; retain initial test-harness failure (missing child source
+path), corrected existing-env run, no new packages/cloud resources. Evidence
+output/0038-parent-profile-compat/; full User/AWS numerical acceptance still open.
+[Full previous ACTIVE history](archive/2026-10-15-before-server-report-contract.md).
+Detailed role/evidence history remains in
+[iteration0038](../iterations/0038-research-foundation.md). Read these indexes
+only when needed; do not re-read or redo already sealed successful phases.

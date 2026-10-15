@@ -1,0 +1,1 @@
+{"exit": 1, "failed": 2, "cases": [{"case": "nonempty-invalid-id", "expected": "NOT_PROVEN", "actual": null, "matched": false}, {"case": "full-id-observer-failed", "expected": "NOT_PROVEN", "actual": null, "matched": false}, {"case": "full-id-observed", "expected": null, "actual": null, "matched": true}], "software_control_flow_only": true, "install_executed": false}

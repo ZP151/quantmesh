@@ -1,0 +1,4 @@
+# Preserve the recovered seed's byte identity referenced by the frozen catalog.
+cases.json -text whitespace=cr-at-eol
+# Captured evidence is immutable original bytes, including native log line endings.
+evidence/** binary

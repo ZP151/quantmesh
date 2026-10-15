@@ -1,0 +1,73 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0020961000118404627,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        370,
+        "test_valid_request_records_both_stages_and_reopens_idempotently"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.05654359993059188,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        370,
+        "test_valid_request_records_both_stages_and_reopens_idempotently"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014119991101324558,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        370,
+        "test_valid_request_records_both_stages_and_reopens_idempotently"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.0015080999583005905
+    },
+    {
+      "sequence": 1,
+      "kind": "model",
+      "boundary": "ModelGateway",
+      "outcome": "ok",
+      "nodeid": "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently",
+      "method": "complete_structured",
+      "transport": "ScriptedModelTransport",
+      "duration_seconds": 0.00039389997255057096
+    }
+  ],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

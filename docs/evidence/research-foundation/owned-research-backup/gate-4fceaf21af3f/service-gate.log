@@ -1,0 +1,1 @@
+{"profile": "POSTGRES_REQUIRED", "postgres": "verified-disposable-tests", "exit": 0, "failures": [], "tests": {"tests": 85, "failures": 0, "errors": 0, "skipped": 0}}

@@ -1,0 +1,8 @@
+From /mnt/c/Users/15492/.codex-clean/worktrees/a391/QuantMesh/output/171-owned-backup/source2.bundle
+ * branch            HEAD       -> FETCH_HEAD
+Previous HEAD position was 1f97102 fix: bound backup tool output without capping PostgreSQL WAL
+HEAD is now at cfad34d fix: corrupt only a fresh encrypted repository copy
+{"log": "cfad34dced21-native-tests.log", "exit": 0}
+{"log": "cfad34dced21-preflight.log", "exit": 0}
+{"log": "cfad34dced21-fixture.log", "exit": 0}
+{"passed": true, "negatives": {"corrupt_cipher_copy": {"refused": true, "source_unchanged": true}, "missing_artifact": {"refused": true, "source_unchanged": true}, "substituted_artifact": {"refused": true, "source_unchanged": true}, "substituted_manifest": {"refused": true, "source_unchanged": true}, "unknown_schema": {"refused": true, "source_unchanged": true}, "wrong_key": {"refused": true, "source_unchanged": true}}, "clusters": [{"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-cfad34dced21/unknown-schema-cluster/data", "pid": 3298, "start_ticks": "118550", "stopped": true, "system_id": "7695915003467705565"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-cfad34dced21/restore/data", "pid": 3225, "start_ticks": "118317", "stopped": true, "system_id": "7695914993833614484"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-cfad34dced21/sibling/data", "pid": 2743, "start_ticks": "117582", "stopped": true, "system_id": "7695914962656701106"}, {"data": "/var/tmp/quantmesh-backup-gnel0hd8/proof-cfad34dced21/source/data", "pid": 2718, "start_ticks": "117522", "stopped": true, "system_id": "7695914960032901785"}]}

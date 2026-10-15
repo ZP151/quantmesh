@@ -1,0 +1,38 @@
+{
+  "scope": "fixed synthetic canonical eight-column writer schema only",
+  "nonce": "99acd3c18e754762844a53bf5db5ca4c",
+  "exit": 1,
+  "native_admission": false,
+  "numerical_certificate": false,
+  "kernel_profile_qualified": false,
+  "production_services_enabled": false,
+  "full_option_A_complete": false,
+  "container_started": true,
+  "container_id": "a5769cd1a0da66f2f76227a08d09fb6778e05f7cdbf711e646be2b04f10e96d4",
+  "actual_child_exit": 1,
+  "actual_oom": false,
+  "actual_pid": 0,
+  "actual_started_at": "2026-10-14T02:08:01.890486678Z",
+  "actual_finished_at": "2026-10-14T02:08:05.369206608Z",
+  "observation": {
+    "exit": 1,
+    "Worker_admission": false,
+    "numerical_certificate": false,
+    "extension_INSTALL_or_LOAD_exercised": false,
+    "network_requested": false,
+    "failure_kind": "AssertionError",
+    "failed_step": "restricted_metadata_reader",
+    "fixed_fixture_error": ""
+  },
+  "failure_kind": "ValueError",
+  "reason": "actual_child_exit",
+  "owned_container_removed": true,
+  "final_engine": {
+    "ID": "cfe71bf3-9059-4059-887d-ac401f2283ec",
+    "Images": 2,
+    "Containers": 0
+  },
+  "host_free_bytes": 160029945856,
+  "whole_host_introduced_bytes": 1401307136,
+  "at_utc": "2026-10-14T02:08:05.680445+00:00"
+}

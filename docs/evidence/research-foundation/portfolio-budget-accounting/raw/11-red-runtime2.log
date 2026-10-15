@@ -1,0 +1,85 @@
+FF......F                                                                [100%]
+================================== FAILURES ===================================
+________ test_runtime_policy_is_optional_and_does_not_advertise_model _________
+
+config_data = {'operator_id': 'fixture', 'expected_build': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'lake_root': WindowsPath('C:/...an/worktrees/10c3/QuantMesh/output/portfolio-budgets/red-runtime2-tmp/test_runtime_policy_is_optiona0/artifacts'), ...}
+
+    def test_runtime_policy_is_optional_and_does_not_advertise_model(config_data):
+        config = configured(config_data)
+>       assert hasattr(config, "portfolio_policy"), "missing optional portfolio configuration"
+E       AssertionError: missing optional portfolio configuration
+E       assert False
+E        +  where False = hasattr(ServiceRuntimeConfig(schema_version=1, operator_id='fixture', expected_build='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', configured_dataset_ids=(), host='127.0.0.1', port=8110), 'portfolio_policy')
+
+services\research_agent\tests\test_portfolio_runtime.py:25: AssertionError
+_____________ test_runtime_accepts_explicit_string_decimal_policy _____________
+
+config_data = {'operator_id': 'fixture', 'expected_build': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'lake_root': WindowsPath('C:/...an/worktrees/10c3/QuantMesh/output/portfolio-budgets/red-runtime2-tmp/test_runtime_accepts_explicit_0/artifacts'), ...}
+
+    def test_runtime_accepts_explicit_string_decimal_policy(config_data):
+>       config = configured(config_data, portfolio_policy={"policy_id": "fixture",
+                             "operating_monthly_usd": "50", "development_total_usd": "200"},
+                             portfolio_category="development")
+
+services\research_agent\tests\test_portfolio_runtime.py:33: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'operator_id': 'fixture', 'expected_build': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'lake_root': WindowsPath('C:/...an/worktrees/10c3/QuantMesh/output/portfolio-budgets/red-runtime2-tmp/test_runtime_accepts_explicit_0/artifacts'), ...}
+updates = {'portfolio_policy': {'policy_id': 'fixture', 'operating_monthly_usd': '50', 'development_total_usd': '200'}, 'portfolio_category': 'development'}
+
+    def configured(data, **updates):
+>       return runtime.ServiceRuntimeConfig.model_validate({**data, **updates})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 2 validation errors for ServiceRuntimeConfig
+E       portfolio_policy
+E         Extra inputs are not permitted [type=extra_forbidden]
+E           For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+E       portfolio_category
+E         Extra inputs are not permitted [type=extra_forbidden]
+E           For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+
+services\research_agent\tests\test_portfolio_runtime.py:20: ValidationError
+___________ test_runtime_build_binds_policy_without_starting_model ____________
+
+config_data = {'operator_id': 'fixture', 'expected_build': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'lake_root': WindowsPath('C:/...an/worktrees/10c3/QuantMesh/output/portfolio-budgets/red-runtime2-tmp/test_runtime_build_binds_polic0/artifacts'), ...}
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x000001F33AB75550>, WindowsPath('C:/Users/15492/.codex-clean/..._runtime_build_binds_polic0/lake'), [datetime.datetime(2026, 10, 13, 1, 34, 17, 746696, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001F33AB24410>
+
+    def test_runtime_build_binds_policy_without_starting_model(config_data, local, monkeypatch):
+        from pydantic import SecretStr
+        from qm_research_agent import store as service_store
+        from qm_research_agent.budgets import EffectLedger, PortfolioBudgetPolicy
+    
+>       config = configured(config_data, portfolio_policy={"policy_id": "fixture",
+                             "operating_monthly_usd": "1", "development_total_usd": "2"},
+                             portfolio_category="operating")
+
+services\research_agent\tests\test_portfolio_runtime.py:63: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+data = {'operator_id': 'fixture', 'expected_build': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'lake_root': WindowsPath('C:/...an/worktrees/10c3/QuantMesh/output/portfolio-budgets/red-runtime2-tmp/test_runtime_build_binds_polic0/artifacts'), ...}
+updates = {'portfolio_policy': {'policy_id': 'fixture', 'operating_monthly_usd': '1', 'development_total_usd': '2'}, 'portfolio_category': 'operating'}
+
+    def configured(data, **updates):
+>       return runtime.ServiceRuntimeConfig.model_validate({**data, **updates})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       pydantic_core._pydantic_core.ValidationError: 2 validation errors for ServiceRuntimeConfig
+E       portfolio_policy
+E         Extra inputs are not permitted [type=extra_forbidden]
+E           For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+E       portfolio_category
+E         Extra inputs are not permitted [type=extra_forbidden]
+E           For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden
+
+services\research_agent\tests\test_portfolio_runtime.py:20: ValidationError
+============================== warnings summary ===============================
+..\..\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED services\research_agent\tests\test_portfolio_runtime.py::test_runtime_policy_is_optional_and_does_not_advertise_model
+FAILED services\research_agent\tests\test_portfolio_runtime.py::test_runtime_accepts_explicit_string_decimal_policy
+FAILED services\research_agent\tests\test_portfolio_runtime.py::test_runtime_build_binds_policy_without_starting_model
+3 failed, 6 passed, 1 warning in 0.39s

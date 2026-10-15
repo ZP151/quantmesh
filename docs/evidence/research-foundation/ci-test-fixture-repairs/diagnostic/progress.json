@@ -1,0 +1,561 @@
+{
+  "candidate": "216b378192bbc0a1742a28b7a1fc75a86ae2fda9",
+  "test_merge": "1313c77aae39e76c3f168b25810926258c676d49",
+  "rows": [
+    {
+      "log_line": 82,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 1,
+      "start_ordinal": 1,
+      "end_ordinal": 72
+    },
+    {
+      "log_line": 83,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 3,
+      "start_ordinal": 73,
+      "end_ordinal": 144
+    },
+    {
+      "log_line": 84,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 4,
+      "start_ordinal": 145,
+      "end_ordinal": 216
+    },
+    {
+      "log_line": 85,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 6,
+      "start_ordinal": 217,
+      "end_ordinal": 288
+    },
+    {
+      "log_line": 86,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 7,
+      "start_ordinal": 289,
+      "end_ordinal": 360
+    },
+    {
+      "log_line": 87,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 9,
+      "start_ordinal": 361,
+      "end_ordinal": 432
+    },
+    {
+      "log_line": 88,
+      "symbols": ".........................F..............................................",
+      "count": 72,
+      "percent": 11,
+      "start_ordinal": 433,
+      "end_ordinal": 504
+    },
+    {
+      "log_line": 89,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 12,
+      "start_ordinal": 505,
+      "end_ordinal": 576
+    },
+    {
+      "log_line": 90,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 14,
+      "start_ordinal": 577,
+      "end_ordinal": 648
+    },
+    {
+      "log_line": 91,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 15,
+      "start_ordinal": 649,
+      "end_ordinal": 720
+    },
+    {
+      "log_line": 92,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 17,
+      "start_ordinal": 721,
+      "end_ordinal": 792
+    },
+    {
+      "log_line": 93,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 18,
+      "start_ordinal": 793,
+      "end_ordinal": 864
+    },
+    {
+      "log_line": 94,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 20,
+      "start_ordinal": 865,
+      "end_ordinal": 936
+    },
+    {
+      "log_line": 95,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 22,
+      "start_ordinal": 937,
+      "end_ordinal": 1008
+    },
+    {
+      "log_line": 96,
+      "symbols": ".......sss..............................................................",
+      "count": 72,
+      "percent": 23,
+      "start_ordinal": 1009,
+      "end_ordinal": 1080
+    },
+    {
+      "log_line": 97,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 25,
+      "start_ordinal": 1081,
+      "end_ordinal": 1152
+    },
+    {
+      "log_line": 98,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 26,
+      "start_ordinal": 1153,
+      "end_ordinal": 1224
+    },
+    {
+      "log_line": 99,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 28,
+      "start_ordinal": 1225,
+      "end_ordinal": 1296
+    },
+    {
+      "log_line": 100,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 29,
+      "start_ordinal": 1297,
+      "end_ordinal": 1368
+    },
+    {
+      "log_line": 101,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 31,
+      "start_ordinal": 1369,
+      "end_ordinal": 1440
+    },
+    {
+      "log_line": 102,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 33,
+      "start_ordinal": 1441,
+      "end_ordinal": 1512
+    },
+    {
+      "log_line": 103,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 34,
+      "start_ordinal": 1513,
+      "end_ordinal": 1584
+    },
+    {
+      "log_line": 104,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 36,
+      "start_ordinal": 1585,
+      "end_ordinal": 1656
+    },
+    {
+      "log_line": 105,
+      "symbols": "......................................................sss...............",
+      "count": 72,
+      "percent": 37,
+      "start_ordinal": 1657,
+      "end_ordinal": 1728
+    },
+    {
+      "log_line": 106,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 39,
+      "start_ordinal": 1729,
+      "end_ordinal": 1800
+    },
+    {
+      "log_line": 107,
+      "symbols": "..............F......FFFFF.............FFFFFF...........................",
+      "count": 72,
+      "percent": 41,
+      "start_ordinal": 1801,
+      "end_ordinal": 1872
+    },
+    {
+      "log_line": 108,
+      "symbols": "...................................s....................................",
+      "count": 72,
+      "percent": 42,
+      "start_ordinal": 1873,
+      "end_ordinal": 1944
+    },
+    {
+      "log_line": 109,
+      "symbols": ".........sssssss........................................................",
+      "count": 72,
+      "percent": 44,
+      "start_ordinal": 1945,
+      "end_ordinal": 2016
+    },
+    {
+      "log_line": 110,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 45,
+      "start_ordinal": 2017,
+      "end_ordinal": 2088
+    },
+    {
+      "log_line": 111,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 47,
+      "start_ordinal": 2089,
+      "end_ordinal": 2160
+    },
+    {
+      "log_line": 112,
+      "symbols": ".............sssss..........F...........................................",
+      "count": 72,
+      "percent": 48,
+      "start_ordinal": 2161,
+      "end_ordinal": 2232
+    },
+    {
+      "log_line": 113,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 50,
+      "start_ordinal": 2233,
+      "end_ordinal": 2304
+    },
+    {
+      "log_line": 114,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 52,
+      "start_ordinal": 2305,
+      "end_ordinal": 2376
+    },
+    {
+      "log_line": 115,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 53,
+      "start_ordinal": 2377,
+      "end_ordinal": 2448
+    },
+    {
+      "log_line": 116,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 55,
+      "start_ordinal": 2449,
+      "end_ordinal": 2520
+    },
+    {
+      "log_line": 117,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 56,
+      "start_ordinal": 2521,
+      "end_ordinal": 2592
+    },
+    {
+      "log_line": 118,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 58,
+      "start_ordinal": 2593,
+      "end_ordinal": 2664
+    },
+    {
+      "log_line": 119,
+      "symbols": ".....................................s..................................",
+      "count": 72,
+      "percent": 59,
+      "start_ordinal": 2665,
+      "end_ordinal": 2736
+    },
+    {
+      "log_line": 120,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 61,
+      "start_ordinal": 2737,
+      "end_ordinal": 2808
+    },
+    {
+      "log_line": 121,
+      "symbols": "........................................................................",
+      "count": 72,
+      "percent": 63,
+      "start_ordinal": 2809,
+      "end_ordinal": 2880
+    },
+    {
+      "log_line": 122,
+      "symbols": "..................................",
+      "count": 34,
+      "percent": null,
+      "start_ordinal": 2881,
+      "end_ordinal": 2914
+    }
+  ],
+  "failure_markers": [
+    {
+      "log_line": 88,
+      "row_position": 26,
+      "symbol_ordinal": 458,
+      "percent": 11
+    },
+    {
+      "log_line": 107,
+      "row_position": 15,
+      "symbol_ordinal": 1815,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 22,
+      "symbol_ordinal": 1822,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 23,
+      "symbol_ordinal": 1823,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 24,
+      "symbol_ordinal": 1824,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 25,
+      "symbol_ordinal": 1825,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 26,
+      "symbol_ordinal": 1826,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 40,
+      "symbol_ordinal": 1840,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 41,
+      "symbol_ordinal": 1841,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 42,
+      "symbol_ordinal": 1842,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 43,
+      "symbol_ordinal": 1843,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 44,
+      "symbol_ordinal": 1844,
+      "percent": 41
+    },
+    {
+      "log_line": 107,
+      "row_position": 45,
+      "symbol_ordinal": 1845,
+      "percent": 41
+    },
+    {
+      "log_line": 112,
+      "row_position": 29,
+      "symbol_ordinal": 2189,
+      "percent": 48
+    }
+  ],
+  "skip_markers": [
+    {
+      "log_line": 96,
+      "row_position": 8,
+      "symbol_ordinal": 1016,
+      "percent": 23
+    },
+    {
+      "log_line": 96,
+      "row_position": 9,
+      "symbol_ordinal": 1017,
+      "percent": 23
+    },
+    {
+      "log_line": 96,
+      "row_position": 10,
+      "symbol_ordinal": 1018,
+      "percent": 23
+    },
+    {
+      "log_line": 105,
+      "row_position": 55,
+      "symbol_ordinal": 1711,
+      "percent": 37
+    },
+    {
+      "log_line": 105,
+      "row_position": 56,
+      "symbol_ordinal": 1712,
+      "percent": 37
+    },
+    {
+      "log_line": 105,
+      "row_position": 57,
+      "symbol_ordinal": 1713,
+      "percent": 37
+    },
+    {
+      "log_line": 108,
+      "row_position": 36,
+      "symbol_ordinal": 1908,
+      "percent": 42
+    },
+    {
+      "log_line": 109,
+      "row_position": 10,
+      "symbol_ordinal": 1954,
+      "percent": 44
+    },
+    {
+      "log_line": 109,
+      "row_position": 11,
+      "symbol_ordinal": 1955,
+      "percent": 44
+    },
+    {
+      "log_line": 109,
+      "row_position": 12,
+      "symbol_ordinal": 1956,
+      "percent": 44
+    },
+    {
+      "log_line": 109,
+      "row_position": 13,
+      "symbol_ordinal": 1957,
+      "percent": 44
+    },
+    {
+      "log_line": 109,
+      "row_position": 14,
+      "symbol_ordinal": 1958,
+      "percent": 44
+    },
+    {
+      "log_line": 109,
+      "row_position": 15,
+      "symbol_ordinal": 1959,
+      "percent": 44
+    },
+    {
+      "log_line": 109,
+      "row_position": 16,
+      "symbol_ordinal": 1960,
+      "percent": 44
+    },
+    {
+      "log_line": 112,
+      "row_position": 14,
+      "symbol_ordinal": 2174,
+      "percent": 48
+    },
+    {
+      "log_line": 112,
+      "row_position": 15,
+      "symbol_ordinal": 2175,
+      "percent": 48
+    },
+    {
+      "log_line": 112,
+      "row_position": 16,
+      "symbol_ordinal": 2176,
+      "percent": 48
+    },
+    {
+      "log_line": 112,
+      "row_position": 17,
+      "symbol_ordinal": 2177,
+      "percent": 48
+    },
+    {
+      "log_line": 112,
+      "row_position": 18,
+      "symbol_ordinal": 2178,
+      "percent": 48
+    },
+    {
+      "log_line": 119,
+      "row_position": 38,
+      "symbol_ordinal": 2702,
+      "percent": 59
+    }
+  ],
+  "observed_symbols": 2914,
+  "totals_consistent_with_floor_percent": [
+    4561,
+    4562,
+    4563,
+    4564,
+    4565
+  ],
+  "terminal_lines": [
+    "release\tCertify exact checkout\t2026-10-13T01:03:37.9933650Z == full pytest suite ==",
+    "release\tCertify exact checkout\t2026-10-13T01:03:37.9945834Z {\"event\":\"step_started\",\"log_path\":\"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log\",\"name\":\"full pytest suite\",\"pid\":3864,\"timeout_seconds\":10800,\"timestamp\":\"2026-10-13T01:03:37.994Z\"}",
+    "release\tCertify exact checkout\t2026-10-13T01:04:15.0056228Z {\"elapsed_seconds\":37.012,\"event\":\"step_failure_seen\",\"log_path\":\"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log\",\"name\":\"full pytest suite\",\"timestamp\":\"2026-10-13T01:04:15.005Z\"}",
+    "release\tCertify exact checkout\t2026-10-13T01:13:38.1644770Z {\"elapsed_seconds\":600.171,\"event\":\"step_progress\",\"log_path\":\"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log\",\"log_size_bytes\":623,\"name\":\"full pytest suite\",\"pytest_percentage\":11,\"timestamp\":\"2026-10-13T01:13:38.164Z\"}",
+    "release\tCertify exact checkout\t2026-10-13T01:23:38.3281224Z {\"elapsed_seconds\":1200.335,\"event\":\"step_progress\",\"log_path\":\"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log\",\"log_size_bytes\":649,\"name\":\"full pytest suite\",\"pytest_percentage\":12,\"timestamp\":\"2026-10-13T01:23:38.327Z\"}",
+    "release\tCertify exact checkout\t2026-10-13T01:33:38.4916408Z {\"elapsed_seconds\":1800.498,\"event\":\"step_progress\",\"log_path\":\"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log\",\"log_size_bytes\":769,\"name\":\"full pytest suite\",\"pytest_percentage\":14,\"timestamp\":\"2026-10-13T01:33:38.491Z\"}",
+    "release\tCertify exact checkout\t2026-10-13T01:43:13.6526355Z {\"elapsed_seconds\":2375.659,\"event\":\"step_finished\",\"exit_code\":-1,\"log_path\":\"/tmp/qmesh-release-gate-3q6l4o3h/logs/16-full-pytest-suite.log\",\"name\":\"full pytest suite\",\"slow_tests\":[],\"timed_out\":false,\"timestamp\":\"2026-10-13T01:43:13.652Z\"}",
+    "release\tCertify exact checkout\t2026-10-13T01:43:13.8639273Z   FAIL   2375.7s  full pytest suite"
+  ],
+  "summary_absent": true
+}

@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002309100003913045,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        90,
+        "test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.06793130002915859,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        90,
+        "test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015409989282488823,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        90,
+        "test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

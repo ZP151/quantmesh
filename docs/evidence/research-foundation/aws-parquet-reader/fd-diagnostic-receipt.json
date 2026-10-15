@@ -1,0 +1,63 @@
+{
+  "scope": "fixed synthetic canonical eight-column writer schema only",
+  "nonce": "f5527e6eeaf4415d849b2c033aecab0c",
+  "exit": 1,
+  "native_admission": false,
+  "numerical_certificate": false,
+  "kernel_profile_qualified": false,
+  "production_services_enabled": false,
+  "full_option_A_complete": false,
+  "container_started": true,
+  "container_id": "d698aa0ac8e2ce707e0131e8036919f0be83d2bd311593de559c3dcd439a152b",
+  "actual_child_exit": 1,
+  "actual_oom": false,
+  "actual_pid": 0,
+  "actual_started_at": "2026-10-14T02:14:22.127651383Z",
+  "actual_finished_at": "2026-10-14T02:14:24.925919894Z",
+  "observation": {
+    "exit": 1,
+    "Worker_admission": false,
+    "numerical_certificate": false,
+    "extension_INSTALL_or_LOAD_exercised": false,
+    "network_requested": false,
+    "observed_reader_settings": {
+      "threads": 1,
+      "memory_limit": "30.5 MiB",
+      "temp_directory": "",
+      "autoload_known_extensions": false,
+      "autoinstall_known_extensions": false,
+      "allow_unsigned_extensions": false,
+      "allow_community_extensions": false,
+      "allow_persistent_secrets": false,
+      "allowed_directories": [],
+      "allowed_paths": [
+        "/tmp/qm-parquet-fd-alias/original-held.parquet"
+      ],
+      "enable_external_access": false,
+      "lock_configuration": true
+    },
+    "fd_alias": "/proc/self/fd/3",
+    "fd_before": [
+      63,
+      4,
+      1155,
+      10001,
+      1
+    ],
+    "fixture_bytes": 3465,
+    "failure_kind": "AssertionError",
+    "failed_step": "reader_exact_allowlist",
+    "fixed_fixture_error": ""
+  },
+  "failure_kind": "ValueError",
+  "reason": "actual_child_exit",
+  "owned_container_removed": true,
+  "final_engine": {
+    "ID": "cfe71bf3-9059-4059-887d-ac401f2283ec",
+    "Images": 2,
+    "Containers": 0
+  },
+  "host_free_bytes": 160029859840,
+  "whole_host_introduced_bytes": 1401393152,
+  "at_utc": "2026-10-14T02:14:25.304475+00:00"
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "scope": "Task1 stdlib fixture native OCI only",
+  "source_base": "c545c02093b5f7e3d8dedb5ccc79b128c9dc014f",
+  "source_branch": "codex/0038-linux-native-qualification",
+  "archive": "task1-native-evidence.tar.gz",
+  "archive_bytes": 339957,
+  "archive_sha256": "49fbb935d14a0fd1f74ca19eb79af8eb46cd0f7e75503fb68f7e8a2dd4c13673",
+  "archive_members": 301,
+  "manifest_sha256": "6031a7b214ad5822f6cf4cecc5a29a4c111f2abfb48dd659719d89e87173553f",
+  "raw_archive_contents": "original reviewed public packet; exact executed context; four tested source files; native fixture inputs/outputs; phase logs; approval; narrow review; cleanup failures and success",
+  "rootfs_archives_retained_in_place": [
+    {
+      "path": "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/image-rootfs.tar",
+      "bytes": 26125312,
+      "sha256": "baa2c69284c2f13ca4872794747c798e540b133a854dc3ce5cc720dea4566224",
+      "retained_in_place": true
+    },
+    {
+      "path": "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/image-rootfs2.tar",
+      "bytes": 26125312,
+      "sha256": "1a64886b79df7ae3b7c37dd93cc4db843f1dd400d238b2ca78705bf2692b83e6",
+      "retained_in_place": true
+    }
+  ],
+  "engine_id": "d619836c-83fd-4b61-bccd-28f15d06069f",
+  "image_id": "sha256:968595795332a9424a6b47591e79ff594b3048cb3161801156a5c782833de167",
+  "image_config_digest": "sha256:2bbe620f62bed9f37df4cc76f65105cfdbbe90eefa4c7cb5a964c2dcc424d250",
+  "bootstrap_sha256": "e05ce046cd800ab801e4ceafb352c02de20774dc2f9bf92dc77ed3688f6de740",
+  "native_qualified": true,
+  "native_required_passed": 15,
+  "focused_regression": {
+    "passed": 48,
+    "deselected": 23,
+    "warnings": 1,
+    "seconds": 16.41
+  },
+  "cleanup": {
+    "images_removed": 2,
+    "known_owned_containers_remaining": 0,
+    "baseline_states_preserved": true,
+    "cache_new_records": 12,
+    "cache_cli_display_upper_bound_bytes": 83875867,
+    "no_global_prune": true
+  },
+  "resource_status": {
+    "native_run_conservative_bytes": 547016704,
+    "native_run_free_c_bytes": 102358667264,
+    "post_cleanup_gate": "failed",
+    "post_cleanup_free_c_bytes": 89973710848,
+    "post_cleanup_c_free_delta_bytes": 12931973120,
+    "post_cleanup_attributable_logical_bytes": 203031020,
+    "extra_whole_volume_delta_attribution": "unproven",
+    "archive_maximum_bytes": 2000000
+  },
+  "remaining": [
+    "storage attribution/final acceptance",
+    "Task2 numerical Worker image/integration",
+    "two-job/reclaim equivalence",
+    "server/AWS release gates"
+  ]
+}

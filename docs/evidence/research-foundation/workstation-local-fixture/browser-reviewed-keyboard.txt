@@ -1,0 +1,84 @@
+- banner:
+  - button "Open navigation":
+  - heading "Research jobs" [level=1]
+  - button "Kill switch off":
+  - separator
+  - button "Open command palette":
+  - link "Open global settings":
+    - /url: /app/settings
+- main:
+  - generic: Operator mode — no live or demo feed is attached.
+  - heading "Research jobs" [level=2]
+  - paragraph: Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.
+  - paragraph:
+    - generic: FIXTURE_ONLY / v1 research
+    - text: Workflow evidence only. Synthetic results do not establish investment performance.
+  - alert: Research service unavailable. Retained status and report remain available.
+  - region "Fixture configuration":
+    - heading "Fixture configuration" [level=3]
+    - status: Research service unavailable. No new submission is enabled.
+    - text: Registered baseline
+    - combobox "Registered baseline" [disabled]:
+      - option "risk_parity · v1" [selected]
+    - text: Pinned fixture
+    - combobox "Pinned fixture" [disabled]:
+      - option "equities · r1 · 1h" [selected]
+    - paragraph: Saved fixture/test inputs · moomoo:AAA, moomoo:BBB, moomoo:CCC
+    - text: Train bars
+    - spinbutton "Train bars" [disabled]: "10"
+    - text: Test bars
+    - spinbutton "Test bars" [disabled]: "5"
+    - text: Step bars
+    - spinbutton "Step bars" [disabled]: "5"
+    - text: Fee (bps)
+    - spinbutton "Fee (bps)" [disabled]: "1"
+    - text: Half spread (bps)
+    - spinbutton "Half spread (bps)" [disabled]: "2"
+    - text: Slippage (bps)
+    - spinbutton "Slippage (bps)" [disabled]: "3"
+    - checkbox "Request optional advisory analysis. Provider may be unavailable." [checked] [disabled]
+    - text: Request optional advisory analysis. Provider may be unavailable.
+    - button "Submit fixture job" [disabled]
+    - paragraph: Fees, half spread and slippage must each be positive. Evaluation windows do not overlap. No automatic resubmission after reload.
+  - region "Durable job":
+    - heading "Durable job" [level=3]
+    - generic: succeeded
+    - generic: 71688feb832e4d498ef1324f07ea6647
+    - paragraph: "Agent unavailable · Deterministic backtest: succeeded"
+    - paragraph: Retained browser status · Job updated 2026-10-12T20:10:08.585880Z
+    - term: Model calls
+    - definition: unavailable
+    - term: Estimated model cost (USD)
+    - definition: unavailable
+    - term: Input / output tokens
+    - definition: unavailable / unavailable
+    - term: Attempt
+    - definition: "1"
+    - button "Refresh status":
+      - text: Refresh status
+    - button "Open immutable report"
+    - button "New fixture job"
+    - paragraph: "Advisory verdict: unavailable. Citations: unavailable. AI has no order or execution authority."
+    - generic "Pinned setup and lineage"
+    - term: Baseline / dataset
+    - definition: risk_parity v1 · equities r1 · 1h
+    - term: "Costs (bps): fee / half spread / slippage"
+    - definition: 1 / 2 / 3
+    - term: "Walk-forward: train / test / step"
+    - definition: 10 / 5 / 5
+    - term: Manifest SHA256
+    - definition: db5b2e8c7cc9c9f622e0a7bbfc0779928d55358f6e516e5e14d76d3eb570da9e
+    - term: Fixture content SHA256
+    - definition: d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501
+    - term: Request/config SHA256
+    - definition: 967a30e60922a195a4956419135d40f0a95b3daf69925521a01ce67b0c0cff57
+    - term: Baseline engine SHA256
+    - definition: 4ad795a698ccbf5737e3730f3821970067d032f991546e5fdc400450b2522824
+    - region "Canonical report":
+      - heading "Canonical report" [level=3]
+      - button "Download report JSON":
+        - text: Download report JSON
+      - paragraph: Retained immutable fixture report. Includes measured numerical windows, costs and source/config/code lineage; workflow proof only.
+      - paragraph: Artifact SHA256 124f692e0bfff4c11fb15e725d800b37dc63052c5c69b2a51ce72d4b35db2566
+      - generic "Inspect canonical JSON" [active]
+      - generic: "{\"implementation_digest\":\"4ad795a698ccbf5737e3730f3821970067d032f991546e5fdc400450b2522824\",\"request_digest\":\"967a30e60922a195a4956419135d40f0a95b3daf69925521a01ce67b0c0cff57\",\"result\":{\"commit\":\"4ad795a698ccbf5737e3730f3821970067d032f991546e5fdc400450b2522824\",\"costs\":{\"fee_bps\":1.0,\"half_spread_bps\":2.0,\"slippage_bps\":3.0},\"dataset\":\"equities\",\"evidence\":{\"build_digest\":\"83325a8e0b3447632cb890c771c9d475dbb05860cabc8f0c897099c9e0a649d9\",\"dependency_digest\":\"e87ed74200e774edd442cb012a07d9951eca896b3a3c26b771263265c07387a7\",\"export_digest\":\"d4e71bbee94b49dfdd38a6801b8f33308bf5ad470fdacc499badcdecc0796501\",\"manifest_digest\":\"db5b2e8c7cc9c9f622e0a7bbfc0779928d55358f6e516e5e14d76d3eb570da9e\",\"request_digest\":\"967a30e60922a195a4956419135d40f0a95b3daf69925521a01ce67b0c0cff57\"},\"id\":\"6a37d0caa700f549\",\"interval\":\"1h\",\"metrics\":{\"annualized_return\":162897.76075921758,\"avg_turnover\":0.1081648611217021,\"max_drawdown\":-0.053573256192749996,\"n_windows\":10,\"sharpe\":16.50703818318896,\"total_cost\":0.0006489891667302124,\"total_return\":0.10430221841282394,\"win_rate\":0.6},\"pipeline_digest\":null,\"revision\":1,\"signals_digest\":null,\"strategy\":\"risk_parity\",\"universe\":[{\"symbol\":\"AAA\",\"venue\":\"moomoo\"},{\"symbol\":\"BBB\",\"venue\":\"moomoo\"},{\"symbol\":\"CCC\",\"venue\":\"moomoo\"}],\"window_spec\":{\"step_bars\":5,\"test_bars\":5,\"train_bars\":10},\"windows\":[{\"cost\":0.0005999999999999998,\"index\":0,\"n_trades\":3,\"test_end\":\"2026-01-05T14:00:00Z\",\"test_start\":\"2026-01-05T10:00:00Z\",\"train_end\":\"2026-01-05T09:00:00Z\",\"turnover\":0.9999999999999999,\"window_return\":0.02944049045768371},{\"cost\":8.776450495423421e-06,\"index\":1,\"n_trades\":3,\"test_end\":\"2026-01-05T19:00:00Z\",\"test_start\":\"2026-01-05T15:00:00Z\",\"train_end\":\"2026-01-05T14:00:00Z\",\"turnover\":0.014627417492372369,\"window_return\":0.02911746724826081},{\"cost\":2.227416688884398e-06,\"index\":2,\"n_trades\":3,\"test_end\":\"2026-01-06T00:00:00Z\",\"test_start\":\"2026-01-05T20:00:00Z\",\"train_end\":\"2026-01-05T19:00:00Z\",\"turnover\":0.0037123611481406638,\"window_return\":-0.04891881463950065},{\"cost\":3.4312663100423466e-06,\"index\":3,\"n_trades\":3,\"test_end\":\"2026-01-06T05:00:00Z\",\"test_start\":\"2026-01-06T01:00:00Z\",\"train_end\":\"2026-01-06T00:00:00Z\",\"turnover\":0.005718777183403911,\"window_return\":0.049945675590965743},{\"cost\":9.234241687081706e-06,\"index\":4,\"n_trades\":3,\"test_end\":\"2026-01-06T10:00:00Z\",\"test_start\":\"2026-01-06T06:00:00Z\",\"train_end\":\"2026-01-06T05:00:00Z\",\"turnover\":0.015390402811802845,\"window_return\":0.004622239506778536},{\"cost\":1.4442134103474612e-06,\"index\":5,\"n_trades\":3,\"test_end\":\"2026-01-06T15:00:00Z\",\"test_start\":\"2026-01-06T11:00:00Z\",\"train_end\":\"2026-01-06T10:00:00Z\",\"turnover\":0.002407022350579102,\"window_return\":-0.03835577149473601},{\"cost\":5.124408532333207e-06,\"index\":6,\"n_trades\":3,\"test_end\":\"2026-01-06T20:00:00Z\",\"test_start\":\"2026-01-06T16:00:00Z\",\"train_end\":\"2026-01-06T15:00:00Z\",\"turnover\":0.008540680887222013,\"window_return\":0.06021652464167304},{\"cost\":9.637388445444028e-06,\"index\":7,\"n_trades\":3,\"test_end\":\"2026-01-07T01:00:00Z\",\"test_start\":\"2026-01-06T21:00:00Z\",\"train_end\":\"2026-01-06T20:00:00Z\",\"turnover\":0.016062314075740047,\"window_return\":-0.018601118969014285},{\"cost\":1.726929827507606e-06,\"index\":8,\"n_trades\":3,\"test_end\":\"2026-01-07T06:00:00Z\",\"test_start\":\"2026-01-07T02:00:00Z\",\"train_end\":\"2026-01-07T01:00:00Z\",\"turnover\":0.0028782163791793436,\"window_return\":-0.019308938476320203},{\"cost\":7.386851333148436e-06,\"index\":9,\"n_trades\":3,\"test_end\":\"2026-01-07T11:00:00Z\",\"test_start\":\"2026-01-07T07:00:00Z\",\"train_end\":\"2026-01-07T06:00:00Z\",\"turnover\":0.012311418888580727,\"window_return\":0.05888249212592456}]},\"schema_version\":1}"

@@ -1,0 +1,169 @@
+== QM-001 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-001\\01-QM-001.log","name":"QM-001","pid":63164,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:23.905Z"}
+{"elapsed_seconds":2.035,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-001\\01-QM-001.log","name":"QM-001","slow_tests":["0.02s call     tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:25.933Z"}
+ok — 0:02
+QM-001: passed (2.04s)
+== QM-002 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-002\\02-QM-002.log","name":"QM-002","pid":27944,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:25.985Z"}
+{"elapsed_seconds":2.033,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-002\\02-QM-002.log","name":"QM-002","slow_tests":["0.01s call     tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]\r","0.01s call     tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:28.001Z"}
+ok — 0:02
+QM-002: passed (2.03s)
+== QM-003 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-003\\03-QM-003.log","name":"QM-003","pid":11712,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:28.034Z"}
+{"elapsed_seconds":2.032,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-003\\03-QM-003.log","name":"QM-003","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:23:30.055Z"}
+ok — 0:02
+QM-003: passed (2.03s)
+== QM-004 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-004\\04-QM-004.log","name":"QM-004","pid":58756,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:30.107Z"}
+{"elapsed_seconds":3.038,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-004\\04-QM-004.log","name":"QM-004","slow_tests":["0.05s call     tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]\r","0.01s call     tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]\r","0.01s call     tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]\r","0.01s call     tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]\r","0.01s call     tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:33.129Z"}
+ok — 0:03
+QM-004: passed (3.04s)
+== QM-005 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-005\\05-QM-005.log","name":"QM-005","pid":44624,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:33.176Z"}
+{"elapsed_seconds":3.044,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-005\\05-QM-005.log","name":"QM-005","slow_tests":["0.03s call     tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:36.203Z"}
+ok — 0:03
+QM-005: passed (3.04s)
+== QM-006 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-006\\06-QM-006.log","name":"QM-006","pid":56152,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:36.241Z"}
+{"elapsed_seconds":2.022,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-006\\06-QM-006.log","name":"QM-006","slow_tests":["0.17s call     tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:38.250Z"}
+ok — 0:02
+QM-006: passed (2.02s)
+== QM-007 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-007\\07-QM-007.log","name":"QM-007","pid":2204,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:38.282Z"}
+{"elapsed_seconds":3.023,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-007\\07-QM-007.log","name":"QM-007","slow_tests":["0.16s call     tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:41.294Z"}
+ok — 0:03
+QM-007: passed (3.02s)
+== QM-008 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-008\\08-QM-008.log","name":"QM-008","pid":14432,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:41.322Z"}
+{"elapsed_seconds":2.03,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-008\\08-QM-008.log","name":"QM-008","slow_tests":["0.17s call     tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:43.343Z"}
+ok — 0:02
+QM-008: passed (2.03s)
+== QM-009 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-009\\09-QM-009.log","name":"QM-009","pid":38616,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:43.407Z"}
+{"elapsed_seconds":2.033,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-009\\09-QM-009.log","name":"QM-009","slow_tests":["0.16s call     tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:45.424Z"}
+ok — 0:02
+QM-009: passed (2.03s)
+== QM-010 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-010\\10-QM-010.log","name":"QM-010","pid":61160,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:45.471Z"}
+{"elapsed_seconds":2.032,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-010\\10-QM-010.log","name":"QM-010","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:23:47.490Z"}
+ok — 0:02
+QM-010: passed (2.03s)
+== QM-011 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-011\\11-QM-011.log","name":"QM-011","pid":42900,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:47.544Z"}
+{"elapsed_seconds":2.035,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-011\\11-QM-011.log","name":"QM-011","slow_tests":["0.14s call     tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:49.566Z"}
+ok — 0:02
+QM-011: passed (2.04s)
+== QM-012 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-012\\12-QM-012.log","name":"QM-012","pid":49728,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:49.632Z"}
+{"elapsed_seconds":2.047,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-012\\12-QM-012.log","name":"QM-012","slow_tests":["0.08s call     tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:51.655Z"}
+ok — 0:02
+QM-012: passed (2.05s)
+== QM-013 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-013\\13-QM-013.log","name":"QM-013","pid":59864,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:51.711Z"}
+{"elapsed_seconds":2.045,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-013\\13-QM-013.log","name":"QM-013","slow_tests":["0.08s call     tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:53.742Z"}
+ok — 0:02
+QM-013: passed (2.05s)
+== QM-014 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-014\\14-QM-014.log","name":"QM-014","pid":51712,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:53.817Z"}
+{"elapsed_seconds":2.043,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-014\\14-QM-014.log","name":"QM-014","slow_tests":["0.08s call     tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]\r","0.07s call     tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]\r","0.07s call     tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:55.840Z"}
+ok — 0:02
+QM-014: passed (2.04s)
+== QM-015 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-015\\15-QM-015.log","name":"QM-015","pid":46592,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:55.886Z"}
+{"elapsed_seconds":4.036,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-015\\15-QM-015.log","name":"QM-015","slow_tests":["1.45s call     tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart\r"],"timed_out":false,"timestamp":"2026-10-12T18:23:59.907Z"}
+ok — 0:04
+QM-015: passed (4.04s)
+== QM-016 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-016\\16-QM-016.log","name":"QM-016","pid":17436,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:23:59.959Z"}
+{"elapsed_seconds":3.055,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-016\\16-QM-016.log","name":"QM-016","slow_tests":["0.05s call     tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]\r","0.05s call     tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]\r","0.05s call     tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]\r","0.05s call     tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]\r","0.05s call     tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]\r"],"timed_out":false,"timestamp":"2026-10-12T18:24:02.999Z"}
+ok — 0:03
+QM-016: passed (3.06s)
+== QM-017 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-017\\17-QM-017.log","name":"QM-017","pid":50148,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:03.047Z"}
+{"elapsed_seconds":2.053,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-017\\17-QM-017.log","name":"QM-017","slow_tests":["0.21s call     tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running\r"],"timed_out":false,"timestamp":"2026-10-12T18:24:05.086Z"}
+ok — 0:02
+QM-017: passed (2.05s)
+== QM-018 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-018\\18-QM-018.log","name":"QM-018","pid":52812,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:05.144Z"}
+{"elapsed_seconds":6.042,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-018\\18-QM-018.log","name":"QM-018","slow_tests":["4.15s call     tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss\r"],"timed_out":false,"timestamp":"2026-10-12T18:24:11.169Z"}
+ok — 0:06
+QM-018: passed (6.04s)
+== QM-019 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-019\\19-QM-019.log","name":"QM-019","pid":42940,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:11.224Z"}
+{"elapsed_seconds":2.045,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-019\\19-QM-019.log","name":"QM-019","slow_tests":["0.65s call     tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake\r"],"timed_out":false,"timestamp":"2026-10-12T18:24:13.253Z"}
+ok — 0:02
+QM-019: passed (2.05s)
+== QM-020 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-020\\20-QM-020.log","name":"QM-020","pid":50464,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:13.317Z"}
+{"elapsed_seconds":2.019,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-020\\20-QM-020.log","name":"QM-020","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:15.320Z"}
+ok — 0:02
+QM-020: passed (2.02s)
+== QM-021 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-021\\21-QM-021.log","name":"QM-021","pid":29340,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:15.381Z"}
+{"elapsed_seconds":2.045,"event":"step_finished","exit_code":0,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-021\\21-QM-021.log","name":"QM-021","slow_tests":["0.02s call     tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages\r"],"timed_out":false,"timestamp":"2026-10-12T18:24:17.407Z"}
+ok — 0:02
+QM-021: passed (2.05s)
+== QM-022 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-022\\22-QM-022.log","name":"QM-022","pid":45968,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:17.461Z"}
+{"elapsed_seconds":2.013,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-022\\22-QM-022.log","name":"QM-022","timestamp":"2026-10-12T18:24:19.485Z"}
+{"elapsed_seconds":2.036,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-022\\22-QM-022.log","name":"QM-022","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:19.486Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+__________________ test_disguised_loopback_origin_is_refused __________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:42: in test_disguised_loopback_origin_is_refused
+    assert not workstation._is_allowed_browser_origin(origin), (
+E   AssertionError: A DNS hostname beginning with 127. must not pass the browser-origin guard
+E   assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001A47156E3E0>('https://127.attacker.example')
+E    +    where <function _is_allowed_browser_origin at 0x000001A47156E3E0> = workstation._is_allowed_browser_origin
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused
+1 failed in 0.59s
+QM-022: failed (2.04s)
+== QM-023 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-023\\23-QM-023.log","name":"QM-023","pid":12908,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:19.546Z"}
+{"elapsed_seconds":2.018,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-023\\23-QM-023.log","name":"QM-023","timestamp":"2026-10-12T18:24:21.566Z"}
+{"elapsed_seconds":2.038,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-023\\23-QM-023.log","name":"QM-023","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:21.567Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+______________ test_generic_pipeline_refuses_fabricated_citation ______________
+benchmarks\quantmesh_v2\test_audit_badcases.py:84: in test_generic_pipeline_refuses_fabricated_citation
+    assert not result.critic.allowed, (
+E   AssertionError: Unresolvable citations must be blocked even when the scripted critic says pass
+E   assert not (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),)
+E    +  where (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),) = CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()).allowed
+E    +    where CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()) = ResearchResult(run_id='2f2c9ec3f2f82909', analyst_report=AnalystReport(claims=[Claim(statement='Synthetic unsupported ...ortfolio_review=PortfolioReview(posture='within_constraints', referenced_inputs=['portfolio-fixture'], suggestions=[])).critic
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation
+1 failed in 0.54s
+QM-023: failed (2.04s)
+== QM-024 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-024\\24-QM-024.log","name":"QM-024","pid":7456,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:21.619Z"}
+{"elapsed_seconds":3.016,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-024\\24-QM-024.log","name":"QM-024","timestamp":"2026-10-12T18:24:24.639Z"}
+{"elapsed_seconds":3.035,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\comparable\\logs\\QM-024\\24-QM-024.log","name":"QM-024","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:24.640Z"}
+FAILED after 0:03; exit code 1; last output:
+F
+================================== FAILURES ===================================
+________________ test_old_source_quote_never_fills_paper_order ________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:124: in test_old_source_quote_never_fills_paper_order
+    assert (result.order.status, len(result.fills)) == (OrderStatus.REJECTED, 0), (
+E   AssertionError: A quote whose source is one hour old must be refused without fills, even with a fresh receipt, valid depth, and proven continuity
+E   assert (<OrderStatus... 'filled'>, 1) == (<OrderStatus...rejected'>, 0)
+E     
+E     At index 0 diff: <OrderStatus.FILLED: 'filled'> != <OrderStatus.REJECTED: 'rejected'>
+E     Use -v to get more diff
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order
+1 failed in 0.76s
+QM-024: failed (3.04s)

@@ -1,0 +1,141 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002272099955007434,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 0.00011300004553049803,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001447000540792942,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0023791000712662935,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.84000551700592e-05,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012610002886503935,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012768000597134233,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.630003917962313e-05,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001148000592365861,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        152,
+        "test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]",
+    "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]",
+    "tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

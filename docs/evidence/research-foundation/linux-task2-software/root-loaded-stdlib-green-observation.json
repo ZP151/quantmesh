@@ -1,0 +1,40 @@
+{
+  "before": {
+    "utc": "2026-10-13T09:52:57.722531+00:00",
+    "free_c_bytes": 89344098304,
+    "test_fixture_bytes": 6198313,
+    "evidence_bytes": 271968,
+    "explicit_source_bytes": 72181,
+    "introduced_logical_upper_bound": 6664643
+  },
+  "after": {
+    "utc": "2026-10-13T09:53:02.727925+00:00",
+    "free_c_bytes": 89344393216,
+    "test_fixture_bytes": 6640845,
+    "evidence_bytes": 303804,
+    "explicit_source_bytes": 72181,
+    "introduced_logical_upper_bound": 7139011
+  },
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_worker_build.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green"
+  ],
+  "mirrored": [
+    "src/quantmesh/research/worker_build.py",
+    "src/quantmesh/research/job_runner.py",
+    "tests/test_worker_build.py",
+    "tests/test_research_job_runner.py"
+  ],
+  "borrowed_environment_read_only": true,
+  "environment_bytecode_policy": "-B and PYTHONDONTWRITEBYTECODE=1",
+  "source_semantics": "explicit targeted overlay on prior owned c545 clone; not whole042 clean checkout",
+  "resource_gate": "software logical<=10MB and free C>=50GB; prior whole-C5GB admission remains PENDING"
+}

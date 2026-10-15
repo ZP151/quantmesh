@@ -1,0 +1,136 @@
+FFFF                                                                     [100%]
+=================================== FAILURES ===================================
+_______________ test_loaded_source_outside_admitted_tree_refuses _______________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_loaded_source_outside_adm0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x738f44149be0>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_loaded_source_outside_adm0')
+
+    def test_loaded_source_outside_admitted_tree_refuses(sealed, monkeypatch, tmp_path):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        api.sys.modules["quantmesh.other"] = SimpleNamespace(__file__=str(tmp_path / "other.py"))
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:282: Failed
+_______ test_dependency_origin_outside_inventory_refuses[metadata_root] ________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_dependency_origin_outside0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x738ef8ba4fb0>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_dependency_origin_outside0')
+outside = 'metadata_root'
+
+    @pytest.mark.parametrize("outside", ["metadata_root", "record_file"])
+    def test_dependency_origin_outside_inventory_refuses(sealed, monkeypatch, tmp_path, outside):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        distributions = list(api._distributions())
+        original = distributions[0].locate_file
+        distributions[0].locate_file = lambda name: (
+            tmp_path / "outside"
+            if (outside == "metadata_root" or str(name) == "RECORD")
+            else original(name)
+        )
+        monkeypatch.setattr(api, "_distributions", lambda: distributions)
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:298: Failed
+________ test_dependency_origin_outside_inventory_refuses[record_file] _________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_dependency_origin_outside1/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x738ef8bad3d0>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_dependency_origin_outside1')
+outside = 'record_file'
+
+    @pytest.mark.parametrize("outside", ["metadata_root", "record_file"])
+    def test_dependency_origin_outside_inventory_refuses(sealed, monkeypatch, tmp_path, outside):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        distributions = list(api._distributions())
+        original = distributions[0].locate_file
+        distributions[0].locate_file = lambda name: (
+            tmp_path / "outside"
+            if (outside == "metadata_root" or str(name) == "RECORD")
+            else original(name)
+        )
+        monkeypatch.setattr(api, "_distributions", lambda: distributions)
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:298: Failed
+__________________ test_symlink_loop_has_sanitized_rejection ___________________
+
+self = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_symlink_loop_has_sanitize0/lib/a')
+strict = True
+
+    def resolve(self, strict=False):
+        """
+        Make the path absolute, resolving all symlinks on the way and also
+        normalizing it.
+        """
+    
+        def check_eloop(e):
+            winerror = getattr(e, 'winerror', 0)
+            if e.errno == ELOOP or winerror == _WINERROR_CANT_RESOLVE_FILENAME:
+                raise RuntimeError("Symlink loop from %r" % e.filename)
+    
+        try:
+>           s = self._flavour.realpath(self, strict=strict)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           OSError: [Errno 40] Too many levels of symbolic links: '/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_symlink_loop_has_sanitize0/lib/a'
+
+/usr/lib/python3.12/pathlib.py:1242: OSError
+
+During handling of the above exception, another exception occurred:
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_symlink_loop_has_sanitize0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x738ef8bb67e0>
+
+    def test_symlink_loop_has_sanitized_rejection(sealed, monkeypatch):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        a, b = sealed.library.with_name("a"), sealed.library.with_name("b")
+        try:
+            a.symlink_to(b.name)
+            b.symlink_to(a.name)
+        except OSError:
+            pytest.skip("OS does not permit fixture symlinks")
+        _reseal_inventory(sealed, links={str(a): b.name, str(b): a.name})
+        with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+>           api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+tests/test_worker_build.py:313: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/quantmesh/research/worker_build.py:225: in measure_worker_runtime
+    files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:155: in _inventory
+    resolved = item.resolve(strict=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/pathlib.py:1244: in resolve
+    check_eloop(e)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+e = OSError(40, 'Too many levels of symbolic links')
+
+    def check_eloop(e):
+        winerror = getattr(e, 'winerror', 0)
+        if e.errno == ELOOP or winerror == _WINERROR_CANT_RESOLVE_FILENAME:
+>           raise RuntimeError("Symlink loop from %r" % e.filename)
+E           RuntimeError: Symlink loop from '/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/review-real-red1/test_symlink_loop_has_sanitize0/lib/a'
+
+/usr/lib/python3.12/pathlib.py:1239: RuntimeError
+=============================== warnings summary ===============================
+tests/test_worker_build.py::test_loaded_source_outside_admitted_tree_refuses
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_build.py::test_loaded_source_outside_admitted_tree_refuses
+FAILED tests/test_worker_build.py::test_dependency_origin_outside_inventory_refuses[metadata_root]
+FAILED tests/test_worker_build.py::test_dependency_origin_outside_inventory_refuses[record_file]
+FAILED tests/test_worker_build.py::test_symlink_loop_has_sanitized_rejection
+4 failed, 25 deselected, 1 warning in 2.14s

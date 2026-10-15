@@ -1,0 +1,20 @@
+....................................F                                    [100%]
+=================================== FAILURES ===================================
+______________ test_module_entrypoint_help_has_no_secret_options _______________
+
+    def test_module_entrypoint_help_has_no_secret_options():
+        result = subprocess.run([sys.executable, "-m", "qm_research_agent", "--help"], capture_output=True, text=True)
+>       assert result.returncode == 0
+E       AssertionError: assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python', '-m', 'qm_research_agent', '--help'], ...code=1, stdout='', stderr='/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python: No module named qm_research_agent\n').returncode
+
+tests/test_runtime.py:245: AssertionError
+=============================== warnings summary ===============================
+../../../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_runtime.py::test_module_entrypoint_help_has_no_secret_options
+1 failed, 36 passed, 1 warning in 0.18s

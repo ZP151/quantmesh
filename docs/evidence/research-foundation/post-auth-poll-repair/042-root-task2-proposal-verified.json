@@ -1,0 +1,15 @@
+{
+  "at_utc": "2026-10-13T08:22:59.578208+00:00",
+  "status": "proposal_hashes_verified",
+  "source": "042fb0b491c13f4535bddbb61290b191d29b1790",
+  "indexed_files": 34,
+  "archive_members": 36,
+  "actual_packet_bytes": 1548420,
+  "archive_sha256": "8770d945f510aa1854f07d612d7bfb010d4ff81896d1680e3aa72e973d228a01",
+  "source_blobs_verified": 15,
+  "official_descriptors_and_attestation_bytes": "matched",
+  "materialized_image": false,
+  "product_tests": false,
+  "storage_acceptance": false,
+  "root_interface_review": "pending"
+}

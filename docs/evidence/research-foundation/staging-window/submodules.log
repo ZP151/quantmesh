@@ -1,0 +1,9 @@
+-2fdb18f9517675ea03695a0962bd19eece9c83f0 vendor/components/hyperliquid-python-sdk
+-215fc63a8fd6ec3a10c7edb73997c9772d8686d3 vendor/components/py-clob-client-v2
+-dfb09498bdd34bdeb37c12b3cfec6d55908450d9 vendor/components/py-moomoo-api
+-79633dd9506ea689e5400dea0197717b5b3d74b7 vendor/components/qlib
+-834f7e5365713feb6530ad4df474fe5e800709d9 vendor/reference/freqtrade
+-2bfaccc48dd49e71a5b6d9b3011808e127dd00cd vendor/reference/hummingbot
+-3e071fcc2cd9f891cac6040ae60296dba76dab46 vendor/reference/openbb
+-a33fd4c0f134485a43553a2c23a63cb14adbd88f vendor/reference/tradingagents
+-fa5206fe63836f3f8cd1ebd7168fbd19a5e2ff09 vendor/reference/vnpy

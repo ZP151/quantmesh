@@ -1,0 +1,265 @@
+FF....FFFFF.F..F.F                                                       [100%]
+================================== FAILURES ===================================
+_____________ test_paid_call_not_repeated_after_checkpoint_resume _____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021E9F598AD0>, WindowsPath('C:/Users/15492/.codex-clean/..._paid_call_not_repeated_af0/lake'), [datetime.datetime(2026, 10, 13, 1, 36, 16, 485184, tzinfo=datetime.timezone.utc)])
+
+    def test_paid_call_not_repeated_after_checkpoint_resume(local):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(ref)
+        engine = runner(store, Decimal("0.2"))
+        lease = store.claim_analysis("first", clock[0])
+        record = engine.run_analysis(job, ref, model, lease=lease)
+        # Crash after the archived effect, before terminal JobStore publication.
+        clock[0] += timedelta(seconds=61)
+        replacement = store.claim_analysis("replacement", clock[0])
+        resumed = runner(store, Decimal("0.2")).run_analysis(job, ref, model, lease=replacement)
+        assert resumed == record
+>       assert len(transport.seen_bodies) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+E        +    where [] = <quantmesh.ai.transport.ScriptedModelTransport object at 0x0000021E9FC9C440>.seen_bodies
+
+services\research_agent\tests\test_agent.py:56: AssertionError
+____________ test_ambiguous_model_timeout_requires_operator_retry _____________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021E9FCD0690>, WindowsPath('C:/Users/15492/.codex-clean/..._ambiguous_model_timeout_r0/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 15, 994164, tzinfo=datetime.timezone.utc)])
+
+    def test_ambiguous_model_timeout_requires_operator_retry(local):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(ref)
+        lease = store.claim_analysis("first", clock[0])
+        effects = EffectLedger(store)
+        digest = ref.sha256
+>       assert effects.reserve_call(job.job_id, digest, Decimal("0"), job.request.budget, lease)
+E       AssertionError: assert False
+E        +  where False = reserve_call('d3f1ab86bb8d4778aa898b004b88c83b', 'b5198161a9457483bba6d580e20f2b46e280511adee039744441efec04c38a87', Decimal('0'), RunBudget(timeout_seconds=900, memory_mib=2048, cpu_limit=1.0, max_model_calls=12, max_estimated_model_usd=1.0), AnalysisLease(job_id='d3f1ab86bb8d4778aa898b004b88c83b', owner='first', attempt=1, expires_at=datetime.datetime(2026, ...94164, tzinfo=datetime.timezone.utc), report_digest='b5198161a9457483bba6d580e20f2b46e280511adee039744441efec04c38a87'))
+E        +    where reserve_call = <qm_research_agent.budgets.EffectLedger object at 0x0000021E9FCD0B90>.reserve_call
+E        +    and   'd3f1ab86bb8d4778aa898b004b88c83b' = JobRecord(job_id='d3f1ab86bb8d4778aa898b004b88c83b', operator_id='operator', idempotency_key='first', request=Research..._calls=None, input_tokens=None, output_tokens=None, estimated_model_usd=None), analysis_state='pending', analysis=None).job_id
+E        +    and   Decimal('0') = Decimal('0')
+E        +    and   RunBudget(timeout_seconds=900, memory_mib=2048, cpu_limit=1.0, max_model_calls=12, max_estimated_model_usd=1.0) = ResearchJobRequest(schema_version=1, strategy_id='momentum', strategy_version='1', dataset=DatasetRef(dataset_id='equi...seconds=900, memory_mib=2048, cpu_limit=1.0, max_model_calls=12, max_estimated_model_usd=1.0), analysis_requested=True).budget
+E        +      where ResearchJobRequest(schema_version=1, strategy_id='momentum', strategy_version='1', dataset=DatasetRef(dataset_id='equi...seconds=900, memory_mib=2048, cpu_limit=1.0, max_model_calls=12, max_estimated_model_usd=1.0), analysis_requested=True) = JobRecord(job_id='d3f1ab86bb8d4778aa898b004b88c83b', operator_id='operator', idempotency_key='first', request=Research..._calls=None, input_tokens=None, output_tokens=None, estimated_model_usd=None), analysis_state='pending', analysis=None).request
+
+services\research_agent\tests\test_agent.py:69: AssertionError
+____________________ test_model_failure_preserves_backtest ____________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021E9F863DF0>, WindowsPath('C:/Users/15492/.codex-clean/..._model_failure_preserves_b0/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 17, 509105, tzinfo=datetime.timezone.utc)])
+
+    def test_model_failure_preserves_backtest(local):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, _ = gateway(ref, {"verdict": "support", "summary": "bad", "citations": ["f" * 64]})
+        lease = store.claim_analysis("first", clock[0])
+        result = runner(store).run_analysis(job, ref, model, lease=lease)
+>       assert result.state == "failed"
+E       AssertionError: assert 'unavailable' == 'failed'
+E         
+E         - failed
+E         + unavailable
+
+services\research_agent\tests\test_agent.py:98: AssertionError
+________________ test_secret_and_order_fields_reject[api_key] _________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021EA0D948D0>, WindowsPath('C:/Users/15492/.codex-clean/..._secret_and_order_fields_r0/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 17, 869238, tzinfo=datetime.timezone.utc)])
+field = 'api_key'
+
+    @pytest.mark.parametrize("field", ["api_key", "order", "credentials", "base_url"])
+    def test_secret_and_order_fields_reject(local, field):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(
+            ref,
+            {"verdict": "support", "summary": "bad", "citations": [ref.artifact_id], field: "injected"},
+        )
+        lease = store.claim_analysis("first", clock[0])
+        result = runner(store).run_analysis(job, ref, model, lease=lease)
+>       assert result.state == "failed" and result.output_digest is None
+E       AssertionError: assert ('unavailable' == 'failed'
+E         
+E         - failed
+E         + unavailable)
+
+services\research_agent\tests\test_agent.py:113: AssertionError
+_________________ test_secret_and_order_fields_reject[order] __________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021E9FC99B50>, WindowsPath('C:/Users/15492/.codex-clean/..._secret_and_order_fields_r1/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 18, 225207, tzinfo=datetime.timezone.utc)])
+field = 'order'
+
+    @pytest.mark.parametrize("field", ["api_key", "order", "credentials", "base_url"])
+    def test_secret_and_order_fields_reject(local, field):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(
+            ref,
+            {"verdict": "support", "summary": "bad", "citations": [ref.artifact_id], field: "injected"},
+        )
+        lease = store.claim_analysis("first", clock[0])
+        result = runner(store).run_analysis(job, ref, model, lease=lease)
+>       assert result.state == "failed" and result.output_digest is None
+E       AssertionError: assert ('unavailable' == 'failed'
+E         
+E         - failed
+E         + unavailable)
+
+services\research_agent\tests\test_agent.py:113: AssertionError
+______________ test_secret_and_order_fields_reject[credentials] _______________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021E9FC9A650>, WindowsPath('C:/Users/15492/.codex-clean/..._secret_and_order_fields_r2/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 18, 641494, tzinfo=datetime.timezone.utc)])
+field = 'credentials'
+
+    @pytest.mark.parametrize("field", ["api_key", "order", "credentials", "base_url"])
+    def test_secret_and_order_fields_reject(local, field):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(
+            ref,
+            {"verdict": "support", "summary": "bad", "citations": [ref.artifact_id], field: "injected"},
+        )
+        lease = store.claim_analysis("first", clock[0])
+        result = runner(store).run_analysis(job, ref, model, lease=lease)
+>       assert result.state == "failed" and result.output_digest is None
+E       AssertionError: assert ('unavailable' == 'failed'
+E         
+E         - failed
+E         + unavailable)
+
+services\research_agent\tests\test_agent.py:113: AssertionError
+________________ test_secret_and_order_fields_reject[base_url] ________________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021EFFA84140>, WindowsPath('C:/Users/15492/.codex-clean/...t_secret_and_order_fields_r3/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 19, 33783, tzinfo=datetime.timezone.utc)])
+field = 'base_url'
+
+    @pytest.mark.parametrize("field", ["api_key", "order", "credentials", "base_url"])
+    def test_secret_and_order_fields_reject(local, field):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(
+            ref,
+            {"verdict": "support", "summary": "bad", "citations": [ref.artifact_id], field: "injected"},
+        )
+        lease = store.claim_analysis("first", clock[0])
+        result = runner(store).run_analysis(job, ref, model, lease=lease)
+>       assert result.state == "failed" and result.output_digest is None
+E       AssertionError: assert ('unavailable' == 'failed'
+E         
+E         - failed
+E         + unavailable)
+
+services\research_agent\tests\test_agent.py:113: AssertionError
+____ test_response_before_checkpoint_replays_original_invocation_metadata _____
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021E9FCB8BB0>, WindowsPath('C:/Users/15492/.codex-clean/..._response_before_checkpoin0/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 19, 700246, tzinfo=datetime.timezone.utc)])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x0000021E9F83EFD0>
+
+    def test_response_before_checkpoint_replays_original_invocation_metadata(local, monkeypatch):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        model, transport = gateway(ref)
+        first = runner(store, Decimal("0.2"))
+        monkeypatch.setattr(first.effects, "checkpoint", lambda *args: False)
+        lease = store.claim_analysis("first", clock[0])
+        original = first.run_analysis(job, ref, model, lease=lease)
+>       assert original.state == "succeeded"
+E       AssertionError: assert 'unavailable' == 'succeeded'
+E         
+E         - succeeded
+E         + unavailable
+
+services\research_agent\tests\test_agent.py:135: AssertionError
+_____________ test_unknown_effect_survives_changed_configuration ______________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021EA0D72ED0>, WindowsPath('C:/Users/15492/.codex-clean/..._unknown_effect_survives_c0/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 20, 551491, tzinfo=datetime.timezone.utc)])
+
+    def test_unknown_effect_survives_changed_configuration(local):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        transport = AmbiguousTransport(
+            [
+                {
+                    "content": json.dumps(
+                        {
+                            "verdict": "inconclusive",
+                            "summary": "scripted fixture",
+                            "citations": [ref.artifact_id],
+                        }
+                    )
+                }
+            ]
+        )
+        gateway = ModelGateway(transport, model_name="scripted-fixture")
+        lease = store.claim_analysis("first", clock[0])
+        engine = AdvisoryRunner(
+            store, EffectLedger(store), provider="scripted", price=Decimal("0"), price_version="v1"
+        )
+>       assert engine.run_analysis(job, ref, gateway, lease=lease).error_code == "unknown_effect"
+E       AssertionError: assert 'budget_exhausted' == 'unknown_effect'
+E         
+E         - unknown_effect
+E         + budget_exhausted
+
+services\research_agent\tests\test_hardening.py:86: AssertionError
+__________ test_analysis_deadline_stops_owned_effect_without_recall ___________
+
+local = (<quantmesh.research.job_store.SQLiteJobStore object at 0x0000021EA0D72450>, WindowsPath('C:/Users/15492/.codex-clean/..._analysis_deadline_stops_o0/lake'), [datetime.datetime(2026, 10, 13, 1, 35, 20, 903008, tzinfo=datetime.timezone.utc)])
+
+    def test_analysis_deadline_stops_owned_effect_without_recall(local):
+        store, lake, clock = local
+        job, ref = succeeded(store, lake)
+        job = job.model_copy(
+            update={
+                "request": job.request.model_copy(
+                    update={"budget": job.request.budget.model_copy(update={"timeout_seconds": 1})}
+                )
+            }
+        )
+        transport = SlowScriptedTransport(
+            [
+                {
+                    "content": json.dumps(
+                        {
+                            "verdict": "inconclusive",
+                            "summary": "scripted",
+                            "citations": [ref.artifact_id],
+                        }
+                    )
+                }
+            ]
+        )
+        gateway = ModelGateway(transport, model_name="scripted-fixture")
+        lease = store.claim_analysis("first", clock[0])
+        engine = AdvisoryRunner(
+            store, EffectLedger(store), provider="scripted", price=Decimal("0"), price_version="v1"
+        )
+        started = time.monotonic()
+        result = engine.run_analysis(job, ref, gateway, lease=lease)
+>       assert result.error_code == "unknown_effect"
+E       AssertionError: assert 'budget_exhausted' == 'unknown_effect'
+E         
+E         - unknown_effect
+E         + budget_exhausted
+
+services\research_agent\tests\test_hardening.py:136: AssertionError
+============================== warnings summary ===============================
+..\..\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+..\..\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\ed95\QuantMesh\services\research_agent\.venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED services\research_agent\tests\test_agent.py::test_paid_call_not_repeated_after_checkpoint_resume
+FAILED services\research_agent\tests\test_agent.py::test_ambiguous_model_timeout_requires_operator_retry
+FAILED services\research_agent\tests\test_agent.py::test_model_failure_preserves_backtest
+FAILED services\research_agent\tests\test_agent.py::test_secret_and_order_fields_reject[api_key]
+FAILED services\research_agent\tests\test_agent.py::test_secret_and_order_fields_reject[order]
+FAILED services\research_agent\tests\test_agent.py::test_secret_and_order_fields_reject[credentials]
+FAILED services\research_agent\tests\test_agent.py::test_secret_and_order_fields_reject[base_url]
+FAILED services\research_agent\tests\test_agent.py::test_response_before_checkpoint_replays_original_invocation_metadata
+FAILED services\research_agent\tests\test_hardening.py::test_unknown_effect_survives_changed_configuration
+FAILED services\research_agent\tests\test_hardening.py::test_analysis_deadline_stops_owned_effect_without_recall
+10 failed, 8 passed, 2 warnings in 6.31s

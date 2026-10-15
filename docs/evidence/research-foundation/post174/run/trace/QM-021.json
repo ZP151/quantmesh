@@ -1,0 +1,62 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002360899932682514,
+      "location": [
+        "tests\\test_ai_tools.py",
+        165,
+        "TestDefaultSurfaces.test_retrieve_documents_renders_passages"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.014928100048564374,
+      "location": [
+        "tests\\test_ai_tools.py",
+        165,
+        "TestDefaultSurfaces.test_retrieve_documents_renders_passages"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00014589994680136442,
+      "location": [
+        "tests\\test_ai_tools.py",
+        165,
+        "TestDefaultSurfaces.test_retrieve_documents_renders_passages"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "tool",
+      "boundary": "ToolRegistry",
+      "outcome": "ok",
+      "nodeid": "tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages",
+      "method": "dispatch",
+      "duration_seconds": 0.011837800033390522
+    }
+  ],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

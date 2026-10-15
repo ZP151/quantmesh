@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002176900045014918,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        195,
+        "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 1.9750767999794334,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        195,
+        "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0002169000217691064,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        195,
+        "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

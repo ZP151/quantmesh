@@ -1,0 +1,15 @@
+{
+  "AtUtc": "2026-10-13T08:18:36.6451123Z",
+  "HelperAlive": true,
+  "OpenDAlive": true,
+  "HelperPid": 12688,
+  "OpenDPid": 28036,
+  "MutexHeld": false,
+  "SupervisorDigest": "60FED2A857B2BB384C0ECD4F8A131C7E6D85AF7BD2CAC605377502216545D961",
+  "Shortcut": {
+    "Target": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "Arguments": "-NoProfile -NonInteractive -WindowStyle Hidden -File \"C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery\\opend_recovery.ps1\" -OpenDPath \"C:/Users/15492/AppData/Roaming/moomoo_OpenD/moomoo_OpenD.exe\" -TailscalePath \"C:/Program Files/Tailscale/tailscale.exe\" -StatusDirectory \"C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery\"",
+    "WorkingDirectory": "C:\\Users\\15492\\AppData\\Local\\QuantMesh\\OpenDRecovery"
+  },
+  "Mutations": "none; no SSH/source requests, process starts or stops"
+}

@@ -1,0 +1,13 @@
+# Narrow failed-install output review
+
+Actual reviewed source SHA256: `A1CA79000E5AE4C924630FAA4972B8DD3CD2F671A616AB30435D149B0DAE7EA3` (`output/install_aws_numeric_wheels.py`). The new failure-output phase was unexecuted at review.
+
+Disposition: clear within this failure-observation correction; no substantive P1/P2 found in the changed boundaries.
+
+After observing the container stopped, the recipe now records ExitCode/OOMKilled/Pid, captures stdout and stderr separately, and stores the parsed observation before applying the original actual-install exit gate. Inner failed_step values are fixed source literals, and failures emit only exception type plus that step rather than raw exception text. Both captured streams are limited to 128 KiB before persistence; capture uses the existing root CLI watchdog. Nonzero logs CLI outcomes are refused after their bounded output is preserved. JSON or gate failure cannot reach commit.
+
+For an acknowledged CID with a start requested but no collected output, finally attempts capture before exact-owned cleanup; failure is recorded as NOT_CAPTURED. Capture does not authorize removal or loosen ownership: the existing cleanup still re-inspects the exact CID/image/nonce, checks stopped/Pid=0 and removes without force. This capture attempt is a bounded observation, not a guarantee of complete logs for an unresponsive/running process. The validated commit_observed flag and its NOT_PROVEN failure handling remain present. Exit, 81-package, pip-removal and native/certification gates were not relaxed; the original 5 GB source ledger/free-floor remains.
+
+Inspected existing `0038-aws-numeric-install-output-red.log/.exit` and `-green.log/.exit`, plus the small AST harness: the failed exit case changed from output not preserved/one failed check/exit 1 to output preserved before rejection/zero failed checks/exit 0. The harness exercises only the actual post-loop/pre-commit control-flow slice with controlled state/log callbacks, not Docker or the finally cleanup path. Receipts explicitly state `software_control_flow_only=true` and `Engine_executed=false`.
+
+Static review and reading retained evidence only; no tests, remote run, installation, container or image operation performed by this reviewer. The first actual failed 86F execution/source/receipt remains a failure with its owned cleanup retained. Its missing output does not establish a native failure or any other root cause. This correction does not certify a derived image, numerical/native closure, runtime admission or Option A completion, and does not re-review old permissions or architecture.

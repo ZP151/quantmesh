@@ -1,0 +1,25 @@
+{
+  "SourceClock": {
+    "status": "observed",
+    "quote_source_clocks": [
+      {
+        "code": "US.AAPL",
+        "data_date": "2026-10-12",
+        "data_time": "16:00:00.040"
+      },
+      {
+        "code": "US.NVDA",
+        "data_date": "2026-10-12",
+        "data_time": "16:00:00.187"
+      }
+    ],
+    "observed_at": "2026-10-13T17:49:54.595012+08:00",
+    "order_checked": false
+  },
+  "ObserverTreeClosed": true,
+  "ObserverPid": 42336,
+  "AtUtc": "2026-10-13T09:49:54.9404862Z",
+  "ExitCode": 0,
+  "AuthenticationUrls": [],
+  "Finished": true
+}

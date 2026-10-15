@@ -54,7 +54,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import quote, urlsplit
 
-from fastapi import APIRouter, FastAPI, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -67,6 +67,7 @@ from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
+from quantmesh.api.research_jobs import create_research_jobs_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
 from quantmesh.data.catalog import TrustedDataCatalog
 from quantmesh.domain.models import Instrument, Quote, Venue
@@ -113,6 +114,7 @@ from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.research.reports import ReportRegistry
+from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
 from quantmesh.settings import settings
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -188,12 +190,39 @@ class WorkstationConfigError(ValueError):
 
 def _is_loopback(host: str) -> bool:
     """Loopback only: localhost, IPv6 ::1, and the whole 127.0.0.0/8."""
-    return host in {"localhost", "::1"} or host.startswith("127.")
+    from ipaddress import IPv4Address
+
+    if host in {"localhost", "::1"}:
+        return True
+    try:
+        return IPv4Address(host).is_loopback
+    except ValueError:
+        return False
 
 
 def _is_allowed_browser_origin(origin: str) -> bool:
+    # urlsplit strips controls and accepts URL forms that are not browser Origins.
+    if (
+        "?" in origin
+        or "#" in origin
+        or any(char.isspace() or ord(char) < 32 or ord(char) == 127 for char in origin)
+    ):
+        return False
     try:
-        hostname = urlsplit(origin).hostname
+        parsed = urlsplit(origin)
+        hostname = parsed.hostname
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.path
+            or parsed.query
+            or parsed.fragment
+            or parsed.netloc.endswith(":")
+            or parsed.port == 0
+        ):
+            return False
     except ValueError:
         return False
     if hostname is not None and _is_loopback(hostname):
@@ -1061,6 +1090,7 @@ def create_workstation_app(
     packet_copilot: PacketCopilotService | None = None,
     packet_monitoring: DecisionWatchStore | None = None,
     packet_reviews: DecisionReviewStore | None = None,
+    research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1271,6 +1301,17 @@ def create_workstation_app(
         data_catalog_router(),
         prefix="/api",
         generate_unique_id_function=lambda route: f"api_{route.name}",
+    )
+
+    def guard_research_write(request: Request) -> None:
+        if request.method == "POST":
+            _json_guard_origin(request, "research jobs")
+
+    app.include_router(
+        create_research_jobs_router(research_jobs_client),
+        prefix="/api",
+        dependencies=[Depends(guard_research_write)],
+        generate_unique_id_function=lambda route: f"api_research_jobs_{route.name}",
     )
 
     # Venue-aware observed history is double-mounted like the live surface:

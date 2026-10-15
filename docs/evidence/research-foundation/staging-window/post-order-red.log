@@ -1,0 +1,27 @@
+..................................ss.............FFs.sssss               [100%]
+================================== FAILURES ===================================
+____ test_generated_configuration_has_fixed_direct_guard_and_no_recording _____
+
+    def test_generated_configuration_has_fixed_direct_guard_and_no_recording():
+        config = stage._tmux_config(stage.StagingWindow(permit())).decode()
+>       assert "new-session" not in config
+E       AssertionError: assert 'new-session' not in 'set-option ...aaaaaaaaaa\n'
+E         
+E         'new-session' is contained here:
+E           efix None
+E           new-session -d -s opend /usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --pane --nonce aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+E         ? +++++++++++
+
+tests\test_opend_staging_window.py:223: AssertionError
+____________ test_service_creates_pane_only_after_foreground_exec _____________
+
+    def test_service_creates_pane_only_after_foreground_exec():
+        unit = (ROOT / "deploy/aws/opend/quantmesh-opend-stage@.service").read_text()
+>       assert "ExecStartPost=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --create-pane --nonce %i" in unit
+E       AssertionError: assert 'ExecStartPost=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --create-pane --nonce %i' in '# DISARMED candidate. No installation/start authority is granted by this template.\n[Unit]\nDescription=QuantMesh exp...antmesh-opend-stage-%i\nRuntimeMaxSec=900\nTimeoutStartSec=15\nTimeoutStopSec=15\nKillMode=control-group\nRestart=no\n'
+
+tests\test_opend_staging_window.py:241: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_opend_staging_window.py::test_generated_configuration_has_fixed_direct_guard_and_no_recording
+FAILED tests/test_opend_staging_window.py::test_service_creates_pane_only_after_foreground_exec
+2 failed, 48 passed, 8 skipped in 0.20s

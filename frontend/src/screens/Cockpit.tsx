@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Radio, Search } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { LiveDataBadge, liveDataPresentation } from '@/components/live-data-badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Page } from '@/components/page'
 import { ErrorState, LoadingState } from '@/components/state'
@@ -9,8 +10,8 @@ import { useQuery } from '@tanstack/react-query'
 import {
   ageText,
   instrumentLabel,
-  LABEL_TEXT,
-  labelTone,
+  isSourceBacked,
+  dataViews,
   liveInstrumentSymbol,
   mergeUpdate,
   midOf,
@@ -83,12 +84,16 @@ function ConnectorPanel({ venues }: { venues: LiveStatus['venues'] }) {
               {venue.sources.map((source) => (
                 <span
                   key={source.instrument}
-                  className="inline-flex items-center gap-1.5 rounded-4xl border border-border px-2 py-0.5 text-xs"
+                  className="inline-flex max-w-full flex-wrap items-center gap-1.5 rounded-4xl border border-border px-2 py-0.5 text-xs"
                 >
                   <span className="font-mono">{source.instrument}</span>
                   <Badge className={sourceTone(source.state)}>{source.state}</Badge>
+                  {source.session_freshness && (
+                    <LiveDataBadge session={source.session_freshness} fallback="unavailable"
+                      realEvidence={source.session_freshness.last_source_at !== null} />
+                  )}
                   {source.age_ms !== null && (
-                    <span className="text-muted-foreground">{ageText(source.age_ms)}</span>
+                    <span className="whitespace-nowrap text-muted-foreground">{ageText(source.age_ms)}</span>
                   )}
                 </span>
               ))}
@@ -469,6 +474,8 @@ export function CockpitScreen() {
                   const quote = quoteNumbers(instrument.kinds.quote)
                   const trade = instrument.kinds.trade
                   const label = instrumentLabel(instrument)
+                  const realEvidence = dataViews(instrument).some(view => isSourceBacked(view.provenance))
+                  const coverage = liveDataPresentation(instrument.session_freshness, label, Date.now(), realEvidence)
                   const mid = midOf(quote)
                   const spread = spreadBps(quote)
                   const worst = instrument.kinds.quote ?? instrument.kinds.trade
@@ -486,7 +493,7 @@ export function CockpitScreen() {
                         {instrument.venue}
                       </td>
                       <td className="px-4 py-2.5">
-                        <Badge className={labelTone(label)}>{t(LABEL_TEXT[label])}</Badge>
+                        <LiveDataBadge session={instrument.session_freshness} fallback={label} realEvidence={realEvidence} />
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         {quote.bid !== undefined ? money(quote.bid) : '—'}
@@ -536,7 +543,7 @@ export function CockpitScreen() {
                           className={
                             worst?.sequence_gap
                               ? 'text-destructive'
-                              : label === 'stale'
+                              : label === 'stale' && coverage.key !== 'live.session.closedLatest'
                                 ? 'text-orange-600 dark:text-orange-400'
                                 : 'text-muted-foreground'
                           }

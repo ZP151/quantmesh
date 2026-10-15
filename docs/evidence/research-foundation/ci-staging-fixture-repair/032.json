@@ -1,0 +1,1303 @@
+{
+  "snapshots": [
+    {
+      "node": "tests/test_live_fence.py::test_blesses_a_healthy_real_quote_into_a_usable_domain_quote",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_when_there_is_no_quote_view[None]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_when_there_is_no_quote_view[view1]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_anything_that_is_not_real[delayed]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_anything_that_is_not_real[synthetic]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_anything_that_is_not_real[unavailable]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_a_sequence_gapped_quote",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_missing_positive_continuity_evidence",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_a_stale_quote_with_the_explicit_age",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_a_quote_without_usable_depth",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejects_a_quote_without_a_receipt_anchor",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_rejection_priority_is_source_then_gap_then_age",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_max_age_must_be_positive",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_resolve_pulls_the_quote_view_from_the_snapshot",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_submit_flows_a_healthy_fenced_quote_to_fills",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_submit_records_the_fence_rejection_with_the_explicit_reason",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_submit_ignores_a_caller_quote_when_the_fence_is_enabled",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_idempotency_replay_bypasses_the_fence",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_fence_requires_a_snapshot_and_submit_requires_a_quote_or_fence",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_without_a_fence_the_caller_quote_is_used_unchanged",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_specs_derive_market_qualified_codes",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_stock_quote_frame_yields_metrics_update",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_rt_ticker_frame_yields_trades_with_sides_sequences_and_dedup",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_stale_venue_clock_emits_nothing",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_dispatch_fails_closed",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_connect_probes_and_serves_quote_capability",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_connect_fails_honestly_when_opend_is_unavailable",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_connect_refuses_when_quote_capability_is_off",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_poll_failure_becomes_a_poll_error_frame",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_pump_shutdown_closes_owned_loop_and_executor",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_live_stack_streams_real_labels_from_a_live_daemon",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_live_stack_ages_stale_when_the_venue_clock_stops",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_live_stack_honest_disconnected_when_the_daemon_dies",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_live_moomoo.py::test_live_stack_honest_unavailable_when_opend_is_down",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_valid_permit_is_staging_authority_only",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[schema_version-True]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[nonce-../../x]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[approved_build-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[max_seconds-True]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[max_seconds-901]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[max_seconds-0]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[gateway_uid-0]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[gateway_gid-True]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[tmux_version-3.5]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[tmux_sha256-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[machine_sha256-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[human_reviewers-value11]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[safety_owner-outsider]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[ci_conclusion-pending]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[operator_window_approved-False]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[new_device_approved-1]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[market_right_transfer_approved-False]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[not_before-2026-10-13T00:00:01+00:00]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[expires_at-2026-10-13T00:00:00+00:00]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[expires_at-2026-10-14T00:00:00]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[expires_at-2026-10-13T00:15:01+00:00]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_malformed_or_wrong_authority_denied[launcher_sha256-dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_unknown_and_credential_claims_denied[password]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_unknown_and_credential_claims_denied[account_id]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_unknown_and_credential_claims_denied[token]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_unknown_and_credential_claims_denied[source_qualified]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_unknown_and_credential_claims_denied[install_allowed]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_default_does_not_inspect_or_spawn",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_cli_has_no_arbitrary_authority[args0]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_cli_has_no_arbitrary_authority[args1]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_cli_has_no_arbitrary_authority[args2]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_cli_has_no_arbitrary_authority[args3]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_template_is_distinct_foreground_and_bounded",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_owned_fixture",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_protected_reader_denies_link_and_mutable_parent",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[User-root]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[KillMode-process]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[Restart-always]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[StandardOutput-journal]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[RuntimeMaxUSec-infinity]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[TimeoutStopUSec-16s]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[DropInPaths-/tmp/override]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[MainPID-0]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[ControlGroup-/borrowed/global]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[ActiveState-inactive]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[RuntimeDirectory-quantmesh-opend]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_wrong_authority_denies[Id-borrowed.service]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_manager_exact_contract",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_generated_configuration_has_fixed_direct_guard_and_no_recording",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_service_creates_pane_only_after_foreground_exec",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_installed_unit_pin_matches_exact_template_bytes",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_activation_transition_preserves_manager_authority",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_context_terminal_rejection_precedes_release[echo]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_context_terminal_rejection_precedes_release[mode]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_context_terminal_rejection_precedes_release[mismatch]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_context_terminal_rejection_precedes_release[direction]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_context_terminal_rejection_precedes_release[owner]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[parent]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[cgroup]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[exe]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[pidfd]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_backend_context_denies_unknown_or_borrowed_before_terminal[pane]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_profile_admission_denies_before_backend_or_child[qualified]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_profile_admission_denies_before_backend_or_child[unsafe_argv]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_profile_admission_denies_before_backend_or_child[public_endpoint]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_actual_profile_admission_denies_before_backend_or_child[profile_hash]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_final_descriptor_replacement_refuses_actual_synthetic_gate",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[link]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[hardlink]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[owner]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[writable]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_protected_file_boundary_with_simulated_root_metadata[hash]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_vendor_descendant_boundary_not_parent_failure[file]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_vendor_descendant_boundary_not_parent_failure[directory]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_specific_vendor_descendant_boundary_not_parent_failure[symlink]",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_registry_is_retained_before_interrupt_is_unblocked",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_no_effect_check_window_redacts_unexpected_error",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_owned_backend_stop_uses_retained_handle_and_preserves_sibling",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_credential_free_vendor_tree_rejects_mutability",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_backend_finish_signals_before_closing_handle",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_admission_failure_never_releases_actual_child",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    },
+    {
+      "node": "tests/test_opend_staging_window.py::test_nonce_claim_is_exclusive_and_survives_reopen",
+      "threads": [
+        {
+          "name": "MainThread",
+          "daemon": false,
+          "alive": true
+        }
+      ],
+      "sigchld": "0"
+    }
+  ],
+  "exit": 0
+}

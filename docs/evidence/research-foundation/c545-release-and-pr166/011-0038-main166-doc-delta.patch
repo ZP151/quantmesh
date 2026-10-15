@@ -1,0 +1,126 @@
+diff --git a/CONTEXT.md b/CONTEXT.md
+index 275e46a..27b9fba 100644
+--- a/CONTEXT.md
++++ b/CONTEXT.md
+@@ -13,8 +13,9 @@ cockpit, venue-aware history, integrated instrument decision workspace,
+ reproducible research evidence, local AI boundaries and guarded execution
+ controls.
+ 
+-Iteration 0021, Trusted Data Fabric, is merged; its real 168-hour soak continues
+-as an independent maintenance and release-confidence track. Iteration 0027,
++Iteration 0021, Trusted Data Fabric, is merged. On2026-10-12 the operator made
++formal168h not required for current work, on-demand only. Historical failures
++remain unaccepted and feature development takes priority. Iteration 0027,
+ Evidence-backed Decision Copilot, is merged through PR #128. Iteration 0028,
+ Decision Inbox & Bounded Paper Shadow Portfolio, is merged through PR #130.
+ Iteration 0029, Decision Readiness Session, is merged through PR #133.
+diff --git a/docs/ITERATION_PLAN.md b/docs/ITERATION_PLAN.md
+index e6908ec..bcd7083 100644
+--- a/docs/ITERATION_PLAN.md
++++ b/docs/ITERATION_PLAN.md
+@@ -1,12 +1,21 @@
+ # QuantMesh Iteration Plan
+ 
+-Updated: 2026-09-23. This replaces the original conceptual iterations 0–5;
++Updated: 2026-10-12. This replaces the original conceptual iterations 0–5;
+ historical delivery IDs and evidence remain in the [iteration index](iterations/INDEX.md).
+ Use the [roadmap](roadmap/ROADMAP.md) for product direction and
+ [ACTIVE](goals/ACTIVE.md) for the resumable frontier.
+ 
+ ## Current resumable goal
+ 
++Current priority: feature development. Formal168h is NOT REQUIRED per the
++operator, on-demand only. Do not enable its retired tasks or claim it passed.
++October8 stock-minute and startup configuration acceptance is complete through
++PRs #163–#165. October12 human SSH check restores the private route and actual
++quote-only readiness. PR #166 repairs probe descendant cleanup; installed helper
++replacement and exact-head CI remain separate gates. Strategy simulation is the
++next proposed research loop. Historical checkpoints below retain their original
++dates; ACTIVE and iteration0037 identify the latest runtime and operator state.
++
+ Iteration 0035 is complete. Iteration 0036 remains active after the 8 GB
+ private AWS migration passed its bounded restore, smoke, chart and restart
+ checks. The 24-hour capacity/freshness observation, rollback rehearsal and
+diff --git a/docs/goals/ACTIVE.md b/docs/goals/ACTIVE.md
+index 3afbe2c..0a00b5b 100644
+--- a/docs/goals/ACTIVE.md
++++ b/docs/goals/ACTIVE.md
+@@ -1,9 +1,11 @@
+ # Active Goal
+ 
+-Status: iteration0037 ACTIVE, 2026-10-08 Singapore. The 0035 AWS real-chart acceptance
+-and the 8 GB migration's short acceptance are complete; this goal remains
+-active until the new host's sustained capacity gate is closed and the separate
+-Moomoo/OpenD route is ready. PR #161 is now merged and deployed; its live API acceptance passes.
++Status: product development ACTIVE, updated2026-10-12 Singapore. The user
++explicitly makes formal168h NOT REQUIRED for current work, on-demand only.
++Preserve historical failures; this does not mark the soak passed. Prioritize
++feature iterations. Capacity/recovery drills stay in later acceptance, not
++the current development frontier. The 0035 AWS real-chart and 8 GB migration's
++short acceptance are complete. PR #161 is merged/deployed; live API passes.
+ PR #162 also passed CI and is deployed as `c8e1813`; API and list-page
+ acceptance pass. Source-backed equity minute charts are implemented on
+ `codex/0037-equity-minute-charts`, checked through PR #163 and deployed at
+@@ -427,3 +429,38 @@ closed-session failures remain preserved. Integrate the documentation-only
+ evidence PR after required CI/review gates, then pause the release heartbeat.
+ Do not redeploy the app or mark the whole goal complete. Actual Windows
+ login/outage,24hcapacity,shutdown/reboot drills and PR #159 remain separate.
++
++## October 12 high-priority blocker repair
++
++The user now authorizes repair of the current high-priority blockers, with no
++live trading. Read-only health confirms deployed69515b7, paper=true/live=false
++and fresh crypto. Both installed source/helper processes are alive. A fresh
++SSH attempt actually requests Tailscale human check-mode authentication; do
++not reuse old URLs or change authentication policy. The user subsequently
++completed that check: actual ObserveOnly existing_private_tunnel and AWS
++quote-only readiness exit0/ready,250 daily rows per stock/order_checked=false.
++OpenD28036/helper53020 and installed digest stay unchanged; no exact orphan
++probe roots remain after scoped cleanup. One host sample shows4705MiB available
++RAM, no swap and NRestarts0; it does not establish sustained capacity.
++
++New branch codex/0037-opend-probe-cleanup starts from origin/main745a231,
++preserving local main. Native RED reproduces orphaned probe descendants and
++unbounded output draining. Gated anonymous job containment fixes only probe
++ownership; focused3 and complete native33/54.05s pass, Ruff/diff clean. Spec
++and Standards round1 have no P1/P2; CI/install/real-source gates stay open.
++See the tracked2026-10-12-opend-probe-cleanup plan and iteration0037. Do not
++replace/restart the installed helper or affect old tunnels implicitly.
++
++Independent maintenance audit: disabled soak tasks point to a nonexistent
++runner. Maintained candidateb6f5cdb is pushed but has no PR/check runs; v5
++admission must verify the real source, disabled task installation and a full
++fresh daily cycle before enabling cadence. No formal168h clock has started.
++The old24h observer has only51 freshness samples over4h10m on33aa0521 and
++one missing host metric sample. Preserve it as partial evidence; start a new
++current-build observer only after connection/source preflight. These elapsed
++time gates, disruptive operator acceptance and firewall review remain open.
++
++Subsequent explicit operator priority: formal168h is NOT REQUIRED / ON DEMAND.
++Do not start v5, enable/publish retired soak cadence or revive its heartbeat
++implicitly. Keep partial evidence unaccepted. Feature development takes
++priority; strategy simulation is the next proposed bounded research loop.
+diff --git a/docs/roadmap/ROADMAP.md b/docs/roadmap/ROADMAP.md
+index 609d7b6..3a3dae1 100644
+--- a/docs/roadmap/ROADMAP.md
++++ b/docs/roadmap/ROADMAP.md
+@@ -1,6 +1,6 @@
+ # QuantMesh Product Roadmap
+ 
+-Last updated: 2026-09-23
++Last updated: 2026-10-12
+ 
+ ## Status legend
+ 
+@@ -338,8 +338,9 @@ Sequence for operator review:
+ 
+ 1. **Done as iteration 0021 (merged PR #120):** trusted data fabric: provider
+    registry, symbol/calendar/corporate-action normalization, raw/normalized/
+-   feature layers, manifests, source rights and quality SLAs. Its 168-hour soak
+-   continues as a non-blocking maintenance/release-confidence track. See
++   feature layers, manifests, source rights and quality SLAs. Formal168h is
++   not required for current work per the October12 operator decision, on-demand
++   only; historical failed evidence stays unaccepted. See
+    [issue #110](https://github.com/ZP151/quantmesh/issues/110),
+    `docs/iterations/0021-trusted-data-fabric.md` and
+    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.

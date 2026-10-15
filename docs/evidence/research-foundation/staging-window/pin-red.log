@@ -1,0 +1,21 @@
+..................................ss...............F.sssssssssssssssssss [ 91%]
+s.sssss                                                                  [100%]
+================================== FAILURES ===================================
+____________ test_installed_unit_pin_matches_exact_template_bytes _____________
+
+    def test_installed_unit_pin_matches_exact_template_bytes():
+>       assert (
+            hashlib.sha256(
+                (ROOT / "deploy/aws/opend/quantmesh-opend-stage@.service").read_bytes()
+            ).hexdigest()
+            == stage.UNIT_SHA
+        )
+E       AssertionError: assert 'e108294e59e6...6069e1e0cfdac' == '18cbd154a940...dd5620eb7a618'
+E         
+E         - 18cbd154a940e744f88a8bdd12f77b926c40fed0cc80d4d35e1dd5620eb7a618
+E         + e108294e59e624d17b0f75034930c9ae3fe1f3d3353c44a90586069e1e0cfdac
+
+tests\test_opend_staging_window.py:253: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_opend_staging_window.py::test_installed_unit_pin_matches_exact_template_bytes
+1 failed, 51 passed, 27 skipped in 0.22s

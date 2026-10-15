@@ -1,0 +1,61 @@
+{
+  "restic.bz2": {
+    "url": "https://github.com/restic/restic/releases/download/v0.19.1/restic_0.19.1_linux_amd64.bz2",
+    "sha256": "f415415624dcc452f2a02b8c33641791a8c6d6d3b65bbb3543fcf9a25151585c",
+    "size": 10107515
+  },
+  "SHA256SUMS": {
+    "url": "https://github.com/restic/restic/releases/download/v0.19.1/SHA256SUMS",
+    "sha256": "fb520966ee01d2a3d4219c66762c66efa56300833b6f639f36082b7462f91cb8",
+    "size": 2503
+  },
+  "SHA256SUMS.asc": {
+    "url": "https://github.com/restic/restic/releases/download/v0.19.1/SHA256SUMS.asc",
+    "sha256": "649f3a48d322c3d7a457ef58e2dc4c5094b1f823192cdbac3f092ea23e194d9a",
+    "size": 833
+  },
+  "key.asc": {
+    "url": "https://restic.net/gpg-key-alex.asc",
+    "sha256": "e4f09134173fdd60ece4454d30e38459d172f3ea9a97b32a37324b4f0515a289",
+    "size": 33940
+  },
+  "installation.html": {
+    "url": "https://raw.githubusercontent.com/restic/restic/v0.19.1/doc/020_installation.rst",
+    "sha256": "843597eb1ab3ce889dc8e1726b0879a920a9ccae4dc0338b67c142eb965958dc",
+    "size": 13199
+  },
+  "LICENSE": {
+    "url": "https://raw.githubusercontent.com/restic/restic/v0.19.1/LICENSE",
+    "sha256": "6f08a01a9fab5b24e139a09f15cc24a73087c7bc09e3bacf099fdf2d767bf897",
+    "size": 1345
+  },
+  "go.mod": {
+    "url": "https://raw.githubusercontent.com/restic/restic/v0.19.1/go.mod",
+    "sha256": "d166913ed4897cf69069ef5be090b2d79a857fc28328bb950e12655b5a54f176",
+    "size": 4894
+  },
+  "go.sum": {
+    "url": "https://raw.githubusercontent.com/restic/restic/v0.19.1/go.sum",
+    "sha256": "e2d2bab6fc96eeaf53d9460af8b43e25d4c5c5de6c1aa6c1306550e6b62b26bc",
+    "size": 31974
+  },
+  "release.json": {
+    "url": "https://api.github.com/repos/restic/restic/releases/tags/v0.19.1",
+    "sha256": "9a3da21d71e294b505b92021afc514fc9e8ed5738bd5bc9719662490ac28ffbe",
+    "size": 48621
+  },
+  "restic-0.19.1.tar.gz": {
+    "url": "https://api.github.com/repos/restic/restic/releases/assets/467000535",
+    "sha256": "bb9b1a19040744d26d8a79be029d4e6b189c45ccc9d8831d7fe367d3c33df725",
+    "size": 24166058
+  },
+  "restic-0.19.1.tar.gz.asc": {
+    "url": "https://api.github.com/repos/restic/restic/releases/assets/467000529",
+    "sha256": "6e5ad378c9aa9ab25b87e3bbed66e5dbb6eca57d4659f292d97352a69f86c3ff",
+    "size": 833
+  },
+  "restic": {
+    "sha256": "20d4142678d0d95ec11a4759def1b73fd9190abc9ca19e4b62d067c0b387e639",
+    "size": 30941346
+  }
+}

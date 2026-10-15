@@ -160,6 +160,12 @@ class MoomooVenueTransport:
                         await self._frames.put({"kind": "current_kline", "payload": candles})
             except OpenDError as error:
                 await self._frames.put({"kind": "poll_error", "message": str(error)})
+            except Exception:
+                # SDK cleanup/decoding can raise outside its classified boundary.
+                # Surface failure to the reconnect owner without raw SDK details.
+                await self._frames.put(
+                    {"kind": "poll_error", "message": "unexpected OpenD poll failure"}
+                )
             await asyncio.sleep(self._poll_interval.total_seconds())
 
 

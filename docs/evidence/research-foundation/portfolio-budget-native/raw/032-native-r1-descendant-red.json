@@ -1,0 +1,32 @@
+{
+  "argv": [
+    "wsl",
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
+    "PYTHONPATH=/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout:/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/src:/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/services/research_agent/src:/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/tests",
+    "QM_TEST_PORTFOLIO_PROFILE=/var/tmp/quantmesh-portfolio-witness-r_a4n26m/profile-r1-red.json",
+    "QM_TEST_PORTFOLIO_ACK=owned-disposable",
+    "/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "-c",
+    "/dev/null",
+    "-p",
+    "no:cacheprovider",
+    "--confcutdir=/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/tests",
+    "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/tests/test_portfolio_budget_qualification.py",
+    "--basetemp=/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-descendant-red-tmp",
+    "--junitxml=/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-descendant-red.junit.xml",
+    "-q",
+    "-k",
+    "initdb_bootstrap"
+  ],
+  "exit": 1,
+  "stdout_sha256": "42160694903bec33051e41aadc9af41aa632ca449de5a37377d2bca1e39f96fd",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,14 @@
+Looking in links: /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/moomoo_api-10.10.7008-py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 1))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/numpy-2.5.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 2))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 3))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 4))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 5))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/python_dateutil-2.9.0.post0-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 6))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/pytz-2026.3.post1-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 7))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/simplejson-4.1.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 8))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/six-1.17.0-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 9))
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/runtime/tzdata-2026.3-py2.py3-none-any.whl (from -r /mnt/c/Users/15492/.codex-clean/worktrees/69d3/QuantMesh/output/169-linux-sdk-wire/candidate.lock (line 10))
+Installing collected packages: pytz, tzdata, six, simplejson, pycryptodome, protobuf, numpy, python-dateutil, pandas, moomoo_api
+
+Successfully installed moomoo_api-10.10.7008 numpy-2.5.2 pandas-2.3.3 protobuf-7.36.1 pycryptodome-3.23.0 python-dateutil-2.9.0.post0 pytz-2026.3.post1 simplejson-4.1.2 six-1.17.0 tzdata-2026.3

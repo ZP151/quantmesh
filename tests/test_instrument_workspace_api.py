@@ -262,15 +262,15 @@ def _quote_feed(
             payload=payload,
         ),
         MarketUpdate(
-                venue=Venue.MOOMOO,
-                instrument="NVDA",
-                kind=UpdateKind.QUOTE,
-                provenance=Provenance.REAL,
-                data_time=received_at,
-                received_at=received_at,
-                sequence=8,
-                sequence_gap=gap,
-                payload=payload,
+            venue=Venue.MOOMOO,
+            instrument="NVDA",
+            kind=UpdateKind.QUOTE,
+            provenance=Provenance.REAL,
+            data_time=received_at,
+            received_at=received_at,
+            sequence=8,
+            sequence_gap=gap,
+            payload=payload,
         ),
     ]
     feed.ingest(updates[-1:] if unproven else updates)
@@ -507,6 +507,7 @@ def test_workspace_captured_quote_keeps_existing_refusal_guards(
     assert live["status"] == expected_status
     assert reason_fragment in live["reason"]
 
+
 def test_workspace_exposes_real_live_lineage_without_relabeling_it(
     tmp_path: Path,
 ) -> None:
@@ -517,6 +518,11 @@ def test_workspace_exposes_real_live_lineage_without_relabeling_it(
 
     assert response.status_code == 200
     live = response.json()["live"]
+    coverage = live.pop("session_freshness")
+    assert coverage["data_state"] == "latest_session"
+    assert coverage["market_state"] == "closed"
+    assert coverage["last_source_at"] == NOW.isoformat().replace("+00:00", "Z")
+    assert coverage["provider_delay_seconds"] is None
     assert live == {
         "status": "available",
         "reason": None,
@@ -699,9 +705,7 @@ def test_workspace_account_marks_and_proposals_share_one_revision_during_confirm
     workspace = responses["workspace"].json()
     assert workspace["risk"]["cash"] == 100_000.0
     assert workspace["position"] is None
-    assert [proposal["status"] for proposal in workspace["proposal"]["proposals"]] == [
-        "pending"
-    ]
+    assert [proposal["status"] for proposal in workspace["proposal"]["proposals"]] == ["pending"]
     assert responses["confirm"].status_code == 200
     assert responses["confirm"].json()["proposal"]["status"] == "confirmed"
 
@@ -771,9 +775,7 @@ def test_workspace_valuation_cannot_observe_a_quote_after_generated_at(
     assert workspace["position"]["mark_status"]["received_at"] == NOW.isoformat().replace(
         "+00:00", "Z"
     )
-    assert workspace["risk"]["equity"] == pytest.approx(
-        account.equity({position_key(NVDA): 105.0})
-    )
+    assert workspace["risk"]["equity"] == pytest.approx(account.equity({position_key(NVDA): 105.0}))
 
 
 def test_workspace_pins_quote_before_live_history_and_next_request_observes_arrival(
@@ -870,7 +872,6 @@ def test_workspace_pins_quote_before_live_history_and_next_request_observes_arri
             assert second.json()["live"]["status"] == "available"
             assert second.json()["live"]["bid"] == 200
             assert clock_calls == [cut, cut + timedelta(seconds=1)]
-
 
 
 def test_create_proposal_is_preview_only(tmp_path: Path) -> None:

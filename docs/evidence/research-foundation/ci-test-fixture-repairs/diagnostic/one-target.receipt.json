@@ -1,0 +1,23 @@
+{
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_linux_owned.py::test_fixed_creation_and_gated_start",
+    "-vv",
+    "-rf",
+    "--maxfail=1",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp"
+  ],
+  "cwd": "/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/candidate",
+  "uid": 1000,
+  "gid": 1000,
+  "exit_code": 1,
+  "scope": "ONE_FAKE_ENGINE_TEST_AT_EXACT216B; NO_DAEMON_OR_LIVE_SOURCE",
+  "metadata_identical_to_collect": true,
+  "pyc_files_after": 0
+}

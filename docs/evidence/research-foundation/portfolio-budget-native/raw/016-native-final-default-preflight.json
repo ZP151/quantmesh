@@ -1,0 +1,22 @@
+{
+  "argv": [
+    "wsl",
+    "-d",
+    "Ubuntu",
+    "--",
+    "/usr/bin/env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "PYTHONPATH=/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout:/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/src:/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/services/research_agent/src",
+    "/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python",
+    "-B",
+    "-m",
+    "tools.qualify_portfolio_budgets",
+    "--profile",
+    "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/profile-final.json",
+    "--output",
+    "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/preflight-never-created"
+  ],
+  "exit": 2,
+  "stdout_sha256": "5771eb0335affed073cc8d5657f6021072fac31d60f612a521567541b605ecbd",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

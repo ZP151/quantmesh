@@ -1,0 +1,21 @@
+{
+  "before": {
+    "test_fixture_bytes": 4095387,
+    "source_bytes": 91774,
+    "evidence_bytes": 160997,
+    "introduced_logical_upper_bound": 4489932,
+    "free_c_bytes": 89357209600
+  },
+  "after": {
+    "test_fixture_bytes": 4095387,
+    "source_bytes": 91774,
+    "evidence_bytes": 223474,
+    "introduced_logical_upper_bound": 4552409,
+    "free_c_bytes": 89357139968
+  },
+  "software_gate": "logical<=10MB/freeC>=50GB",
+  "prior_whole_C_5GB_gate": "PENDING",
+  "archive_members_verified": true,
+  "current_source_equals_tested_overlay": true,
+  "no_commit_push_or_native_certificate": true
+}

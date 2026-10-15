@@ -1,0 +1,212 @@
+{
+  "head": "4fceaf21af3fbe513fc1b02b210d2305112bfca7",
+  "scope": "OWNED_LOCAL_FIXTURE_ONLY",
+  "production_release_qualified": false,
+  "snapshot_id": "614a19d04588863a8a80d79f6a865490bfef370d9093de5c126d367262490dac",
+  "manifest_sha256": "1ead8fc00591975fb7f0b6edb26a0b10cbbe8c595e02976da94f4d248310b802",
+  "dump_sha256": "d7e53145dd69c5326c783238e3f2e7523830df841dd72dd142a84b328622a0d8",
+  "jobs": 3,
+  "advanced_jobs": 4,
+  "artifacts": 1,
+  "artifact_bytes": 257,
+  "effects": [
+    "completed",
+    "reserved"
+  ],
+  "negatives": [
+    "corrupt_cipher_copy",
+    "missing_artifact",
+    "substituted_artifact",
+    "substituted_manifest",
+    "unknown_schema",
+    "wrong_key"
+  ],
+  "native_duration_seconds": 10.011,
+  "owned_clusters": 4,
+  "commands": 17,
+  "native_tests": {
+    "tests": 45,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "service_tests": {
+    "tests": 85,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "licenses": 81,
+  "external_modules": 79,
+  "notices": 98,
+  "actual_command_interruption": {
+    "argv_checked": true,
+    "executable": "/usr/bin/python3.12",
+    "exit": -15,
+    "kernel_uid_checked": true,
+    "nonce_checked": true,
+    "pid": 12859,
+    "sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "start_ticks": "274894",
+    "stopped": true
+  },
+  "closed_command_processes": 17,
+  "audit_entries": 950,
+  "archived_files": [
+    {
+      "path": "proof-4fceaf21af3f\\backup-receipt.json",
+      "sha256": "14ed210474548a386d3fde84a0be2a1f456558db64ae83fa80fe6461322191a1",
+      "size": 372
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-001.log",
+      "sha256": "8e66c359082477c242645c23b0f3d6fcc7f351c50a39fa7f51a789a0d2b1860c",
+      "size": 958
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-002.log",
+      "sha256": "4327dc205b5012877821a5157b1fd7449c0fecce048bf3031a02fd2a0851e920",
+      "size": 2317
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-003.log",
+      "sha256": "a6030d7d4e506aac0c063fc78d779ccfdafde4a71066fe7deaed69b6d66d5d3e",
+      "size": 960
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-004.log",
+      "sha256": "bfb0015116bb2014811c10495ff4d197fd461b51fb0cd5202d5f402055875f61",
+      "size": 2317
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-005.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-006.log",
+      "sha256": "08e837a9bf1ed1348e8ecf581f8d412e3c9c2aed752dc2ca4d6160d5fd745d66",
+      "size": 189
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-007.log",
+      "sha256": "c09e12dc9ae4f0620815f959f724c397bc7d7096448882d3683fb23cb9e304a4",
+      "size": 474
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-008.log",
+      "sha256": "390183f57f5965367604ccbb914ce144ee4e7a11a769bf987db639f71c003be6",
+      "size": 113
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-009.log",
+      "sha256": "06739a80b2a23e52d732944dfd1b6e64d02c1c071c820516a6d10d185febbef2",
+      "size": 105
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-010.log",
+      "sha256": "07948a776f8344b4e15b15ed0b977cac6ba44a838cda13cdeab0cab819bb21cd",
+      "size": 960
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-011.log",
+      "sha256": "b8772b03eb9a7056e0dd3edabfcb54ccd939e7e625e5e5b04e14e2fdb5381a1d",
+      "size": 2317
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-012.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-013.log",
+      "sha256": "52e6e90408bfc58cc551750753eb14013475e5151d651bc78309010bf5c5f3c4",
+      "size": 90
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-014.log",
+      "sha256": "7cfe46c3ecec540a79f33945cb7c06bf294da94ede4c9f54eeb3926cd6a3022d",
+      "size": 1667
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-015.log",
+      "sha256": "58fe2149a7e4fe15afcfa02fdf5df7de9777fcf2c513c50d64e652a8c2e18a6e",
+      "size": 990
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-016.log",
+      "sha256": "39efe8b668788932120f2b3cee813873a892f3522ae858fbdf8ea136af919ed0",
+      "size": 2317
+    },
+    {
+      "path": "proof-4fceaf21af3f\\command-017.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "proof-4fceaf21af3f\\payload\\artifacts\\7d5b3e518d834b3a88bc566a63abf669\\183aae59c3c7c4db08c8d8555fa4b818de2d0211e7f27fbb589e2ad7fa753ca0.json",
+      "sha256": "183aae59c3c7c4db08c8d8555fa4b818de2d0211e7f27fbb589e2ad7fa753ca0",
+      "size": 257
+    },
+    {
+      "path": "proof-4fceaf21af3f\\payload\\manifest.json",
+      "sha256": "1ead8fc00591975fb7f0b6edb26a0b10cbbe8c595e02976da94f4d248310b802",
+      "size": 6395
+    },
+    {
+      "path": "proof-4fceaf21af3f\\payload\\research.dump",
+      "sha256": "d7e53145dd69c5326c783238e3f2e7523830df841dd72dd142a84b328622a0d8",
+      "size": 14781
+    },
+    {
+      "path": "proof-4fceaf21af3f\\recovered\\payload\\artifacts\\7d5b3e518d834b3a88bc566a63abf669\\183aae59c3c7c4db08c8d8555fa4b818de2d0211e7f27fbb589e2ad7fa753ca0.json",
+      "sha256": "183aae59c3c7c4db08c8d8555fa4b818de2d0211e7f27fbb589e2ad7fa753ca0",
+      "size": 257
+    },
+    {
+      "path": "proof-4fceaf21af3f\\recovered\\payload\\manifest.json",
+      "sha256": "1ead8fc00591975fb7f0b6edb26a0b10cbbe8c595e02976da94f4d248310b802",
+      "size": 6395
+    },
+    {
+      "path": "proof-4fceaf21af3f\\recovered\\payload\\research.dump",
+      "sha256": "d7e53145dd69c5326c783238e3f2e7523830df841dd72dd142a84b328622a0d8",
+      "size": 14781
+    },
+    {
+      "path": "proof-4fceaf21af3f\\restore\\postgres.log",
+      "sha256": "e6c7106f977ca33621351c6629c8d9b48228d9dac3a922d10f9440f8ccb3e03e",
+      "size": 1234
+    },
+    {
+      "path": "proof-4fceaf21af3f\\restore-state-before-replay.json",
+      "sha256": "3f0a9812f7c5ff628a63b03660a655a1ae1021a7654de701ae61cc656d34a228",
+      "size": 5797
+    },
+    {
+      "path": "proof-4fceaf21af3f\\sibling\\postgres.log",
+      "sha256": "db442aabac822721bbfa081d2c7e4c5547e802cffdc342a2e8db39a82f3253d7",
+      "size": 1228
+    },
+    {
+      "path": "proof-4fceaf21af3f\\source\\postgres.log",
+      "sha256": "ad61c280f3638166204b9bac82921f2004c6c540928b91976a64f93d776df6df",
+      "size": 1234
+    },
+    {
+      "path": "proof-4fceaf21af3f\\source-state-after.json",
+      "sha256": "3c86aaf5dc5e0bba7534766d7d5080980704d661869bbf786f47d6e61d72b659",
+      "size": 7430
+    },
+    {
+      "path": "proof-4fceaf21af3f\\unknown-schema-cluster\\postgres.log",
+      "sha256": "73e7ab7c120e14d77781d311d96e43da206e0fdb5caa138f8f583252e5d1d01e",
+      "size": 1234
+    },
+    {
+      "path": "proof-4fceaf21af3f\\witness.json",
+      "sha256": "8bd711e4f4a507ca548571af678f13a8546df5dca215a9c177f11d3e8edf9e8b",
+      "size": 7013
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "pip",
+  "version": "26.2.1",
+  "scope": "isolated gate build-tool only; absent API runtime PYTHONPATH",
+  "path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/build-tools"
+}

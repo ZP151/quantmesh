@@ -1,0 +1,87 @@
+[
+  {
+    "path": "0038-ci38395044039-terminal.json",
+    "bytes": 12003,
+    "sha256": "5f01a6d5264f67d82575144c31dc9de3f4853441e2acce44309d12fb6ed0d263"
+  },
+  {
+    "path": "0038-ci38395044039-jobs.json",
+    "bytes": 15276,
+    "sha256": "c878c5576fdd62250e65996b51c679e4852d04fb3cb56a007f9da83083827661"
+  },
+  {
+    "path": "0038-ci38395044039-checkout.json",
+    "bytes": 2594,
+    "sha256": "6ea5beda822ff67135c3422c462691f8e64c0e2bfd51fb45f2059b0c1187a55b"
+  },
+  {
+    "path": "0038-ci38395044039-success.log",
+    "bytes": 313691,
+    "sha256": "4d03b7950be11d545c072b296c72f58cf9a8d2699ee532c4d68c9951d4bceb5e"
+  },
+  {
+    "path": "0038-ci38395044039-verified-summary.json",
+    "bytes": 851,
+    "sha256": "768e35a6ea8265b8dee231a061ec6b21ecc4dbe8a7cbac523671f6ac1a8bbc7b"
+  },
+  {
+    "path": "0038-ci38395044039-artifacts.json",
+    "bytes": 1448,
+    "sha256": "eb7533a685438299e5e1711aaf43738dcf29b3b5364974bd8f333ea65828c649"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/artifact-metadata.json",
+    "bytes": 404,
+    "sha256": "92be0b091917ac5f2710dc5e74f484a4cf584bb70205c5d464c70e38c27704e7"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/artifact.zip",
+    "bytes": 7314,
+    "sha256": "f774d4245a80e697f1e97fbb8efdbd406caa95ad900432bae4c45b1c86047c83"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/pytest-fd7e274c3d4348aa8f891314ad95be1d.xml",
+    "bytes": 28042,
+    "sha256": "845a8b69d2b3bfe8b3599dc96887c10646f57c9271ded6ddd97eab28eacc1911"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/service-gate-0.log",
+    "bytes": 30,
+    "sha256": "9261363b733079a641c2e4cc9bc46ffa1d8336945a87f807b6cf68847dbc9b09"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/service-gate-1.log",
+    "bytes": 19,
+    "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/service-gate-2.log",
+    "bytes": 27,
+    "sha256": "edc30689f9fd3dc494be14b82b3b560778897cff7435d2cc81d54f1829d5038d"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/service-gate-3.log",
+    "bytes": 1312,
+    "sha256": "0c4df3069f2f693b667ef688469f0161792da839a80b94ad0a47ae7f5a8f5e86"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/service-gate-4.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/service-gate.json",
+    "bytes": 10348,
+    "sha256": "6b26a9186063dfe990d284722c21753aac887d94e428c3c0f2e973a765cb77d4"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/verified-summary.json",
+    "bytes": 1320,
+    "sha256": "80038da50ae7a9dd78675df56b8f4df211da30e4dfdc84cd1a00fa112f274867"
+  },
+  {
+    "path": "0038-remote-service-ci56d95cf/zip-path-inventory.json",
+    "bytes": 204,
+    "sha256": "eef6dfd83fb1ec2c7aee617aa46992a3fa404a73459cf2e8e4ef5ef8281d1631"
+  }
+]

@@ -1,7 +1,8 @@
 import { Badge } from '@/components/ui/badge'
+import { LiveDataBadge } from '@/components/live-data-badge'
 import type { InstrumentWorkspace, LiveLabel } from '@/lib/api'
 import { dateTime, moneyPrecise } from '@/lib/format'
-import { ageText, LABEL_TEXT, liveInstrumentKey, useAgedInstruments } from '@/lib/live'
+import { ageText, isSourceBacked, LABEL_TEXT, liveInstrumentKey, useAgedInstruments } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 
 function liveTone(status: InstrumentWorkspace['live']['status']): string {
@@ -82,6 +83,9 @@ export function WorkspaceHeader({
             </h1>
           </div>
           <Badge className={liveTone(displayStatus)}>{t(LIVE_MESSAGE[displayStatus])}</Badge>
+          {live.session_freshness && <LiveDataBadge session={live.session_freshness}
+            fallback={aged.label} realEvidence={isSourceBacked(live.provenance)
+              || (live.provenance === null && live.session_freshness.last_source_at !== null)} />}
         </div>
         <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-right sm:grid-cols-4 xl:grid-cols-8">
           <div>

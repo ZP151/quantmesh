@@ -1,0 +1,15 @@
+{
+  "exit": 1,
+  "candidate_head": "57a66f84d4e101d54410fcfa49ea2ee064f2ba33",
+  "native_checkout": "f3a72af",
+  "exact_tested_source_sha256": {
+    "tests/test_live_fence.py": "e8a9c0c2d6c9f06179dd30fe290736a65e765db65c6a83288cd7a0df567e67d0",
+    "tests/test_live_moomoo.py": "14b23cdcc3fbb6a7a5b2d30ed2e357ac2f06be6e58195ede8285a333b4eb5f3e",
+    "tests/test_opend_staging_window.py": "97cbd9a37d753eda48e51307d65403569f7e30f7782039ceebb45f1c7681cfd9",
+    "deploy/aws/opend/stage_console.py": "2aabead42bb8211da1a7e9fa81b8f06e48b9b655e1651f992edcfdfa5be6eef4"
+  },
+  "scope": "SCRIPTED_LIVE_TEST_ORDER_AND_SYNTHETIC_NATIVE_STAGING_ONLY",
+  "market_requests": 0,
+  "model_calls": 0,
+  "production_qualified": false
+}

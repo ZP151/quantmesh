@@ -1,0 +1,382 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.00017980008851736784,
+      "location": [
+        "tests\\test_ai_tools.py",
+        113,
+        "TestDispatch.test_allowed_role_dispatch_calls_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0001278999261558056,
+      "location": [
+        "tests\\test_ai_tools.py",
+        113,
+        "TestDispatch.test_allowed_role_dispatch_calls_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 7.720000576227903e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        113,
+        "TestDispatch.test_allowed_role_dispatch_calls_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 7.990002632141113e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        120,
+        "TestDispatch.test_permission_matrix_analyst"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0001118999207392335,
+      "location": [
+        "tests\\test_ai_tools.py",
+        120,
+        "TestDispatch.test_permission_matrix_analyst"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 7.740000728517771e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        120,
+        "TestDispatch.test_permission_matrix_analyst"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 7.449998520314693e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        128,
+        "TestDispatch.test_permission_matrix_critic"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.00010289996862411499,
+      "location": [
+        "tests\\test_ai_tools.py",
+        128,
+        "TestDispatch.test_permission_matrix_critic"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 6.200000643730164e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        128,
+        "TestDispatch.test_permission_matrix_critic"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 8.189992513507605e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        134,
+        "TestDispatch.test_permission_matrix_risk_and_portfolio"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.00011129991617053747,
+      "location": [
+        "tests\\test_ai_tools.py",
+        134,
+        "TestDispatch.test_permission_matrix_risk_and_portfolio"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 7.189996540546417e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        134,
+        "TestDispatch.test_permission_matrix_risk_and_portfolio"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 7.650000043213367e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        141,
+        "TestDispatch.test_forbidden_call_refuses_naming_role_and_tool"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.00022570008877664804,
+      "location": [
+        "tests\\test_ai_tools.py",
+        141,
+        "TestDispatch.test_forbidden_call_refuses_naming_role_and_tool"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 8.190004155039787e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        141,
+        "TestDispatch.test_forbidden_call_refuses_naming_role_and_tool"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 8.870009332895279e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        146,
+        "TestDispatch.test_unknown_tool_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0002039000391960144,
+      "location": [
+        "tests\\test_ai_tools.py",
+        146,
+        "TestDispatch.test_unknown_tool_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 7.51999905332923e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        146,
+        "TestDispatch.test_unknown_tool_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 7.860001642256975e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        151,
+        "TestDispatch.test_unknown_role_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0001262999139726162,
+      "location": [
+        "tests\\test_ai_tools.py",
+        151,
+        "TestDispatch.test_unknown_role_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 6.649992428719997e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        151,
+        "TestDispatch.test_unknown_role_refused"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 7.730000652372837e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        156,
+        "TestDispatch.test_forbidden_call_never_touches_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0001194999786093831,
+      "location": [
+        "tests\\test_ai_tools.py",
+        156,
+        "TestDispatch.test_forbidden_call_never_touches_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 8.679996244609356e-05,
+      "location": [
+        "tests\\test_ai_tools.py",
+        156,
+        "TestDispatch.test_forbidden_call_never_touches_surface"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "tool",
+      "boundary": "ToolRegistry",
+      "outcome": "ok",
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+      "method": "dispatch",
+      "duration_seconds": 4.200031980872154e-06
+    },
+    {
+      "sequence": 1,
+      "kind": "tool",
+      "boundary": "ToolRegistry",
+      "outcome": "error",
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+      "method": "dispatch",
+      "error_type": "ToolRefusalError",
+      "duration_seconds": 7.5999414548277855e-06
+    },
+    {
+      "sequence": 2,
+      "kind": "tool",
+      "boundary": "ToolRegistry",
+      "outcome": "error",
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+      "method": "dispatch",
+      "error_type": "UnknownToolError",
+      "duration_seconds": 6.600050255656242e-06
+    },
+    {
+      "sequence": 3,
+      "kind": "tool",
+      "boundary": "ToolRegistry",
+      "outcome": "error",
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+      "method": "dispatch",
+      "error_type": "UnknownRoleError",
+      "duration_seconds": 5.200039595365524e-06
+    },
+    {
+      "sequence": 4,
+      "kind": "tool",
+      "boundary": "ToolRegistry",
+      "outcome": "error",
+      "nodeid": "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface",
+      "method": "dispatch",
+      "error_type": "ToolRefusalError",
+      "duration_seconds": 5.700043402612209e-06
+    }
+  ],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface",
+    "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst",
+    "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic",
+    "tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio",
+    "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool",
+    "tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused",
+    "tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused",
+    "tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

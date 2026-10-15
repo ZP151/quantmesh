@@ -1,0 +1,152 @@
+[
+  {
+    "path": "build_aws_oci_capsule.py",
+    "bytes": 8485,
+    "sha256": "01502c3f6a062396ef3701cd3c65ee249dfa9d442aae71d1be2af5ec5f67ba1c"
+  },
+  {
+    "path": "import_aws_numeric_base.py",
+    "bytes": 8293,
+    "sha256": "1ed0b09272cd5d2ec2783c081d2f8e61978ae312318aa262f065f35d130cdaf0"
+  },
+  {
+    "path": "import_aws_numeric_base-review.md",
+    "bytes": 3185,
+    "sha256": "5126d42a2691e8e1cbf6241fe6da18a905f221c76284390e63b2e2e8d3c81dcb"
+  },
+  {
+    "path": "diagnose_aws_base_import.py",
+    "bytes": 1373,
+    "sha256": "66b2219713cafd13f6923851309b56d085d9f9b83207efc7e4ab8e6ecf241098"
+  },
+  {
+    "path": "verify_aws_base_import.py",
+    "bytes": 4862,
+    "sha256": "3b42cc406eceecd036ebd31bfc5e0dab36074a60be4614403e557d981b975d8d"
+  },
+  {
+    "path": "fetch_aws_numeric_wheels.py",
+    "bytes": 8580,
+    "sha256": "3f8c7eac66d482b0ce5ec2b2089435bf2a1119ef10a3588b3ef3372f20f7b06f"
+  },
+  {
+    "path": "launch_aws_numeric_wheels.py",
+    "bytes": 1561,
+    "sha256": "59c829598af320d16741d876eeea9d79e43f91079f54f4c3209e0aa572e4628f"
+  },
+  {
+    "path": "fetch_aws_numeric_wheels-review.md",
+    "bytes": 3454,
+    "sha256": "a382c5dd332840410525a8338ed8add17a87f1c5dda29de07634afe68d09d8f9"
+  },
+  {
+    "path": "check_aws_numeric_wheels_guards.py",
+    "bytes": 2694,
+    "sha256": "e6c68b9d70750f98704b537e102ddf786f9def5712bd014122d6bbb184b80bd3"
+  },
+  {
+    "path": "check_aws_numeric_wheels_guards-first-drvfs.py",
+    "bytes": 2538,
+    "sha256": "3c9289d74fbd8be0083cfeedcbb91e956dca008b9f0d581c1d2565c6c055b672"
+  },
+  {
+    "path": "0038-aws-numeric-oci-capsule.json",
+    "bytes": 2392,
+    "sha256": "f8cb9ba72f6539d5a870e8cf193ee40e757f11bfbeaad2abfd33d5ae86ababb3"
+  },
+  {
+    "path": "0038-aws-numeric-oci-capsule.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-engine-build.json",
+    "bytes": 1143,
+    "sha256": "d86daf46cd66a4b6f096ca18db7a22b60447cf1c2000b1830a392af8c058514d"
+  },
+  {
+    "path": "0038-aws-numeric-engine-build.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-base-import.json",
+    "bytes": 1366,
+    "sha256": "1468066c85506380004eb3039c36095796b40465d3ccbccffae4ce4dd080327e"
+  },
+  {
+    "path": "0038-aws-numeric-base-import.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-base-import-diagnostic.json",
+    "bytes": 4444,
+    "sha256": "3f10c29b3cc1391d01e7de7cfea8c4e268968efd2a18f0b318a14015cccc3644"
+  },
+  {
+    "path": "0038-aws-numeric-base-import-diagnostic.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-base-import-verified.json",
+    "bytes": 1720,
+    "sha256": "1bd3e8772dbce61564920213331c863d6d4cb088404d6248c2ea9e3ae255de32"
+  },
+  {
+    "path": "0038-aws-numeric-base-import-verified.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-intake.json",
+    "bytes": 17188,
+    "sha256": "a3b813475189953bcf8bff7c644fb8ce38bf9e9d5cc0b3a6b3a61e4f98a9703e"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-intake.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-intake.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-guards.log",
+    "bytes": 1610,
+    "sha256": "3bd9a7ed970937033e7041f120d1334e1ff8e2eb6c9ed6e9a0281687ef9a1813"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-guards.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-guards-first-drvfs.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "native-174-handoff.md",
+    "bytes": 4020,
+    "sha256": "96848b783f613fbbee2f9cfff630ee3e8ead17ddad3e7978398d0e69eac52e5c"
+  },
+  {
+    "path": "native-174-sha256-manifest.json",
+    "bytes": 3451,
+    "sha256": "5060fa35601f9a6c4d152052e69fa6ca3262f2adb21a55c0aada442b80585486"
+  },
+  {
+    "path": "native-174-diagnostic.stderr",
+    "bytes": 2727,
+    "sha256": "145b685de930546e3d262e60924083fc0329124cc27752c109e06dbf7d408b47"
+  },
+  {
+    "path": "native-174-resource-checkpoint.json",
+    "bytes": 4361,
+    "sha256": "3946ed68789dfe3f4aba98aaa84264cc2024b4f91155acb056a5706bf466f1e1"
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "recorded_at_utc": "2026-10-13T10:04:26Z",
+  "source": "Authenticated Lightsail UI visible instances/form",
+  "existing": [
+    {
+      "name": "quantmesh-staging-8gb",
+      "region": "ap-southeast-1",
+      "zone": "A",
+      "ram_gb": 8,
+      "vcpus": 2,
+      "ssd_gb": 160,
+      "state": "Running"
+    },
+    {
+      "name": "quantmesh-staging",
+      "region": "ap-southeast-1",
+      "zone": "A",
+      "ram_gb": 2,
+      "vcpus": 2,
+      "ssd_gb": 60,
+      "state": "Running"
+    }
+  ],
+  "prepared": {
+    "name": "quantmesh-research-8gb",
+    "region": "ap-southeast-1",
+    "zone": "A",
+    "os": "Ubuntu24.04LTS",
+    "ram_gb": 8,
+    "vcpus": 2,
+    "ssd_gb": 160,
+    "plan": "General Purpose/Dual-stack",
+    "usd_per_month": 44,
+    "auto_snapshots": false,
+    "count": 1,
+    "ssh_key": "existing regional default"
+  },
+  "create_clicked": false,
+  "resource_bill_and_private_tailnet_approval": "pending",
+  "application_ingress": "private tailnet only, not activated",
+  "account_identifiers_addresses_credentials": "excluded"
+}

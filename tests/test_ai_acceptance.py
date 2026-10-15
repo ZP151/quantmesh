@@ -154,13 +154,19 @@ def universe(tmp_path) -> dict:
     journal = OrderJournal(root=tmp_path / "orders")
     journal.record(_order("o-1"))
     context = {
+        "document:d-1": (
+            "AAA expanded its buyback program; the filing discloses a "
+            "200M share repurchase authorization effective next quarter."
+        ),
+        f"experiment:{exp.id}": exp.model_dump_json(),
+        "audit:o-1": journal.get("o-1").model_dump_json(),
         "retrieved": (
             f"[document:d-1] AAA expanded its buyback program; the filing "
             "discloses a 200M share repurchase authorization effective next "
             "quarter.\n"
             f"[experiment:{exp.id}] {exp.model_dump_json()}\n"
             f"[audit:o-1] {journal.get('o-1').model_dump_json()}"
-        )
+        ),
     }
     return {
         "docs": docs,
@@ -172,9 +178,7 @@ def universe(tmp_path) -> dict:
 
 
 def _script(*contents: str) -> ScriptedModelTransport:
-    return ScriptedModelTransport(
-        [{"content": content, "model": MODEL} for content in contents]
-    )
+    return ScriptedModelTransport([{"content": content, "model": MODEL} for content in contents])
 
 
 def _claim(statement: str, citation: str) -> dict:
@@ -235,9 +239,7 @@ def _sources(universe) -> dict:
 class TestExitCriterionOne:
     """Schema-validated output; the risk APIs cannot be bypassed."""
 
-    def test_hostile_analyst_json_is_refused_with_no_partial_object(
-        self, universe
-    ) -> None:
+    def test_hostile_analyst_json_is_refused_with_no_partial_object(self, universe) -> None:
         log = DecisionLog(root=universe["docs"].root.parent / "decisions")
         transport = _script(
             "definitely not json",
@@ -245,9 +247,7 @@ class TestExitCriterionOne:
             _risk_json(),
             _portfolio_json(),
         )
-        pipeline = _pipeline(
-            transport, universe["context"], decision_log=log, model_meta=META
-        )
+        pipeline = _pipeline(transport, universe["context"], decision_log=log, model_meta=META)
         with pytest.raises(ModelOutputError, match="not JSON"):
             pipeline.run()
         # No partial object escaped, and nothing was recorded: the run
@@ -431,9 +431,7 @@ class TestExitCriterionTwo:
         assert records[2].verdict == "aligned"
         assert records[3].verdict == "within_constraints"
 
-    def test_fabricated_citation_is_flagged_blocked_and_recorded(
-        self, universe
-    ) -> None:
+    def test_fabricated_citation_is_flagged_blocked_and_recorded(self, universe) -> None:
         transport = _script(
             _analyst_json(
                 _claim("AAA will double on authority of this fabricated source", "document:zzz")

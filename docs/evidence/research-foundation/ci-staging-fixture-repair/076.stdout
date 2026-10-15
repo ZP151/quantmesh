@@ -1,0 +1,53 @@
+{
+  "head": "57a66f84d4e101d54410fcfa49ea2ee064f2ba33",
+  "scope": "SYNTHETIC_LOOP_LIFETIME_ONLY_NO_TEST_OR_SDK_OR_SOCKET_OR_FORK",
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "machine": "x86_64",
+  "owned": "/var/tmp/quantmesh-ci57a66f8-loop-proof-0l39as44",
+  "reference_sha256": "2aabead42bb8211da1a7e9fa81b8f06e48b9b655e1651f992edcfdfa5be6eef4",
+  "baseline": {
+    "active_count": 1,
+    "threads": [
+      {
+        "name": "MainThread",
+        "alive": true,
+        "daemon": false
+      }
+    ],
+    "SIGCHLD": "0",
+    "native_gate": "passed"
+  },
+  "stopped_pump_loop_unclosed": {
+    "active_count": 2,
+    "threads": [
+      {
+        "name": "MainThread",
+        "alive": true,
+        "daemon": false
+      },
+      {
+        "name": "asyncio_0",
+        "alive": true,
+        "daemon": true
+      }
+    ],
+    "SIGCHLD": "0",
+    "native_gate": "unsupported_native"
+  },
+  "after_owned_executor_shutdown": {
+    "active_count": 1,
+    "threads": [
+      {
+        "name": "MainThread",
+        "alive": true,
+        "daemon": false
+      }
+    ],
+    "SIGCHLD": "0",
+    "native_gate": "passed"
+  },
+  "runtime_metadata_identical": true,
+  "runtime_pyc_files": 0,
+  "runtime_record_files": 81,
+  "old_ci_runtime_condition_proven": false
+}

@@ -1,0 +1,28 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________ test_actual_initdb_bootstrap_descendant_timeout_is_terminal __________
+
+verifier = <module 'tools.qualify_portfolio_budgets' from '/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/tools/qualify_portfolio_budgets.py'>
+tmp_path = PosixPath('/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-descendant-red-tmp/test_actual_initdb_bootstrap_d0')
+
+    def test_actual_initdb_bootstrap_descendant_timeout_is_terminal(verifier, tmp_path):
+        code = (
+            "import importlib.util,json,sys;from pathlib import Path;"
+            "from tools import qualify_portfolio_budgets as q;"
+            "p=q.Profile.from_mapping(json.loads(Path(sys.argv[1]).read_text()));"
+            "s=importlib.util.spec_from_file_location('owned_boot_probe',"
+            "p.root/'checkout/tests/test_portfolio_budget_qualification.py');"
+            "m=importlib.util.module_from_spec(s);s.loader.exec_module(m);"
+            "m._native_boot_timeout_probe(q,p,Path(sys.argv[2]))"
+        )
+        result, output = native_command(verifier, tmp_path, code)
+        evidence = json.loads((output / "bootstrap-cleanup.json").read_text())
+>       assert result.returncode == 0, evidence
+E       AssertionError: {'boot_terminal_before_test_fallback': False, 'initdb_pid': 58126, 'parent_terminal_exit': -9, 'positively_owned_boots...ntmesh-portfolio-witness-r_a4n26m/prefix/bin/postgres', 'group': 58030, 'nonce_matches': True, 'pid': 58134, ...}, ...}
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python', '-B', '-c', "import importlib....\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: owned postgres --boot survived cleanup\n').returncode
+
+/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/tests/test_portfolio_budget_qualification.py:532: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../../dev::test_actual_initdb_bootstrap_descendant_timeout_is_terminal
+1 failed, 35 deselected in 6.53s

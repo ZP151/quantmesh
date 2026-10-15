@@ -1,0 +1,22 @@
+{
+  "checkout": "/var/tmp/quantmesh-service-native-yxk1ppm2/checkout",
+  "actual_imports": {
+    "quantmesh": {
+      "file": "/var/tmp/quantmesh-service-native-yxk1ppm2/checkout/src/quantmesh/__init__.py",
+      "sha256": "6e280cd52704e5ee0a0d8509e978820431bffb760892dd1e1da73db5947918c5"
+    },
+    "quantmesh.research.jobs": {
+      "file": "/var/tmp/quantmesh-service-native-yxk1ppm2/checkout/src/quantmesh/research/jobs.py",
+      "sha256": "fd6abdb293a8092fba65b5239abdf4410ebb2e0cf4b8e5294f9c21dd53981812"
+    },
+    "qm_research_agent.app": {
+      "file": "/var/tmp/quantmesh-service-native-yxk1ppm2/checkout/services/research_agent/src/qm_research_agent/app.py",
+      "sha256": "bb2526125df361e3093bf57c500b927b12789bbdd042c82610481f73a11721ac"
+    },
+    "tools.research_service_gate": {
+      "file": "/var/tmp/quantmesh-service-native-yxk1ppm2/checkout/tools/research_service_gate.py",
+      "sha256": "7025dca39520f00a81490ca3053330f00d3c44382380e8b8f7b6be1130b9fbec"
+    }
+  },
+  "verified": true
+}

@@ -1,0 +1,767 @@
+== QM-001 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-001\\01-QM-001.log","name":"QM-001","pid":48032,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:44.642Z"}
+{"elapsed_seconds":2.014,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-001\\01-QM-001.log","name":"QM-001","timestamp":"2026-10-12T18:24:46.663Z"}
+{"elapsed_seconds":3.035,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-001\\01-QM-001.log","name":"QM-001","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:47.665Z"}
+FAILED after 0:03; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_______ test_valid_request_records_both_stages_and_reopens_idempotently _______
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_packet_copilot.py::test_valid_request_records_both_stages_and_reopens_idempotently
+1 failed, 2 warnings in 0.68s
+QM-001: failed (3.04s)
+== QM-002 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-002\\02-QM-002.log","name":"QM-002","pid":33064,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:47.719Z"}
+{"elapsed_seconds":2.016,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-002\\02-QM-002.log","name":"QM-002","timestamp":"2026-10-12T18:24:49.747Z"}
+{"elapsed_seconds":3.044,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-002\\02-QM-002.log","name":"QM-002","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:50.749Z"}
+FAILED after 0:03; exit code 1; last output:
+FFFFF
+================================== FAILURES ===================================
+_ test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/missing-None-does not exist]
+FAILED tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state-None-container]
+FAILED tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/~0/trigger-None-escaped]
+FAILED tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/scenarios/01/trigger-None-array index]
+FAILED tests/test_packet_copilot.py::test_packet_source_refuses_bad_pointer_or_digest[/market_state/support-175.0-digest]
+5 failed, 2 warnings in 0.73s
+QM-002: failed (3.05s)
+== QM-003 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-003\\03-QM-003.log","name":"QM-003","pid":37856,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:50.802Z"}
+{"elapsed_seconds":2.019,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-003\\03-QM-003.log","name":"QM-003","timestamp":"2026-10-12T18:24:52.829Z"}
+{"elapsed_seconds":2.046,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-003\\03-QM-003.log","name":"QM-003","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:52.831Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_______ test_contracts_refuse_cross_packet_and_authority_shaped_output ________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_packet_copilot.py::test_contracts_refuse_cross_packet_and_authority_shaped_output
+1 failed, 2 warnings in 0.64s
+QM-003: failed (2.05s)
+== QM-004 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-004\\04-QM-004.log","name":"QM-004","pid":38892,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:52.881Z"}
+{"elapsed_seconds":2.017,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-004\\04-QM-004.log","name":"QM-004","timestamp":"2026-10-12T18:24:54.902Z"}
+{"elapsed_seconds":3.04,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-004\\04-QM-004.log","name":"QM-004","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:55.905Z"}
+FAILED after 0:03; exit code 1; last output:
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_failures_degrade_without_persisting_or_mutating_packet[authority-field] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+__ test_failures_degrade_without_persisting_or_mutating_packet[bad-citation] __
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+__ test_failures_degrade_without_persisting_or_mutating_packet[critic-flag] ___
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[missing-gateway]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[unavailable]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[timeout]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[non-json]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[authority-field]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[cross-packet-draft]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[bad-citation]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[malformed-critic]
+FAILED tests/test_packet_copilot.py::test_failures_degrade_without_persisting_or_mutating_packet[critic-flag]
+9 failed, 2 warnings in 0.82s
+QM-004: failed (3.04s)
+== QM-005 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-005\\05-QM-005.log","name":"QM-005","pid":54364,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:55.945Z"}
+{"elapsed_seconds":2.012,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-005\\05-QM-005.log","name":"QM-005","timestamp":"2026-10-12T18:24:57.969Z"}
+{"elapsed_seconds":3.036,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-005\\05-QM-005.log","name":"QM-005","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:24:58.970Z"}
+FAILED after 0:03; exit code 1; last output:
+F
+================================== FAILURES ===================================
+___________ test_secret_is_redacted_before_analyst_and_critic_calls ___________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls
+1 failed, 2 warnings in 0.69s
+QM-005: failed (3.04s)
+== QM-006 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-006\\06-QM-006.log","name":"QM-006","pid":9136,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:24:59.041Z"}
+{"elapsed_seconds":2.023,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-006\\06-QM-006.log","name":"QM-006","timestamp":"2026-10-12T18:25:01.061Z"}
+{"elapsed_seconds":2.042,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-006\\06-QM-006.log","name":"QM-006","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:01.061Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+______ test_proposal_is_a_preview_and_pins_the_forecast_without_ordering ______
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering
+1 failed in 0.34s
+QM-006: failed (2.04s)
+== QM-007 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-007\\07-QM-007.log","name":"QM-007","pid":62300,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:01.126Z"}
+{"elapsed_seconds":2.023,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-007\\07-QM-007.log","name":"QM-007","timestamp":"2026-10-12T18:25:03.145Z"}
+{"elapsed_seconds":2.042,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-007\\07-QM-007.log","name":"QM-007","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:03.146Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_____ test_confirm_requires_exact_operator_token_then_crosses_quote_fence _____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence
+1 failed in 0.34s
+QM-007: failed (2.04s)
+== QM-008 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-008\\08-QM-008.log","name":"QM-008","pid":24656,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:03.204Z"}
+{"elapsed_seconds":2.015,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-008\\08-QM-008.log","name":"QM-008","timestamp":"2026-10-12T18:25:05.227Z"}
+{"elapsed_seconds":2.038,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-008\\08-QM-008.log","name":"QM-008","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:05.229Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+___ test_two_service_instances_share_one_exactly_once_confirmation_boundary ___
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_paper_proposals.py::test_two_service_instances_share_one_exactly_once_confirmation_boundary
+1 failed in 0.32s
+QM-008: failed (2.04s)
+== QM-009 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-009\\09-QM-009.log","name":"QM-009","pid":50904,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:05.318Z"}
+{"elapsed_seconds":2.02,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-009\\09-QM-009.log","name":"QM-009","timestamp":"2026-10-12T18:25:07.348Z"}
+{"elapsed_seconds":2.05,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-009\\09-QM-009.log","name":"QM-009","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:07.350Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_ test_later_retry_recovers_after_order_was_journaled_before_proposal_transition _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition
+1 failed in 0.32s
+QM-009: failed (2.05s)
+== QM-010 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-010\\10-QM-010.log","name":"QM-010","pid":62508,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:07.409Z"}
+{"elapsed_seconds":2.019,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-010\\10-QM-010.log","name":"QM-010","timestamp":"2026-10-12T18:25:09.434Z"}
+{"elapsed_seconds":2.046,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-010\\10-QM-010.log","name":"QM-010","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:09.438Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+____ test_journal_recovery_closes_the_append_before_snapshot_crash_window _____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window
+1 failed in 0.18s
+QM-010: failed (2.05s)
+== QM-011 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-011\\11-QM-011.log","name":"QM-011","pid":62128,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:09.504Z"}
+{"elapsed_seconds":2.016,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-011\\11-QM-011.log","name":"QM-011","timestamp":"2026-10-12T18:25:11.522Z"}
+{"elapsed_seconds":2.033,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-011\\11-QM-011.log","name":"QM-011","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:11.522Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+________ test_forecast_that_ages_after_preview_is_blocked_before_order ________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_paper_proposals.py::test_forecast_that_ages_after_preview_is_blocked_before_order
+1 failed in 0.34s
+QM-011: failed (2.03s)
+== QM-012 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-012\\12-QM-012.log","name":"QM-012","pid":10076,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:11.572Z"}
+{"elapsed_seconds":2.014,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-012\\12-QM-012.log","name":"QM-012","timestamp":"2026-10-12T18:25:13.602Z"}
+{"elapsed_seconds":2.043,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-012\\12-QM-012.log","name":"QM-012","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:13.603Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+__ test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive __
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_forecast_outcomes.py::test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive
+1 failed, 2 warnings in 0.53s
+QM-012: failed (2.04s)
+== QM-013 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-013\\13-QM-013.log","name":"QM-013","pid":24324,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:13.663Z"}
+{"elapsed_seconds":2.021,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-013\\13-QM-013.log","name":"QM-013","timestamp":"2026-10-12T18:25:15.683Z"}
+{"elapsed_seconds":2.041,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-013\\13-QM-013.log","name":"QM-013","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:15.684Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_ test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_forecast_outcomes.py::test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores
+1 failed, 2 warnings in 0.54s
+QM-013: failed (2.04s)
+== QM-014 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-014\\14-QM-014.log","name":"QM-014","pid":62636,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:15.738Z"}
+{"elapsed_seconds":2.018,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-014\\14-QM-014.log","name":"QM-014","timestamp":"2026-10-12T18:25:17.770Z"}
+{"elapsed_seconds":2.051,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-014\\14-QM-014.log","name":"QM-014","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:17.772Z"}
+FAILED after 0:02; exit code 1; last output:
+FFF
+================================== FAILURES ===================================
+___ test_pending_or_empty_paths_never_report_zero_performance[2-2-pending] ____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+___ test_pending_or_empty_paths_never_report_zero_performance[0-0-pending] ____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[2-2-pending]
+FAILED tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[0-0-pending]
+FAILED tests/test_forecast_outcomes.py::test_pending_or_empty_paths_never_report_zero_performance[30-0-unavailable]
+3 failed, 2 warnings in 0.58s
+QM-014: failed (2.05s)
+== QM-015 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-015\\15-QM-015.log","name":"QM-015","pid":62692,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:17.820Z"}
+{"elapsed_seconds":2.017,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-015\\15-QM-015.log","name":"QM-015","timestamp":"2026-10-12T18:25:19.846Z"}
+{"elapsed_seconds":2.043,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-015\\15-QM-015.log","name":"QM-015","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:19.847Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_ test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart
+1 failed, 2 warnings in 0.55s
+QM-015: failed (2.04s)
+== QM-016 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-016\\16-QM-016.log","name":"QM-016","pid":12592,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:19.905Z"}
+{"elapsed_seconds":2.015,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-016\\16-QM-016.log","name":"QM-016","timestamp":"2026-10-12T18:25:21.931Z"}
+{"elapsed_seconds":2.04,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-016\\16-QM-016.log","name":"QM-016","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:21.931Z"}
+FAILED after 0:02; exit code 1; last output:
+_ test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_ test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids] _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]
+FAILED tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]
+20 failed in 0.33s
+QM-016: failed (2.04s)
+== QM-017 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-017\\17-QM-017.log","name":"QM-017","pid":33172,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:21.956Z"}
+{"elapsed_seconds":2.009,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-017\\17-QM-017.log","name":"QM-017","timestamp":"2026-10-12T18:25:23.976Z"}
+{"elapsed_seconds":2.029,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-017\\17-QM-017.log","name":"QM-017","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:23.978Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+____ test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running _____
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_live_candle_revisions.py::test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running
+1 failed in 0.35s
+QM-017: failed (2.03s)
+== QM-018 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-018\\18-QM-018.log","name":"QM-018","pid":61772,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:24.033Z"}
+{"elapsed_seconds":2.016,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-018\\18-QM-018.log","name":"QM-018","timestamp":"2026-10-12T18:25:26.053Z"}
+{"elapsed_seconds":2.036,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-018\\18-QM-018.log","name":"QM-018","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:26.054Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_____ test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss ______
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_live_buffer_lookup.py::test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss
+1 failed in 0.18s
+QM-018: failed (2.04s)
+== QM-019 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-019\\19-QM-019.log","name":"QM-019","pid":42276,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:26.107Z"}
+{"elapsed_seconds":2.015,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-019\\19-QM-019.log","name":"QM-019","timestamp":"2026-10-12T18:25:28.130Z"}
+{"elapsed_seconds":2.037,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-019\\19-QM-019.log","name":"QM-019","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:28.131Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+_________ TestLatest.test_latest_uses_bounded_memory_for_a_large_lake _________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake
+1 failed in 0.17s
+QM-019: failed (2.04s)
+== QM-020 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-020\\20-QM-020.log","name":"QM-020","pid":29580,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:28.184Z"}
+{"elapsed_seconds":2.017,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-020\\20-QM-020.log","name":"QM-020","timestamp":"2026-10-12T18:25:30.215Z"}
+{"elapsed_seconds":2.049,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-020\\20-QM-020.log","name":"QM-020","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:30.217Z"}
+FAILED after 0:02; exit code 1; last output:
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+_________________ TestDispatch.test_permission_matrix_critic __________________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+___________ TestDispatch.test_permission_matrix_risk_and_portfolio ____________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+________ TestDispatch.test_forbidden_call_refuses_naming_role_and_tool ________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+___________________ TestDispatch.test_unknown_tool_refused ____________________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+___________________ TestDispatch.test_unknown_role_refused ____________________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+___________ TestDispatch.test_forbidden_call_never_touches_surface ____________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(5 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_ai_tools.py::TestDispatch::test_allowed_role_dispatch_calls_surface
+FAILED tests/test_ai_tools.py::TestDispatch::test_permission_matrix_analyst
+FAILED tests/test_ai_tools.py::TestDispatch::test_permission_matrix_critic - ...
+FAILED tests/test_ai_tools.py::TestDispatch::test_permission_matrix_risk_and_portfolio
+FAILED tests/test_ai_tools.py::TestDispatch::test_forbidden_call_refuses_naming_role_and_tool
+FAILED tests/test_ai_tools.py::TestDispatch::test_unknown_tool_refused - Asse...
+FAILED tests/test_ai_tools.py::TestDispatch::test_unknown_role_refused - Asse...
+FAILED tests/test_ai_tools.py::TestDispatch::test_forbidden_call_never_touches_surface
+8 failed in 0.21s
+QM-020: failed (2.05s)
+== QM-021 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-021\\21-QM-021.log","name":"QM-021","pid":43180,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:30.282Z"}
+{"elapsed_seconds":2.025,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-021\\21-QM-021.log","name":"QM-021","timestamp":"2026-10-12T18:25:32.305Z"}
+{"elapsed_seconds":2.047,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-021\\21-QM-021.log","name":"QM-021","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:32.306Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+________ TestDefaultSurfaces.test_retrieve_documents_renders_passages _________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_ai_tools.py::TestDefaultSurfaces::test_retrieve_documents_renders_passages
+1 failed in 0.17s
+QM-021: failed (2.05s)
+== QM-022 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-022\\22-QM-022.log","name":"QM-022","pid":56440,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:32.373Z"}
+{"elapsed_seconds":2.019,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-022\\22-QM-022.log","name":"QM-022","timestamp":"2026-10-12T18:25:34.393Z"}
+{"elapsed_seconds":2.038,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-022\\22-QM-022.log","name":"QM-022","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:34.394Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+__________________ test_disguised_loopback_origin_is_refused __________________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused
+1 failed in 0.56s
+QM-022: failed (2.04s)
+== QM-023 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-023\\23-QM-023.log","name":"QM-023","pid":52028,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:34.457Z"}
+{"elapsed_seconds":2.022,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-023\\23-QM-023.log","name":"QM-023","timestamp":"2026-10-12T18:25:36.476Z"}
+{"elapsed_seconds":2.04,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-023\\23-QM-023.log","name":"QM-023","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:36.477Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+______________ test_generic_pipeline_refuses_fabricated_citation ______________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation
+1 failed in 0.60s
+QM-023: failed (2.04s)
+== QM-024 ==
+{"event":"step_started","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-024\\24-QM-024.log","name":"QM-024","pid":50932,"timeout_seconds":120.0,"timestamp":"2026-10-12T18:25:36.518Z"}
+{"elapsed_seconds":2.015,"event":"step_failure_seen","log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-024\\24-QM-024.log","name":"QM-024","timestamp":"2026-10-12T18:25:38.538Z"}
+{"elapsed_seconds":2.034,"event":"step_finished","exit_code":1,"log_path":"C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\output\\eval-160\\known-bad\\logs\\QM-024\\24-QM-024.log","name":"QM-024","slow_tests":[],"timed_out":false,"timestamp":"2026-10-12T18:25:38.539Z"}
+FAILED after 0:02; exit code 1; last output:
+F
+================================== FAILURES ===================================
+________________ test_old_source_quote_never_fills_paper_order ________________
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order
+1 failed in 0.59s
+QM-024: failed (2.04s)

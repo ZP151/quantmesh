@@ -657,6 +657,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research/job-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Options */
+        get: operations["api_research_jobs_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit */
+        post: operations["api_research_jobs_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["api_research_jobs_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/jobs/{job_id}/artifacts/{artifact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Artifact */
+        get: operations["api_research_jobs_artifact"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["api_research_jobs_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/risk": {
         parameters: {
             query?: never;
@@ -1382,12 +1467,67 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AnalysisRecord */
+        AnalysisRecord: {
+            /** Citations */
+            citations?: components["schemas"]["ArtifactRef"][];
+            /** Error Code */
+            error_code?: ("worker_failed" | "timeout" | "budget_exhausted" | "artifact_invalid" | "dataset_rejected" | "analysis_failed" | "model_unavailable" | "unknown_effect" | "cancelled") | null;
+            /** Estimated Price Version */
+            estimated_price_version?: string | null;
+            /** Job Id */
+            job_id: string;
+            /** Model */
+            model?: string | null;
+            output_artifact?: components["schemas"]["ArtifactRef"] | null;
+            /** Output Digest */
+            output_digest?: string | null;
+            /** Prompt Digest */
+            prompt_digest?: string | null;
+            /** Provider */
+            provider?: string | null;
+            /** Report Digest */
+            report_digest: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "succeeded" | "failed" | "unavailable" | "cancelled";
+            usage?: components["schemas"]["Usage"];
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "support" | "challenge" | "inconclusive" | "unavailable";
+        };
         /**
          * ArtifactLayer
          * @description Stages in the raw-to-feature trusted-data lineage.
          * @enum {string}
          */
         ArtifactLayer: "raw" | "normalized" | "adjusted" | "feature";
+        /** ArtifactRef */
+        ArtifactRef: {
+            /** Artifact Id */
+            artifact_id: string;
+            /** Byte Size */
+            byte_size: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "report" | "equity_curve" | "trades" | "analysis";
+            /** Object Key */
+            object_key: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Sha256 */
+            sha256: string;
+        };
         /** Body_kill_switch_post_kill_switch_post */
         Body_kill_switch_post_kill_switch_post: {
             /** Action */
@@ -1643,6 +1783,32 @@ export interface components {
          * @enum {string}
          */
         DataKind: "bars" | "quotes" | "books" | "trades" | "adjustment-factors" | "splits" | "dividends";
+        /** DatasetJobOption */
+        DatasetJobOption: {
+            dataset: components["schemas"]["DatasetRef"];
+            /** Interval */
+            interval: string;
+            /** Minimum Available Bars */
+            minimum_available_bars: number;
+            /** Universe */
+            universe: components["schemas"]["UniverseMember"][];
+        };
+        /** DatasetRef */
+        DatasetRef: {
+            /** Dataset Id */
+            dataset_id: string;
+            /** Export Digest */
+            export_digest: string;
+            /** Manifest Digest */
+            manifest_digest: string;
+            /**
+             * Permission Class
+             * @enum {string}
+             */
+            permission_class: "fixture" | "local_research" | "remote_export";
+            /** Revision */
+            revision: number;
+        };
         /**
          * DecisionAttentionState
          * @enum {string}
@@ -2718,6 +2884,88 @@ export interface components {
             /** Level */
             level: number;
         };
+        /** JobCosts */
+        JobCosts: {
+            /** Fee Bps */
+            fee_bps: number;
+            /** Half Spread Bps */
+            half_spread_bps: number;
+            /** Slippage Bps */
+            slippage_bps: number;
+        };
+        /** JobRecord */
+        JobRecord: {
+            analysis?: components["schemas"]["AnalysisRecord"] | null;
+            /**
+             * Analysis State
+             * @default not_requested
+             * @enum {string}
+             */
+            analysis_state: "not_requested" | "pending" | "running" | "succeeded" | "failed" | "unavailable" | "cancelled";
+            /** Artifacts */
+            artifacts?: components["schemas"]["ArtifactRef"][];
+            /**
+             * Attempt
+             * @default 0
+             */
+            attempt: number;
+            /**
+             * Cancel Requested
+             * @default false
+             */
+            cancel_requested: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Error Code */
+            error_code?: ("worker_failed" | "timeout" | "budget_exhausted" | "artifact_invalid" | "dataset_rejected" | "analysis_failed" | "model_unavailable" | "unknown_effect" | "cancelled") | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Implementation Digest */
+            implementation_digest: string;
+            /** Job Id */
+            job_id: string;
+            /** Lease Expires At */
+            lease_expires_at?: string | null;
+            /** Lease Owner */
+            lease_owner?: string | null;
+            /** Operator Id */
+            operator_id: string;
+            request: components["schemas"]["ResearchJobRequest"];
+            /** Request Digest */
+            request_digest: string;
+            /**
+             * State
+             * @default queued
+             * @enum {string}
+             */
+            state: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            usage?: components["schemas"]["Usage"];
+        };
+        /** JobUniverseMember */
+        JobUniverseMember: {
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"];
+        };
+        /** JobWindows */
+        JobWindows: {
+            /** Step Bars */
+            step_bars: number;
+            /** Test Bars */
+            test_bars: number;
+            /** Train Bars */
+            train_bars: number;
+        };
         /**
          * LiveTailLineage
          * @description Positive, point-in-time evidence attached only to a live-tail bar.
@@ -3208,11 +3456,89 @@ export interface components {
          * @enum {string}
          */
         QualityStatus: "pass" | "fail" | "not-due" | "unavailable";
+        /** ResearchJobOptions */
+        ResearchJobOptions: {
+            /** Datasets */
+            datasets: components["schemas"]["DatasetJobOption"][];
+            /** Reason */
+            reason?: ("no_qualified_inputs" | "service_unavailable") | null;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "configured" | "unavailable";
+            /** Strategies */
+            strategies: components["schemas"]["StrategySpec"][];
+        };
+        /** ResearchJobRequest */
+        ResearchJobRequest: {
+            /**
+             * Analysis Requested
+             * @default false
+             */
+            analysis_requested: boolean;
+            budget?: components["schemas"]["RunBudget"];
+            costs: components["schemas"]["JobCosts"];
+            dataset: components["schemas"]["DatasetRef"];
+            /** Interval */
+            interval: string;
+            /** Parameters */
+            parameters?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Strategy Id */
+            strategy_id: string;
+            /** Strategy Version */
+            strategy_version: string;
+            /** Universe */
+            universe: components["schemas"]["JobUniverseMember"][];
+            window_spec: components["schemas"]["JobWindows"];
+        };
         /**
          * ReviewClassification
          * @enum {string}
          */
         ReviewClassification: "supported" | "challenged" | "mixed" | "inconclusive";
+        /** RunBudget */
+        RunBudget: {
+            /**
+             * Cpu Limit
+             * @default 1
+             */
+            cpu_limit: number;
+            /**
+             * Max Estimated Model Usd
+             * @default 1
+             */
+            max_estimated_model_usd: number;
+            /**
+             * Max Model Calls
+             * @default 12
+             */
+            max_model_calls: number;
+            /**
+             * Memory Mib
+             * @default 2048
+             */
+            memory_mib: number;
+            /**
+             * Timeout Seconds
+             * @default 900
+             */
+            timeout_seconds: number;
+        };
         /**
          * ScenarioLabSnapshot
          * @description Frozen chart evidence and selected-horizon qualification, never order authority.
@@ -3275,6 +3601,43 @@ export interface components {
              */
             threshold_state: "observed" | "not_observed" | "unavailable";
         };
+        /** SessionFreshness */
+        SessionFreshness: {
+            /** Calendar Version */
+            calendar_version?: string | null;
+            /**
+             * Data State
+             * @enum {string}
+             */
+            data_state: "fresh" | "latest_session" | "delayed" | "missing" | "unknown";
+            /** Evaluated At */
+            evaluated_at?: string | null;
+            /** Expected Last Bar End */
+            expected_last_bar_end?: string | null;
+            /** Last Source At */
+            last_source_at: string | null;
+            /**
+             * Market State
+             * @enum {string}
+             */
+            market_state: "open" | "closed" | "unknown";
+            /** Next Open At */
+            next_open_at?: string | null;
+            /**
+             * Opening Grace Seconds
+             * @default 120
+             */
+            opening_grace_seconds: number;
+            /**
+             * Policy Version
+             * @default quantmesh:session-freshness:1
+             */
+            policy_version: string;
+            /** Provider Delay Seconds */
+            provider_delay_seconds?: number | null;
+            /** Reason */
+            reason: string;
+        };
         /**
          * SessionPolicy
          * @description Trading-session boundaries admitted by a calendar request.
@@ -3330,10 +3693,62 @@ export interface components {
              */
             reference_at: string;
         };
+        /** StrategySpec */
+        StrategySpec: {
+            /** Cost Policy Id */
+            cost_policy_id: string;
+            /** Dataset Requirements */
+            dataset_requirements: {
+                [key: string]: unknown;
+            };
+            /** Family */
+            family: string;
+            /** Implementation Digest */
+            implementation_digest: string;
+            /** Parameters Schema */
+            parameters_schema: {
+                [key: string]: unknown;
+            };
+            /** Strategy Id */
+            strategy_id: string;
+            /** Supported Intervals */
+            supported_intervals: string[];
+            /** Supported Markets */
+            supported_markets: string[];
+            /** Version */
+            version: string;
+        };
         /** UnavailableFacts */
         UnavailableFacts: {
             /** Code */
             code: string;
+        };
+        /**
+         * UniverseMember
+         * @description One symbol of the report's universe, pinned by venue and symbol.
+         */
+        UniverseMember: {
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"];
+        };
+        /**
+         * Usage
+         * @description None is unknown/unmeasured, including when no worker has run.
+         */
+        Usage: {
+            /** Elapsed Seconds */
+            elapsed_seconds?: number | null;
+            /** Estimated Model Usd */
+            estimated_model_usd?: number | null;
+            /** Input Tokens */
+            input_tokens?: number | null;
+            /** Model Calls */
+            model_calls?: number | null;
+            /** Output Tokens */
+            output_tokens?: number | null;
+            /** Peak Memory Mib */
+            peak_memory_mib?: number | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -3448,6 +3863,7 @@ export interface components {
             sequence?: number | null;
             /** Sequence Gap */
             sequence_gap?: boolean | null;
+            session_freshness?: components["schemas"]["SessionFreshness"] | null;
             /** Source */
             source?: string | null;
             /**
@@ -4646,6 +5062,155 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    api_research_jobs_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchJobOptions"];
+                };
+            };
+        };
+    };
+    api_research_jobs_submit: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchJobRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_research_jobs_status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_research_jobs_artifact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+                artifact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    api_research_jobs_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

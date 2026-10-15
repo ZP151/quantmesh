@@ -1,0 +1,10 @@
+{
+  "owned_root": "/var/tmp/quantmesh-service-ci-check-akt9iaqr",
+  "interpreter": "/var/tmp/quantmesh-bootstrap-krfg8kx6/venv/bin/python",
+  "qualified_81_package_environment_reused_read_only": true,
+  "existing_audited_gate_only_pip_path": "/var/tmp/quantmesh-bootstrap-krfg8kx6/build-tools",
+  "new_package_install": false,
+  "postgres_fixture": false,
+  "model_api_call": false,
+  "scope": "LOCAL_OFFLINE_SCRIPTED_SERVICE_GATE"
+}

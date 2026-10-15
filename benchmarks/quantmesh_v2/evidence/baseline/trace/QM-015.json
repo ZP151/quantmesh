@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0019658999517560005,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        195,
+        "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 1.4080211999826133,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        195,
+        "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00022879999596625566,
+      "location": [
+        "tests\\test_forecast_outcomes.py",
+        195,
+        "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_forecast_outcomes.py::test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

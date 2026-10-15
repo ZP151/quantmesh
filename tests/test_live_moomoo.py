@@ -236,9 +236,7 @@ def test_stale_venue_clock_emits_nothing() -> None:
     stale = _StubOpenD(stale_clock=True)
     now = datetime.now(UTC)
     assert (
-        supervisor.dispatch(
-            {"kind": "stock_quote", "payload": stale.stock_quote(["US.AAPL"])}, now
-        )
+        supervisor.dispatch({"kind": "stock_quote", "payload": stale.stock_quote(["US.AAPL"])}, now)
         == []
     )
     assert (
@@ -322,6 +320,38 @@ def test_poll_failure_becomes_a_poll_error_frame() -> None:
     asyncio.run(run())
 
 
+@pytest.mark.parametrize("method", ["stock_quote", "rt_ticker", "current_kline"])
+def test_unexpected_poll_failure_reaches_supervisor_without_private_details(method) -> None:
+    """An SDK cleanup failure must disconnect the wire instead of orphaning recv."""
+    client = _StubOpenD()
+
+    def fail(*args, **kwargs):
+        raise RuntimeError("private-sdk-detail-that-must-not-be-surfaced")
+
+    setattr(client, method, fail)
+    transport = MoomooVenueTransport(client, candle_num=1)
+
+    async def run() -> None:
+        transport.connect()
+        transport.send({"symbol": "AAPL", "code": "US.AAPL"})
+        task = transport._task
+        try:
+            while True:
+                frame = await asyncio.wait_for(transport.recv(), timeout=1)
+                if frame["kind"] == "poll_error":
+                    assert frame["message"] == "unexpected OpenD poll failure"
+                    assert "private-sdk-detail" not in str(frame)
+                    supervisor = MoomooVenueSupervisor(transport)
+                    with pytest.raises(MoomooProtocolError):
+                        supervisor.dispatch(frame, datetime.now(UTC))
+                    break
+        finally:
+            transport.close()
+            await asyncio.gather(task, return_exceptions=True)
+
+    asyncio.run(run())
+
+
 # -- the live-stack drills (feed + supervisor on one daemon loop) --------------
 
 
@@ -331,14 +361,18 @@ def _start_pump(feed: LiveFeed) -> tuple[threading.Thread, asyncio.Task[None]]:
     holder: dict[str, object] = {}
 
     def runner() -> None:
-        asyncio.set_event_loop(loop)
-        task = loop.create_task(feed.run())
-        holder["task"] = task
-        started.set()
-        try:
-            loop.run_until_complete(task)
-        except asyncio.CancelledError:
-            pass
+        async def pump() -> None:
+            holder["task"] = asyncio.current_task()
+            started.set()
+            await feed.run()
+
+        # The fixture owns the loop and its to_thread executor, including
+        # cancellation cleanup; joining only the pump leaks executor threads.
+        with asyncio.Runner(loop_factory=lambda: loop) as owned_runner:
+            try:
+                owned_runner.run(pump())
+            except asyncio.CancelledError:
+                pass
 
     thread = threading.Thread(target=runner, daemon=True)
     thread.start()
@@ -351,6 +385,30 @@ def _stop_pump(thread, loop, run_task: asyncio.Task[None], transport) -> None:
     loop.call_soon_threadsafe(run_task.cancel)
     loop.call_soon_threadsafe(transport.close)  # cancels the poll task
     thread.join(timeout=5)
+    assert not thread.is_alive(), "owned pump did not finish shutdown"
+    assert loop.is_closed(), "owned pump loop was not closed"
+
+
+def test_pump_shutdown_closes_owned_loop_and_executor() -> None:
+    feed = LiveFeed(lag=timedelta(seconds=2), stale=timedelta(seconds=4))
+    transport = MoomooVenueTransport(_StubOpenD(), poll_interval=timedelta(seconds=0.1))
+    supervisor = MoomooVenueSupervisor(transport)
+    supervisor.subscribe(["AAPL"])
+    feed.attach(supervisor)
+    thread, run_task = _start_pump(feed)
+    loop = run_task.get_loop()
+    workers = ()
+    try:
+        _wait_for(lambda: _state(feed, "AAPL").get("label") == "real")
+        executor = loop._default_executor
+        assert executor is not None
+        workers = tuple(executor._threads)
+        assert workers and all(worker.is_alive() for worker in workers)
+    finally:
+        _stop_pump(thread, loop, run_task, transport)
+    assert not thread.is_alive()
+    assert loop.is_closed()
+    assert all(not worker.is_alive() for worker in workers)
 
 
 def _wait_for(condition, timeout: float = 10.0) -> None:
@@ -396,12 +454,14 @@ def test_live_stack_streams_real_labels_from_a_live_daemon() -> None:
         # the newest trade is the SELL (seq 2) — the BUY (seq 1) was
         # replaced by the kinds-cache, and the label is real
         _wait_for(
-            lambda: _state(feed, "AAPL")
-            .get("kinds", {})
-            .get("trade", {})
-            .get("payload", {})
-            .get("side")
-            == "sell"
+            lambda: (
+                _state(feed, "AAPL")
+                .get("kinds", {})
+                .get("trade", {})
+                .get("payload", {})
+                .get("side")
+                == "sell"
+            )
         )
         kinds = _state(feed, "AAPL")["kinds"]
         assert kinds["trade"]["sequence"] == 2
@@ -477,10 +537,7 @@ def test_live_stack_honest_unavailable_when_opend_is_down() -> None:
     try:
         # wait for the disconnect STATUS updates themselves (the
         # statuses() defaults alone are not the surface)
-        _wait_for(
-            lambda: set(feed.latest_state()["instruments"])
-            == {"moomoo:AAPL", "moomoo:NVDA"}
-        )
+        _wait_for(lambda: set(feed.latest_state()["instruments"]) == {"moomoo:AAPL", "moomoo:NVDA"})
         assert _source_state(feed, "AAPL") == "unavailable"
         assert _source_state(feed, "NVDA") == "unavailable"
         assert _moomoo_venue(feed).get("connected") is False

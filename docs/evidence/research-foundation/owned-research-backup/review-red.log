@@ -1,0 +1,119 @@
+................................FFFFFFF                                  [100%]
+=================================== FAILURES ===================================
+________ test_infrastructure_failure_is_not_a_negative_witness[error0] _________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/review-red-temp/test_infrastructure_failure_is0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71a42f94aa20>
+error = ValueError('pin')
+
+    @pytest.mark.parametrize("error", [ValueError("pin"), OSError("file"), TimeoutError("wall")])
+    def test_infrastructure_failure_is_not_a_negative_witness(tmp_path, monkeypatch, error):
+        source = SimpleNamespace()
+        receipt = {"negative_witnesses": {}}
+        monkeypatch.setattr(backup, "current_state", lambda source: {})
+        def action():
+            raise error
+>       with pytest.raises(type(error)):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_research_backup_qualification.py:253: Failed
+________ test_infrastructure_failure_is_not_a_negative_witness[error1] _________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/review-red-temp/test_infrastructure_failure_is1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71a42f94baa0>
+error = OSError('file')
+
+    @pytest.mark.parametrize("error", [ValueError("pin"), OSError("file"), TimeoutError("wall")])
+    def test_infrastructure_failure_is_not_a_negative_witness(tmp_path, monkeypatch, error):
+        source = SimpleNamespace()
+        receipt = {"negative_witnesses": {}}
+        monkeypatch.setattr(backup, "current_state", lambda source: {})
+        def action():
+            raise error
+>       with pytest.raises(type(error)):
+E       Failed: DID NOT RAISE OSError
+
+tests/test_research_backup_qualification.py:253: Failed
+________ test_infrastructure_failure_is_not_a_negative_witness[error2] _________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/review-red-temp/test_infrastructure_failure_is2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71a42f96f980>
+error = TimeoutError('wall')
+
+    @pytest.mark.parametrize("error", [ValueError("pin"), OSError("file"), TimeoutError("wall")])
+    def test_infrastructure_failure_is_not_a_negative_witness(tmp_path, monkeypatch, error):
+        source = SimpleNamespace()
+        receipt = {"negative_witnesses": {}}
+        monkeypatch.setattr(backup, "current_state", lambda source: {})
+        def action():
+            raise error
+>       with pytest.raises(type(error)):
+E       Failed: DID NOT RAISE TimeoutError
+
+tests/test_research_backup_qualification.py:253: Failed
+____ test_expected_crypto_refusal_requires_exit_and_matching_tool_evidence _____
+
+    def test_expected_crypto_refusal_requires_exit_and_matching_tool_evidence():
+        with pytest.raises(ValueError):
+>           backup.crypto_refusal("wrong_key", 12, b"unrelated error")
+            ^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'tools.qualify_research_backup' has no attribute 'crypto_refusal'
+
+tests/test_research_backup_qualification.py:260: AttributeError
+______________ test_whole_fixture_deadline_covers_noncommand_work ______________
+
+    def test_whole_fixture_deadline_covers_noncommand_work():
+        import sys
+        import time
+        if sys.platform != "linux":
+            pytest.skip("native owned process timer")
+>       guard = backup.FixtureDeadline(0.02)
+                ^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'tools.qualify_research_backup' has no attribute 'FixtureDeadline'
+
+tests/test_research_backup_qualification.py:272: AttributeError
+______ test_server_log_is_drained_but_capped_without_limiting_data_files _______
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/review-red-temp/test_server_log_is_drained_but0')
+
+    def test_server_log_is_drained_but_capped_without_limiting_data_files(tmp_path):
+        import subprocess
+        import sys
+        if sys.platform != "linux":
+            pytest.skip("native owned log pipe")
+        process = subprocess.Popen([sys.executable, "-c", "import os; os.write(1,b'x'*3000000)"],
+                                   stdout=subprocess.PIPE)
+>       collector = backup.ServerLog(process.stdout, tmp_path / "server.log")
+                    ^^^^^^^^^^^^^^^^
+E       AttributeError: module 'tools.qualify_research_backup' has no attribute 'ServerLog'
+
+tests/test_research_backup_qualification.py:287: AttributeError
+_______________ test_refused_stop_still_removes_generated_pgpass _______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/review-red-temp/test_refused_stop_still_remove0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x71a42f96e1b0>
+
+    def test_refused_stop_still_removes_generated_pgpass(tmp_path, monkeypatch):
+        backup.write_private(tmp_path / "pgpass", b"private-marker")
+        process = SimpleNamespace(pid=123456, poll=lambda: None,
+                                  send_signal=lambda _: pytest.fail("unverified stop"))
+        cluster = backup.Cluster(SimpleNamespace(root=tmp_path), tmp_path, tmp_path / "data", "fixture",
+                                 "secret", "nonce", 54321, process, "old-ticks")
+        monkeypatch.setattr(backup, "process_ticks", lambda pid: "different-ticks")
+        with pytest.raises(ValueError):
+            cluster.stop()
+>       assert not (tmp_path / "pgpass").exists()
+E       AssertionError: assert not True
+E        +  where True = exists()
+E        +    where exists = (PosixPath('/var/tmp/quantmesh-backup-gnel0hd8/review-red-temp/test_refused_stop_still_remove0') / 'pgpass').exists
+
+tests/test_research_backup_qualification.py:303: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_research_backup_qualification.py::test_infrastructure_failure_is_not_a_negative_witness[error0]
+FAILED tests/test_research_backup_qualification.py::test_infrastructure_failure_is_not_a_negative_witness[error1]
+FAILED tests/test_research_backup_qualification.py::test_infrastructure_failure_is_not_a_negative_witness[error2]
+FAILED tests/test_research_backup_qualification.py::test_expected_crypto_refusal_requires_exit_and_matching_tool_evidence
+FAILED tests/test_research_backup_qualification.py::test_whole_fixture_deadline_covers_noncommand_work
+FAILED tests/test_research_backup_qualification.py::test_server_log_is_drained_but_capped_without_limiting_data_files
+FAILED tests/test_research_backup_qualification.py::test_refused_stop_still_removes_generated_pgpass
+7 failed, 32 passed in 2.21s

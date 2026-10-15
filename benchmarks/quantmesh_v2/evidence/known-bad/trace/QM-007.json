@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002338099991902709,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        200,
+        "test_confirm_requires_exact_operator_token_then_crosses_quote_fence"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.400001727044582e-05,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        200,
+        "test_confirm_requires_exact_operator_token_then_crosses_quote_fence"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013780000153928995,
+      "location": [
+        "tests\\test_paper_proposals.py",
+        200,
+        "test_confirm_requires_exact_operator_token_then_crosses_quote_fence"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_paper_proposals.py::test_confirm_requires_exact_operator_token_then_crosses_quote_fence"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

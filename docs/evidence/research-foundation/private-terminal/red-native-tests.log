@@ -1,0 +1,667 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                          [100%]
+=================================== FAILURES ===================================
+________________ test_default_preflight_has_no_resource_effect _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x706bb07c1340>
+capsys = <_pytest.capture.CaptureFixture object at 0x706bb07c1be0>
+
+    def test_default_preflight_has_no_resource_effect(monkeypatch, capsys):
+        def forbidden():
+            pytest.fail("default preflight created native resources")
+    
+        monkeypatch.setattr(terminal, "run_owned_fixture", forbidden)
+>       assert terminal.main([]) == 2
+               ^^^^^^^^^^^^^^^^^
+
+tests/test_opend_private_terminal.py:40: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+argv = []
+
+    def main(argv=None):
+>       raise NotImplementedError("no-effect preflight not implemented")
+E       NotImplementedError: no-effect preflight not implemented
+
+tools/qualify_opend_private_terminal.py:19: NotImplementedError
+__________________ test_cli_rejects_arbitrary_targets[argv0] ___________________
+
+argv = ['--command', 'true']
+
+    @pytest.mark.parametrize("argv", [["--command", "true"], ["--tty", "/dev/tty"], ["--root", "/tmp"]])
+    def test_cli_rejects_arbitrary_targets(argv):
+        with pytest.raises(SystemExit) as exc:
+>           terminal.main(argv)
+
+tests/test_opend_private_terminal.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+argv = ['--command', 'true']
+
+    def main(argv=None):
+>       raise NotImplementedError("no-effect preflight not implemented")
+E       NotImplementedError: no-effect preflight not implemented
+
+tools/qualify_opend_private_terminal.py:19: NotImplementedError
+__________________ test_cli_rejects_arbitrary_targets[argv1] ___________________
+
+argv = ['--tty', '/dev/tty']
+
+    @pytest.mark.parametrize("argv", [["--command", "true"], ["--tty", "/dev/tty"], ["--root", "/tmp"]])
+    def test_cli_rejects_arbitrary_targets(argv):
+        with pytest.raises(SystemExit) as exc:
+>           terminal.main(argv)
+
+tests/test_opend_private_terminal.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+argv = ['--tty', '/dev/tty']
+
+    def main(argv=None):
+>       raise NotImplementedError("no-effect preflight not implemented")
+E       NotImplementedError: no-effect preflight not implemented
+
+tools/qualify_opend_private_terminal.py:19: NotImplementedError
+__________________ test_cli_rejects_arbitrary_targets[argv2] ___________________
+
+argv = ['--root', '/tmp']
+
+    @pytest.mark.parametrize("argv", [["--command", "true"], ["--tty", "/dev/tty"], ["--root", "/tmp"]])
+    def test_cli_rejects_arbitrary_targets(argv):
+        with pytest.raises(SystemExit) as exc:
+>           terminal.main(argv)
+
+tests/test_opend_private_terminal.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+argv = ['--root', '/tmp']
+
+    def main(argv=None):
+>       raise NotImplementedError("no-effect preflight not implemented")
+E       NotImplementedError: no-effect preflight not implemented
+
+tools/qualify_opend_private_terminal.py:19: NotImplementedError
+_______________ test_invalid_uid_refuses_before_inspection[True] _______________
+
+uid = True
+
+    @NATIVE
+    @pytest.mark.parametrize("uid", [True, False, -1, 1.0, "1000", None])
+    def test_invalid_uid_refuses_before_inspection(uid):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_uid"):
+>           terminal.inspect_private_terminal(0, 1, 2, expected_uid=uid)
+
+tests/test_opend_private_terminal.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 0, stdout_fd = 1, stderr_fd = 2, expected_uid = True
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________ test_invalid_uid_refuses_before_inspection[False] _______________
+
+uid = False
+
+    @NATIVE
+    @pytest.mark.parametrize("uid", [True, False, -1, 1.0, "1000", None])
+    def test_invalid_uid_refuses_before_inspection(uid):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_uid"):
+>           terminal.inspect_private_terminal(0, 1, 2, expected_uid=uid)
+
+tests/test_opend_private_terminal.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 0, stdout_fd = 1, stderr_fd = 2, expected_uid = False
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+________________ test_invalid_uid_refuses_before_inspection[-1] ________________
+
+uid = -1
+
+    @NATIVE
+    @pytest.mark.parametrize("uid", [True, False, -1, 1.0, "1000", None])
+    def test_invalid_uid_refuses_before_inspection(uid):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_uid"):
+>           terminal.inspect_private_terminal(0, 1, 2, expected_uid=uid)
+
+tests/test_opend_private_terminal.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 0, stdout_fd = 1, stderr_fd = 2, expected_uid = -1
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_______________ test_invalid_uid_refuses_before_inspection[1.0] ________________
+
+uid = 1.0
+
+    @NATIVE
+    @pytest.mark.parametrize("uid", [True, False, -1, 1.0, "1000", None])
+    def test_invalid_uid_refuses_before_inspection(uid):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_uid"):
+>           terminal.inspect_private_terminal(0, 1, 2, expected_uid=uid)
+
+tests/test_opend_private_terminal.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 0, stdout_fd = 1, stderr_fd = 2, expected_uid = 1.0
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_______________ test_invalid_uid_refuses_before_inspection[1000] _______________
+
+uid = '1000'
+
+    @NATIVE
+    @pytest.mark.parametrize("uid", [True, False, -1, 1.0, "1000", None])
+    def test_invalid_uid_refuses_before_inspection(uid):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_uid"):
+>           terminal.inspect_private_terminal(0, 1, 2, expected_uid=uid)
+
+tests/test_opend_private_terminal.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 0, stdout_fd = 1, stderr_fd = 2, expected_uid = '1000'
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_______________ test_invalid_uid_refuses_before_inspection[None] _______________
+
+uid = None
+
+    @NATIVE
+    @pytest.mark.parametrize("uid", [True, False, -1, 1.0, "1000", None])
+    def test_invalid_uid_refuses_before_inspection(uid):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_uid"):
+>           terminal.inspect_private_terminal(0, 1, 2, expected_uid=uid)
+
+tests/test_opend_private_terminal.py:58: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 0, stdout_fd = 1, stderr_fd = 2, expected_uid = None
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+____________________ test_invalid_descriptor_refuses[True] _____________________
+
+fd = True
+
+    @NATIVE
+    @pytest.mark.parametrize("fd", [True, -1, 1.0, "0", None, 999999])
+    def test_invalid_descriptor_refuses(fd):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_descriptor"):
+>           terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = True, stdout_fd = True, stderr_fd = True, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_____________________ test_invalid_descriptor_refuses[-1] ______________________
+
+fd = -1
+
+    @NATIVE
+    @pytest.mark.parametrize("fd", [True, -1, 1.0, "0", None, 999999])
+    def test_invalid_descriptor_refuses(fd):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_descriptor"):
+>           terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = -1, stdout_fd = -1, stderr_fd = -1, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_____________________ test_invalid_descriptor_refuses[1.0] _____________________
+
+fd = 1.0
+
+    @NATIVE
+    @pytest.mark.parametrize("fd", [True, -1, 1.0, "0", None, 999999])
+    def test_invalid_descriptor_refuses(fd):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_descriptor"):
+>           terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 1.0, stdout_fd = 1.0, stderr_fd = 1.0, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________________ test_invalid_descriptor_refuses[0] ______________________
+
+fd = '0'
+
+    @NATIVE
+    @pytest.mark.parametrize("fd", [True, -1, 1.0, "0", None, 999999])
+    def test_invalid_descriptor_refuses(fd):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_descriptor"):
+>           terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = '0', stdout_fd = '0', stderr_fd = '0', expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+____________________ test_invalid_descriptor_refuses[None] _____________________
+
+fd = None
+
+    @NATIVE
+    @pytest.mark.parametrize("fd", [True, -1, 1.0, "0", None, 999999])
+    def test_invalid_descriptor_refuses(fd):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_descriptor"):
+>           terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = None, stdout_fd = None, stderr_fd = None, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+___________________ test_invalid_descriptor_refuses[999999] ____________________
+
+fd = 999999
+
+    @NATIVE
+    @pytest.mark.parametrize("fd", [True, -1, 1.0, "0", None, 999999])
+    def test_invalid_descriptor_refuses(fd):
+        with pytest.raises(terminal.TerminalQualificationError, match="invalid_descriptor"):
+>           terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 999999, stdout_fd = 999999, stderr_fd = 999999, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+________ test_admission_returns_only_kernel_metadata_and_does_not_read _________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x706bb07c0860>
+
+    @NATIVE
+    def test_admission_returns_only_kernel_metadata_and_does_not_read(monkeypatch):
+        with private_pty() as (_, slave):
+            def forbidden(*args):
+                pytest.fail("admission read terminal bytes")
+    
+            monkeypatch.setattr(os, "read", forbidden)
+>           proof = terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_opend_private_terminal.py:75: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________________ test_each_echo_flag_refuses[ECHO] _______________________
+
+flag = 'ECHO'
+
+    @NATIVE
+    @pytest.mark.parametrize("flag", ["ECHO", "ECHONL"])
+    def test_each_echo_flag_refuses(flag):
+        import termios
+    
+        with private_pty() as (_, slave):
+            attrs = termios.tcgetattr(slave)
+            attrs[3] |= getattr(termios, flag)
+            termios.tcsetattr(slave, termios.TCSANOW, attrs)
+            with pytest.raises(terminal.TerminalQualificationError, match="echo_enabled"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_____________________ test_each_echo_flag_refuses[ECHONL] ______________________
+
+flag = 'ECHONL'
+
+    @NATIVE
+    @pytest.mark.parametrize("flag", ["ECHO", "ECHONL"])
+    def test_each_echo_flag_refuses(flag):
+        import termios
+    
+        with private_pty() as (_, slave):
+            attrs = termios.tcgetattr(slave)
+            attrs[3] |= getattr(termios, flag)
+            termios.tcsetattr(slave, termios.TCSANOW, attrs)
+            with pytest.raises(terminal.TerminalQualificationError, match="echo_enabled"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________________ test_nonprivate_mode_refuses[400] _______________________
+
+mode = 400
+
+    @NATIVE
+    @pytest.mark.parametrize("mode", [0o620, 0o640, 0o604, 0o666])
+    def test_nonprivate_mode_refuses(mode):
+        with private_pty() as (_, slave):
+            os.fchmod(slave, mode)
+            with pytest.raises(terminal.TerminalQualificationError, match="nonprivate_mode"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________________ test_nonprivate_mode_refuses[416] _______________________
+
+mode = 416
+
+    @NATIVE
+    @pytest.mark.parametrize("mode", [0o620, 0o640, 0o604, 0o666])
+    def test_nonprivate_mode_refuses(mode):
+        with private_pty() as (_, slave):
+            os.fchmod(slave, mode)
+            with pytest.raises(terminal.TerminalQualificationError, match="nonprivate_mode"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________________ test_nonprivate_mode_refuses[388] _______________________
+
+mode = 388
+
+    @NATIVE
+    @pytest.mark.parametrize("mode", [0o620, 0o640, 0o604, 0o666])
+    def test_nonprivate_mode_refuses(mode):
+        with private_pty() as (_, slave):
+            os.fchmod(slave, mode)
+            with pytest.raises(terminal.TerminalQualificationError, match="nonprivate_mode"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+______________________ test_nonprivate_mode_refuses[438] _______________________
+
+mode = 438
+
+    @NATIVE
+    @pytest.mark.parametrize("mode", [0o620, 0o640, 0o604, 0o666])
+    def test_nonprivate_mode_refuses(mode):
+        with private_pty() as (_, slave):
+            os.fchmod(slave, mode)
+            with pytest.raises(terminal.TerminalQualificationError, match="nonprivate_mode"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:104: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+___________________________ test_wrong_owner_refuses ___________________________
+
+    @NATIVE
+    def test_wrong_owner_refuses():
+        with private_pty() as (_, slave):
+            with pytest.raises(terminal.TerminalQualificationError, match="wrong_owner"):
+>               terminal.inspect_private_terminal(slave, slave, slave, expected_uid=os.getuid() + 1)
+
+tests/test_opend_private_terminal.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1001
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+____________ test_regular_file_and_non_tty_character_device_refuse _____________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-terminal-check-vh59tp7k/pytest-temp/test_regular_file_and_non_tty_0')
+
+    @NATIVE
+    def test_regular_file_and_non_tty_character_device_refuse(tmp_path):
+        with (tmp_path / "ordinary").open("w+") as handle, open(os.devnull) as null:
+            assert stat.S_ISCHR(os.fstat(null.fileno()).st_mode)
+            for fd in [handle.fileno(), null.fileno()]:
+                with pytest.raises(terminal.TerminalQualificationError, match="not_terminal"):
+>                   terminal.inspect_private_terminal(fd, fd, fd, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 11, stdout_fd = 11, stderr_fd = 11, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_______________________ test_different_terminals_refuse ________________________
+
+    @NATIVE
+    def test_different_terminals_refuse():
+        with private_pty() as (_, first), private_pty() as (_, second):
+            with pytest.raises(terminal.TerminalQualificationError, match="terminal_mismatch"):
+>               terminal.inspect_private_terminal(first, first, second, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 14, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+__________________ test_replaced_fd_during_inspection_refuses __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x706bb07d9df0>
+
+    @NATIVE
+    def test_replaced_fd_during_inspection_refuses(monkeypatch):
+        with private_pty() as (_, first), private_pty() as (_, second):
+            original = os.isatty
+            replaced = False
+    
+            def replace(fd):
+                nonlocal replaced
+                if not replaced:
+                    os.dup2(second, first)
+                    replaced = True
+                return original(fd)
+    
+            monkeypatch.setattr(os, "isatty", replace)
+            with pytest.raises(terminal.TerminalQualificationError, match="descriptor_changed"):
+>               terminal.inspect_private_terminal(first, first, first, expected_uid=os.getuid())
+
+tests/test_opend_private_terminal.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+stdin_fd = 12, stdout_fd = 12, stderr_fd = 12, expected_uid = 1000
+
+    def inspect_private_terminal(stdin_fd, stdout_fd, stderr_fd, *, expected_uid):
+>       raise NotImplementedError("terminal admission not implemented")
+E       NotImplementedError: terminal admission not implemented
+
+tools/qualify_opend_private_terminal.py:11: NotImplementedError
+_______ test_owned_fixture_proves_transport_cleanup_and_sibling_survival _______
+
+    @NATIVE
+    def test_owned_fixture_proves_transport_cleanup_and_sibling_survival():
+>       receipt = terminal.run_owned_fixture()
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_opend_private_terminal.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def run_owned_fixture():
+>       raise NotImplementedError("owned fixture not implemented")
+E       NotImplementedError: owned fixture not implemented
+
+tools/qualify_opend_private_terminal.py:15: NotImplementedError
+______________ test_release_rechecks_echo_before_any_child_input _______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-terminal-check-vh59tp7k/pytest-temp/test_release_rechecks_echo_bef0')
+
+    @NATIVE
+    def test_release_rechecks_echo_before_any_child_input(tmp_path):
+        import termios
+    
+        with private_pty() as (_, slave):
+>           child = terminal._spawn(tmp_path, "blocked", slave, terminal._Deadline())
+                    ^^^^^^^^^^^^^^^
+E           AttributeError: module 'tools.qualify_opend_private_terminal' has no attribute '_spawn'
+
+tests/test_opend_private_terminal.py:181: AttributeError
+_ test_registration_failure_never_releases_and_waits_for_owned_child[missing_handle] _
+
+tmp_path = PosixPath('/var/tmp/quantmesh-terminal-check-vh59tp7k/pytest-temp/test_registration_failure_neve0')
+failure = 'missing_handle'
+
+    @NATIVE
+    @pytest.mark.parametrize("failure", ["missing_handle", "registration_interrupted"])
+    def test_registration_failure_never_releases_and_waits_for_owned_child(tmp_path, failure):
+        with private_pty() as (_, slave):
+            with pytest.raises(terminal.TerminalQualificationError) as caught:
+>               terminal._spawn(tmp_path, "blocked", slave, terminal._Deadline(), failure=failure)
+                ^^^^^^^^^^^^^^^
+E               AttributeError: module 'tools.qualify_opend_private_terminal' has no attribute '_spawn'
+
+tests/test_opend_private_terminal.py:199: AttributeError
+_ test_registration_failure_never_releases_and_waits_for_owned_child[registration_interrupted] _
+
+tmp_path = PosixPath('/var/tmp/quantmesh-terminal-check-vh59tp7k/pytest-temp/test_registration_failure_neve1')
+failure = 'registration_interrupted'
+
+    @NATIVE
+    @pytest.mark.parametrize("failure", ["missing_handle", "registration_interrupted"])
+    def test_registration_failure_never_releases_and_waits_for_owned_child(tmp_path, failure):
+        with private_pty() as (_, slave):
+            with pytest.raises(terminal.TerminalQualificationError) as caught:
+>               terminal._spawn(tmp_path, "blocked", slave, terminal._Deadline(), failure=failure)
+                ^^^^^^^^^^^^^^^
+E               AttributeError: module 'tools.qualify_opend_private_terminal' has no attribute '_spawn'
+
+tests/test_opend_private_terminal.py:199: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_opend_private_terminal.py::test_default_preflight_has_no_resource_effect
+FAILED tests/test_opend_private_terminal.py::test_cli_rejects_arbitrary_targets[argv0]
+FAILED tests/test_opend_private_terminal.py::test_cli_rejects_arbitrary_targets[argv1]
+FAILED tests/test_opend_private_terminal.py::test_cli_rejects_arbitrary_targets[argv2]
+FAILED tests/test_opend_private_terminal.py::test_invalid_uid_refuses_before_inspection[True]
+FAILED tests/test_opend_private_terminal.py::test_invalid_uid_refuses_before_inspection[False]
+FAILED tests/test_opend_private_terminal.py::test_invalid_uid_refuses_before_inspection[-1]
+FAILED tests/test_opend_private_terminal.py::test_invalid_uid_refuses_before_inspection[1.0]
+FAILED tests/test_opend_private_terminal.py::test_invalid_uid_refuses_before_inspection[1000]
+FAILED tests/test_opend_private_terminal.py::test_invalid_uid_refuses_before_inspection[None]
+FAILED tests/test_opend_private_terminal.py::test_invalid_descriptor_refuses[True]
+FAILED tests/test_opend_private_terminal.py::test_invalid_descriptor_refuses[-1]
+FAILED tests/test_opend_private_terminal.py::test_invalid_descriptor_refuses[1.0]
+FAILED tests/test_opend_private_terminal.py::test_invalid_descriptor_refuses[0]
+FAILED tests/test_opend_private_terminal.py::test_invalid_descriptor_refuses[None]
+FAILED tests/test_opend_private_terminal.py::test_invalid_descriptor_refuses[999999]
+FAILED tests/test_opend_private_terminal.py::test_admission_returns_only_kernel_metadata_and_does_not_read
+FAILED tests/test_opend_private_terminal.py::test_each_echo_flag_refuses[ECHO]
+FAILED tests/test_opend_private_terminal.py::test_each_echo_flag_refuses[ECHONL]
+FAILED tests/test_opend_private_terminal.py::test_nonprivate_mode_refuses[400]
+FAILED tests/test_opend_private_terminal.py::test_nonprivate_mode_refuses[416]
+FAILED tests/test_opend_private_terminal.py::test_nonprivate_mode_refuses[388]
+FAILED tests/test_opend_private_terminal.py::test_nonprivate_mode_refuses[438]
+FAILED tests/test_opend_private_terminal.py::test_wrong_owner_refuses - NotIm...
+FAILED tests/test_opend_private_terminal.py::test_regular_file_and_non_tty_character_device_refuse
+FAILED tests/test_opend_private_terminal.py::test_different_terminals_refuse
+FAILED tests/test_opend_private_terminal.py::test_replaced_fd_during_inspection_refuses
+FAILED tests/test_opend_private_terminal.py::test_owned_fixture_proves_transport_cleanup_and_sibling_survival
+FAILED tests/test_opend_private_terminal.py::test_release_rechecks_echo_before_any_child_input
+FAILED tests/test_opend_private_terminal.py::test_registration_failure_never_releases_and_waits_for_owned_child[missing_handle]
+FAILED tests/test_opend_private_terminal.py::test_registration_failure_never_releases_and_waits_for_owned_child[registration_interrupted]
+31 failed in 0.19s

@@ -1,0 +1,1 @@
+{"exit":0,"family":[],"pid":60075,"stderr":"command-004.stderr","stderr_sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","stdout":"command-004.stdout","stdout_sha256":"422186c56cb9fd1bb5d82dff5d64c742f8216b9f8d9dcb183117fa4e8bde718c","tool":"pg_controldata"}

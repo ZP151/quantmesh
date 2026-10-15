@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="4.534" timestamp="2026-10-13T11:18:22.953513+08:00" hostname="zhoulaptop"><testcase classname="" name="test_actual_initdb_bootstrap_descendant_timeout_is_terminal" time="4.472" /></testsuite></testsuites>

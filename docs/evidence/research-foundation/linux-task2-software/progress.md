@@ -1,0 +1,16 @@
+# SDD ledger — plan: docs/superpowers/plans/2026-10-13-linux-numerical-worker.md
+
+Base042fb0b491c13f4535bddbb61290b191d29b1790; branchcodex/0038-linux-worker-jobs; isolateda718 clean verified. Root interface freeze accepted proposal; source-only/focused tests, no materialization; total introduced <=10MB.
+
+Existing native owner marker90afdbee6add43169483520e384539ae verified. Borrowed81 env9r8 is read-only Python3.12.3 with include-system-site-packages=false. Only explicit changed source/test bytes will be copied into prior owned clone (Git basec545); tests are a sealed targeted overlay, not a clean whole042 build. No new clone/env.
+
+Pre-flight: runtime byte admission precedes image-bound construction/producer. Existing .git/host fingerprint cannot serve image. Ruling: checkpoint1 independently implements RO runtime verification and existing runner guards; do not add partial deploy/image qualification stubs while actual image proof is forbidden. Windows/no-profile/four-arg behavior must stay.
+
+Task1 runtime verifier: RED pending. Task2 runner guards: RED pending. Review/checkpoint pending. Materialized image/numerical/native/recovery/resource gates pending.
+Checkpoint1 progress: runtime-red2 22 actual failures -> runtime-green1 22pass. Edge RED runtime-red3 3fail22pass (empty installer marker, source alias, special-file coverage) -> runtime-green2 25pass. runner-red1 8fail -> runner-green1 8pass24deselected. final-focused1 36pass4Windows-native-specificskip17deselected/1 incumbent calendar warning4.13s. Software resource measured upperbound2,668,666B/freeC89,392,091,136B; full5GB whole-volume resource gate still PENDING.
+
+Ruling: inventory permits admitted empty ordinary files (pip REQUESTED/empty __init__) but JSON records remain nonempty; source aliases and any uninventoried special files refuse. The helper measures only declared byte closure; it does not assert actual ELF edges/complete OS notice eligibility/image identity/native bounds. Default host fingerprint and four-arg API unchanged, no Linux activation.
+
+New combined Spec/Standards bounded reviewer task2_checkpoint_review dispatched after root's completed final narrow live-poll report was retained at output/0038-poll-unexpected-repair/review.md. It reads only this checkpoint. No repeated Task1/full architecture review. Review pending, checkpoint incomplete until findings resolved and evidence sealed.
+
+Review round1: two P2s reproduced/fixed (QuantMesh/distribution origins, sanitized cyclic-symlink RuntimeError). Two initial distribution fixture attempts regenerated provider objects and are retained as diagnostics; corrected pre-fix reproduction review-real-red1=4fail25deselect, review-fix-green2=29pass. Round2 retains external loaded dependency-origin P2; Standards none. Review budget exhausted; return to Planner/root, no further patch/third reviewer/commit/push. Final focused2=40pass4Windows-native-onlyskip17deselect1 incumbent warning3.89s/exit0; four-file Ruff check/format and gitdiffcheck pass. Latest observed software logical upperbound4,428,442B/freeC89,387,270,144B. Code is not complete despite tests passing. Root must resolve reduced scope/review authorization before integration.

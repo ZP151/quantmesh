@@ -1,0 +1,216 @@
+{
+  "AtUtc": "2026-10-13T08:33:55.0935319Z",
+  "API": "private HTTPS api/live/state",
+  "GeneratedAt": "2026-10-13T16:33:55.016177+08:00",
+  "Scope": "one post-auth read-only collection intake; no provider RPC, prices/accounts/config or source mutation; old deployed labels are not global calendar acceptance",
+  "Rows": [
+    {
+      "identity": "hyperliquid:BTC",
+      "venue": "hyperliquid",
+      "instrument": "BTC",
+      "kinds": {
+        "l2_snapshot": {
+          "data_time": "2026-10-13T16:33:52.386+08:00",
+          "received_at": "2026-10-13T16:33:52.822066+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        },
+        "quote": {
+          "data_time": "2026-10-13T16:33:54.567+08:00",
+          "received_at": "2026-10-13T16:33:54.806049+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        },
+        "candle": {
+          "data_time": "2026-10-13T16:33:00+08:00",
+          "received_at": "2026-10-13T16:33:54.540368+08:00",
+          "provenance": "real",
+          "sequence": 1791880380000,
+          "provider_end": null,
+          "label": "real"
+        },
+        "trade": {
+          "data_time": "2026-10-13T16:33:54.008+08:00",
+          "received_at": "2026-10-13T16:33:54.331347+08:00",
+          "provenance": "real",
+          "sequence": 550871365278019,
+          "provider_end": null,
+          "label": "real"
+        },
+        "metrics": {
+          "data_time": "2026-10-13T16:33:54.450258+08:00",
+          "received_at": "2026-10-13T16:33:54.450398+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        }
+      },
+      "session_freshness": null
+    },
+    {
+      "identity": "hyperliquid:ETH",
+      "venue": "hyperliquid",
+      "instrument": "ETH",
+      "kinds": {
+        "l2_snapshot": {
+          "data_time": "2026-10-13T16:33:52.386+08:00",
+          "received_at": "2026-10-13T16:33:52.822508+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        },
+        "quote": {
+          "data_time": "2026-10-13T16:33:54.676+08:00",
+          "received_at": "2026-10-13T16:33:54.921655+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        },
+        "candle": {
+          "data_time": "2026-10-13T16:33:00+08:00",
+          "received_at": "2026-10-13T16:33:53.734468+08:00",
+          "provenance": "real",
+          "sequence": 1791880380000,
+          "provider_end": null,
+          "label": "real"
+        },
+        "trade": {
+          "data_time": "2026-10-13T16:33:53.061+08:00",
+          "received_at": "2026-10-13T16:33:53.344475+08:00",
+          "provenance": "real",
+          "sequence": 450793635795804,
+          "provider_end": null,
+          "label": "real"
+        },
+        "metrics": {
+          "data_time": "2026-10-13T16:33:54.450513+08:00",
+          "received_at": "2026-10-13T16:33:54.450562+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        }
+      },
+      "session_freshness": null
+    },
+    {
+      "identity": "hyperliquid:SOL",
+      "venue": "hyperliquid",
+      "instrument": "SOL",
+      "kinds": {
+        "l2_snapshot": {
+          "data_time": "2026-10-13T16:33:52.386+08:00",
+          "received_at": "2026-10-13T16:33:52.822917+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        },
+        "quote": {
+          "data_time": "2026-10-13T16:33:54.5+08:00",
+          "received_at": "2026-10-13T16:33:54.711285+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        },
+        "candle": {
+          "data_time": "2026-10-13T16:33:00+08:00",
+          "received_at": "2026-10-13T16:33:53.310882+08:00",
+          "provenance": "real",
+          "sequence": 1791880380000,
+          "provider_end": null,
+          "label": "real"
+        },
+        "trade": {
+          "data_time": "2026-10-13T16:33:52.725+08:00",
+          "received_at": "2026-10-13T16:33:52.976375+08:00",
+          "provenance": "real",
+          "sequence": 909780409221111,
+          "provider_end": null,
+          "label": "real"
+        },
+        "metrics": {
+          "data_time": "2026-10-13T16:33:54.450623+08:00",
+          "received_at": "2026-10-13T16:33:54.450715+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "real"
+        }
+      },
+      "session_freshness": null
+    },
+    {
+      "identity": "moomoo:AAPL",
+      "venue": "moomoo",
+      "instrument": "AAPL",
+      "kinds": {
+        "metrics": {
+          "data_time": "2026-10-10T04:00:00.169+08:00",
+          "received_at": "2026-10-10T04:00:28.516383+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "stale"
+        },
+        "trade": {
+          "data_time": "2026-10-10T03:59:58.841+08:00",
+          "received_at": "2026-10-10T03:59:59.150805+08:00",
+          "provenance": "real",
+          "sequence": 7694760319708561533,
+          "provider_end": null,
+          "label": "stale"
+        },
+        "candle": {
+          "data_time": "2026-10-10T03:59:00+08:00",
+          "received_at": "2026-10-10T08:14:30.842786+08:00",
+          "provenance": "real",
+          "sequence": 1791591270842786,
+          "provider_end": "2026-10-10T04:00:00+08:00",
+          "label": "stale"
+        }
+      },
+      "session_freshness": null
+    },
+    {
+      "identity": "moomoo:NVDA",
+      "venue": "moomoo",
+      "instrument": "NVDA",
+      "kinds": {
+        "metrics": {
+          "data_time": "2026-10-10T04:00:00.362+08:00",
+          "received_at": "2026-10-10T04:00:28.516383+08:00",
+          "provenance": "real",
+          "sequence": null,
+          "provider_end": null,
+          "label": "stale"
+        },
+        "trade": {
+          "data_time": "2026-10-10T03:59:59.962+08:00",
+          "received_at": "2026-10-10T04:00:00.675168+08:00",
+          "provenance": "real",
+          "sequence": 7694760324003529183,
+          "provider_end": null,
+          "label": "stale"
+        },
+        "candle": {
+          "data_time": "2026-10-10T03:59:00+08:00",
+          "received_at": "2026-10-10T08:12:55.258322+08:00",
+          "provenance": "real",
+          "sequence": 1791591175258322,
+          "provider_end": "2026-10-10T04:00:00+08:00",
+          "label": "stale"
+        }
+      },
+      "session_freshness": null
+    }
+  ]
+}

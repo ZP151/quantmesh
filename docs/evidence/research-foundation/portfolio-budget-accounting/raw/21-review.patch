@@ -1,0 +1,1081 @@
+diff --git a/services/research_agent/README.md b/services/research_agent/README.md
+index 02c16c4..38eb8db 100644
+--- a/services/research_agent/README.md
++++ b/services/research_agent/README.md
+@@ -79,6 +79,80 @@ in this slice. Price must be explicitly known, finite and nonnegative; call
+ count and USD reservations cannot exceed the request budget. Dollar limits are
+ estimate admission controls, not provider invoice guarantees.
+ 
++## Portfolio estimate authority — issue #171
++
++New effects, including zero estimates and scripted fixtures, require an explicit
++service-owned policy and category. This is additive accounting over the frozen
++store/DTO contracts. Runtime defaults still have no model runner; health and
++preflight continue to report model `unavailable`, paper mode and live disabled.
++
++```python
++from decimal import Decimal
++from qm_research_agent.budgets import EffectLedger, PortfolioBudgetPolicy
++
++policy = PortfolioBudgetPolicy("research-estimates-v1", Decimal("50"), Decimal("200"))
++effects = EffectLedger(store, policy=policy, category="operating")
++```
++
++The frozen policy accepts a bounded ASCII identifier and finite nonnegative
++Decimal caps, at most $50 operating per UTC calendar month and $200 development
++over the authority's lifetime. Category is explicitly `operating` or
++`development`; jobs and HTTP submissions cannot supply it. The optional private
++runtime configuration uses paired `portfolio_policy` and `portfolio_category`:
++
++```json
++{
++  "portfolio_policy": {
++    "policy_id": "research-estimates-v1",
++    "operating_monthly_usd": "50",
++    "development_total_usd": "200"
++  },
++  "portfolio_category": "operating"
++}
++```
++
++Amounts in JSON are decimal strings. Numeric coercion, unpaired fields, unknown
++fields and expanded caps reject. Serving with this optional configuration binds
++the policy in the authoritative store; it does not enable model execution or
++external requests. Configuring a future model runner requires independent
++provider/key/containment approval.
++
++The additive version-1 tables are `qm_portfolio_schema`, singleton
++`qm_portfolio_policy` (immutable identity/caps and a UTC high-water clock), and
++`qm_portfolio_reservations` (effect identity, category, UTC month, canonical
++Decimal price and reservation timestamp). `model_effects` retains its original
++columns and read/response/checkpoint tuple. Admission validates the binding and
++version, checks lease fencing and both per-job and portfolio limits, then inserts
++the effect and attribution in the **same** store transaction. SQLite witnesses
++use BEGIN IMMEDIATE; PostgreSQL uses the existing schema advisory transaction
++lock. Provider invocation happens only after commit. Exact rational arithmetic
++over validated Decimals avoids ambient Decimal-context rounding and float sums;
++prices and caps persist as canonical Decimal strings.
++
++Completed operating estimates count only in their reservation month. Unresolved
++effects from earlier months still count against the current month; cancellation,
++timeouts and crashes never release them. Development estimates remain cumulative
++after completion, month transitions and reopening. Backward store time denies new
++reservations. The authoritative store clock supplies all timestamps and periods.
++Changed policy IDs/caps, unknown accounting versions and existing unattributed
++effects fail closed; no historical category/timestamp is invented. Missing policy
++denies new effects but archived response/checkpoint replay remains usable.
++
++There is one authority per deployment/schema. A restored backup preserves the
++policy, clock and complete reservation history; it does not renew the allowance.
++Cloned or restored stores cannot be simultaneously promoted as independent
++authorities for one allowance. Production cutover remains operator-gated; an
++older snapshot cannot serve as a fresh spending authority. External development
++API tools must reserve through this same approved authority before future paid
++activation or remain blocked. This service ledger does not certify a full-project
++ceiling for tools or bake-offs that bypass it. Estimates differ from provider
++invoices, and infrastructure spending is outside this ledger.
++
++The new tests are explicitly local SQLite/scripted accounting witnesses. Real
++PostgreSQL concurrency and dump/restore require the separate owned qualifier;
++these tests do not certify real billing, model performance, production TLS,
++off-host restore or deployment. No paid call is authorized by this change.
++
+ Model input is the verified published report only. Credential/endpoint/order
+ fields and recognized secret text reject; schema-valid outputs must cite the
+ exact published report and produce digest/size-verified job-owned analysis
+diff --git a/services/research_agent/src/qm_research_agent/accounting.py b/services/research_agent/src/qm_research_agent/accounting.py
+new file mode 100644
+index 0000000..a3dad8a
+--- /dev/null
++++ b/services/research_agent/src/qm_research_agent/accounting.py
+@@ -0,0 +1,168 @@
++"""Additive estimate authority, serialized by the owning store transaction."""
++
++import re
++from dataclasses import dataclass
++from datetime import UTC, datetime
++from decimal import Decimal
++from fractions import Fraction
++
++
++def valid_amount(value):
++    return isinstance(value, Decimal) and value.is_finite() and value >= 0
++
++
++def canonical(value):
++    """Normalize exact Decimal digits without rounding through a context."""
++    if not valid_amount(value):
++        raise ValueError("invalid accounting amount")
++    if value == 0:
++        return "0"
++    sign, digits, exponent = value.as_tuple()
++    digits = list(digits)
++    while digits[-1] == 0:
++        digits.pop()
++        exponent += 1
++    return str(Decimal((sign, tuple(digits), exponent)))
++
++
++@dataclass(frozen=True)
++class PortfolioBudgetPolicy:
++    policy_id: str
++    operating_monthly_usd: Decimal
++    development_total_usd: Decimal
++
++    def __post_init__(self):
++        if (
++            not isinstance(self.policy_id, str)
++            or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}", self.policy_id)
++            or not valid_amount(self.operating_monthly_usd)
++            or not valid_amount(self.development_total_usd)
++            or self.operating_monthly_usd > Decimal("50")
++            or self.development_total_usd > Decimal("200")
++        ):
++            raise ValueError("invalid portfolio policy")
++
++    def binding(self):
++        return (
++            self.policy_id,
++            canonical(self.operating_monthly_usd),
++            canonical(self.development_total_usd),
++        )
++
++
++def utc_stamp(now):
++    if not isinstance(now, datetime) or now.tzinfo is None or now.utcoffset() is None:
++        raise ValueError("invalid accounting clock")
++    return now.astimezone(UTC).isoformat(timespec="microseconds")
++
++
++def exact_total(values):
++    # Decimal's ambient precision can round a tiny overage away at a cap.
++    # Exact ratios of validated Decimals avoid both rounding and floating point.
++    return sum((Fraction(value) for value in values), Fraction(0))
++
++
++def validate(con, policy):
++    versions = con.execute("SELECT version FROM qm_portfolio_schema").fetchall()
++    if [tuple(row) for row in versions] != [(1,)]:
++        raise ValueError("unsupported portfolio accounting version")
++    rows = con.execute(
++        "SELECT slot,policy_id,operating_monthly_usd,development_total_usd,high_water "
++        "FROM qm_portfolio_policy"
++    ).fetchall()
++    if len(rows) != 1 or rows[0][0] != 1 or tuple(rows[0][1:4]) != policy.binding():
++        raise ValueError("portfolio policy mismatch")
++    stamp = rows[0][4]
++    if utc_stamp(datetime.fromisoformat(stamp)) != stamp:
++        raise ValueError("invalid accounting clock")
++    # Never attribute pre-policy history or tolerate incomplete restore/import.
++    if con.execute(
++        "SELECT 1 FROM model_effects e LEFT JOIN qm_portfolio_reservations r "
++        "ON e.job_id=r.job_id AND e.digest=r.digest WHERE r.job_id IS NULL"
++    ).fetchone():
++        raise ValueError("unattributed model effects")
++    return stamp
++
++
++def initialize(con, policy, now):
++    con.execute("CREATE TABLE IF NOT EXISTS qm_portfolio_schema(version INTEGER NOT NULL)")
++    versions = con.execute("SELECT version FROM qm_portfolio_schema").fetchall()
++    if versions and [tuple(row) for row in versions] != [(1,)]:
++        raise ValueError("unsupported portfolio accounting version")
++    con.execute(
++        "CREATE TABLE IF NOT EXISTS qm_portfolio_policy ("
++        "slot INTEGER PRIMARY KEY CHECK(slot=1), policy_id TEXT NOT NULL, "
++        "operating_monthly_usd TEXT NOT NULL, development_total_usd TEXT NOT NULL, "
++        "high_water TEXT NOT NULL)"
++    )
++    con.execute(
++        "CREATE TABLE IF NOT EXISTS qm_portfolio_reservations ("
++        "job_id TEXT NOT NULL, digest TEXT NOT NULL, "
++        "category TEXT NOT NULL CHECK(category IN ('operating','development')), "
++        "period TEXT NOT NULL, price TEXT NOT NULL, reserved_at TEXT NOT NULL, "
++        "PRIMARY KEY(job_id,digest), "
++        "FOREIGN KEY(job_id,digest) REFERENCES model_effects(job_id,digest))"
++    )
++    if not versions:
++        if (
++            con.execute("SELECT 1 FROM qm_portfolio_policy").fetchone()
++            or con.execute("SELECT 1 FROM qm_portfolio_reservations").fetchone()
++        ):
++            raise ValueError("missing portfolio accounting version")
++        con.execute("INSERT INTO qm_portfolio_schema VALUES (1)")
++    if policy is None:
++        return
++    if not con.execute("SELECT 1 FROM qm_portfolio_policy").fetchone():
++        if con.execute("SELECT 1 FROM model_effects").fetchone():
++            raise ValueError("unattributed model effects")
++        con.execute(
++            "INSERT INTO qm_portfolio_policy VALUES (1,?,?,?,?)",
++            (*policy.binding(), utc_stamp(now)),
++        )
++    validate(con, policy)
++
++
++def admit(con, policy, category, now, amount):
++    """Validate and consume clock authority; caller inserts both rows atomically."""
++    if policy is None:
++        return None
++    try:
++        high_water = validate(con, policy)
++        stamp = utc_stamp(now)
++        if stamp < high_water:
++            return None
++        period = stamp[:7]
++        rows = con.execute(
++            "SELECT r.category,r.period,r.price,r.reserved_at,e.price,e.status,e.response "
++            "FROM qm_portfolio_reservations r JOIN model_effects e "
++            "ON r.job_id=e.job_id AND r.digest=e.digest"
++        ).fetchall()
++        charged = []
++        for row_category, row_period, price, reserved_at, effect_price, status, response in rows:
++            value = Decimal(price)
++            if (
++                row_category not in {"operating", "development"}
++                or canonical(value) != price
++                or canonical(Decimal(effect_price)) != price
++                or utc_stamp(datetime.fromisoformat(reserved_at)) != reserved_at
++                or reserved_at[:7] != row_period
++                or reserved_at > high_water
++                or status not in {"reserved", "completed"}
++                or (status == "completed" and not response)
++            ):
++                return None
++            if row_category == category and (
++                category == "development" or row_period == period or status == "reserved"
++            ):
++                charged.append(value)
++        con.execute("UPDATE qm_portfolio_policy SET high_water=? WHERE slot=1", (stamp,))
++        cap = (
++            policy.operating_monthly_usd
++            if category == "operating"
++            else policy.development_total_usd
++        )
++        if exact_total([*charged, amount]) > Fraction(cap):
++            return None
++        return period, stamp
++    except (ValueError, ArithmeticError, TypeError):
++        return None
+diff --git a/services/research_agent/src/qm_research_agent/budgets.py b/services/research_agent/src/qm_research_agent/budgets.py
+index b239765..b7548f5 100644
+--- a/services/research_agent/src/qm_research_agent/budgets.py
++++ b/services/research_agent/src/qm_research_agent/budgets.py
+@@ -6,12 +6,27 @@ Local SQLite use is only the explicitly-labelled offline boundary witness.
+ 
+ from decimal import Decimal
+ 
++from qm_research_agent.accounting import (
++    PortfolioBudgetPolicy,
++    admit,
++    canonical,
++    exact_total,
++    initialize,
++    valid_amount,
++)
+ from quantmesh.research.jobs import AnalysisRecord, RunBudget
+ 
+ 
+ class EffectLedger:
+-    def __init__(self, store):
++    def __init__(self, store, *, policy=None, category=None):
++        if (
++            (policy is None) != (category is None)
++            or (policy is not None and not isinstance(policy, PortfolioBudgetPolicy))
++            or (category is not None and category not in {"operating", "development"})
++        ):
++            raise ValueError("invalid portfolio configuration")
+         self.store = store
++        self.policy, self.category = policy, category
+         with store._transaction() as con:
+             con.execute(
+                 "CREATE TABLE IF NOT EXISTS model_effects ("
+@@ -19,6 +34,7 @@ class EffectLedger:
+                 "status TEXT NOT NULL, response TEXT, checkpoint TEXT, "
+                 "PRIMARY KEY(job_id, digest))"
+             )
++            initialize(con, policy, store._clock())
+ 
+     def read(self, job_id, digest):
+         with self.store._transaction() as con:
+@@ -30,12 +46,11 @@ class EffectLedger:
+     def reserve_call(
+         self, job_id: str, request_digest: str, estimated_usd: Decimal, budget: RunBudget, lease
+     ) -> bool:
+-        if estimated_usd is None or not estimated_usd.is_finite() or estimated_usd < 0:
++        if not valid_amount(estimated_usd):
+             return False
+         with self.store._transaction() as con:
+-            if lease.job_id != job_id or not self.store._analysis_fenced(
+-                con, lease, self.store._clock()
+-            ):
++            now = self.store._clock()
++            if lease.job_id != job_id or not self.store._analysis_fenced(con, lease, now):
+                 return False
+             if con.execute(
+                 "SELECT 1 FROM model_effects WHERE job_id=? AND digest=?", (job_id, request_digest)
+@@ -44,13 +59,34 @@ class EffectLedger:
+             rows = con.execute(
+                 "SELECT price FROM model_effects WHERE job_id=?", (job_id,)
+             ).fetchall()
+-            if len(rows) >= budget.max_model_calls or sum(
+-                (Decimal(row[0]) for row in rows), Decimal(0)
+-            ) + estimated_usd > Decimal(str(budget.max_estimated_model_usd)):
++            try:
++                prices = [Decimal(row[0]) for row in rows]
++                if any(not valid_amount(price) for price in prices):
++                    return False
++                within_job = exact_total([*prices, estimated_usd]) <= exact_total(
++                    [Decimal(str(budget.max_estimated_model_usd))]
++                )
++            except (ValueError, ArithmeticError):
++                return False
++            if len(rows) >= budget.max_model_calls or not within_job:
++                return False
++            admission = admit(con, self.policy, self.category, now, estimated_usd)
++            if admission is None:
+                 return False
+             con.execute(
+                 "INSERT INTO model_effects VALUES (?, ?, ?, 'reserved', NULL, NULL)",
+-                (job_id, request_digest, str(estimated_usd)),
++                (job_id, request_digest, canonical(estimated_usd)),
++            )
++            con.execute(
++                "INSERT INTO qm_portfolio_reservations VALUES (?,?,?,?,?,?)",
++                (
++                    job_id,
++                    request_digest,
++                    self.category,
++                    admission[0],
++                    canonical(estimated_usd),
++                    admission[1],
++                ),
+             )
+             return True
+ 
+diff --git a/services/research_agent/src/qm_research_agent/runtime.py b/services/research_agent/src/qm_research_agent/runtime.py
+index d592ff8..b49d8cd 100644
+--- a/services/research_agent/src/qm_research_agent/runtime.py
++++ b/services/research_agent/src/qm_research_agent/runtime.py
+@@ -15,12 +15,15 @@ import stat
+ import subprocess
+ import sys
+ from dataclasses import dataclass, field
++from decimal import Decimal
+ from pathlib import Path
+ from typing import Literal
+ from urllib.parse import parse_qsl, urlsplit
+ 
+ from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
+ 
++from qm_research_agent.budgets import PortfolioBudgetPolicy
++
+ 
+ class RuntimeRejected(ValueError):
+     """Only fixed categories cross the operator boundary."""
+@@ -53,6 +56,34 @@ def _directory(path: Path) -> Path:
+     return path
+ 
+ 
++class PortfolioPolicyConfig(BaseModel):
++    """Explicit service config; JSON amounts are exact decimal strings."""
++
++    model_config = ConfigDict(frozen=True, extra="forbid", hide_input_in_errors=True)
++    policy_id: str
++    operating_monthly_usd: Decimal
++    development_total_usd: Decimal
++
++    @model_validator(mode="before")
++    @classmethod
++    def exact_amounts(cls, values):
++        if isinstance(values, dict):
++            for name in ("operating_monthly_usd", "development_total_usd"):
++                if name in values and not isinstance(values[name], (str, Decimal)):
++                    raise RuntimeRejected("configuration_invalid")
++        return values
++
++    def authority(self):
++        return PortfolioBudgetPolicy(
++            self.policy_id, self.operating_monthly_usd, self.development_total_usd
++        )
++
++    @model_validator(mode="after")
++    def valid_policy(self):
++        self.authority()
++        return self
++
++
+ class ServiceRuntimeConfig(BaseModel):
+     model_config = ConfigDict(frozen=True, extra="forbid", hide_input_in_errors=True)
+ 
+@@ -65,6 +96,8 @@ class ServiceRuntimeConfig(BaseModel):
+     credential_directory: Path = Field(repr=False)
+     host: Literal["127.0.0.1"] = "127.0.0.1"
+     port: Literal[8110] = 8110
++    portfolio_policy: PortfolioPolicyConfig | None = None
++    portfolio_category: Literal["operating", "development"] | None = None
+ 
+     @model_validator(mode="before")
+     @classmethod
+@@ -81,6 +114,8 @@ class ServiceRuntimeConfig(BaseModel):
+         from quantmesh.data.layout import validate_dataset_name
+ 
+         try:
++            if (self.portfolio_policy is None) != (self.portfolio_category is None):
++                raise ValueError
+             if len(set(self.configured_dataset_ids)) != len(self.configured_dataset_ids):
+                 raise ValueError
+             for name in self.configured_dataset_ids:
+@@ -469,6 +504,7 @@ def load_runtime(config_path: Path) -> ServiceRuntime:
+ 
+ def build_app(runtime: ServiceRuntime):
+     from qm_research_agent.app import create_app
++    from qm_research_agent.budgets import EffectLedger
+     from qm_research_agent.store import PostgresJobStore
+ 
+     config = runtime.config
+@@ -478,6 +514,11 @@ def build_app(runtime: ServiceRuntime):
+     store = PostgresJobStore(
+         runtime.postgres_dsn, lake_root=config.lake_root, artifact_root=config.artifact_root
+     )
++    if config.portfolio_policy is not None:
++        # Bind authority only; bootstrap does not construct or start a model runner.
++        EffectLedger(
++            store, policy=config.portfolio_policy.authority(), category=config.portfolio_category
++        )
+     return create_app(
+         store,
+         operator_id=config.operator_id,
+diff --git a/services/research_agent/tests/conftest.py b/services/research_agent/tests/conftest.py
+index bd56da3..698ef26 100644
+--- a/services/research_agent/tests/conftest.py
++++ b/services/research_agent/tests/conftest.py
+@@ -3,8 +3,10 @@
+ import hashlib
+ import json
+ from datetime import UTC, datetime
++from decimal import Decimal
+ 
+ import pytest
++from qm_research_agent.budgets import EffectLedger, PortfolioBudgetPolicy
+ from test_research_jobs import request_for
+ 
+ from quantmesh.research.job_store import SQLiteJobStore
+@@ -51,3 +53,12 @@ def succeeded(store, lake):
+     job = store.submit("operator", "first", request_for(lake, analysis_requested=True))
+     ref = publish(store, job)
+     return store.get("operator", job.job_id), ref
++
++
++def scripted_effects(store):
++    """Explicit fixture authority, with the same admission as remote effects."""
++    return EffectLedger(
++        store,
++        policy=PortfolioBudgetPolicy("scripted-test-authority", Decimal("50"), Decimal("200")),
++        category="operating",
++    )
+diff --git a/services/research_agent/tests/test_agent.py b/services/research_agent/tests/test_agent.py
+index a49897b..691cc02 100644
+--- a/services/research_agent/tests/test_agent.py
++++ b/services/research_agent/tests/test_agent.py
+@@ -3,8 +3,7 @@ from datetime import timedelta
+ from decimal import Decimal
+ 
+ import pytest
+-from conftest import succeeded
+-from qm_research_agent.budgets import EffectLedger
++from conftest import scripted_effects, succeeded
+ from qm_research_agent.orchestrator import AdvisoryRunner
+ 
+ from quantmesh.ai.gateway import ModelGateway
+@@ -34,7 +33,7 @@ def gateway(ref, content=None):
+ def runner(store, price=Decimal("0")):
+     return AdvisoryRunner(
+         store,
+-        EffectLedger(store),
++        scripted_effects(store),
+         provider="scripted",
+         price=price,
+         price_version="scripted-free-v1",
+@@ -64,7 +63,7 @@ def test_ambiguous_model_timeout_requires_operator_retry(local):
+     job, ref = succeeded(store, lake)
+     model, transport = gateway(ref)
+     lease = store.claim_analysis("first", clock[0])
+-    effects = EffectLedger(store)
++    effects = scripted_effects(store)
+     digest = ref.sha256
+     assert effects.reserve_call(job.job_id, digest, Decimal("0"), job.request.budget, lease)
+     # A reserved effect left by a killed process has unknown external outcome.
+@@ -119,7 +118,7 @@ def test_expired_lease_cannot_reserve(local):
+     job, _ = succeeded(store, lake)
+     lease = store.claim_analysis("first", clock[0])
+     clock[0] += timedelta(seconds=61)
+-    assert not EffectLedger(store).reserve_call(
++    assert not scripted_effects(store).reserve_call(
+         job.job_id, "a" * 64, Decimal("0"), RunBudget(), lease
+     )
+ 
+diff --git a/services/research_agent/tests/test_hardening.py b/services/research_agent/tests/test_hardening.py
+index 3397f36..bba842f 100644
+--- a/services/research_agent/tests/test_hardening.py
++++ b/services/research_agent/tests/test_hardening.py
+@@ -2,11 +2,10 @@ import json
+ import time
+ from decimal import Decimal
+ 
+-from conftest import succeeded
++from conftest import scripted_effects, succeeded
+ from fastapi.testclient import TestClient
+ from pydantic import SecretStr
+ from qm_research_agent.app import create_app
+-from qm_research_agent.budgets import EffectLedger
+ from qm_research_agent.orchestrator import AdvisoryRunner, ApprovedRemoteGateway
+ from test_research_jobs import request_for
+ 
+@@ -25,7 +24,7 @@ def test_unsupported_budget_blocks_before_effect(local, monkeypatch):
+     transport = ScriptedModelTransport([])
+     gateway = ModelGateway(transport, model_name="scripted-fixture")
+     lease = store.claim_analysis("first", clock[0])
+-    effects = EffectLedger(store)
++    effects = scripted_effects(store)
+     engine = AdvisoryRunner(
+         store, effects, provider="scripted", price=Decimal("0"), price_version="v1"
+     )
+@@ -81,7 +80,7 @@ def test_unknown_effect_survives_changed_configuration(local):
+     gateway = ModelGateway(transport, model_name="scripted-fixture")
+     lease = store.claim_analysis("first", clock[0])
+     engine = AdvisoryRunner(
+-        store, EffectLedger(store), provider="scripted", price=Decimal("0"), price_version="v1"
++        store, scripted_effects(store), provider="scripted", price=Decimal("0"), price_version="v1"
+     )
+     assert engine.run_analysis(job, ref, gateway, lease=lease).error_code == "unknown_effect"
+     engine.price_version = "v2"
+@@ -129,7 +128,7 @@ def test_analysis_deadline_stops_owned_effect_without_recall(local):
+     gateway = ModelGateway(transport, model_name="scripted-fixture")
+     lease = store.claim_analysis("first", clock[0])
+     engine = AdvisoryRunner(
+-        store, EffectLedger(store), provider="scripted", price=Decimal("0"), price_version="v1"
++        store, scripted_effects(store), provider="scripted", price=Decimal("0"), price_version="v1"
+     )
+     started = time.monotonic()
+     result = engine.run_analysis(job, ref, gateway, lease=lease)
+diff --git a/services/research_agent/tests/test_portfolio_budgets.py b/services/research_agent/tests/test_portfolio_budgets.py
+new file mode 100644
+index 0000000..bee6175
+--- /dev/null
++++ b/services/research_agent/tests/test_portfolio_budgets.py
+@@ -0,0 +1,364 @@
++"""Scripted/local accounting witnesses; no provider billing or production proof."""
++
++from concurrent.futures import ThreadPoolExecutor
++from contextlib import contextmanager
++from datetime import UTC, datetime, timedelta
++from decimal import Decimal
++
++import pytest
++from conftest import publish
++from qm_research_agent import budgets
++from test_research_jobs import request_for
++
++from quantmesh.research.job_store import SQLiteJobStore
++from quantmesh.research.jobs import RunBudget
++
++
++def jobs(local, count=2):
++    store, lake, clock = local
++    result = []
++    for i in range(count):
++        job = store.submit("operator", f"portfolio-{i}", request_for(lake, analysis_requested=True))
++        publish(store, job)
++        lease = store.claim_analysis(f"analyst-{i}", clock[0])
++        assert lease.job_id == job.job_id
++        result.append((job, lease))
++    return result
++
++
++def reserve(ledger, pair, price="0.6", digest="a"):
++    job, lease = pair
++    return ledger.reserve_call(job.job_id, digest, Decimal(price), job.request.budget, lease)
++
++
++def policy(operating="1", development="2", policy_id="scripted-local"):
++    assert hasattr(budgets, "PortfolioBudgetPolicy"), "missing immutable portfolio policy"
++    return budgets.PortfolioBudgetPolicy(policy_id, Decimal(operating), Decimal(development))
++
++
++def ledger(local, category="operating", **limits):
++    return budgets.EffectLedger(local[0], policy=policy(**limits), category=category)
++
++
++def test_independent_jobs_share_exact_allowance(local):
++    pairs = jobs(local)
++    effects = ledger(local)
++    assert reserve(effects, pairs[0])
++    assert not reserve(effects, pairs[1])
++    assert effects.read(pairs[1][0].job_id, "a") is None
++
++
++def test_exact_boundary_decimal_precision_and_per_job_limit(local):
++    pairs = jobs(local)
++    effects = ledger(local, operating="0.3")
++    assert reserve(effects, pairs[0], "0.1")
++    assert reserve(effects, pairs[1], "0.2")
++    assert not reserve(effects, pairs[1], "1e-40", "b")
++
++
++def test_per_job_limits_still_apply_with_room_in_portfolio(local):
++    pair = jobs(local, 1)[0]
++    effects = ledger(local, operating="50")
++    assert reserve(effects, pair, "0.6")
++    assert not reserve(effects, pair, "0.6", "b")
++    for i in range(11):
++        assert reserve(effects, pair, "0", str(i))
++    assert not reserve(effects, pair, "0", "thirteenth")
++
++
++def test_last_slot_race_different_jobs_and_store_connections(local):
++    pairs = jobs(local)
++    ledger(local)
++
++    def attempt(pair):
++        store, lake, clock = local
++        separate = SQLiteJobStore(store.path, lake_root=lake, clock=lambda: clock[0])
++        return reserve(budgets.EffectLedger(separate, policy=policy(), category="operating"), pair)
++
++    with ThreadPoolExecutor(2) as pool:
++        assert sorted(pool.map(attempt, pairs)) == [False, True]
++    with local[0]._transaction() as con:
++        assert con.execute("SELECT COUNT(*) FROM model_effects").fetchone()[0] == 1
++
++
++def test_categories_are_separate_development_is_lifetime(local):
++    pairs = jobs(local)
++    operating = ledger(local, operating="0.6", development="0.6")
++    development = ledger(local, "development", operating="0.6", development="0.6")
++    assert reserve(operating, pairs[0])
++    assert reserve(development, pairs[1])
++    assert not reserve(operating, pairs[1], "0.01", "b")
++    assert not reserve(development, pairs[0], "0.01", "b")
++    # Completed development effects still count after a month and a restart.
++    assert development.response(pairs[1][1], "a", "archived scripted response")
++    local[2][0] += timedelta(days=40)
++    replacement = local[0].claim_analysis("replacement", local[2][0])
++    assert replacement is not None
++    reopened = ledger(local, "development", operating="0.6", development="0.6")
++    assert not reserve(reopened, (pairs[0][0], replacement), "0.01", "later")
++
++
++@pytest.mark.parametrize("completed", [True, False])
++def test_utc_month_transition_completed_reset_unresolved_carry(local, completed):
++    local[2][0] = datetime(2026, 1, 31, 23, 59, 30, tzinfo=UTC)
++    pairs = jobs(local)
++    effects = ledger(local, operating="0.6")
++    assert reserve(effects, pairs[0])
++    if completed:
++        assert effects.response(pairs[0][1], "a", "scripted response")
++    local[2][0] = datetime(2026, 2, 1, tzinfo=UTC)
++    assert reserve(effects, pairs[1]) is completed
++
++
++def test_clock_rollback_and_stale_fence_deny_without_effect(local):
++    pair = jobs(local, 1)[0]
++    effects = ledger(local)
++    assert reserve(effects, pair, "0")
++    local[2][0] -= timedelta(seconds=1)
++    assert not reserve(effects, pair, "0", "rollback")
++    local[2][0] += timedelta(seconds=62)
++    assert not reserve(effects, pair, "0", "expired")
++    assert effects.read(pair[0].job_id, "rollback") is None
++    assert effects.read(pair[0].job_id, "expired") is None
++
++
++def test_missing_policy_denies_zero_estimate(local):
++    pair = jobs(local, 1)[0]
++    effects = budgets.EffectLedger(local[0])
++    assert not reserve(effects, pair, "0")
++    assert effects.read(pair[0].job_id, "a") is None
++
++
++@pytest.mark.parametrize(
++    "kwargs",
++    [
++        {"operating": "50.01"},
++        {"development": "200.01"},
++        {"operating": "NaN"},
++        {"development": "Infinity"},
++        {"operating": "-1"},
++        {"policy_id": "../bad"},
++        {"policy_id": ""},
++        {"policy_id": "x" * 65},
++    ],
++)
++def test_invalid_policy_rejected(kwargs):
++    with pytest.raises(ValueError):
++        policy(**kwargs)
++
++
++def test_policy_is_immutable_and_rejects_float():
++    value = policy()
++    with pytest.raises((AttributeError, TypeError)):
++        value.operating_monthly_usd = Decimal("50")
++    with pytest.raises(ValueError):
++        budgets.PortfolioBudgetPolicy("fixture", 1.0, Decimal("2"))
++
++
++@pytest.mark.parametrize(
++    "limits", [{"policy_id": "other"}, {"operating": "2"}, {"development": "3"}]
++)
++def test_bound_policy_cannot_be_replaced(local, limits):
++    ledger(local)
++    with pytest.raises(ValueError):
++        ledger(local, **limits)
++
++
++def test_invalid_category_and_unpaired_policy(local):
++    with pytest.raises(ValueError):
++        budgets.EffectLedger(local[0], policy=policy(), category="scripted")
++    with pytest.raises(ValueError):
++        budgets.EffectLedger(local[0], policy=policy())
++    with pytest.raises(ValueError):
++        budgets.EffectLedger(local[0], category="operating")
++
++
++def test_legacy_unattributed_effects_block_policy_activation_and_preserve_read(local):
++    pair = jobs(local, 1)[0]
++    old = budgets.EffectLedger(local[0])
++    with local[0]._transaction() as con:
++        con.execute(
++            "INSERT INTO model_effects VALUES (?, 'legacy', '0', 'completed', 'raw', NULL)",
++            (pair[0].job_id,),
++        )
++    with pytest.raises(ValueError):
++        ledger(local)
++    assert old.read(pair[0].job_id, "legacy") == ("completed", "raw", None)
++
++
++def test_duplicate_crash_reopen_and_atomic_rollback(local, monkeypatch):
++    pairs = jobs(local)
++    effects = ledger(local)
++    assert reserve(effects, pairs[0])
++    assert not reserve(effects, pairs[0])
++    reopened = ledger(local)
++    assert reopened.read(pairs[0][0].job_id, "a") == ("reserved", None, None)
++    assert not reserve(reopened, pairs[1])
++    original = local[0]._transaction
++
++    @contextmanager
++    def interrupted():
++        with original() as con:
++            yield con
++            raise RuntimeError("scripted crash before commit")
++
++    monkeypatch.setattr(local[0], "_transaction", interrupted)
++    with pytest.raises(RuntimeError):
++        reserve(effects, pairs[1], "0.4", "rolled-back")
++    monkeypatch.setattr(local[0], "_transaction", original)
++    assert effects.read(pairs[1][0].job_id, "rolled-back") is None
++    assert reserve(effects, pairs[1], "0.4", "after-rollback")
++
++
++def test_unknown_accounting_version_rejects_activation_and_admission(local):
++    pair = jobs(local, 1)[0]
++    effects = ledger(local)
++    with local[0]._transaction() as con:
++        con.execute("UPDATE qm_portfolio_schema SET version=999")
++    with pytest.raises(ValueError):
++        ledger(local)
++    assert not reserve(effects, pair)
++
++
++def test_policy_mismatch_and_unattributed_history_deny_existing_instance(local):
++    pair = jobs(local, 1)[0]
++    effects = ledger(local)
++    with local[0]._transaction() as con:
++        con.execute("UPDATE qm_portfolio_policy SET policy_id='other'")
++    assert not reserve(effects, pair)
++
++
++@pytest.mark.parametrize("price", [None, 0.0, Decimal("NaN"), Decimal("Infinity"), Decimal("-1")])
++def test_invalid_estimate_denied(local, price):
++    job, lease = jobs(local, 1)[0]
++    assert not ledger(local).reserve_call(job.job_id, "invalid", price, RunBudget(), lease)
++
++
++def test_remote_missing_policy_has_zero_external_invocations(local, monkeypatch):
++    from pydantic import SecretStr
++    from qm_research_agent import orchestrator
++
++    pair = jobs(local, 1)[0]
++    job = local[0].get("operator", pair[0].job_id)
++    ref = next(ref for ref in job.artifacts if ref.kind == "report")
++    gateway = orchestrator.ApprovedRemoteGateway(
++        base_url="https://scripted-unused.example",
++        model="unused",
++        key=SecretStr(""),
++        allowed_origins=frozenset({"https://scripted-unused.example"}),
++        remote_consent=True,
++    )
++    invocations = []
++
++    def forbidden(*args):
++        invocations.append(args)
++        raise AssertionError("external invocation must not occur")
++
++    monkeypatch.setattr(orchestrator, "bounded_complete", forbidden)
++    effects = budgets.EffectLedger(local[0])
++    engine = orchestrator.AdvisoryRunner(
++        local[0], effects, provider="explicit-remote", price=Decimal("0"), price_version="fixture"
++    )
++    result = engine.run_analysis(job, ref, gateway, lease=pair[1])
++    assert result.error_code == "budget_exhausted"
++    assert not invocations
++    assert effects.read(job.job_id, ref.sha256) is None
++
++
++@pytest.mark.parametrize("checkpointed", [False, True])
++def test_archived_replay_usable_without_policy(local, monkeypatch, checkpointed):
++    from qm_research_agent.orchestrator import AdvisoryRunner
++    from test_agent import gateway
++
++    pair = jobs(local, 1)[0]
++    job = local[0].get("operator", pair[0].job_id)
++    ref = next(ref for ref in job.artifacts if ref.kind == "report")
++    effects = ledger(local)
++    if not checkpointed:
++        monkeypatch.setattr(effects, "checkpoint", lambda *args: False)
++    model, transport = gateway(ref)
++    engine = AdvisoryRunner(
++        local[0], effects, provider="scripted", price=Decimal("0.6"), price_version="scripted"
++    )
++    original = engine.run_analysis(job, ref, model, lease=pair[1])
++    assert original.state == "succeeded"
++    local[2][0] += timedelta(seconds=61)
++    replacement = local[0].claim_analysis("replacement", local[2][0])
++    archived = AdvisoryRunner(
++        local[0],
++        budgets.EffectLedger(local[0]),
++        provider="unavailable",
++        price=None,
++        price_version=None,
++    )
++    replayed = archived.run_analysis(job, ref, model, lease=replacement)
++    assert replayed == original
++    assert len(transport.seen_bodies) == 1
++    with local[0]._transaction() as con:
++        assert con.execute("SELECT COUNT(*) FROM qm_portfolio_reservations").fetchone()[0] == 1
++
++
++def test_cancelled_unknown_reservation_keeps_allowance_next_month(local):
++    local[2][0] = datetime(2026, 1, 31, 23, 59, 30, tzinfo=UTC)
++    pairs = jobs(local)
++    effects = ledger(local, operating="0.6")
++    assert reserve(effects, pairs[0])
++    local[0].request_cancel("operator", pairs[0][0].job_id)
++    assert not effects.response(pairs[0][1], "a", "late")
++    local[2][0] = datetime(2026, 2, 1, tzinfo=UTC)
++    assert not reserve(effects, pairs[1])
++
++
++@pytest.mark.parametrize(
++    "sql",
++    [
++        "UPDATE qm_portfolio_reservations SET price='NaN'",
++        "UPDATE qm_portfolio_reservations SET price='0.600'",
++        "UPDATE qm_portfolio_reservations SET period='1900-01'",
++        "UPDATE qm_portfolio_policy SET high_water='malformed'",
++        "UPDATE model_effects SET price='0.1'",
++        "DELETE FROM qm_portfolio_reservations",
++        "INSERT INTO qm_portfolio_schema VALUES (1)",
++    ],
++)
++def test_malformed_or_incomplete_accounting_denies_without_new_effect(local, sql):
++    pairs = jobs(local)
++    effects = ledger(local)
++    assert reserve(effects, pairs[0])
++    with local[0]._transaction() as con:
++        con.execute(sql)
++    assert not reserve(effects, pairs[1], "0")
++    assert effects.read(pairs[1][0].job_id, "a") is None
++
++
++def test_canonical_amounts_are_persisted_and_equivalent_policy_reopens(local):
++    pair = jobs(local, 1)[0]
++    effects = ledger(local, operating="1.00", development="2.000")
++    assert reserve(effects, pair, "0.6000")
++    ledger(local)
++    with local[0]._transaction() as con:
++        assert tuple(
++            con.execute(
++                "SELECT operating_monthly_usd,development_total_usd FROM qm_portfolio_policy"
++            ).fetchone()
++        ) == ("1", "2")
++        assert con.execute("SELECT price FROM qm_portfolio_reservations").fetchone()[0] == "0.6"
++
++
++def test_missing_version_does_not_reset_bound_authority(local):
++    ledger(local)
++    with local[0]._transaction() as con:
++        con.execute("DELETE FROM qm_portfolio_schema")
++    with pytest.raises(ValueError):
++        ledger(local)
++
++
++def test_completed_without_archived_response_cannot_release_old_allowance(local):
++    local[2][0] = datetime(2026, 1, 31, 23, 59, 30, tzinfo=UTC)
++    pairs = jobs(local)
++    effects = ledger(local, operating="0.6")
++    assert reserve(effects, pairs[0])
++    with local[0]._transaction() as con:
++        con.execute("UPDATE model_effects SET status='completed'")
++    local[2][0] = datetime(2026, 2, 1, tzinfo=UTC)
++    assert not reserve(effects, pairs[1])
+diff --git a/services/research_agent/tests/test_portfolio_runtime.py b/services/research_agent/tests/test_portfolio_runtime.py
+new file mode 100644
+index 0000000..9d6a959
+--- /dev/null
++++ b/services/research_agent/tests/test_portfolio_runtime.py
+@@ -0,0 +1,120 @@
++"""Policy config only; filesystem admission retains separate native witnesses."""
++
++from decimal import Decimal
++
++import pytest
++from pydantic import ValidationError
++from qm_research_agent import runtime
++
++
++@pytest.fixture
++def config_data(tmp_path, monkeypatch):
++    # Isolate config validation from Linux-only private filesystem admission.
++    monkeypatch.setattr(runtime, "_directory", lambda path: path)
++    return {
++        "operator_id": "fixture",
++        "expected_build": "a" * 40,
++        "lake_root": tmp_path / "lake",
++        "artifact_root": tmp_path / "artifacts",
++        "credential_directory": tmp_path / "credentials",
++    }
++
++
++def configured(data, **updates):
++    return runtime.ServiceRuntimeConfig.model_validate({**data, **updates})
++
++
++def test_runtime_policy_is_optional_and_does_not_advertise_model(config_data):
++    config = configured(config_data)
++    assert hasattr(config, "portfolio_policy"), "missing optional portfolio configuration"
++    assert config.portfolio_policy is None and config.portfolio_category is None
++    instance = runtime.ServiceRuntime(config, None, None, "a" * 40, "b" * 64)
++    assert instance.preflight()["capabilities"]["model"] == "unavailable"
++    assert instance.preflight()["live"] is False
++
++
++def test_runtime_accepts_explicit_string_decimal_policy(config_data):
++    config = configured(
++        config_data,
++        portfolio_policy={
++            "policy_id": "fixture",
++            "operating_monthly_usd": "50",
++            "development_total_usd": "200",
++        },
++        portfolio_category="development",
++    )
++    assert config.portfolio_policy.operating_monthly_usd == Decimal("50")
++    assert config.portfolio_category == "development"
++
++
++@pytest.mark.parametrize(
++    "updates",
++    [
++        {"portfolio_category": "operating"},
++        {
++            "portfolio_policy": {
++                "policy_id": "fixture",
++                "operating_monthly_usd": "1",
++                "development_total_usd": "2",
++            }
++        },
++        {"portfolio_category": "scripted"},
++        {
++            "portfolio_policy": {
++                "policy_id": "fixture",
++                "operating_monthly_usd": 1.0,
++                "development_total_usd": "2",
++            },
++            "portfolio_category": "operating",
++        },
++        {
++            "portfolio_policy": {
++                "policy_id": "fixture",
++                "operating_monthly_usd": "51",
++                "development_total_usd": "2",
++            },
++            "portfolio_category": "operating",
++        },
++        {
++            "portfolio_policy": {
++                "policy_id": "fixture",
++                "operating_monthly_usd": "1",
++                "development_total_usd": "2",
++                "unknown": True,
++            },
++            "portfolio_category": "operating",
++        },
++    ],
++)
++def test_runtime_rejects_unpaired_coerced_or_expanded_policy(config_data, updates):
++    with pytest.raises((ValueError, ValidationError)):
++        configured(config_data, **updates)
++
++
++def test_runtime_build_binds_policy_without_starting_model(config_data, local, monkeypatch):
++    from pydantic import SecretStr
++    from qm_research_agent import store as service_store
++    from qm_research_agent.budgets import EffectLedger, PortfolioBudgetPolicy
++
++    config = configured(
++        config_data,
++        portfolio_policy={
++            "policy_id": "fixture",
++            "operating_monthly_usd": "1",
++            "development_total_usd": "2",
++        },
++        portfolio_category="operating",
++    )
++    monkeypatch.setattr(runtime, "_admit_runtime", lambda expected: ("a" * 40, "b" * 64))
++    monkeypatch.setattr(service_store, "PostgresJobStore", lambda *args, **kwargs: local[0])
++    instance = runtime.ServiceRuntime(
++        config, SecretStr("fixture-private-token"), SecretStr("unused"), "a" * 40, "b" * 64
++    )
++    assert runtime.build_app(instance) is not None
++    # A different identity cannot become a fresh authority after bootstrap.
++    with pytest.raises(ValueError):
++        EffectLedger(
++            local[0],
++            policy=PortfolioBudgetPolicy("other", Decimal("1"), Decimal("2")),
++            category="operating",
++        )
+diff --git a/services/research_agent/tests/test_store.py b/services/research_agent/tests/test_store.py
+index b7e9beb..e93ebae 100644
+--- a/services/research_agent/tests/test_store.py
++++ b/services/research_agent/tests/test_store.py
+@@ -7,9 +7,8 @@ from datetime import UTC, datetime, timedelta
+ from decimal import Decimal
+ 
+ import pytest
+-from conftest import publish
++from conftest import publish, scripted_effects
+ from pydantic import SecretStr
+-from qm_research_agent.budgets import EffectLedger
+ from qm_research_agent.store import PostgresJobStore, connect
+ from test_research_jobs import request_for
+ 
+@@ -101,7 +100,7 @@ def test_postgres_concurrent_reservations_cannot_exceed_allowance(pg):
+     lease = store.claim_analysis("analyst", clock[0])
+ 
+     def reserve(i):
+-        return EffectLedger(factory()).reserve_call(
++        return scripted_effects(factory()).reserve_call(
+             job.job_id, f"{i:064x}", Decimal("0.6"), RunBudget(), lease
+         )
+ 

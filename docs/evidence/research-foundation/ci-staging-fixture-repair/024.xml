@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="3.786" timestamp="2026-10-13T13:26:08.383215+08:00" hostname="zhoulaptop"><testcase classname="tests.test_live_moomoo" name="test_pump_shutdown_closes_owned_loop_and_executor" time="0.368"><failure message="assert False&#10; +  where False = is_closed()&#10; +    where is_closed = &lt;_UnixSelectorEventLoop running=False closed=False debug=False&gt;.is_closed">def test_pump_shutdown_closes_owned_loop_and_executor() -&gt; None:
+        feed = LiveFeed(lag=timedelta(seconds=2), stale=timedelta(seconds=4))
+        transport = MoomooVenueTransport(_StubOpenD(), poll_interval=timedelta(seconds=0.1))
+        supervisor = MoomooVenueSupervisor(transport)
+        supervisor.subscribe(["AAPL"])
+        feed.attach(supervisor)
+        thread, run_task = _start_pump(feed)
+        loop = run_task.get_loop()
+        workers = ()
+        try:
+            _wait_for(lambda: _state(feed, "AAPL").get("label") == "real")
+            executor = loop._default_executor
+            assert executor is not None
+            workers = tuple(executor._threads)
+            assert workers and all(worker.is_alive() for worker in workers)
+        finally:
+            _stop_pump(thread, loop, run_task, transport)
+        assert not thread.is_alive()
+&gt;       assert loop.is_closed()
+E       assert False
+E        +  where False = is_closed()
+E        +    where is_closed = &lt;_UnixSelectorEventLoop running=False closed=False debug=False&gt;.is_closed
+
+/mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh/tests/test_live_moomoo.py:374: AssertionError</failure></testcase></testsuite></testsuites>

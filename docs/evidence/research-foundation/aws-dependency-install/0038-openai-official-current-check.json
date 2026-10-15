@@ -1,0 +1,28 @@
+{
+  "scope": "fresh official documentation/source coherence only",
+  "at_utc": "2026-10-13T18:46:31.100109+00:00",
+  "model": "gpt-6.1-sol",
+  "documented_public_model": true,
+  "reasoning_effort_in_source": "low",
+  "standard_rates_per_million": {
+    "input": "2.00",
+    "cached_input": "0.10",
+    "cache_write": "2.50",
+    "output": "10.00"
+  },
+  "short_context_limit": 272000,
+  "source_price_version": "openai-gpt-6.1-sol-standard-2026-10-13",
+  "source_sha256": "0f4ac75b5feb378b3121da04d6b25ba8d1f51fdad55874a0a03f42949da2d0d2",
+  "source_matches_current_official_pages": true,
+  "sources": [
+    "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+    "https://developers.openai.com/api/docs/pricing",
+    "https://developers.openai.com/api/docs/guides/your-data"
+  ],
+  "API_account_access_verified": false,
+  "key_configured": false,
+  "actual_request_made": false,
+  "data_egress_approved": false,
+  "real_linux_service_activated": false,
+  "full_Option_A_complete": false
+}

@@ -1,0 +1,6 @@
+{
+  "postmaster_pidfile_absent": true,
+  "owned_port_closed": true,
+  "password_inputs_absent": true,
+  "owned_root": "/var/tmp/quantmesh-owned-pg-0ue7gicj"
+}

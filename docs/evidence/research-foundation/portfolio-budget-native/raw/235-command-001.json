@@ -1,0 +1,1 @@
+{"exit":0,"pid":44550,"stderr":"command-001.stderr","stderr_sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","stdout":"command-001.stdout","stdout_sha256":"bd328b5cdf00faf2a065b1f7f4fb467c08eb5cf3aac5c27287941501def39abb","tool":"initdb"}

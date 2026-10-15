@@ -1,0 +1,60 @@
+FFFFFF                                                                   [100%]
+=================================== FAILURES ===================================
+____________________ test_actual_runtime_fields_without_git ____________________
+tests/test_worker_build.py:139: in test_actual_runtime_fields_without_git
+    result = api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:353: in measure_worker_runtime
+    raise WorkerBuildRejected("worker build rejected") from None
+E   quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+_________________ test_empty_installer_inventory_file_is_valid _________________
+tests/test_worker_build.py:250: in test_empty_installer_inventory_file_is_valid
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:353: in measure_worker_runtime
+    raise WorkerBuildRejected("worker build rejected") from None
+E   quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+_______________ test_job_runner_manifest_branch_never_calls_git ________________
+tests/test_worker_build.py:325: in test_job_runner_manifest_branch_never_calls_git
+    result = job_runner.runtime_fingerprint(
+src/quantmesh/research/job_runner.py:63: in runtime_fingerprint
+    return measure_worker_runtime(manifest_path, manifest_sha256=manifest_sha256)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:353: in measure_worker_runtime
+    raise WorkerBuildRejected("worker build rejected") from None
+E   quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+_______________ test_loaded_admitted_dependency_and_builtin_pass _______________
+tests/test_worker_build.py:371: in test_loaded_admitted_dependency_and_builtin_pass
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:353: in measure_worker_runtime
+    raise WorkerBuildRejected("worker build rejected") from None
+E   quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+____________________ test_measured_source_main_entry_passes ____________________
+tests/test_worker_build.py:380: in test_measured_source_main_entry_passes
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:353: in measure_worker_runtime
+    raise WorkerBuildRejected("worker build rejected") from None
+E   quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+_____________ test_measured_base_stdlib_outside_venv_prefix_passes _____________
+tests/test_worker_build.py:402: in test_measured_base_stdlib_outside_venv_prefix_passes
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/quantmesh/research/worker_build.py:353: in measure_worker_runtime
+    raise WorkerBuildRejected("worker build rejected") from None
+E   quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+=============================== warnings summary ===============================
+tests/test_worker_build.py::test_actual_runtime_fields_without_git
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_build.py::test_actual_runtime_fields_without_git - q...
+FAILED tests/test_worker_build.py::test_empty_installer_inventory_file_is_valid
+FAILED tests/test_worker_build.py::test_job_runner_manifest_branch_never_calls_git
+FAILED tests/test_worker_build.py::test_loaded_admitted_dependency_and_builtin_pass
+FAILED tests/test_worker_build.py::test_measured_source_main_entry_passes - q...
+FAILED tests/test_worker_build.py::test_measured_base_stdlib_outside_venv_prefix_passes
+6 failed, 32 deselected, 1 warning in 5.78s

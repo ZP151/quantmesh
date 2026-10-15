@@ -1,0 +1,9 @@
+Processing /var/tmp/quantmesh-sdk-wire-zz47gnjl/moomoo_api-10.10.7008
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: moomoo_api
+  Building wheel for moomoo_api (pyproject.toml): started
+  Building wheel for moomoo_api (pyproject.toml): finished with status 'done'
+  Created wheel for moomoo_api: filename=moomoo_api-10.10.7008-py3-none-any.whl size=6743055 sha256=1b52a6f9ebe475c098765ee63e961fde1a73796c4febd4b2157b37b5a740e891
+  Stored in directory: /tmp/pip-ephem-wheel-cache-k1vx_k6h/wheels/82/d7/be/333172ecbe361b142ca10662730c2071bd16b38c27e0b0d407
+Successfully built moomoo_api

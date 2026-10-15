@@ -1,0 +1,174 @@
+.....................FFF.                                                [100%]
+=================================== FAILURES ===================================
+_________________ test_empty_installer_inventory_file_is_valid _________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red3/test_empty_installer_inventory0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c91e2d3d640>
+
+    def test_empty_installer_inventory_file_is_valid(sealed, monkeypatch):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        (sealed.prefix / "REQUESTED").write_bytes(b"")
+        _reseal_inventory(sealed)
+>       assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_worker_build.py:241: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red3/test_empty_installer_inventory0/build.json')
+manifest_sha256 = 'b6d257e6890ecbd463572ae264b2ee57f5b1e607be434c069a58723246b43911'
+
+    def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
+        """Validate pinned actual bytes, then collect the unchanged five runtime fields.
+    
+        The caller supplies the manifest SHA from independent image admission. This
+        function grants no Linux activation or image/native certificate by itself.
+        """
+        try:
+            data = _json(Path(manifest_path), manifest_sha256)
+            if set(data) != {
+                "schema_version",
+                "source_commit",
+                "source_root",
+                "prefix",
+                "python_executable",
+                "lock_path",
+                "inventory_path",
+                "inventory_sha256",
+                "source_files",
+                "library_paths",
+                "notice_paths",
+            }:
+                raise ValueError
+            if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+                raise ValueError
+            if not isinstance(data["source_commit"], str) or not re.fullmatch(
+                r"[0-9a-f]{40}", data["source_commit"]
+            ):
+                raise ValueError
+            source, prefix, executable = (
+                _path(data[key]) for key in ("source_root", "prefix", "python_executable")
+            )
+            if (
+                sys.platform != "linux"
+                or sys.version_info[:2] != (3, 12)
+                or platform.machine() != "x86_64"
+                or not sys.dont_write_bytecode
+                or os.environ.get("PYTHONDONTWRITEBYTECODE") != "1"
+                or Path(sys.prefix) != prefix
+                or Path(sys.executable) != executable
+                or not executable.is_relative_to(prefix)
+            ):
+                raise ValueError
+            files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+            required = [source, prefix]
+            inventory = _json(_path(data["inventory_path"]), data["inventory_sha256"])
+            if any(str(root) not in inventory["roots"] for root in required):
+                raise ValueError
+            for key in ("library_paths", "notice_paths"):
+                if (
+                    not isinstance(data[key], list)
+                    or not data[key]
+                    or len(set(data[key])) != len(data[key])
+                ):
+                    raise ValueError
+                if any(str(_path(p)) not in files for p in data[key]):
+                    raise ValueError
+            if str(executable) not in files or str(_path(data["lock_path"])) not in files:
+                raise ValueError
+            pins = _pins(_path(data["lock_path"]))
+            declared = data["source_files"]
+            if not isinstance(declared, dict) or not declared:
+                raise ValueError
+            source_files = {
+                p.relative_to(source).as_posix(): files[str(p)]
+                for p in sorted((source / "quantmesh").rglob("*.py"))
+                if not p.is_symlink()
+            }
+            if source_files != declared:
+                raise ValueError
+            dependencies, actual = [], {}
+            for dist in _distributions():
+                name = dist.metadata["Name"]
+                normalized = re.sub(r"[-_.]+", "-", name).lower()
+                if normalized in actual:
+                    raise ValueError
+                actual[normalized] = dist.version
+                hashes = {
+                    key: hashlib.sha256((dist.read_text(key) or "").encode()).hexdigest()
+                    for key in ("METADATA", "RECORD", "direct_url.json")
+                }
+                dependencies.append((name, dist.version, hashes))
+            if actual != pins:
+                raise ValueError
+            executable_digest = files[str(executable)]
+            dependency = hashlib.sha256(
+                _canonical(
+                    dict(
+                        packages=[json.loads(d) for d in sorted({_canonical(d) for d in dependencies})],
+                        python_version=sys.version,
+                        python_executable_digest=executable_digest,
+                        platform=sys.platform,
+                        machine=platform.machine(),
+                    )
+                )
+            ).hexdigest()
+            return dict(
+                build_digest=hashlib.sha256(_canonical(sorted(source_files.items()))).hexdigest(),
+                dependency_digest=dependency,
+                git_commit=data["source_commit"],
+                python_version=sys.version,
+                python_executable_digest=executable_digest,
+            )
+        except (OSError, ValueError, TypeError, KeyError, AttributeError, UnicodeError, RecursionError):
+>           raise WorkerBuildRejected("worker build rejected") from None
+E           quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected
+
+src/quantmesh/research/worker_build.py:281: WorkerBuildRejected
+_______________ test_source_alias_refuses_even_when_in_inventory _______________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red3/test_source_alias_refuses_even0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c91e2d3db50>
+
+    def test_source_alias_refuses_even_when_in_inventory(sealed, monkeypatch):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        alias = sealed.code.with_name("alias.py")
+        try:
+            alias.symlink_to(sealed.code.name)
+        except OSError:
+            pytest.skip("OS does not permit fixture symlinks")
+        _reseal_inventory(sealed, links={str(alias): sealed.code.name})
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:253: Failed
+___________________ test_uninventoried_special_file_refuses ____________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...inux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red3/test_uninventoried_special_fil0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c91e2d3e9f0>
+
+    def test_uninventoried_special_file_refuses(sealed, monkeypatch):
+        import os
+    
+        if not hasattr(os, "mkfifo"):
+            pytest.skip("POSIX special-file unit fixture")
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        os.mkfifo(sealed.prefix / "pipe")
+>       with pytest.raises(api.WorkerBuildRejected):
+E       Failed: DID NOT RAISE WorkerBuildRejected
+
+tests/test_worker_build.py:265: Failed
+=============================== warnings summary ===============================
+tests/test_worker_build.py::test_actual_runtime_fields_without_git
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_build.py::test_empty_installer_inventory_file_is_valid
+FAILED tests/test_worker_build.py::test_source_alias_refuses_even_when_in_inventory
+FAILED tests/test_worker_build.py::test_uninventoried_special_file_refuses - ...
+3 failed, 22 passed, 1 warning in 2.15s

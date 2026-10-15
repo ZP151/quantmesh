@@ -1,0 +1,329 @@
+release	Certify exact checkout	﻿2026-10-13T00:43:04.1692700Z ##[group]Run python tools/release_gate.py
+release	Certify exact checkout	2026-10-13T00:43:04.1693075Z ^[[36;1mpython tools/release_gate.py^[[0m
+release	Certify exact checkout	2026-10-13T00:43:04.1757950Z shell: /usr/bin/bash -e {0}
+release	Certify exact checkout	2026-10-13T00:43:04.1758268Z env:
+release	Certify exact checkout	2026-10-13T00:43:04.1758611Z   QUANTMESH_GATE_LOGS: /home/runner/work/_temp/quantmesh-gate-logs
+release	Certify exact checkout	2026-10-13T00:43:04.1759139Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T00:43:04.1759653Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+release	Certify exact checkout	2026-10-13T00:43:04.1760178Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T00:43:04.1760640Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T00:43:04.1761114Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+release	Certify exact checkout	2026-10-13T00:43:04.1761581Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+release	Certify exact checkout	2026-10-13T00:43:04.1761974Z ##[endgroup]
+release	Certify exact checkout	2026-10-13T00:43:04.4498455Z release gate over HEAD @ 3da85f5fbc41 — source checkout clean, proceeding with a fresh deterministic environment
+release	Certify exact checkout	2026-10-13T00:43:04.4502122Z == clone current commit ==
+release	Certify exact checkout	2026-10-13T00:43:04.4511969Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/01-clone-current-commit.log","name":"clone current commit","pid":3232,"timeout_seconds":600,"timestamp":"2026-10-13T00:43:04.450Z"}
+release	Certify exact checkout	2026-10-13T00:43:05.4525974Z {"elapsed_seconds":1.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/01-clone-current-commit.log","name":"clone current commit","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:05.451Z"}
+release	Certify exact checkout	2026-10-13T00:43:05.4529131Z ok — 0:01
+release	Certify exact checkout	2026-10-13T00:43:05.4529674Z == release version consistent (metadata, notes, tag) ==
+release	Certify exact checkout	2026-10-13T00:43:05.4535779Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/02-release-version-consistent-(metadata,-notes,-tag).log","name":"release version consistent (metadata, notes, tag)","pid":3245,"timeout_seconds":120,"timestamp":"2026-10-13T00:43:05.453Z"}
+release	Certify exact checkout	2026-10-13T00:43:06.4544168Z {"elapsed_seconds":1.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/02-release-version-consistent-(metadata,-notes,-tag).log","name":"release version consistent (metadata, notes, tag)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:06.453Z"}
+release	Certify exact checkout	2026-10-13T00:43:06.4547980Z ok — 0:01
+release	Certify exact checkout	2026-10-13T00:43:06.4548385Z == fresh venv ==
+release	Certify exact checkout	2026-10-13T00:43:06.4553991Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/03-fresh-venv.log","name":"fresh venv","pid":3248,"timeout_seconds":600,"timestamp":"2026-10-13T00:43:06.455Z"}
+release	Certify exact checkout	2026-10-13T00:43:09.4566561Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/03-fresh-venv.log","name":"fresh venv","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:09.456Z"}
+release	Certify exact checkout	2026-10-13T00:43:09.4568376Z ok — 0:03
+release	Certify exact checkout	2026-10-13T00:43:09.4568815Z == install release extras .[dev,research,e2e,moomoo] ==
+release	Certify exact checkout	2026-10-13T00:43:09.4575720Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log","name":"install release extras .[dev,research,e2e,moomoo]","pid":3273,"timeout_seconds":1800,"timestamp":"2026-10-13T00:43:09.457Z"}
+release	Certify exact checkout	2026-10-13T00:43:44.4678471Z {"elapsed_seconds":35.011,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log","name":"install release extras .[dev,research,e2e,moomoo]","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:44.467Z"}
+release	Certify exact checkout	2026-10-13T00:43:44.4681303Z ok — 0:35
+release	Certify exact checkout	2026-10-13T00:43:44.4681816Z == ruff check src tests tools ==
+release	Certify exact checkout	2026-10-13T00:43:44.4688069Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/05-ruff-check-src-tests-tools.log","name":"ruff check src tests tools","pid":3336,"timeout_seconds":600,"timestamp":"2026-10-13T00:43:44.468Z"}
+release	Certify exact checkout	2026-10-13T00:43:45.4697414Z {"elapsed_seconds":1.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/05-ruff-check-src-tests-tools.log","name":"ruff check src tests tools","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:45.469Z"}
+release	Certify exact checkout	2026-10-13T00:43:45.4700538Z ok — 0:01
+release	Certify exact checkout	2026-10-13T00:43:45.4700905Z == trusted data tooling installed ==
+release	Certify exact checkout	2026-10-13T00:43:45.4707306Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/06-trusted-data-tooling-installed.log","name":"trusted data tooling installed","pid":3345,"timeout_seconds":120,"timestamp":"2026-10-13T00:43:45.470Z"}
+release	Certify exact checkout	2026-10-13T00:43:47.4727258Z {"elapsed_seconds":2.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/06-trusted-data-tooling-installed.log","name":"trusted data tooling installed","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:47.471Z"}
+release	Certify exact checkout	2026-10-13T00:43:47.4729668Z ok — 0:02
+release	Certify exact checkout	2026-10-13T00:43:47.4730091Z == license review (closure contract) ==
+release	Certify exact checkout	2026-10-13T00:43:47.4746247Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/07-license-review-(closure-contract).log","name":"license review (closure contract)","pid":3352,"timeout_seconds":600,"timestamp":"2026-10-13T00:43:47.473Z"}
+release	Certify exact checkout	2026-10-13T00:43:48.4757582Z {"elapsed_seconds":1.003,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/07-license-review-(closure-contract).log","name":"license review (closure contract)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:48.475Z"}
+release	Certify exact checkout	2026-10-13T00:43:48.4760050Z ok — 0:01
+release	Certify exact checkout	2026-10-13T00:43:48.4760568Z == audit venv (isolated tooling) ==
+release	Certify exact checkout	2026-10-13T00:43:48.4766533Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/08-audit-venv-(isolated-tooling).log","name":"audit venv (isolated tooling)","pid":3353,"timeout_seconds":600,"timestamp":"2026-10-13T00:43:48.476Z"}
+release	Certify exact checkout	2026-10-13T00:43:51.4790733Z {"elapsed_seconds":3.003,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/08-audit-venv-(isolated-tooling).log","name":"audit venv (isolated tooling)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:51.478Z"}
+release	Certify exact checkout	2026-10-13T00:43:51.4792871Z ok — 0:03
+release	Certify exact checkout	2026-10-13T00:43:51.4793885Z == install pip-audit (isolated) ==
+release	Certify exact checkout	2026-10-13T00:43:51.4800654Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/09-install-pip-audit-(isolated).log","name":"install pip-audit (isolated)","pid":3379,"timeout_seconds":600,"timestamp":"2026-10-13T00:43:51.479Z"}
+release	Certify exact checkout	2026-10-13T00:43:56.4819217Z {"elapsed_seconds":5.003,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/09-install-pip-audit-(isolated).log","name":"install pip-audit (isolated)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:56.481Z"}
+release	Certify exact checkout	2026-10-13T00:43:56.4821596Z ok — 0:05
+release	Certify exact checkout	2026-10-13T00:43:56.4822070Z == pip-audit over requirements-audit.txt ==
+release	Certify exact checkout	2026-10-13T00:43:56.4827571Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/10-pip-audit-over-requirements-audit.txt.log","name":"pip-audit over requirements-audit.txt","pid":3402,"timeout_seconds":900,"timestamp":"2026-10-13T00:43:56.482Z"}
+release	Certify exact checkout	2026-10-13T00:43:59.4848491Z {"elapsed_seconds":3.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/10-pip-audit-over-requirements-audit.txt.log","name":"pip-audit over requirements-audit.txt","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:43:59.484Z"}
+release	Certify exact checkout	2026-10-13T00:43:59.4851340Z ok — 0:03
+release	Certify exact checkout	2026-10-13T00:43:59.4851731Z == npm ci (frontend deps) ==
+release	Certify exact checkout	2026-10-13T00:43:59.4856111Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/11-npm-ci-(frontend-deps).log","name":"npm ci (frontend deps)","pid":3407,"timeout_seconds":1800,"timestamp":"2026-10-13T00:43:59.485Z"}
+release	Certify exact checkout	2026-10-13T00:44:07.4887853Z {"elapsed_seconds":8.004,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/11-npm-ci-(frontend-deps).log","name":"npm ci (frontend deps)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:44:07.488Z"}
+release	Certify exact checkout	2026-10-13T00:44:07.4892509Z ok — 0:08
+release	Certify exact checkout	2026-10-13T00:44:07.4893022Z == frontend license review (locked closure) ==
+release	Certify exact checkout	2026-10-13T00:44:07.4909073Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/12-frontend-license-review-(locked-closure).log","name":"frontend license review (locked closure)","pid":3461,"timeout_seconds":120,"timestamp":"2026-10-13T00:44:07.490Z"}
+release	Certify exact checkout	2026-10-13T00:44:08.4916963Z {"elapsed_seconds":1.003,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/12-frontend-license-review-(locked-closure).log","name":"frontend license review (locked closure)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:44:08.491Z"}
+release	Certify exact checkout	2026-10-13T00:44:08.4919290Z ok — 0:01
+release	Certify exact checkout	2026-10-13T00:44:08.4919754Z == npm audit --audit-level=high ==
+release	Certify exact checkout	2026-10-13T00:44:08.4927213Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/13-npm-audit---audit-level=high.log","name":"npm audit --audit-level=high","pid":3462,"timeout_seconds":600,"timestamp":"2026-10-13T00:44:08.492Z"}
+release	Certify exact checkout	2026-10-13T00:44:09.4936803Z {"elapsed_seconds":1.002,"event":"step_finished","exit_code":0,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/13-npm-audit---audit-level=high.log","name":"npm audit --audit-level=high","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:44:09.493Z"}
+release	Certify exact checkout	2026-10-13T00:44:09.4939411Z ok — 0:01
+release	Certify exact checkout	2026-10-13T00:44:09.4939917Z == frontend bundle current (build_frontend --check) ==
+release	Certify exact checkout	2026-10-13T00:44:09.4946605Z {"event":"step_started","log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/14-frontend-bundle-current-(build_frontend---check).log","name":"frontend bundle current (build_frontend --check)","pid":3474,"timeout_seconds":1800,"timestamp":"2026-10-13T00:44:09.494Z"}
+release	Certify exact checkout	2026-10-13T00:44:20.5001331Z {"elapsed_seconds":11.006,"event":"step_finished","exit_code":1,"log_path":"/tmp/qmesh-release-gate-vivg_uah/logs/14-frontend-bundle-current-(build_frontend---check).log","name":"frontend bundle current (build_frontend --check)","slow_tests":[],"timed_out":false,"timestamp":"2026-10-13T00:44:20.499Z"}
+release	Certify exact checkout	2026-10-13T00:44:20.5005584Z FAILED after 0:11; exit code 1; last output:
+release	Certify exact checkout	2026-10-13T00:44:20.5005960Z 
+release	Certify exact checkout	2026-10-13T00:44:20.5006526Z > frontend@0.0.0 build
+release	Certify exact checkout	2026-10-13T00:44:20.5007037Z > tsc -b && vite build
+release	Certify exact checkout	2026-10-13T00:44:20.5007310Z 
+release	Certify exact checkout	2026-10-13T00:44:20.5008189Z ^[[36mvite v8.2.1 ^[[32mbuilding client environment for production...^[[36m^[[39m
+release	Certify exact checkout	2026-10-13T00:44:20.5008916Z ^[[2K
+release	Certify exact checkout	2026-10-13T00:44:20.5009930Z transforming...✓ 2090 modules transformed.
+release	Certify exact checkout	2026-10-13T00:44:20.5010438Z rendering chunks...
+release	Certify exact checkout	2026-10-13T00:44:20.5010806Z computing gzip size...
+release	Certify exact checkout	2026-10-13T00:44:20.5011533Z dist/index.html                                              1.20 kB │ gzip:   0.60 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5012382Z dist/assets/geist-cyrillic-ext-wght-normal-DjL33-gN.woff2    7.42 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5013194Z dist/assets/geist-vietnamese-wght-normal-6IgcOCM7.woff2      8.00 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5013827Z dist/assets/geist-cyrillic-wght-normal-BEAKL7Jp.woff2       15.08 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5014767Z dist/assets/geist-latin-ext-wght-normal-DC-KSUi6.woff2      16.51 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5015429Z dist/assets/geist-latin-wght-normal-BgDaEnEv.woff2          29.40 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5016165Z dist/assets/index-Btd8ivVr.css                              57.21 kB │ gzip:  10.59 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5016938Z dist/assets/InstrumentWorkspace-BIPKNtWq.js                296.53 kB │ gzip:  84.30 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5017703Z dist/assets/index-DuOEswkL.js                              687.90 kB │ gzip: 195.55 kB
+release	Certify exact checkout	2026-10-13T00:44:20.5018023Z 
+release	Certify exact checkout	2026-10-13T00:44:20.5018204Z ^[[32m✓ built in 590ms^[[39m
+release	Certify exact checkout	2026-10-13T00:44:20.5018606Z ^[[33m[plugin builtin:vite-reporter] 
+release	Certify exact checkout	2026-10-13T00:44:20.5019112Z (!) Some chunks are larger than 500 kB after minification. Consider:
+release	Certify exact checkout	2026-10-13T00:44:20.5019626Z - Using dynamic import() to code-split the application
+release	Certify exact checkout	2026-10-13T00:44:20.5020478Z - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+release	Certify exact checkout	2026-10-13T00:44:20.5021675Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.^[[39m
+release	Certify exact checkout	2026-10-13T00:44:20.5022581Z stale bundle — rebuild and commit the frontend output:
+release	Certify exact checkout	2026-10-13T00:44:20.5023259Z   assets/InstrumentWorkspace-BIPKNtWq.js
+release	Certify exact checkout	2026-10-13T00:44:20.5023866Z   assets/InstrumentWorkspace-DUz7Fb4y.js
+release	Certify exact checkout	2026-10-13T00:44:20.5024633Z   assets/index--uD4kafi.js
+release	Certify exact checkout	2026-10-13T00:44:20.5025079Z   assets/index-BCLe9pUA.css
+release	Certify exact checkout	2026-10-13T00:44:20.5025519Z   assets/index-Btd8ivVr.css
+release	Certify exact checkout	2026-10-13T00:44:20.5025952Z   assets/index-DuOEswkL.js
+release	Certify exact checkout	2026-10-13T00:44:20.5026354Z   index.html
+release	Certify exact checkout	2026-10-13T00:44:20.7152986Z 
+release	Certify exact checkout	2026-10-13T00:44:20.7153875Z === release gate summary ===
+release	Certify exact checkout	2026-10-13T00:44:20.7154867Z branch: HEAD   commit: 3da85f5fbc4112e6b22249ca45de877b5f577596
+release	Certify exact checkout	2026-10-13T00:44:20.7155385Z source checkout clean at start: yes
+release	Certify exact checkout	2026-10-13T00:44:20.7155798Z   PASS      1.0s  clone current commit
+release	Certify exact checkout	2026-10-13T00:44:20.7156298Z   PASS      1.0s  release version consistent (metadata, notes, tag)
+release	Certify exact checkout	2026-10-13T00:44:20.7156796Z   PASS      3.0s  fresh venv
+release	Certify exact checkout	2026-10-13T00:44:20.7157280Z   PASS     35.0s  install release extras .[dev,research,e2e,moomoo]
+release	Certify exact checkout	2026-10-13T00:44:20.7157801Z   PASS      1.0s  ruff check src tests tools
+release	Certify exact checkout	2026-10-13T00:44:20.7158248Z   PASS      2.0s  trusted data tooling installed
+release	Certify exact checkout	2026-10-13T00:44:20.7158722Z   PASS      1.0s  license review (closure contract)
+release	Certify exact checkout	2026-10-13T00:44:20.7159181Z   PASS      3.0s  audit venv (isolated tooling)
+release	Certify exact checkout	2026-10-13T00:44:20.7159623Z   PASS      5.0s  install pip-audit (isolated)
+release	Certify exact checkout	2026-10-13T00:44:20.7160112Z   PASS      3.0s  pip-audit over requirements-audit.txt
+release	Certify exact checkout	2026-10-13T00:44:20.7160568Z   PASS      8.0s  npm ci (frontend deps)
+release	Certify exact checkout	2026-10-13T00:44:20.7161030Z   PASS      1.0s  frontend license review (locked closure)
+release	Certify exact checkout	2026-10-13T00:44:20.7161520Z   PASS      1.0s  npm audit --audit-level=high
+release	Certify exact checkout	2026-10-13T00:44:20.7162043Z   FAIL     11.0s  frontend bundle current (build_frontend --check)
+release	Certify exact checkout	2026-10-13T00:44:20.7162582Z clone clean at end (no generated state): yes
+release	Certify exact checkout	2026-10-13T00:44:20.7163080Z   playwright browser cache: absent (E2E tests skipped)
+release	Certify exact checkout	2026-10-13T00:44:20.7163378Z 
+release	Certify exact checkout	2026-10-13T00:44:20.7164026Z RELEASE GATE FAILED — diagnostics kept at /tmp/qmesh-release-gate-vivg_uah
+release	Certify exact checkout	2026-10-13T00:44:20.7260305Z ##[error]Process completed with exit code 1.
+fast	Test frontend	﻿2026-10-13T00:43:08.1357134Z ##[group]Run npx vitest run
+fast	Test frontend	2026-10-13T00:43:08.1357473Z ^[[36;1mnpx vitest run^[[0m
+fast	Test frontend	2026-10-13T00:43:08.1421544Z shell: /usr/bin/bash -e {0}
+fast	Test frontend	2026-10-13T00:43:08.1421814Z env:
+fast	Test frontend	2026-10-13T00:43:08.1422118Z   QUANTMESH_GATE_LOGS: /home/runner/work/_temp/quantmesh-gate-logs
+fast	Test frontend	2026-10-13T00:43:08.1422586Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+fast	Test frontend	2026-10-13T00:43:08.1423236Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+fast	Test frontend	2026-10-13T00:43:08.1423688Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+fast	Test frontend	2026-10-13T00:43:08.1424081Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+fast	Test frontend	2026-10-13T00:43:08.1424468Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+fast	Test frontend	2026-10-13T00:43:08.1424861Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+fast	Test frontend	2026-10-13T00:43:08.1425190Z ##[endgroup]
+fast	Test frontend	2026-10-13T00:43:08.8142411Z 
+fast	Test frontend	2026-10-13T00:43:08.8145185Z ^[[1m^[[46m RUN ^[[49m^[[22m ^[[36mv3.2.7 ^[[39m^[[90m/home/runner/work/quantmesh/quantmesh/frontend^[[39m
+fast	Test frontend	2026-10-13T00:43:08.8146229Z 
+fast	Test frontend	2026-10-13T00:43:13.9880214Z  ^[[32m✓^[[39m src/screens/Watchlist.test.tsx ^[[2m(^[[22m^[[2m60 tests^[[22m^[[2m)^[[22m^[[33m 3181^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:13.9883569Z    ^[[33m^[[2m✓^[[22m^[[39m filters the four textual attention buckets while preserving exact packet identity ^[[33m 312^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:14.3015904Z  ^[[32m✓^[[39m src/screens/instrument/DecisionRail.test.tsx ^[[2m(^[[22m^[[2m22 tests^[[22m^[[2m)^[[22m^[[33m 3578^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:14.3037714Z    ^[[33m^[[2m✓^[[22m^[[39m DecisionRail^[[2m > ^[[22mkeeps Reject and Watch usable while evidence blocks Paper, then displays the saved packet ID ^[[33m 451^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:16.5427517Z  ^[[32m✓^[[39m src/components/charts/InstrumentChart.test.tsx ^[[2m(^[[22m^[[2m16 tests^[[22m^[[2m)^[[22m^[[33m 737^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:17.5446601Z  ^[[32m✓^[[39m src/screens/Cockpit.test.tsx ^[[2m(^[[22m^[[2m26 tests^[[22m^[[2m)^[[22m^[[33m 1680^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.0200770Z  ^[[32m✓^[[39m src/lib/live.test.ts ^[[2m(^[[22m^[[2m40 tests^[[22m^[[2m)^[[22m^[[32m 68^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3938588Z  ^[[32m✓^[[39m src/screens/InstrumentWorkspace.test.tsx ^[[2m(^[[22m^[[2m37 tests^[[22m^[[2m)^[[22m^[[33m 7203^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3941337Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mrestores exact packet action state on Back and Forward after creating a child ^[[33m 1152^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3972945Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mleaves a pinned packet atomically when changing range and keeps fresh controls ^[[33m 343^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3980625Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mreplaces the packet query with an action child and removes it for new analysis ^[[33m 751^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3983317Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mpromotes an action result across market, scenarios, evidence, risk, and actions during polling ^[[33m 490^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3986126Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mpauses Reject, Watch, and Paper while a requested range still shows placeholder evidence ^[[33m 523^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3988894Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mpauses an existing proposal confirmation while a requested range still shows placeholder evidence ^[[33m 400^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3991371Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mresets packet selection when the venue-symbol-range context changes ^[[33m 351^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:18.3993604Z    ^[[33m^[[2m✓^[[22m^[[39m InstrumentWorkspaceScreen^[[2m > ^[[22mrefetches history for URL-backed range and comparison controls ^[[33m 386^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:20.5436602Z  ^[[32m✓^[[39m src/screens/instrument/PacketOutcomeReview.test.tsx ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m)^[[22m^[[33m 1013^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:20.5449070Z    ^[[33m^[[2m✓^[[22m^[[39m PacketOutcomeReview^[[2m > ^[[22mrenders honest pending evidence and saves only the exact outcome identity ^[[33m 495^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:21.2895923Z  ^[[32m✓^[[39m src/screens/NavigationAndValuation.test.tsx ^[[2m(^[[22m^[[2m15 tests^[[22m^[[2m)^[[22m^[[33m 1225^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5531505Z  ^[[32m✓^[[39m src/screens/instrument/ScenarioLab.test.tsx ^[[2m(^[[22m^[[2m17 tests^[[22m^[[2m)^[[22m^[[33m 3406^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5535854Z    ^[[33m^[[2m✓^[[22m^[[39m saves Watch with the displayed horizon and then replays the child snapshot ^[[33m 529^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5537938Z    ^[[33m^[[2m✓^[[22m^[[39m blocks saved-draft Paper with complete valuation when current capability refuses: forecast evidence is stale ^[[33m 449^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5592912Z    ^[[33m^[[2m✓^[[22m^[[39m blocks saved-draft Paper with complete valuation when current capability refuses: forecast is unavailable ^[[33m 325^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5608150Z    ^[[33m^[[2m✓^[[22m^[[39m blocks saved-draft Paper with complete valuation when current capability refuses: paper proposal service is not attached ^[[33m 379^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5616328Z    ^[[33m^[[2m✓^[[22m^[[39m blocks saved-draft Paper with complete valuation when current capability refuses: a fresh real quote is required for paper confirmation ^[[33m 386^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.5618876Z    ^[[33m^[[2m✓^[[22m^[[39m retains the abstaining chart and safe actions when the pinned artifact is unavailable ^[[33m 322^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.6977834Z  ^[[32m✓^[[39m src/screens/ResearchJobs.test.tsx ^[[2m(^[[22m^[[2m14 tests^[[22m^[[2m)^[[22m^[[33m 1727^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.6987307Z    ^[[33m^[[2m✓^[[22m^[[39m fixture research loop^[[2m > ^[[22msubmits pinned setup, reaches report, reloads and keeps Agent unavailable independent ^[[33m 394^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:23.7017371Z    ^[[33m^[[2m✓^[[22m^[[39m fixture research loop^[[2m > ^[[22mstops automatic status checks at the bound and never polls a terminal job ^[[33m 413^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:24.1087371Z  ^[[32m✓^[[39m src/screens/Markets.test.tsx ^[[2m(^[[22m^[[2m30 tests^[[22m^[[2m)^[[22m^[[33m 1221^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:25.4585892Z  ^[[32m✓^[[39m src/screens/instrument/PacketCopilot.test.tsx ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 506^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:25.5527968Z  ^[[32m✓^[[39m src/screens/instrument/MarketCanvas.test.tsx ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[33m 567^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:26.1947788Z  ^[[32m✓^[[39m src/screens/DataCatalog.test.tsx ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[33m 647^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:26.1951680Z    ^[[33m^[[2m✓^[[22m^[[39m DataCatalogScreen^[[2m > ^[[22mshows failed quality and lineage without presenting data as usable ^[[33m 401^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:26.7878600Z  ^[[32m✓^[[39m src/lib/messages.test.ts ^[[2m(^[[22m^[[2m36 tests^[[22m^[[2m)^[[22m^[[32m 142^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:26.9418319Z  ^[[32m✓^[[39m src/screens/instrument/ScenarioEvidence.test.tsx ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 259^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:27.9313387Z  ^[[32m✓^[[39m src/screens/instrument/PacketMonitoring.test.tsx ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[33m 430^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4173809Z  ^[[31m❯^[[39m src/screens/instrument/WorkspaceHeader.test.tsx ^[[2m(^[[22m^[[2m10 tests^[[22m^[[2m | ^[[22m^[[31m3 failed^[[39m^[[2m)^[[22m^[[32m 211^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4176128Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22mages and degrades a cached quote without changing values or source times^[[32m 72^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4177883Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22mretains monotonic age through wall-clock rollback and identical HTTP snapshots^[[32m 16^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4179501Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22mrecovers with a new fresh HTTP observation even while the stream stays down^[[32m 20^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4181065Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22muses source age when a newly received quote already contains old data^[[32m 12^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4182972Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22mnever promotes demo-synthetic observations to real^[[32m 14^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4184372Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22mnever promotes synthetic observations to real^[[32m 25^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4186194Z    ^[[32m✓^[[39m WorkspaceHeader cached freshness^[[2m > ^[[22mpreserves server unavailability while aging retained values^[[32m 11^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4188437Z ^[[31m   ^[[31m×^[[31m WorkspaceHeader cached freshness^[[2m > ^[[22mshows closed coverage independently from real execution evidence^[[39m^[[32m 20^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4190429Z ^[[31m     → ^[[2mexpect(^[[22m^[[31melement^[[31m^[[2m).toHaveTextContent()^[[22m
+fast	Test frontend	2026-10-13T00:43:28.4191055Z 
+fast	Test frontend	2026-10-13T00:43:28.4191393Z Expected element to have text content:
+fast	Test frontend	2026-10-13T00:43:28.4192121Z ^[[32m  Oct 10^[[31m
+fast	Test frontend	2026-10-13T00:43:28.4192476Z Received:
+fast	Test frontend	2026-10-13T00:43:28.4192938Z ^[[31m  Oct 9, 08:00 PM^[[31m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4194073Z ^[[31m   ^[[31m×^[[31m WorkspaceHeader cached freshness^[[2m > ^[[22mshows closed coverage independently from delayed execution evidence^[[39m^[[32m 12^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4269036Z ^[[31m     → ^[[2mexpect(^[[22m^[[31melement^[[31m^[[2m).toHaveTextContent()^[[22m
+fast	Test frontend	2026-10-13T00:43:28.4269570Z 
+fast	Test frontend	2026-10-13T00:43:28.4269848Z Expected element to have text content:
+fast	Test frontend	2026-10-13T00:43:28.4270359Z ^[[32m  Oct 10^[[31m
+fast	Test frontend	2026-10-13T00:43:28.4270700Z Received:
+fast	Test frontend	2026-10-13T00:43:28.4271140Z ^[[31m  Oct 9, 08:00 PM^[[31m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4272596Z ^[[31m   ^[[31m×^[[31m WorkspaceHeader cached freshness^[[2m > ^[[22mshows closed coverage independently from null execution evidence^[[39m^[[32m 8^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.4274015Z ^[[31m     → ^[[2mexpect(^[[22m^[[31melement^[[31m^[[2m).toHaveTextContent()^[[22m
+fast	Test frontend	2026-10-13T00:43:28.4274464Z 
+fast	Test frontend	2026-10-13T00:43:28.4274722Z Expected element to have text content:
+fast	Test frontend	2026-10-13T00:43:28.4275225Z ^[[32m  Oct 10^[[31m
+fast	Test frontend	2026-10-13T00:43:28.4275796Z Received:
+fast	Test frontend	2026-10-13T00:43:28.4276247Z ^[[31m  Oct 9, 08:00 PM^[[31m^[[39m
+fast	Test frontend	2026-10-13T00:43:28.5139000Z  ^[[32m✓^[[39m src/screens/Prediction.test.tsx ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[33m 312^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:29.6226884Z  ^[[32m✓^[[39m src/screens/instrument/ForecastOutcomeComparison.test.tsx ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[33m 427^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:29.6442950Z  ^[[32m✓^[[39m src/lib/live-session.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 8^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:30.4048736Z  ^[[32m✓^[[39m src/screens/Imports.test.tsx ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[33m 393^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:30.7637256Z  ^[[32m✓^[[39m src/components/charts/ForecastBand.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 17^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:31.5452352Z  ^[[32m✓^[[39m src/screens/Overview.test.tsx ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[33m 354^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:31.6887313Z  ^[[32m✓^[[39m src/lib/preferences.test.tsx ^[[2m(^[[22m^[[2m3 tests^[[22m^[[2m)^[[22m^[[32m 178^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:31.9911336Z  ^[[32m✓^[[39m src/components/live-data-badge.test.tsx ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:33.1171449Z  ^[[32m✓^[[39m src/lib/format.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[32m 11^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:33.4477250Z  ^[[32m✓^[[39m src/screens/Locale.test.tsx ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 194^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:33.9131467Z  ^[[32m✓^[[39m src/components/instrument-entry.test.tsx ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[33m 607^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:34.2707031Z  ^[[32m✓^[[39m src/lib/nav.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:34.8657548Z  ^[[32m✓^[[39m src/screens/Settings.test.tsx ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 180^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:35.0497164Z  ^[[32m✓^[[39m src/lib/api.test.ts ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3702205Z  ^[[32m✓^[[39m src/screens/instrument/WorkspaceStates.test.tsx ^[[2m(^[[22m^[[2m1 test^[[22m^[[2m)^[[22m^[[32m 30^[[2mms^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3898098Z 
+fast	Test frontend	2026-10-13T00:43:35.3899204Z ^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m^[[1m^[[41m Failed Tests 3 ^[[49m^[[22m^[[31m⎯⎯⎯⎯⎯⎯⎯^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3899772Z 
+fast	Test frontend	2026-10-13T00:43:35.3904031Z ^[[41m^[[1m FAIL ^[[22m^[[49m src/screens/instrument/WorkspaceHeader.test.tsx^[[2m > ^[[22mWorkspaceHeader cached freshness^[[2m > ^[[22mshows closed coverage independently from real execution evidence
+fast	Test frontend	2026-10-13T00:43:35.3907728Z ^[[41m^[[1m FAIL ^[[22m^[[49m src/screens/instrument/WorkspaceHeader.test.tsx^[[2m > ^[[22mWorkspaceHeader cached freshness^[[2m > ^[[22mshows closed coverage independently from delayed execution evidence
+fast	Test frontend	2026-10-13T00:43:35.3910816Z ^[[41m^[[1m FAIL ^[[22m^[[49m src/screens/instrument/WorkspaceHeader.test.tsx^[[2m > ^[[22mWorkspaceHeader cached freshness^[[2m > ^[[22mshows closed coverage independently from null execution evidence
+fast	Test frontend	2026-10-13T00:43:35.3925897Z ^[[31m^[[1mError^[[22m: ^[[2mexpect(^[[22m^[[31melement^[[31m^[[2m).toHaveTextContent()^[[22m
+fast	Test frontend	2026-10-13T00:43:35.3926516Z 
+fast	Test frontend	2026-10-13T00:43:35.3926828Z Expected element to have text content:
+fast	Test frontend	2026-10-13T00:43:35.3927428Z ^[[32m  Oct 10^[[31m
+fast	Test frontend	2026-10-13T00:43:35.3927806Z Received:
+fast	Test frontend	2026-10-13T00:43:35.3928319Z ^[[31m  Oct 9, 08:00 PM^[[31m^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3929352Z ^[[36m ^[[2m❯^[[22m src/screens/instrument/WorkspaceHeader.test.tsx:^[[2m120:32^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3971307Z     ^[[90m118| ^[[39m    ^[[34mexpect^[[39m(screen^[[33m.^[[39m^[[34mgetByText^[[39m(^[[32m'Live degraded'^[[39m))^[[33m.^[[39m^[[34mtoBeInTheDocument^[[39m()
+fast	Test frontend	2026-10-13T00:43:35.3973674Z     ^[[90m119| ^[[39m    ^[[34mexpect^[[39m(^[[34mfield^[[39m(^[[32m'Live classification'^[[39m))^[[33m.^[[39m^[[34mtoHaveTextContent^[[39m(^[[32m'stale'^[[39m)
+fast	Test frontend	2026-10-13T00:43:35.3974590Z 
+fast	Test frontend	2026-10-13T00:43:35.3976076Z     ^[[90m120| ^[[39m    ^[[34mexpect^[[39m(^[[34mfield^[[39m(^[[32m'Data time'^[[39m))^[[33m.^[[39m^[[34mtoHaveTextContent^[[39m(^[[32m'Oct 10'^[[39m)
+fast	Test frontend	2026-10-13T00:43:35.3977415Z     ^[[90m   | ^[[39m                               ^[[31m^^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3978761Z     ^[[90m121| ^[[39m    ^[[34mexpect^[[39m(^[[34mfield^[[39m(^[[32m'Age'^[[39m))^[[33m.^[[39mnot^[[33m.^[[39m^[[34mtoHaveTextContent^[[39m(^[[32m'0 ms'^[[39m)
+fast	Test frontend	2026-10-13T00:43:35.3979751Z     ^[[90m122| ^[[39m  })
+fast	Test frontend	2026-10-13T00:43:35.3979997Z 
+fast	Test frontend	2026-10-13T00:43:35.3980436Z ^[[31m^[[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯^[[22m^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3980818Z 
+fast	Test frontend	2026-10-13T00:43:35.3981627Z ^[[2m Test Files ^[[22m ^[[1m^[[31m1 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m32 passed^[[39m^[[22m^[[90m (33)^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3983083Z ^[[2m      Tests ^[[22m ^[[1m^[[31m3 failed^[[39m^[[22m^[[2m | ^[[22m^[[1m^[[32m416 passed^[[39m^[[22m^[[90m (419)^[[39m
+fast	Test frontend	2026-10-13T00:43:35.3984006Z ^[[2m   Start at ^[[22m 00:43:08
+fast	Test frontend	2026-10-13T00:43:35.3986480Z ^[[2m   Duration ^[[22m 26.57s^[[2m (transform 2.40s, setup 7.87s, collect 10.61s, tests 30.53s, environment 20.86s, prepare 3.73s)^[[22m
+fast	Test frontend	2026-10-13T00:43:35.3987295Z 
+fast	Test frontend	2026-10-13T00:43:35.4000077Z 
+fast	Test frontend	2026-10-13T00:43:35.4006720Z ##[error]Error: expect(element).toHaveTextContent()
+fast	Test frontend	
+fast	Test frontend	Expected element to have text content:
+fast	Test frontend	  Oct 10
+fast	Test frontend	Received:
+fast	Test frontend	  Oct 9, 08:00 PM
+fast	Test frontend	 ❯ src/screens/instrument/WorkspaceHeader.test.tsx:120:32
+fast	Test frontend	
+fast	Test frontend	
+fast	Test frontend	2026-10-13T00:43:35.4008812Z 
+fast	Test frontend	2026-10-13T00:43:35.4011730Z ##[error]Error: expect(element).toHaveTextContent()
+fast	Test frontend	
+fast	Test frontend	Expected element to have text content:
+fast	Test frontend	  Oct 10
+fast	Test frontend	Received:
+fast	Test frontend	  Oct 9, 08:00 PM
+fast	Test frontend	 ❯ src/screens/instrument/WorkspaceHeader.test.tsx:120:32
+fast	Test frontend	
+fast	Test frontend	
+fast	Test frontend	2026-10-13T00:43:35.4013555Z 
+fast	Test frontend	2026-10-13T00:43:35.4016601Z ##[error]Error: expect(element).toHaveTextContent()
+fast	Test frontend	
+fast	Test frontend	Expected element to have text content:
+fast	Test frontend	  Oct 10
+fast	Test frontend	Received:
+fast	Test frontend	  Oct 9, 08:00 PM
+fast	Test frontend	 ❯ src/screens/instrument/WorkspaceHeader.test.tsx:120:32
+fast	Test frontend	
+fast	Test frontend	
+fast	Test frontend	2026-10-13T00:43:35.4909305Z ##[error]Process completed with exit code 1.
+python	Require successful selected gates	﻿2026-10-13T00:44:26.9162563Z ##[group]Run python - <<'PY'
+python	Require successful selected gates	2026-10-13T00:44:26.9163374Z ^[[36;1mpython - <<'PY'^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9164034Z ^[[36;1mimport json^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9164615Z ^[[36;1mimport os^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9165418Z ^[[36;1mresults = json.loads(os.environ["GATE_RESULTS"])^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9166185Z ^[[36;1mrequired = ("classify", "fast")^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9166993Z ^[[36;1mfailed = any(results[name]["result"] != "success" for name in required)^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9167936Z ^[[36;1mfailed |= any(value["result"] not in {"success", "skipped"}^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9168754Z ^[[36;1m              for value in results.values())^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9169443Z ^[[36;1mraise SystemExit(1 if failed else 0)^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9170118Z ^[[36;1mPY^[[0m
+python	Require successful selected gates	2026-10-13T00:44:26.9377988Z shell: /usr/bin/bash -e {0}
+python	Require successful selected gates	2026-10-13T00:44:26.9379094Z env:
+python	Require successful selected gates	2026-10-13T00:44:26.9379724Z   pythonLocation: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T00:44:26.9380654Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib/pkgconfig
+python	Require successful selected gates	2026-10-13T00:44:26.9381635Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T00:44:26.9382692Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T00:44:26.9383529Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.13.16/x64
+python	Require successful selected gates	2026-10-13T00:44:26.9384556Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.13.16/x64/lib
+python	Require successful selected gates	2026-10-13T00:44:26.9395710Z   GATE_RESULTS: {
+python	Require successful selected gates	  "classify": {
+python	Require successful selected gates	    "result": "success",
+python	Require successful selected gates	    "outputs": {
+python	Require successful selected gates	      "tier": "release",
+python	Require successful selected gates	      "decision": "{\"domains\":[],\"frontend\":false,\"pytest_targets\":[],\"reasons\":[\"safety:.github/workflows/ci.yml\",\"safety:docs/evidence/research-foundation/owned-research-backup/public-audit/go.mod\",\"safety:docs/evidence/research-foundation/owned-research-backup/public-audit/go.sum\",\"safety:frontend/src/components/live-data-badge.test.tsx\",\"safety:frontend/src/components/live-data-badge.tsx\",\"safety:frontend/src/components/live-market-list.tsx\",\"safety:frontend/src/lib/live-session.test.ts\",\"safety:frontend/src/lib/live.ts\",\"safety:src/quantmesh/instruments/contracts.py\",\"safety:src/quantmesh/instruments/workspace.py\",\"safety:src/quantmesh/live/feed.py\",\"safety:src/quantmesh/live/fence.py\",\"safety:src/quantmesh/live/session_freshness.py\",\"safety:src/quantmesh/research/job_store.py\",\"safety:tests/test_ai_acceptance.py\",\"safety:tests/test_live_fence.py\",\"safety:tests/test_live_session_consumers.py\",\"safety:tests/test_live_session_freshness.py\",\"safety:tests/test_owned_postgres_fixture.py\",\"safety:tests/test_research_job_store.py\",\"safety:tools/eval_harness/README.md\",\"safety:tools/eval_harness/__init__.py\",\"safety:tools/eval_harness/__main__.py\",\"safety:tools/eval_harness/core.py\",\"safety:tools/eval_harness/pytest_plugin.py\",\"safety:tools/eval_harness/runner.py\",\"safety:tools/gate_policy.py\",\"safety:tools/qualify_linux_worker.py\",\"safety:tools/qualify_opend_private_terminal.py\",\"safety:tools/qualify_owned_postgres.py\",\"safety:tools/qualify_research_backup.py\",\"safety:tools/quality_gate.py\",\"safety:tools/release_gate.py\",\"safety:tools/research_job.py\",\"safety:tools/research_service_gate.py\",\"safety:tools/server_market_inventory.py\",\"safety:tools/verify_server_market_source.py\"],\"tier\":\"release\"}",
+python	Require successful selected gates	      "domains": "[]",
+python	Require successful selected gates	      "frontend": "false",
+python	Require successful selected gates	      "run_browser": "false"
+python	Require successful selected gates	    }
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "fast": {
+python	Require successful selected gates	    "result": "failure",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "domain": {
+python	Require successful selected gates	    "result": "skipped",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "browser": {
+python	Require successful selected gates	    "result": "skipped",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  },
+python	Require successful selected gates	  "release": {
+python	Require successful selected gates	    "result": "failure",
+python	Require successful selected gates	    "outputs": {}
+python	Require successful selected gates	  }
+python	Require successful selected gates	}
+python	Require successful selected gates	2026-10-13T00:44:26.9407786Z ##[endgroup]
+python	Require successful selected gates	2026-10-13T00:44:27.5130179Z ##[error]Process completed with exit code 1.

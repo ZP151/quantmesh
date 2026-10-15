@@ -99,4 +99,29 @@ describe('WorkspaceHeader cached freshness', () => {
     expect(screen.getByText('Live unavailable')).toBeInTheDocument()
     expect(field('Age')).toHaveTextContent('31 s')
   })
+
+  it.each(['real', 'delayed', null])('shows closed coverage independently from %s execution evidence', (provenance) => {
+    vi.setSystemTime(new Date('2026-10-11T12:00:00Z'))
+    const coverage = {
+      market_state: 'closed' as const, data_state: 'latest_session' as const,
+      last_source_at: '2026-10-09T20:00:00Z', expected_last_bar_end: '2026-10-09T20:00:00Z',
+      next_open_at: '2026-10-12T13:30:00Z', calendar_version: 'XNYS:pinned',
+      reason: 'closed_latest_session_covered_without_latency_assumption',
+      policy_version: 'quantmesh:session-freshness:1', provider_delay_seconds: null,
+      opening_grace_seconds: 120,
+    }
+    const workspace = observed({ ...{ session_freshness: coverage }, label: 'stale', provenance,
+      status: 'degraded', age_ms: 144_000_000,
+      data_time: coverage.last_source_at, received_at: coverage.last_source_at })
+    render(header(workspace))
+    expect(screen.getByText('Market closed · Last session')).toBeInTheDocument()
+    expect(screen.getByText('Live degraded')).toBeInTheDocument()
+    expect(field('Live classification')).toHaveTextContent('stale')
+    // The same source instant is Oct 9 in UTC and Oct 10 in Singapore.
+    const displayedSourceDay = new Intl.DateTimeFormat('en-US', {
+      month: 'short', day: 'numeric',
+    }).format(new Date(coverage.last_source_at))
+    expect(field('Data time')).toHaveTextContent(displayedSourceDay)
+    expect(field('Age')).not.toHaveTextContent('0 ms')
+  })
 })

@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "C:/Users/15492/.codex-clean/worktrees/ed95/QuantMesh/services/research_agent/.venv/Scripts/python.exe",
+    "-B",
+    "-m",
+    "pytest",
+    "-c",
+    "services/research_agent/pyproject.toml",
+    "services/research_agent/tests/test_effect_launch.py",
+    "services/research_agent/tests/test_hardening.py",
+    "-q",
+    "--basetemp",
+    "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh\\output\\0038-effect-bytecode\\windows-owned-tmp"
+  ],
+  "exit": 0,
+  "scope": "OWNED_SCRIPTED_TEST_ONLY",
+  "production_qualified": false
+}

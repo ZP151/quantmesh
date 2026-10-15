@@ -1,0 +1,52 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0001965999836102128,
+      "location": [
+        "tests\\test_account_store.py",
+        37,
+        "test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "when": "call",
+      "outcome": "passed",
+      "duration_seconds": 0.0010981999803334475,
+      "location": [
+        "tests\\test_account_store.py",
+        37,
+        "test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001012999564409256,
+      "location": [
+        "tests\\test_account_store.py",
+        37,
+        "test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 0,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_account_store.py::test_journal_recovery_closes_the_append_before_snapshot_crash_window"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh\\output\\174-safety\\eval-clean-checkout\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

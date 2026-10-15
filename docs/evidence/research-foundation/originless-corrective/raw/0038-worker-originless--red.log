@@ -1,0 +1,493 @@
+FFFFFFFFFFFFFFFFFFFFFFF                                                  [100%]
+=================================== FAILURES ===================================
+_____________ test_genuine_measured_typing_alias_passes[typing.io] _____________
+
+name = 'typing.io'
+
+    @pytest.mark.parametrize("name", ["typing.io", "typing.re"])
+    def test_genuine_measured_typing_alias_passes(name):
+>       assert _api()._originless_helper(name, sys.modules[name], sys.modules, _measured_typing())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:26: AttributeError
+_____________ test_genuine_measured_typing_alias_passes[typing.re] _____________
+
+name = 'typing.re'
+
+    @pytest.mark.parametrize("name", ["typing.io", "typing.re"])
+    def test_genuine_measured_typing_alias_passes(name):
+>       assert _api()._originless_helper(name, sys.modules[name], sys.modules, _measured_typing())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:26: AttributeError
+________________ test_typing_alias_changes_refuse[replacement] _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762f440>
+change = 'replacement'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+_________________ test_typing_alias_changes_refuse[metaclass] __________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762e240>
+change = 'metaclass'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+_______________ test_typing_alias_changes_refuse[extra_function] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762eae0>
+change = 'extra_function'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+___________________ test_typing_alias_changes_refuse[member] ___________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c8852818440>
+change = 'member'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+____________________ test_typing_alias_changes_refuse[all] _____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762cb60>
+change = 'all'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+____________________ test_typing_alias_changes_refuse[code] ____________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762fbc0>
+change = 'code'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+______________ test_typing_alias_changes_refuse[external_typing] _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762f2f0>
+change = 'external_typing'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+_________________ test_typing_alias_changes_refuse[descriptor] _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7c880762ee10>
+change = 'descriptor'
+
+    @pytest.mark.parametrize("change", ["replacement", "metaclass", "extra_function", "member", "all", "code", "external_typing", "descriptor"])
+    def test_typing_alias_changes_refuse(monkeypatch, change):
+        alias = sys.modules["typing.io"]
+        measured = _measured_typing()
+        modules = dict(sys.modules)
+        if change == "replacement":
+            alias = object()
+        elif change == "metaclass":
+            alias = type("io", (), {})
+        elif change == "extra_function":
+            monkeypatch.setattr(alias, "foreign", lambda: None, raising=False)
+        elif change == "member":
+            monkeypatch.setattr(alias, "IO", object())
+        elif change == "all":
+            monkeypatch.setattr(alias, "__all__", ["IO"])
+        elif change == "code":
+            monkeypatch.setattr(typing._DeprecatedType, "__getattribute__", lambda self, name: None)
+        elif change == "external_typing":
+            measured = {}
+        elif change == "descriptor":
+            monkeypatch.setattr(alias, "__weakref__", object.__dict__["__class__"])
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("typing.io", alias, modules, measured)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:51: AttributeError
+_______________ test_plain_data_only_cython_runtime_passes[None] _______________
+
+setting = None
+
+    @pytest.mark.parametrize("setting", [None, True, False])
+    def test_plain_data_only_cython_runtime_passes(setting):
+        module = _runtime()
+        if setting is not None:
+            module.cline_in_traceback = setting
+>       assert _api()._originless_helper("cython_runtime", module, {}, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:65: AttributeError
+_______________ test_plain_data_only_cython_runtime_passes[True] _______________
+
+setting = True
+
+    @pytest.mark.parametrize("setting", [None, True, False])
+    def test_plain_data_only_cython_runtime_passes(setting):
+        module = _runtime()
+        if setting is not None:
+            module.cline_in_traceback = setting
+>       assert _api()._originless_helper("cython_runtime", module, {}, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:65: AttributeError
+______________ test_plain_data_only_cython_runtime_passes[False] _______________
+
+setting = False
+
+    @pytest.mark.parametrize("setting", [None, True, False])
+    def test_plain_data_only_cython_runtime_passes(setting):
+        module = _runtime()
+        if setting is not None:
+            module.cline_in_traceback = setting
+>       assert _api()._originless_helper("cython_runtime", module, {}, {})
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:65: AttributeError
+__________________ test_runtime_arbitrary_payload_refuses[1] ___________________
+
+payload = 1
+
+    @pytest.mark.parametrize("payload", [1, object(), lambda: None, property(lambda self: None)])
+    def test_runtime_arbitrary_payload_refuses(payload):
+        module = _runtime()
+        module.cline_in_traceback = payload
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:73: AttributeError
+_______________ test_runtime_arbitrary_payload_refuses[payload1] _______________
+
+payload = <object object at 0x7c8855379970>
+
+    @pytest.mark.parametrize("payload", [1, object(), lambda: None, property(lambda self: None)])
+    def test_runtime_arbitrary_payload_refuses(payload):
+        module = _runtime()
+        module.cline_in_traceback = payload
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:73: AttributeError
+_______________ test_runtime_arbitrary_payload_refuses[<lambda>] _______________
+
+payload = <function <lambda> at 0x7c88523ccae0>
+
+    @pytest.mark.parametrize("payload", [1, object(), lambda: None, property(lambda self: None)])
+    def test_runtime_arbitrary_payload_refuses(payload):
+        module = _runtime()
+        module.cline_in_traceback = payload
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:73: AttributeError
+_______________ test_runtime_arbitrary_payload_refuses[payload3] _______________
+
+payload = <property object at 0x7c88523a47c0>
+
+    @pytest.mark.parametrize("payload", [1, object(), lambda: None, property(lambda self: None)])
+    def test_runtime_arbitrary_payload_refuses(payload):
+        module = _runtime()
+        module.cline_in_traceback = payload
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:73: AttributeError
+_________________ test_runtime_extra_members_refuse[__file__] __________________
+
+key = '__file__'
+
+    @pytest.mark.parametrize("key", ["__file__", "__path__", "__getattr__", "foreign"])
+    def test_runtime_extra_members_refuse(key):
+        module = _runtime()
+        vars(module)[key] = object()
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:81: AttributeError
+_________________ test_runtime_extra_members_refuse[__path__] __________________
+
+key = '__path__'
+
+    @pytest.mark.parametrize("key", ["__file__", "__path__", "__getattr__", "foreign"])
+    def test_runtime_extra_members_refuse(key):
+        module = _runtime()
+        vars(module)[key] = object()
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:81: AttributeError
+________________ test_runtime_extra_members_refuse[__getattr__] ________________
+
+key = '__getattr__'
+
+    @pytest.mark.parametrize("key", ["__file__", "__path__", "__getattr__", "foreign"])
+    def test_runtime_extra_members_refuse(key):
+        module = _runtime()
+        vars(module)[key] = object()
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:81: AttributeError
+__________________ test_runtime_extra_members_refuse[foreign] __________________
+
+key = 'foreign'
+
+    @pytest.mark.parametrize("key", ["__file__", "__path__", "__getattr__", "foreign"])
+    def test_runtime_extra_members_refuse(key):
+        module = _runtime()
+        vars(module)[key] = object()
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", module, {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:81: AttributeError
+__________________ test_module_subclass_hooks_are_not_invoked __________________
+
+    def test_module_subclass_hooks_are_not_invoked():
+        class Dangerous(types.ModuleType):
+            def __getattribute__(self, name):
+                raise AssertionError("untrusted module hook invoked")
+    
+        with pytest.raises(ValueError):
+>           _api()._originless_helper("cython_runtime", Dangerous("cython_runtime"), {}, {})
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:90: AttributeError
+_________________ test_unknown_or_native_cache_is_not_exempted _________________
+
+    def test_unknown_or_native_cache_is_not_exempted():
+        for name in ("unknown", "_cython_3_1_4", "_cython_3_2_9"):
+>           assert not _api()._originless_helper(name, types.ModuleType(name), {}, {})
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'quantmesh.research.worker_build' has no attribute '_originless_helper'
+
+tests/test_worker_originless.py:95: AttributeError
+=============================== warnings summary ===============================
+tests/test_worker_originless.py::test_genuine_measured_typing_alias_passes[typing.io]
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_worker_originless.py::test_typing_alias_changes_refuse[member]
+tests/test_worker_originless.py::test_typing_alias_changes_refuse[all]
+tests/test_worker_originless.py::test_typing_alias_changes_refuse[descriptor]
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/_pytest/monkeypatch.py:240: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.13.
+    oldval = getattr(target, name, NOTSET)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_originless.py::test_genuine_measured_typing_alias_passes[typing.io]
+FAILED tests/test_worker_originless.py::test_genuine_measured_typing_alias_passes[typing.re]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[replacement]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[metaclass]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[extra_function]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[member]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[all]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[code]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[external_typing]
+FAILED tests/test_worker_originless.py::test_typing_alias_changes_refuse[descriptor]
+FAILED tests/test_worker_originless.py::test_plain_data_only_cython_runtime_passes[None]
+FAILED tests/test_worker_originless.py::test_plain_data_only_cython_runtime_passes[True]
+FAILED tests/test_worker_originless.py::test_plain_data_only_cython_runtime_passes[False]
+FAILED tests/test_worker_originless.py::test_runtime_arbitrary_payload_refuses[1]
+FAILED tests/test_worker_originless.py::test_runtime_arbitrary_payload_refuses[payload1]
+FAILED tests/test_worker_originless.py::test_runtime_arbitrary_payload_refuses[<lambda>]
+FAILED tests/test_worker_originless.py::test_runtime_arbitrary_payload_refuses[payload3]
+FAILED tests/test_worker_originless.py::test_runtime_extra_members_refuse[__file__]
+FAILED tests/test_worker_originless.py::test_runtime_extra_members_refuse[__path__]
+FAILED tests/test_worker_originless.py::test_runtime_extra_members_refuse[__getattr__]
+FAILED tests/test_worker_originless.py::test_runtime_extra_members_refuse[foreign]
+FAILED tests/test_worker_originless.py::test_module_subclass_hooks_are_not_invoked
+FAILED tests/test_worker_originless.py::test_unknown_or_native_cache_is_not_exempted
+23 failed, 4 warnings in 5.13s

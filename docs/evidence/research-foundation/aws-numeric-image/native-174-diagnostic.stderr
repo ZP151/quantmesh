@@ -1,0 +1,59 @@
+rejection-location _reject 72 walk 372
+raw-kind MISSING
+known-field depth 2
+rejection-location walk 372 edge 269
+raw-kind NoneType
+known-field key MISSING
+known-field depth 1
+rejection-location edge 269 walk 324
+raw-kind type
+known-field key MISSING
+known-field depth 1
+rejection-location walk 324 edge 269
+raw-kind NoneType
+known-field key Token
+known-field depth 0
+rejection-location edge 269 _executable_signature 380
+raw-kind type
+known-field key Token
+rejection-location _executable_signature 380 _module_record 622
+raw-kind NoneType
+known-field name _contextvars
+rejection-location _module_record 622 _register_all 673
+raw-kind NoneType
+known-field name _contextvars
+rejection-location _register_all 673 __init__ 496
+raw-kind NoneType
+rejection-location __init__ 496 _entry_session 761
+raw-kind NoneType
+rejection-location _entry_session 761 __enter__ 137
+raw-kind NoneType
+rejection-location _reject 72 _entry_session 766
+raw-kind NoneType
+rejection-location _entry_session 766 __enter__ 137
+raw-kind NoneType
+rejection-location __enter__ 137 _foundation 120
+raw-kind NoneType
+known-field name inventory
+rejection-location _foundation 120 __enter__ 137
+raw-kind NoneType
+rejection-location __enter__ 137 _fixture_main 148
+raw-kind NoneType
+Traceback (most recent call last):
+  File "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/lineage-foundation/weak-diagnostic/deploy/research_worker/worker_entry.py", line 154, in <module>
+    _fixture_main()
+  File "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/lineage-foundation/weak-diagnostic/deploy/research_worker/worker_entry.py", line 148, in _fixture_main
+    with _foundation(sys.argv[1:]) as session:
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/lineage-foundation/weak-diagnostic/deploy/research_worker/worker_entry.py", line 120, in _foundation
+    with module._entry_session(
+  File "/usr/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/lineage-foundation/weak-diagnostic/src/quantmesh/research/worker_provenance.py", line 766, in _entry_session
+    _reject()
+  File "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/lineage-foundation/weak-diagnostic/src/quantmesh/research/worker_provenance.py", line 72, in _reject
+    raise WorkerProvenanceRejected("worker provenance rejected") from None
+_quantmesh_worker_provenance.WorkerProvenanceRejected: worker provenance rejected

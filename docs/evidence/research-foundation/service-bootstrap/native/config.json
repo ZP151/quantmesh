@@ -1,0 +1,1 @@
+{"schema_version": 1, "operator_id": "operator", "expected_build": "97f53d046faaa6293edea2497836d1ed69819637", "lake_root": "/var/tmp/quantmesh-bootstrap-krfg8kx6/lake", "artifact_root": "/var/tmp/quantmesh-bootstrap-krfg8kx6/artifacts", "configured_dataset_ids": ["equities"], "credential_directory": "/var/tmp/quantmesh-bootstrap-krfg8kx6/credentials"}

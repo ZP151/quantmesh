@@ -1,0 +1,39 @@
+{
+  "before": {
+    "utc": "2026-10-13T08:37:10.589754+00:00",
+    "free_c_bytes": 89409540096,
+    "test_fixture_bytes": 0,
+    "evidence_bytes": 4417,
+    "explicit_source_bytes": 45290,
+    "introduced_logical_upper_bound": 144997
+  },
+  "after": {
+    "utc": "2026-10-13T08:37:13.068277+00:00",
+    "free_c_bytes": 89408393216,
+    "test_fixture_bytes": 0,
+    "evidence_bytes": 44970,
+    "explicit_source_bytes": 45290,
+    "introduced_logical_upper_bound": 185550
+  },
+  "argv": [
+    "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_worker_build.py",
+    "-q",
+    "-p",
+    "no:cacheprovider",
+    "--basetemp",
+    "/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/runtime-red1"
+  ],
+  "mirrored": [
+    "src/quantmesh/research/job_runner.py",
+    "tests/test_worker_build.py",
+    "tests/test_research_job_runner.py"
+  ],
+  "borrowed_environment_read_only": true,
+  "environment_bytecode_policy": "-B and PYTHONDONTWRITEBYTECODE=1",
+  "source_semantics": "explicit targeted overlay on prior owned c545 clone; not whole042 clean checkout",
+  "resource_gate": "software logical<=10MB and free C>=50GB; prior whole-C5GB admission remains PENDING"
+}

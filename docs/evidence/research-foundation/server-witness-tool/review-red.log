@@ -1,0 +1,116 @@
+.FFFF                                                                    [100%]
+================================== FAILURES ===================================
+_ test_review_invalid_partial_or_receipt_lineage_cannot_pass[old_lineage_receipt] _
+
+change = 'old_lineage_receipt'
+
+    @pytest.mark.parametrize("change", ["intermediate_bar", "old_lineage_receipt", "missing_freshness"])
+    def test_review_invalid_partial_or_receipt_lineage_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            bars = sample["symbols"]["AAPL"]["app"]["bars"]
+            if change == "intermediate_bar":
+                extra = copy.deepcopy(bars[-2])
+                extra["timestamp"] = (
+                    datetime.fromisoformat(extra["timestamp"]) + timedelta(seconds=30)
+                ).isoformat()
+                extra["close"] = 102
+                bars.insert(-1, extra)
+            elif change == "old_lineage_receipt":
+                bars[-1]["live_lineage"]["received_at"] = "2020-01-01T00:00:00Z"
+                bars[-1]["live_lineage"]["freshness_time"] = None
+            else:
+                bars[-1]["live_lineage"]["freshness_time"] = None
+>       assert tool().evaluate_samples(value)["provider_application"] == "failed"
+E       AssertionError: assert 'passed' == 'failed'
+E         
+E         - failed
+E         + passed
+
+tests\test_server_market_witness.py:786: AssertionError
+_ test_review_invalid_partial_or_receipt_lineage_cannot_pass[missing_freshness] _
+
+change = 'missing_freshness'
+
+    @pytest.mark.parametrize("change", ["intermediate_bar", "old_lineage_receipt", "missing_freshness"])
+    def test_review_invalid_partial_or_receipt_lineage_cannot_pass(change):
+        value = samples()
+        for sample in value["samples"]:
+            bars = sample["symbols"]["AAPL"]["app"]["bars"]
+            if change == "intermediate_bar":
+                extra = copy.deepcopy(bars[-2])
+                extra["timestamp"] = (
+                    datetime.fromisoformat(extra["timestamp"]) + timedelta(seconds=30)
+                ).isoformat()
+                extra["close"] = 102
+                bars.insert(-1, extra)
+            elif change == "old_lineage_receipt":
+                bars[-1]["live_lineage"]["received_at"] = "2020-01-01T00:00:00Z"
+                bars[-1]["live_lineage"]["freshness_time"] = None
+            else:
+                bars[-1]["live_lineage"]["freshness_time"] = None
+>       assert tool().evaluate_samples(value)["provider_application"] == "failed"
+E       AssertionError: assert 'passed' == 'failed'
+E         
+E         - failed
+E         + passed
+
+tests\test_server_market_witness.py:786: AssertionError
+___________ test_configuration_fifo_or_oversize_refused_before_read ___________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/review-red-temp/test_configuration_fifo_or_ove0')
+
+    def test_configuration_fifo_or_oversize_refused_before_read(tmp_path):
+        file = tmp_path / "reviewed.xml"
+        file.write_bytes(b"x" * 16385)
+        with pytest.raises(tool().WitnessError):
+>           tool()._read_regular(file, 16384)
+            ^^^^^^^^^^^^^^^^^^^^
+E           AttributeError: module 'tools.verify_server_market_source' has no attribute '_read_regular'
+
+tests\test_server_market_witness.py:793: AttributeError
+_____________ test_runtime_native_reads_run_inside_owned_deadline _____________
+
+tmp_path = WindowsPath('C:/Users/15492/.codex-clean/worktrees/4a9b/QuantMesh/output/169-server-witness/review-red-temp/test_runtime_native_reads_run_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x000001FCEC3D3E10>
+
+    def test_runtime_native_reads_run_inside_owned_deadline(tmp_path, monkeypatch):
+        identity = prepare_native_collection(monkeypatch)
+        targets = []
+        rows = iter(samples()["samples"])
+    
+        def owned(target, args, *, timeout):
+            targets.append(target.__name__)
+            if target.__name__ == "_identity_child":
+                assert timeout <= 15
+                return {"identity": identity}
+            return {"sample": next(rows)}
+    
+        monkeypatch.setattr(tool(), "_run_owned_child", owned)
+        result = tool().collect_samples(profile(True), BUILD, tmp_path / "new")
+        assert result["provider_application"] == "passed"
+>       assert targets.count("_identity_child") == 13
+E       AssertionError: assert 0 == 13
+E        +  where 0 = <built-in method count of list object at 0x000001FCEC7B2240>('_identity_child')
+E        +    where <built-in method count of list object at 0x000001FCEC7B2240> = ['_sample_child', '_sample_child', '_sample_child', '_sample_child', '_sample_child', '_sample_child'].count
+
+tests\test_server_market_witness.py:815: AssertionError
+============================== warnings summary ===============================
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[intermediate_bar]
+  C:\Users\15492\AppData\Local\Programs\Python\Python313\Lib\site-packages\exchange_calendars\utils\pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[old_lineage_receipt]
+FAILED tests/test_server_market_witness.py::test_review_invalid_partial_or_receipt_lineage_cannot_pass[missing_freshness]
+FAILED tests/test_server_market_witness.py::test_configuration_fifo_or_oversize_refused_before_read
+FAILED tests/test_server_market_witness.py::test_runtime_native_reads_run_inside_owned_deadline
+4 failed, 1 passed, 67 deselected, 5 warnings in 2.24s

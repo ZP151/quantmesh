@@ -60,7 +60,7 @@ jobs:
         # separate step/environment so its own CLI dependencies
         # (license-expression, boolean.py, ...) never contaminate the
         # application's license inventory.
-        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
+        run: python -m pip install -c requirements-audit.txt -e ".[dev,research,e2e,moomoo]"
       - name: License review (deterministic inventory check)
         run: python tools/license_review.py
       - name: Install audit tooling

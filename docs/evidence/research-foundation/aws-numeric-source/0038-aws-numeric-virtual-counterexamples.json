@@ -1,0 +1,20 @@
+{
+  "exit": 0,
+  "checks": [
+    "same_layer_new_notice_survives_opaque_whiteout",
+    "non_directory_replacement_removes_old_descendants",
+    "hardlink_snapshots_prior_inode_before_source_replacement",
+    "later_source_whiteout_preserves_linked_inode",
+    "regular_ancestor_refused",
+    "symlink_member_ancestor_refused",
+    "forward_hardlink_refused",
+    "regular_ancestor_virtual_resolution_refused",
+    "virtual_link_cycle_refused",
+    "virtual_root_escape_refused"
+  ],
+  "count": 10,
+  "reader_sha256": "b33c6502b024082f19e6229f189e37f5833c963e46b59e70e7dea9a9189e8fd8",
+  "scope": "synthetic data-overlay counterexamples only/actual merger and resolver AST",
+  "remote_executed": false,
+  "image_or_runtime_qualified": false
+}

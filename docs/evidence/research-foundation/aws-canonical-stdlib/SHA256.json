@@ -1,0 +1,52 @@
+[
+  {
+    "path": "probe_aws_canonical_python.py",
+    "bytes": 9140,
+    "sha256": "618f44a4a4125b46dd05901948e937253ae432125aa8c10791d2e1e2ace6ab71"
+  },
+  {
+    "path": "probe_aws_canonical_python-before-observer-fix.py",
+    "bytes": 8910,
+    "sha256": "821cdb7751510b2f470fa3499e3456d88231710157314f792fe0c93646a2f778"
+  },
+  {
+    "path": "probe_aws_canonical_python-review.md",
+    "bytes": 4222,
+    "sha256": "7214e815101e28d30e20e6c6d8ccc8e2dc9b04ccb8f1f7b910e97414e1710b56"
+  },
+  {
+    "path": "check_canonical_probe_observers.py",
+    "bytes": 3315,
+    "sha256": "77f3265223ef797a30c6020aeb63c14de07896b51e99d1a88229f0acd7c4e6cb"
+  },
+  {
+    "path": "0038-aws-numeric-canonical-observers-red.log",
+    "bytes": 1502,
+    "sha256": "cd04963d1a7a235ca6e20458416190e2c5c372b9ce9c79522e32fdf45c4ed682"
+  },
+  {
+    "path": "0038-aws-numeric-canonical-observers-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-canonical-observers-green.log",
+    "bytes": 1595,
+    "sha256": "7f1c7a2e94bb6cae4c31cbc36a23551d48b7481fd904de3e4fecbe76a5ca0e83"
+  },
+  {
+    "path": "0038-aws-numeric-canonical-observers-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-canonical-probe.json",
+    "bytes": 2440,
+    "sha256": "8f7e2b4404e3fbf91f3b1d6381ed515afb8acc3692fec5adbc8d30299c8f359a"
+  },
+  {
+    "path": "0038-aws-numeric-canonical-probe.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  }
+]

@@ -1,0 +1,14 @@
+{
+    "ObserverTreeClosed":  true,
+    "ObserverPid":  61848,
+    "AuthenticationUrls":  [
+
+                           ],
+    "Finished":  true,
+    "AtUtc":  "2026-10-13T09:24:22.3199382Z",
+    "ExitCode":  0,
+    "SourceClock":  {
+                        "status":  "quote_probe_failed",
+                        "order_checked":  false
+                    }
+}

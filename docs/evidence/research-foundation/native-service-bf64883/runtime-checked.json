@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "scope": "DEPENDENCY_ADMISSION_ONLY_OWNED_LOCAL_FIXTURE",
+  "owned_root": "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz",
+  "interpreter": "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python",
+  "builder": "/var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/build-tools",
+  "wheel_count": 81,
+  "verified_record_files": 6669,
+  "licensed_packages": 81,
+  "bytecode_files": 0,
+  "source_admitted": false,
+  "lock_sha256": "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a",
+  "prior_modified": false,
+  "network_used": false,
+  "production_qualified": false,
+  "model_calls": 0
+}

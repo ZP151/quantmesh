@@ -1,0 +1,35 @@
+{
+  "scope": "NEW local DuckDB policy diagnostic, NOT qualified",
+  "first_exit": 11,
+  "second_exit": 11,
+  "first_observation": "InvalidInputException: Cannot change allowed_directories when enable_external_access is disabled; OpenBLAS thread warnings and crash",
+  "second_observation": "process exit11; no policy receipt; direct cause UNKNOWN",
+  "first_stderr_in_tool_transcript_only": true,
+  "first_stdout_log_created": false,
+  "actual_core_pattern": "|/wsl-capture-crash %t %E %p %s",
+  "workspace_core_files_observed": 0,
+  "crash_handler_output_attribution": "two specific timestamp/Python/SIG11 crash artifacts correlated; whole-C remaining delta still PENDING",
+  "settings_or_native_admission_qualified": false,
+  "extension_INSTALL_or_LOAD_exercised": false,
+  "network_requested": false,
+  "broader_local_retries_authorized": false,
+  "next": "Use the canonical AWS no-network cgroup profile after authentication and candidate materialization; no per-type native exemption",
+  "known_new_crash_capture_bytes": 524611584,
+  "known_new_crash_files": [
+    {
+      "FullName": "C:\\Users\\15492\\AppData\\Local\\Temp\\wsl-crashes\\wsl-crash-1791914822-50589-_usr_bin_python3.12-11.dmp",
+      "Length": 289361920,
+      "LastWriteTimeUtc": "2026-10-13T18:07:09.7869945Z"
+    },
+    {
+      "FullName": "C:\\Users\\15492\\AppData\\Local\\Temp\\wsl-crashes\\wsl-crash-1791914923-50753-_usr_bin_python3.12-11.dmp",
+      "Length": 235249664,
+      "LastWriteTimeUtc": "2026-10-13T18:08:49.963532Z"
+    }
+  ],
+  "crash_bodies_read": false,
+  "crash_copied_or_deleted": false,
+  "unexpected_local_payload_not_software_source_reservation": true,
+  "original_whole_C_gate_waived": false,
+  "original_whole_C_gate_reset": false
+}

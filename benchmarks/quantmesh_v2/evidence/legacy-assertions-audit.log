@@ -1,0 +1,35 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+__________________ test_disguised_loopback_origin_is_refused __________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:42: in test_disguised_loopback_origin_is_refused
+    assert not workstation._is_allowed_browser_origin(origin), (
+E   AssertionError: A DNS hostname beginning with 127. must not pass the browser-origin guard
+E   assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x0000013DBF796CA0>('https://127.attacker.example')
+E    +    where <function _is_allowed_browser_origin at 0x0000013DBF796CA0> = workstation._is_allowed_browser_origin
+______________ test_generic_pipeline_refuses_fabricated_citation ______________
+benchmarks\quantmesh_v2\test_audit_badcases.py:84: in test_generic_pipeline_refuses_fabricated_citation
+    assert not result.critic.allowed, (
+E   AssertionError: Unresolvable citations must be blocked even when the scripted critic says pass
+E   assert not (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),)
+E    +  where (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),) = CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()).allowed
+E    +    where CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()) = ResearchResult(run_id='2f2c9ec3f2f82909', analyst_report=AnalystReport(claims=[Claim(statement='Synthetic unsupported ...ortfolio_review=PortfolioReview(posture='within_constraints', referenced_inputs=['portfolio-fixture'], suggestions=[])).critic
+________________ test_old_source_quote_never_fills_paper_order ________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:124: in test_old_source_quote_never_fills_paper_order
+    assert (result.order.status, len(result.fills)) == (OrderStatus.REJECTED, 0), (
+E   AssertionError: A quote whose source is one hour old must be refused without fills, even with a fresh receipt, valid depth, and proven continuity
+E   assert (<OrderStatus... 'filled'>, 1) == (<OrderStatus...rejected'>, 0)
+E     
+E     At index 0 diff: <OrderStatus.FILLED: 'filled'> != <OrderStatus.REJECTED: 'rejected'>
+E     Use -v to get more diff
+============================== warnings summary ===============================
+..\..\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order
+3 failed, 1 warning in 3.78s

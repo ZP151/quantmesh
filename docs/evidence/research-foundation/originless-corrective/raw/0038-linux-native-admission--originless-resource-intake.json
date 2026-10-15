@@ -1,0 +1,12 @@
+{
+  "original_baseline_bytes": 8876772,
+  "accepted_construction_upper": 9829943.0,
+  "owned_test_growth": 152965,
+  "additional_root_bytes": 44362,
+  "correction_source_archive_git_forecast": 600000,
+  "limit_bytes": 12000000,
+  "free_c_bytes": 89137451008,
+  "whole_C_attribution": "PENDING/no reset/no materialization waiver",
+  "scope": "same original software scope plus all root helper and CI fixture additions; future allowance conservative",
+  "introduced_logical_upper_bound": 10627270.0
+}

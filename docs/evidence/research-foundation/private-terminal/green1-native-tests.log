@@ -1,0 +1,22 @@
+...........................F...                                          [100%]
+=================================== FAILURES ===================================
+_______ test_owned_fixture_proves_transport_cleanup_and_sibling_survival _______
+
+    @NATIVE
+    def test_owned_fixture_proves_transport_cleanup_and_sibling_survival():
+        receipt = terminal.run_owned_fixture()
+        assert receipt["status"] == "passed"
+        assert receipt["scope"] == "OWNED_LOCAL_PRIVATE_TERMINAL_FIXTURE"
+        assert receipt["elapsed_seconds"] <= 90
+        assert receipt["owned_root_mode"] == 0o700
+        assert receipt["owned_root_removed"] is True
+        assert receipt["input"]["accepted_bytes"] == 65
+        assert receipt["input"]["digest_matched"] is True
+        assert receipt["input"]["marker_not_echoed"] is True
+>       assert receipt["input"]["observed_bytes"] == 4
+E       assert 5 == 4
+
+tests/test_opend_private_terminal.py:160: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_opend_private_terminal.py::test_owned_fixture_proves_transport_cleanup_and_sibling_survival
+1 failed, 30 passed in 2.32s

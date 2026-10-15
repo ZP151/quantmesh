@@ -1,0 +1,6 @@
+.
+============================= slowest 5 durations =============================
+0.67s call     tests/test_live_buffer.py::TestLatest::test_latest_uses_bounded_memory_for_a_large_lake
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+1 passed in 0.76s

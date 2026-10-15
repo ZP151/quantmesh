@@ -1,6 +1,28 @@
 # QuantMesh Product Roadmap
 
-Last updated: 2026-10-12
+Current operator decision2026-10-12: [iteration0038](../iterations/0038-research-foundation.md)
+is ACTIVE, approved Option A recoverable research infrastructure before strategy
+expansion. Persistent jobs/reports, advisory Agent service and evaluation gates
+are the next product loop. Server market sources must not depend on the operator's
+personal PC; OpenD gateway migration remains distinct from the AWS SDK already
+registered. Formal168h is NOT REQUIRED/on-demand; no uptime pass is inferred.
+
+Last updated: 2026-10-13
+
+Research checkpointc545 passes exact full CI38352153020. PR166 probe repair is
+merged7da320f and installed; helper recovery does not close the server-owned
+market requirement. Fresh SSH authentication/forwarded listener is verified;
+042fb0b CI completes SUCCESS4497corepass113skip/frontend419. Native stdlib and OpenAI offline slices are
+integrated; numerical Worker software is active with real image/storage gates
+pending. A new isolated poll-error repair has24focusedpasses and narrowreview,
+but is not deployed or proven to cause the AWS gap. Private AWS/report/provider/
+user and server-owned market acceptance remain open. Worker Task2 byte/receipt
+software is integrated after a bounded loaded-code correction;49focused passes
+and5actual Windows ownership passes do not certify the numerical image. AWS
+console login confirms two retained staging instances; new research host's
+specific$44monthly/private-tailnet approval is pending. Actual Oct12-close vendor
+quote clocks and Oct9 app cache are recorded separately, without closed-session
+freshness failure or a claimed collector cause.
 
 ## Status legend
 
@@ -338,9 +360,8 @@ Sequence for operator review:
 
 1. **Done as iteration 0021 (merged PR #120):** trusted data fabric: provider
    registry, symbol/calendar/corporate-action normalization, raw/normalized/
-   feature layers, manifests, source rights and quality SLAs. Formal168h is
-   not required for current work per the October12 operator decision, on-demand
-   only; historical failed evidence stays unaccepted. See
+   feature layers, manifests, source rights and quality SLAs. Its 168-hour soak
+   continues as a non-blocking maintenance/release-confidence track. See
    [issue #110](https://github.com/ZP151/quantmesh/issues/110),
    `docs/iterations/0021-trusted-data-fabric.md` and
    `docs/superpowers/specs/2026-08-14-trusted-data-fabric-design.md`.

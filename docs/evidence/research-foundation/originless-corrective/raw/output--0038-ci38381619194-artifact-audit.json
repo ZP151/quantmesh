@@ -1,0 +1,90 @@
+{
+  "run": 38381619194,
+  "head": "7498a73f881ea23fdf10d81b4796c3e721e75eba",
+  "conclusion": "failure",
+  "archive_sha256": "526302497eead4128dfe362f6fa34f15d66f64af0d6d42939beb6f78b05c8405",
+  "members": {
+    "qmesh-release-gate-p5bdiclc/logs/01-clone-current-commit.log": {
+      "bytes": 580,
+      "sha256": "cce51e0c5e1ebf31ea0a9b1312f120b42718e9479d6e2c3e5f8cc6bbb5702ece"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/02-release-version-consistent-(metadata,-notes,-tag).log": {
+      "bytes": 68,
+      "sha256": "f003441ab93396f4a4ae35546314fd6dcac56b9e0ce3c41269b62bbd20a6673f"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/03-fresh-venv.log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/04-install-release-extras-.[dev,research,e2e,moomoo].log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/05-ruff-check-src-tests-tools.log": {
+      "bytes": 19,
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/06-trusted-data-tooling-installed.log": {
+      "bytes": 419,
+      "sha256": "bde476152ebfcf6b7d2f2d6e2ced5e1e3e8d051fa9cb7c13ea7bdecb8c50dbc6"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/07-license-review-(closure-contract).log": {
+      "bytes": 2464,
+      "sha256": "eb4b89b278c47f1c41bed6311797791a329ff17a0a806b697a9730305ffd6635"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/08-audit-venv-(isolated-tooling).log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/09-install-pip-audit-(isolated).log": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/10-pip-audit-over-requirements-audit.txt.log": {
+      "bytes": 265,
+      "sha256": "79d30422388543b2563e1dde76bb7e7857d7ef0c6fdf05c8c71598633ca07e1e"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/11-npm-ci-(frontend-deps).log": {
+      "bytes": 389,
+      "sha256": "ee83e72982acfe6bcdb30f6514c99d09069846d983c300bd2a171b86baeebb43"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/12-frontend-license-review-(locked-closure).log": {
+      "bytes": 176,
+      "sha256": "e2968d198ef6d235aeb33c815023536d42a53c56cdb33aec240b0e45b0c1f721"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/13-npm-audit---audit-level=high.log": {
+      "bytes": 569,
+      "sha256": "95cc32bb954183eb1f27252bb2d35a0dff328af088e70b7dd1d59e7e894429ec"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/14-frontend-bundle-current-(build_frontend---check).log": {
+      "bytes": 1338,
+      "sha256": "a0fca1475d8c98aca87bb8b916e399810375e0d66779d97eed39c63062d651f5"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/15-frontend-unit-tests-(vitest).log": {
+      "bytes": 5874,
+      "sha256": "f67fcfe5c12bfd123d3982f8158369c4ea2b51116f3a865953842b0396215fe2"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/16-full-pytest-suite.log": {
+      "bytes": 604398,
+      "sha256": "4d48b208e25afbd0c0c1bfede9750485560914c36f3d1f5fde56db53ee566033"
+    },
+    "qmesh-release-gate-p5bdiclc/logs/events.jsonl": {
+      "bytes": 17018,
+      "sha256": "9dab1bbec25f2262eaffba959dfd66037ba5d7943646ef635b5ea0c3ae76d714"
+    }
+  },
+  "failed": [
+    "FAILED tests/test_worker_build.py::test_actual_runtime_fields_without_git - quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected",
+    "FAILED tests/test_worker_build.py::test_empty_installer_inventory_file_is_valid - quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected",
+    "FAILED tests/test_worker_build.py::test_job_runner_manifest_branch_never_calls_git - quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected",
+    "FAILED tests/test_worker_build.py::test_loaded_admitted_dependency_and_builtin_pass - quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected",
+    "FAILED tests/test_worker_build.py::test_measured_source_main_entry_passes - quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected",
+    "FAILED tests/test_worker_build.py::test_measured_base_stdlib_outside_venv_prefix_passes - quantmesh.research.worker_build.WorkerBuildRejected: worker build rejected"
+  ],
+  "failed_count": 6,
+  "passed": 4540,
+  "skipped": 113,
+  "corrective_fixture": "local RED6 -> GREEN7; missing-marker negative preserved",
+  "native_originless_gap": "separate unresolved compatibility issue",
+  "image_or_production_certificate": false
+}

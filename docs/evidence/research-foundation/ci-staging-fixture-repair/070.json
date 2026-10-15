@@ -1,0 +1,54 @@
+{
+  "output/0038-release-ci57a66f8-diagnostics/qmesh-release-gate-ujc4ktae/logs/16-full-pytest-suite.log": {
+    "sha256": "df3ea3676afe6f97eb3a730033a6945c9bdaa2124df4d05d320367f6d1f52c63",
+    "bytes": 546162
+  },
+  "output/0038-ci57a66f8-failed.log": {
+    "sha256": "24e7679e521576016e91e16176d53588cf7c74c0ccd9bec5e60fec38f42ce37a",
+    "bytes": 43455
+  },
+  "output/0038-staging-order-red/state.json": {
+    "sha256": "a9f5a33554343bb5c7a49fbe801a3f7cc7e098102d7cc6f131d30a1f662a53d4",
+    "bytes": 2529
+  },
+  "output/0038-staging-order-red/receipt.json": {
+    "sha256": "0fe6f36400390cff310b6c073684ce302299726a14fa5d8191e1e8923d720829",
+    "bytes": 620
+  },
+  "output/0038-staging-order-red/tests.stdout": {
+    "sha256": "4ab7830129c85722e285595559025b36d7a6d2f4c50af4fda5d536f7417ff01a",
+    "bytes": 2672
+  },
+  "output/0038-ci57a66f8-staging-diagnosis.md": {
+    "sha256": "047cf9e0abaf111cd69424876e9a5a1fd8119e8abab6ce58d7588791559c3b4e",
+    "bytes": 9465
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/actual-ci-evidence.json": {
+    "sha256": "79470f9d276b2bb2706acb8ec7fbe2e3bb7d2accef5ee42216613a3ba169f610",
+    "bytes": 5258
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/exact57a-source-excerpts.txt": {
+    "sha256": "bd655f3f5d832dafb2d378dc99c243bf69ca1cc4cb94e442e4ec098394aab5ca",
+    "bytes": 14843
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/runtime-preservation.json": {
+    "sha256": "6611318f9214bad72390a207d0e475899070cf410cdcc4ec2290026e1e6a1f4a",
+    "bytes": 22864
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/source-sha256.json": {
+    "sha256": "42fe081e74cea18d66415f8a4fc1203b3251380078bdc1837e8c848eae991f94",
+    "bytes": 1131
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/synthetic-loop-proof.json": {
+    "sha256": "ddadd3f7b9c7f97a164d816b8e2f494485c1b987d3d9e6b3f8794f36514201a6",
+    "bytes": 1282
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/synthetic-loop-proof.stderr": {
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  "output/0038-ci57a66f8-staging-diagnosis/synthetic-loop-proof.stdout": {
+    "sha256": "4dbd9271c5a0075e8ef111ebcb51de1074e45f04493a42f6554d99899814d346",
+    "bytes": 1335
+  }
+}

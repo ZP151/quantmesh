@@ -1,0 +1,52 @@
+{
+  "head": {
+    "stderr": "",
+    "exit": 0,
+    "stdout": "5aab2346f2f4f4378ed1fe0570abb3be258a8fc7",
+    "argv": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ]
+  },
+  "branch": {
+    "stderr": "",
+    "exit": 0,
+    "stdout": "codex/0038-terminal-backend-audit",
+    "argv": [
+      "git",
+      "branch",
+      "--show-current"
+    ]
+  },
+  "status": {
+    "stderr": "",
+    "exit": 0,
+    "stdout": "",
+    "argv": [
+      "git",
+      "status",
+      "--porcelain=v1"
+    ]
+  },
+  "diff": {
+    "stderr": "",
+    "exit": 0,
+    "stdout": "",
+    "argv": [
+      "git",
+      "diff",
+      "--check"
+    ]
+  },
+  "main": {
+    "stderr": "",
+    "exit": 0,
+    "stdout": "c74ea03f16c9159e96861c0fb60a7af560bc52eb",
+    "argv": [
+      "git",
+      "rev-parse",
+      "main"
+    ]
+  }
+}

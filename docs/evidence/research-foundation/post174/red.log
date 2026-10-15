@@ -1,0 +1,285 @@
+FFFFFFFFFFFFF.FFF......FFFFFFFF..FFFFFF..F..F.FFF                        [100%]
+================================== FAILURES ===================================
+__________ test_dns_127_prefix_is_not_loopback[127.attacker.example] __________
+tests\test_browser_origin_safety.py:13: in test_dns_127_prefix_is_not_loopback
+    assert not workstation._is_loopback(host)
+E   AssertionError: assert not True
+E    +  where True = <function _is_loopback at 0x000001EEE509C680>('127.attacker.example')
+E    +    where <function _is_loopback at 0x000001EEE509C680> = workstation._is_loopback
+___________ test_dns_127_prefix_is_not_loopback[127.0.0.1.example] ____________
+tests\test_browser_origin_safety.py:13: in test_dns_127_prefix_is_not_loopback
+    assert not workstation._is_loopback(host)
+E   AssertionError: assert not True
+E    +  where True = <function _is_loopback at 0x000001EEE509C680>('127.0.0.1.example')
+E    +    where <function _is_loopback at 0x000001EEE509C680> = workstation._is_loopback
+_________________ test_dns_127_prefix_is_not_loopback[127.1] __________________
+tests\test_browser_origin_safety.py:13: in test_dns_127_prefix_is_not_loopback
+    assert not workstation._is_loopback(host)
+E   AssertionError: assert not True
+E    +  where True = <function _is_loopback at 0x000001EEE509C680>('127.1')
+E    +    where <function _is_loopback at 0x000001EEE509C680> = workstation._is_loopback
+______________ test_dns_127_prefix_is_not_loopback[127.0.0.999] _______________
+tests\test_browser_origin_safety.py:13: in test_dns_127_prefix_is_not_loopback
+    assert not workstation._is_loopback(host)
+E   AssertionError: assert not True
+E    +  where True = <function _is_loopback at 0x000001EEE509C680>('127.0.0.999')
+E    +    where <function _is_loopback at 0x000001EEE509C680> = workstation._is_loopback
+___ test_noncanonical_browser_origins_refused[https://127.attacker.example] ___
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('https://127.attacker.example')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+_________ test_noncanonical_browser_origins_refused[ftp://localhost] __________
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('ftp://localhost')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+___________ test_noncanonical_browser_origins_refused[//localhost] ____________
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('//localhost')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+______ test_noncanonical_browser_origins_refused[http://user@localhost] _______
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://user@localhost')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+______ test_noncanonical_browser_origins_refused[http://localhost:99999] ______
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost:99999')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+_______ test_noncanonical_browser_origins_refused[http://localhost:bad] _______
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost:bad')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+______ test_noncanonical_browser_origins_refused[http://localhost/path] _______
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost/path')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+_______ test_noncanonical_browser_origins_refused[http://localhost?x=1] _______
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost?x=1')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+________ test_noncanonical_browser_origins_refused[http://localhost#x] ________
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost#x')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+________ test_noncanonical_browser_origins_refused[http://localhost:] _________
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost:')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+________ test_noncanonical_browser_origins_refused[http://localhost/] _________
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost/')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+________ test_noncanonical_browser_origins_refused[http://localhost\n] ________
+tests\test_browser_origin_safety.py:23: in test_noncanonical_browser_origins_refused
+    assert not workstation._is_allowed_browser_origin(origin)
+E   AssertionError: assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('http://localhost\n')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+_______________ test_hostile_origin_cannot_change_paper_account _______________
+tests\test_browser_origin_safety.py:50: in test_hostile_origin_cannot_change_paper_account
+    assert response.status_code == 403
+E   assert 200 == 403
+E    +  where 200 = <Response [200 OK]>.status_code
+___________ test_mixed_or_malformed_claim_sources_block[citations0] ___________
+tests\test_ai_citation_safety.py:44: in test_mixed_or_malformed_claim_sources_block
+    assert result.critic.allowed == ()
+E   AssertionError: assert (Claim(statem...t:missing']),) == ()
+E     
+E     Left contains one more item: Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:missing'])
+E     Use -v to get more diff
+___________ test_mixed_or_malformed_claim_sources_block[citations1] ___________
+tests\test_ai_citation_safety.py:44: in test_mixed_or_malformed_claim_sources_block
+    assert result.critic.allowed == ()
+E   AssertionError: assert (Claim(statem...t:missing']),) == ()
+E     
+E     Left contains one more item: Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:known', 'document:missing'])
+E     Use -v to get more diff
+___________ test_mixed_or_malformed_claim_sources_block[citations2] ___________
+tests\test_ai_citation_safety.py:44: in test_mixed_or_malformed_claim_sources_block
+    assert result.critic.allowed == ()
+E   AssertionError: assert (Claim(statem...document:']),) == ()
+E     
+E     Left contains one more item: Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:'])
+E     Use -v to get more diff
+___________ test_mixed_or_malformed_claim_sources_block[citations3] ___________
+tests\test_ai_citation_safety.py:44: in test_mixed_or_malformed_claim_sources_block
+    assert result.critic.allowed == ()
+E   AssertionError: assert (Claim(statem...ell:known']),) == ()
+E     
+E     Left contains one more item: Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['shell:known'])
+E     Use -v to get more diff
+___________ test_mixed_or_malformed_claim_sources_block[citations4] ___________
+tests\test_ai_citation_safety.py:44: in test_mixed_or_malformed_claim_sources_block
+    assert result.critic.allowed == ()
+E   AssertionError: assert (Claim(statem...s=['known']),) == ()
+E     
+E     Left contains one more item: Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['known'])
+E     Use -v to get more diff
+___________ test_mixed_or_malformed_claim_sources_block[citations5] ___________
+tests\test_ai_citation_safety.py:44: in test_mixed_or_malformed_claim_sources_block
+    assert result.critic.allowed == ()
+E   AssertionError: assert (Claim(statem...t:known\n']),) == ()
+E     
+E     Left contains one more item: Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:known\n'])
+E     Use -v to get more diff
+____________ test_text_mentions_do_not_register_citation_authority ____________
+tests\test_ai_citation_safety.py:54: in test_text_mentions_do_not_register_citation_authority
+    assert not result.critic.allowed
+E   AssertionError: assert not (Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:invented']),)
+E    +  where (Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:invented']),) = CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:invented']),), blocked=()).allowed
+E    +    where CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='unsupported-fixture-claim', confidence=0.9, direction='long', evidence_citations=['document:invented']),), blocked=()) = ResearchResult(run_id='c08f370597fc5fcd', analyst_report=AnalystReport(claims=[Claim(statement='unsupported-fixture-cl...ortfolio_review=PortfolioReview(posture='within_constraints', referenced_inputs=['portfolio-fixture'], suggestions=[])).critic
+___________________ test_unknown_claim_refusal_is_archived ____________________
+tests\test_ai_citation_safety.py:74: in test_unknown_claim_refusal_is_archived
+    assert critic.refusal and "blocked" in critic.refusal
+E   AssertionError: assert (None)
+E    +  where None = DecisionRecord(decision_id='3a10227810e25e64', run_id='38b818df4264d991', role='critic', model=ModelMeta(name='offline...e2085d43', refusal=None, recorded_at=datetime.datetime(2026, 10, 12, 18, 32, 27, 925504, tzinfo=datetime.timezone.utc)).refusal
+_________________ test_invalid_or_old_source_is_refused[None] _________________
+tests\test_quote_source_time_safety.py:16: in test_invalid_or_old_source_is_refused
+    assert not QuoteFence().evaluate(view, instrument=BTC, now=T0).allowed
+E   AssertionError: assert not True
+E    +  where True = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).allowed
+E    +    where FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)) = evaluate({'kind': 'quote', 'provenance': 'real', 'data_time': None, 'received_at': '2026-08-09T10:00:00+00:00', ...}, instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PERPETUAL: 'perpetual'>, currency='USD', metadata={}), now=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc))
+E    +      where evaluate = <quantmesh.live.fence.QuoteFence object at 0x000001EEE529B4D0>.evaluate
+E    +        where <quantmesh.live.fence.QuoteFence object at 0x000001EEE529B4D0> = QuoteFence()
+_________________ test_invalid_or_old_source_is_refused[bad] __________________
+tests\test_quote_source_time_safety.py:16: in test_invalid_or_old_source_is_refused
+    assert not QuoteFence().evaluate(view, instrument=BTC, now=T0).allowed
+E   AssertionError: assert not True
+E    +  where True = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).allowed
+E    +    where FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)) = evaluate({'kind': 'quote', 'provenance': 'real', 'data_time': 'bad', 'received_at': '2026-08-09T10:00:00+00:00', ...}, instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PERPETUAL: 'perpetual'>, currency='USD', metadata={}), now=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc))
+E    +      where evaluate = <quantmesh.live.fence.QuoteFence object at 0x000001EEE529B9D0>.evaluate
+E    +        where <quantmesh.live.fence.QuoteFence object at 0x000001EEE529B9D0> = QuoteFence()
+_________ test_invalid_or_old_source_is_refused[2026-08-09T10:00:00] __________
+tests\test_quote_source_time_safety.py:16: in test_invalid_or_old_source_is_refused
+    assert not QuoteFence().evaluate(view, instrument=BTC, now=T0).allowed
+E   AssertionError: assert not True
+E    +  where True = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).allowed
+E    +    where FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)) = evaluate({'kind': 'quote', 'provenance': 'real', 'data_time': '2026-08-09T10:00:00', 'received_at': '2026-08-09T10:00:00+00:00', ...}, instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PERPETUAL: 'perpetual'>, currency='USD', metadata={}), now=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc))
+E    +      where evaluate = <quantmesh.live.fence.QuoteFence object at 0x000001EEE533C640>.evaluate
+E    +        where <quantmesh.live.fence.QuoteFence object at 0x000001EEE533C640> = QuoteFence()
+______ test_invalid_or_old_source_is_refused[2026-08-09T10:00:01+00:00] _______
+tests\test_quote_source_time_safety.py:16: in test_invalid_or_old_source_is_refused
+    assert not QuoteFence().evaluate(view, instrument=BTC, now=T0).allowed
+E   AssertionError: assert not True
+E    +  where True = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).allowed
+E    +    where FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)) = evaluate({'kind': 'quote', 'provenance': 'real', 'data_time': '2026-08-09T10:00:01+00:00', 'received_at': '2026-08-09T10:00:00+00:00', ...}, instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PERPETUAL: 'perpetual'>, currency='USD', metadata={}), now=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc))
+E    +      where evaluate = <quantmesh.live.fence.QuoteFence object at 0x000001EEE533C770>.evaluate
+E    +        where <quantmesh.live.fence.QuoteFence object at 0x000001EEE533C770> = QuoteFence()
+______ test_invalid_or_old_source_is_refused[2026-08-09T09:00:00+00:00] _______
+tests\test_quote_source_time_safety.py:16: in test_invalid_or_old_source_is_refused
+    assert not QuoteFence().evaluate(view, instrument=BTC, now=T0).allowed
+E   AssertionError: assert not True
+E    +  where True = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).allowed
+E    +    where FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)) = evaluate({'kind': 'quote', 'provenance': 'real', 'data_time': '2026-08-09T09:00:00+00:00', 'received_at': '2026-08-09T10:00:00+00:00', ...}, instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PERPETUAL: 'perpetual'>, currency='USD', metadata={}), now=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc))
+E    +      where evaluate = <quantmesh.live.fence.QuoteFence object at 0x000001EEE52AF890>.evaluate
+E    +        where <quantmesh.live.fence.QuoteFence object at 0x000001EEE52AF890> = QuoteFence()
+_________ test_invalid_or_old_receipt_is_refused[2026-08-09T10:00:00] _________
+tests\test_quote_source_time_safety.py:24: in test_invalid_or_old_receipt_is_refused
+    assert not QuoteFence().evaluate(view, instrument=BTC, now=T0).allowed
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src\quantmesh\live\fence.py:115: in evaluate
+    age = now - anchored
+          ^^^^^^^^^^^^^^
+E   TypeError: can't subtract offset-naive and offset-aware datetimes
+______________ test_source_horizon_boundary_and_quote_timestamp _______________
+tests\test_quote_source_time_safety.py:31: in test_source_horizon_boundary_and_quote_timestamp
+    assert decision.allowed and decision.quote.timestamp == T0 - timedelta(seconds=30)
+E   AssertionError: assert (True and datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc) == (datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc) - datetime.timedelta(seconds=30)))
+E    +  where True = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).allowed
+E    +  and   datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc) = Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PE...tamp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0).timestamp
+E    +    where Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hyperliquid'>, instrument_type=<InstrumentType.PE...tamp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0) = FenceDecision(allowed=True, reason=None, quote=Quote(instrument=Instrument(symbol='BTC', venue=<Venue.HYPERLIQUID: 'hy...amp=datetime.datetime(2026, 8, 9, 10, 0, tzinfo=datetime.timezone.utc), bid=100.0, ask=100.5, last=100.25, volume=3.0)).quote
+E    +  and   datetime.timedelta(seconds=30) = timedelta(seconds=30)
+__________________ test_disguised_loopback_origin_is_refused __________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:42: in test_disguised_loopback_origin_is_refused
+    assert not workstation._is_allowed_browser_origin(origin), (
+E   AssertionError: A DNS hostname beginning with 127. must not pass the browser-origin guard
+E   assert not True
+E    +  where True = <function _is_allowed_browser_origin at 0x000001EEE509CA40>('https://127.attacker.example')
+E    +    where <function _is_allowed_browser_origin at 0x000001EEE509CA40> = workstation._is_allowed_browser_origin
+______________ test_generic_pipeline_refuses_fabricated_citation ______________
+benchmarks\quantmesh_v2\test_audit_badcases.py:84: in test_generic_pipeline_refuses_fabricated_citation
+    assert not result.critic.allowed, (
+E   AssertionError: Unresolvable citations must be blocked even when the scripted critic says pass
+E   assert not (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),)
+E    +  where (Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),) = CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()).allowed
+E    +    where CriticGateResult(verdict=CriticVerdict(verdict='pass', flagged_claims=[]), allowed=(Claim(statement='Synthetic unsupported claim', confidence=0.9, direction='long', evidence_citations=['document:does-not-exist']),), blocked=()) = ResearchResult(run_id='2f2c9ec3f2f82909', analyst_report=AnalystReport(claims=[Claim(statement='Synthetic unsupported ...ortfolio_review=PortfolioReview(posture='within_constraints', referenced_inputs=['portfolio-fixture'], suggestions=[])).critic
+________________ test_old_source_quote_never_fills_paper_order ________________
+benchmarks\quantmesh_v2\test_audit_badcases.py:124: in test_old_source_quote_never_fills_paper_order
+    assert (result.order.status, len(result.fills)) == (OrderStatus.REJECTED, 0), (
+E   AssertionError: A quote whose source is one hour old must be refused without fills, even with a fresh receipt, valid depth, and proven continuity
+E   assert (<OrderStatus... 'filled'>, 1) == (<OrderStatus...rejected'>, 0)
+E     
+E     At index 0 diff: <OrderStatus.FILLED: 'filled'> != <OrderStatus.REJECTED: 'rejected'>
+E     Use -v to get more diff
+============================== warnings summary ===============================
+output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\starlette\testclient.py:53: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]
+
+output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_browser_origin_safety.py::test_dns_127_prefix_is_not_loopback[127.attacker.example]
+FAILED tests/test_browser_origin_safety.py::test_dns_127_prefix_is_not_loopback[127.0.0.1.example]
+FAILED tests/test_browser_origin_safety.py::test_dns_127_prefix_is_not_loopback[127.1]
+FAILED tests/test_browser_origin_safety.py::test_dns_127_prefix_is_not_loopback[127.0.0.999]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[https://127.attacker.example]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[ftp://localhost]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[//localhost]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://user@localhost]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost:99999]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost:bad]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost/path]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost?x=1]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost#x]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost:]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost/]
+FAILED tests/test_browser_origin_safety.py::test_noncanonical_browser_origins_refused[http://localhost\n]
+FAILED tests/test_browser_origin_safety.py::test_hostile_origin_cannot_change_paper_account
+FAILED tests/test_ai_citation_safety.py::test_mixed_or_malformed_claim_sources_block[citations0]
+FAILED tests/test_ai_citation_safety.py::test_mixed_or_malformed_claim_sources_block[citations1]
+FAILED tests/test_ai_citation_safety.py::test_mixed_or_malformed_claim_sources_block[citations2]
+FAILED tests/test_ai_citation_safety.py::test_mixed_or_malformed_claim_sources_block[citations3]
+FAILED tests/test_ai_citation_safety.py::test_mixed_or_malformed_claim_sources_block[citations4]
+FAILED tests/test_ai_citation_safety.py::test_mixed_or_malformed_claim_sources_block[citations5]
+FAILED tests/test_ai_citation_safety.py::test_text_mentions_do_not_register_citation_authority
+FAILED tests/test_ai_citation_safety.py::test_unknown_claim_refusal_is_archived
+FAILED tests/test_quote_source_time_safety.py::test_invalid_or_old_source_is_refused[None]
+FAILED tests/test_quote_source_time_safety.py::test_invalid_or_old_source_is_refused[bad]
+FAILED tests/test_quote_source_time_safety.py::test_invalid_or_old_source_is_refused[2026-08-09T10:00:00]
+FAILED tests/test_quote_source_time_safety.py::test_invalid_or_old_source_is_refused[2026-08-09T10:00:01+00:00]
+FAILED tests/test_quote_source_time_safety.py::test_invalid_or_old_source_is_refused[2026-08-09T09:00:00+00:00]
+FAILED tests/test_quote_source_time_safety.py::test_invalid_or_old_receipt_is_refused[2026-08-09T10:00:00]
+FAILED tests/test_quote_source_time_safety.py::test_source_horizon_boundary_and_quote_timestamp
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_disguised_loopback_origin_is_refused
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_generic_pipeline_refuses_fabricated_citation
+FAILED benchmarks/quantmesh_v2/test_audit_badcases.py::test_old_source_quote_never_fills_paper_order
+35 failed, 14 passed, 3 warnings in 6.39s

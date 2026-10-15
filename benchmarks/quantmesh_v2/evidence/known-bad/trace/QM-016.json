@@ -1,0 +1,872 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0021430999040603638,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 8.699996396899223e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00017800007481127977,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0025064999936148524,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.950002327561378e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001327999634668231,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001229400048032403,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.779997445642948e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.790004696696997e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011894999770447612,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.6399963796138763e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.000103199970908463,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011669000377878547,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.0399994254112244e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 8.860009256750345e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011177000124007463,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.3999945521354675e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001335999695584178,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013173000188544393,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.57000346109271e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010349997319281101,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001227299915626645,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.079999729990959e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.0001686000032350421,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013260000851005316,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.91999851167202e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010379997547715902,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001195100019685924,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.94001030549407e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.450002107769251e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0011905001010745764,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.9699988923966885e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010900001507252455,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013232999481260777,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 7.389998063445091e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.829993359744549e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012193000875413418,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.909998435527086e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00012530002277344465,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001299199997447431,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.370001938194036e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010249996557831764,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0022284999722614884,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.019999273121357e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.96999442577362e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012933999532833695,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.440002471208572e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00010199996177107096,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012827001046389341,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.979998968541622e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.520002640783787e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0012162999482825398,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.9999991208314896e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.240000508725643e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.001218999968841672,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 5.75000885874033e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 9.360001422464848e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.0013345000334084034,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 6.029999349266291e-05,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00013930001296103,
+      "location": [
+        "tests\\test_live_observation_identity.py",
+        47,
+        "test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[same-payload-distinct-us-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[changed-payload-same-time-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[both-change-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[next-ms-persisted-first-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-same-batch-allMids]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-activeAssetCtx]",
+    "tests/test_live_observation_identity.py::test_metric_observations_survive_real_feed_buffer[repeat-persisted-first-allMids]"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

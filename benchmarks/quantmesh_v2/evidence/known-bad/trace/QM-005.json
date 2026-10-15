@@ -1,0 +1,55 @@
+{
+  "reports": [
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "when": "setup",
+      "outcome": "passed",
+      "duration_seconds": 0.002341300016269088,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        476,
+        "test_secret_is_redacted_before_analyst_and_critic_calls"
+      ],
+      "wasxfail": false,
+      "failure": null
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "when": "call",
+      "outcome": "failed",
+      "duration_seconds": 9.909993968904018e-05,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        476,
+        "test_secret_is_redacted_before_analyst_and_critic_calls"
+      ],
+      "wasxfail": false,
+      "failure": {
+        "type": "AssertionError",
+        "message": "injected known-bad verifier must remain a real failure"
+      }
+    },
+    {
+      "nodeid": "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration_seconds": 0.00015440001152455807,
+      "location": [
+        "tests\\test_packet_copilot.py",
+        476,
+        "test_secret_is_redacted_before_analyst_and_critic_calls"
+      ],
+      "wasxfail": false,
+      "failure": null
+    }
+  ],
+  "events": [],
+  "exit_code": 1,
+  "incomplete": false,
+  "collected_nodeids": [
+    "tests/test_packet_copilot.py::test_secret_is_redacted_before_analyst_and_critic_calls"
+  ],
+  "imported_plugin": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\tools\\eval_harness\\pytest_plugin.py",
+  "imported_source": "C:\\Users\\15492\\.codex-clean\\worktrees\\e549\\QuantMesh\\src\\quantmesh\\__init__.py",
+  "instrumentation": "ModelGateway completions + ToolRegistry.dispatch"
+}

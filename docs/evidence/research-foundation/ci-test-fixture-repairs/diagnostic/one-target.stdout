@@ -1,0 +1,91 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/bin/python
+rootdir: /var/tmp/quantmesh-ci-quiet-collection-sadscdcz/candidate
+configfile: pyproject.toml
+collecting ... collected 1 item
+
+tests/test_linux_owned.py::test_fixed_creation_and_gated_start FAILED    [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_fixed_creation_and_gated_start ______________________
+
+profile = LinuxExecutionProfile(endpoint='unix:///var/run/docker.sock', docker_cli=PosixPath('/var/tmp/quantmesh-ci-quiet-collec...t=PosixPath('/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures'))
+paths = (PosixPath('/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures/in...ath('/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures/attempt'))
+engine = ([['info', '--format', '{{json .}}'], ['image', 'inspect', 'sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...aaaaa']], {'Running': True, 'ExitCode': 0, 'OOMKilled': False}, [], <test_linux_owned.Attach object at 0x78d7850745f0>)
+
+    def test_fixed_creation_and_gated_start(profile, paths, engine):
+        calls, state, _, attach = engine
+>       process = owned.LinuxOwnedProcess(
+            profile, ["/usr/local/bin/python3", "-V"], RunBudget(), *paths
+        )
+
+tests/test_linux_owned.py:103: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <quantmesh.research.linux_owned.LinuxOwnedProcess object at 0x78d7857e0e00>
+profile = LinuxExecutionProfile(endpoint='unix:///var/run/docker.sock', docker_cli=PosixPath('/var/tmp/quantmesh-ci-quiet-collec...t=PosixPath('/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures'))
+command = ['/usr/local/bin/python3', '-V']
+budget = RunBudget(timeout_seconds=900, memory_mib=2048, cpu_limit=1.0, max_model_calls=12, max_estimated_model_usd=1.0)
+inputs = PosixPath('/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures/inputs')
+output = PosixPath('/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures/attempt')
+
+    def __init__(
+        self,
+        profile: LinuxExecutionProfile,
+        command: list[str],
+        budget: RunBudget,
+        inputs: Path,
+        output: Path,
+    ):
+        self.profile = profile
+        self.container_id = None
+        self.nonce = uuid.uuid4().hex
+        self.transport = None
+        self.evidence: dict = {"qualification": "unqualified", "native": False}
+        self.closed = False
+        self.started = time.monotonic()
+        self.budget = budget
+        if budget.cpu_limit != 1:
+            raise LinuxContainmentError("fractional_cpu_unsupported")
+        if (
+            not command
+            or any(not isinstance(c, str) or "\x00" in c for c in command)
+            or not command[0].startswith("/")
+        ):
+            raise LinuxContainmentError("unsafe_command")
+        self.inputs, self.output = _safe_path(inputs), _safe_path(output)
+        root = profile.fixture_root
+        if (
+            not self.inputs.is_dir()
+            or self.output.exists()
+            or not self.inputs.is_relative_to(root)
+            or self.inputs == root
+            or not self.output.is_relative_to(root)
+            or self.output == root
+            or self.output.is_relative_to(self.inputs)
+            or self.inputs.is_relative_to(self.output)
+        ):
+            raise LinuxContainmentError("unsafe_mounts")
+        # Reject existing nested links too; trusted datasets cannot alias host secrets.
+        if any(
+            p.is_symlink() or (hasattr(p, "is_junction") and p.is_junction())
+            for p in self.inputs.rglob("*")
+        ):
+            raise LinuxContainmentError("unsafe_mounts")
+        self.evidence.update(profile.prerequisites())
+        self.output.mkdir(parents=False)
+        if os.name == "posix":
+>           os.chown(self.output, profile.uid, profile.gid)
+E           PermissionError: [Errno 1] Operation not permitted: '/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures/attempt'
+
+src/quantmesh/research/linux_owned.py:307: PermissionError
+=============================== warnings summary ===============================
+../../quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_linux_owned.py::test_fixed_creation_and_gated_start - PermissionError: [Errno 1] Operation not permitted: '/var/tmp/quantmesh-ci-quiet-collection-sadscdcz/one-target-tmp/test_fixed_creation_and_gated_0/fixtures/attempt'
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+========================= 1 failed, 1 warning in 2.11s =========================

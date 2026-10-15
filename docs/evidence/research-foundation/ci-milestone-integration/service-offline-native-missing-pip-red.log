@@ -1,0 +1,1 @@
+{"profile": "OFFLINE_SCRIPTED_ONLY", "postgres": "pending", "exit": 1, "failures": ["gate command 0 failed; inspect service-gate-0.log"], "tests": null}

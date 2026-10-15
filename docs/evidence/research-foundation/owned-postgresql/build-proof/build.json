@@ -1,0 +1,42 @@
+{
+  "root": "/var/tmp/quantmesh-owned-pg-0ue7gicj",
+  "source_url": "https://ftp.postgresql.org/pub/source/v18.6/postgresql-18.6.tar.bz2",
+  "source_sha256": "555610c24d53e4316da5b7d3fc25c279d96856d5e0e23ee308c328c5fa881d9f",
+  "packages": [
+    {
+      "Package": "bison",
+      "Version": "2:3.8.2+dfsg-1build2",
+      "Filename": "pool/main/b/bison/bison_3.8.2+dfsg-1build2_amd64.deb",
+      "SHA256": "18f487c400da3e968a44ecb3783a443641bcd14e2b080ed9ed1167f4aa2c1612",
+      "Depends": "m4, libc6 (>= 2.38)"
+    },
+    {
+      "Package": "flex",
+      "Version": "2.6.4-8.2build1",
+      "Filename": "pool/main/f/flex/flex_2.6.4-8.2build1_amd64.deb",
+      "SHA256": "c5604f55827b50e3f568b4731b7799f86b147454c867be02bc141d9d8ce561ff",
+      "Depends": "libc6 (>= 2.38), m4"
+    },
+    {
+      "Package": "m4",
+      "Version": "1.4.19-4build1",
+      "Filename": "pool/main/m/m4/m4_1.4.19-4build1_amd64.deb",
+      "SHA256": "30ea715845a1863abd55d11e47ab91513130bf347852d4cdeae69e9d98fa795c",
+      "Depends": "libc6 (>= 2.38)"
+    }
+  ],
+  "configure": [
+    "./configure",
+    "--prefix=/var/tmp/quantmesh-owned-pg-0ue7gicj/prefix",
+    "--without-readline",
+    "--without-zlib",
+    "--without-icu"
+  ],
+  "binaries": {
+    "postgres": "4cd5ef0c0632e8da70fd6d7a62a9e02a6df00f3517b1b5720511db199d825d08",
+    "initdb": "ec107de4c2da562b0001811e63b79793433c28267e35883a80fd55fba7d019e2",
+    "pg_ctl": "4122dcb4375873bca2dcd2f83242614c21f28d4ebd872d06ab702a0ab26ae159",
+    "pg_controldata": "a8352343c4773b7138e3c9547223e68252021fcde0ec696575f30c37d8bb06ff"
+  },
+  "license_sha256": "3d6af92ff8a4c2cdf69afb1cf44edea727922f5cd0cf8b5f72b11cdecac8fdfd"
+}

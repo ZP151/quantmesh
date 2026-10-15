@@ -1,0 +1,46 @@
+.F                                                                       [100%]
+=================================== FAILURES ===================================
+__________________________ test_actual_owned_fixture ___________________________
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="real Linux pidfd/PTY lifecycle")
+    def test_actual_owned_fixture():
+>       result = stage.run_owned_fixture()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_opend_staging_window.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+deploy/aws/opend/stage_console.py:1037: in run_owned_fixture
+    _native()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+live = False
+
+    def _native(*, live=False):
+        if (
+            sys.platform != "linux"
+            or platform.machine() != "x86_64"
+            or not hasattr(os, "pidfd_open")
+            or not hasattr(signal, "pidfd_send_signal")
+            or threading.active_count() != 1
+            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL
+        ):
+>           raise StageDenied("unsupported_native")
+E           stage.StageDenied: unsupported_native
+
+deploy/aws/opend/stage_console.py:175: StageDenied
+=============================== warnings summary ===============================
+../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/utils/pandas_utils.py:60: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    delta = pd.Timedelta(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED ../../../../dev::test_actual_owned_fixture - stage.StageDenied: unsupp...
+1 failed, 1 passed, 20 deselected, 5 warnings in 7.54s

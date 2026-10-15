@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="1" time="6.531" timestamp="2026-10-13T11:08:39.162893+08:00" hostname="zhoulaptop"><testcase classname="" name="test_actual_initdb_bootstrap_descendant_timeout_is_terminal" time="6.439"><failure message="AssertionError: {'boot_terminal_before_test_fallback': False, 'initdb_pid': 58126, 'parent_terminal_exit': -9, 'positively_owned_boots...ntmesh-portfolio-witness-r_a4n26m/prefix/bin/postgres', 'group': 58030, 'nonce_matches': True, 'pid': 58134, ...}, ...}&#10;assert 1 == 0&#10; +  where 1 = CompletedProcess(args=['/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python', '-B', '-c', &quot;import importlib....\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: owned postgres --boot survived cleanup\n').returncode">verifier = &lt;module 'tools.qualify_portfolio_budgets' from '/mnt/c/Users/15492/.codex-clean/worktrees/b7a1/QuantMesh/tools/qualify_portfolio_budgets.py'&gt;
+tmp_path = PosixPath('/var/tmp/quantmesh-portfolio-witness-r_a4n26m/native-r1-descendant-red-tmp/test_actual_initdb_bootstrap_d0')
+
+    def test_actual_initdb_bootstrap_descendant_timeout_is_terminal(verifier, tmp_path):
+        code = (
+            "import importlib.util,json,sys;from pathlib import Path;"
+            "from tools import qualify_portfolio_budgets as q;"
+            "p=q.Profile.from_mapping(json.loads(Path(sys.argv[1]).read_text()));"
+            "s=importlib.util.spec_from_file_location('owned_boot_probe',"
+            "p.root/'checkout/tests/test_portfolio_budget_qualification.py');"
+            "m=importlib.util.module_from_spec(s);s.loader.exec_module(m);"
+            "m._native_boot_timeout_probe(q,p,Path(sys.argv[2]))"
+        )
+        result, output = native_command(verifier, tmp_path, code)
+        evidence = json.loads((output / "bootstrap-cleanup.json").read_text())
+&gt;       assert result.returncode == 0, evidence
+E       AssertionError: {'boot_terminal_before_test_fallback': False, 'initdb_pid': 58126, 'parent_terminal_exit': -9, 'positively_owned_boots...ntmesh-portfolio-witness-r_a4n26m/prefix/bin/postgres', 'group': 58030, 'nonce_matches': True, 'pid': 58134, ...}, ...}
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python', '-B', '-c', "import importlib....\n           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: owned postgres --boot survived cleanup\n').returncode
+
+/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout/tests/test_portfolio_budget_qualification.py:532: AssertionError</failure></testcase></testsuite></testsuites>

@@ -1,0 +1,45 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________ test_owned_effect_child_does_not_generate_bytecode ______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-portfolio-runtime-aihe1p21/effect-red-tmp/test_owned_effect_child_does_n0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a8e16a059a0>
+
+    def test_owned_effect_child_does_not_generate_bytecode(tmp_path, monkeypatch):
+        # An owned fixture module reports interpreter state before any provider or
+        # unpickling. It shadows only this child's module; no runtime is qualified.
+        package = tmp_path / "qm_research_agent"
+        package.mkdir()
+        (package / "__init__.py").write_text("", encoding="utf-8")
+        (package / "effect_worker.py").write_text(
+            "import json, sys\n"
+            "sys.stdin.buffer.read()\n"
+            "print(json.dumps({'response': {'model_name': 'scripted-fixture', "
+            "'content': json.dumps({'no_bytecode': sys.dont_write_bytecode})}, "
+            "'scripted_seen': 1}))\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(sys, "path", [str(tmp_path), *sys.path])
+        gateway = ModelGateway(ScriptedModelTransport([]), model_name="scripted-fixture")
+        response = bounded_complete(
+            gateway,
+            ModelRequest(messages=[ChatMessage(role="user", content="owned fixture")]),
+            RunBudget(timeout_seconds=5),
+        )
+>       assert json.loads(response.content) == {"no_bytecode": True}
+E       AssertionError: assert {'no_bytecode': False} == {'no_bytecode': True}
+E         
+E         Differing items:
+E         {'no_bytecode': False} != {'no_bytecode': True}
+E         Use -v to get more diff
+
+services/research_agent/tests/test_effect_launch.py:35: AssertionError
+=============================== warnings summary ===============================
+../../../../../../../../var/tmp/quantmesh-portfolio-runtime-aihe1p21/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-aihe1p21/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED services/research_agent/tests/test_effect_launch.py::test_owned_effect_child_does_not_generate_bytecode
+1 failed, 1 warning in 1.62s

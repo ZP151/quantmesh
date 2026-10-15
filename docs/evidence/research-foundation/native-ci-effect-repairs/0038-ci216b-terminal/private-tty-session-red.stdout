@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /var/tmp/quantmesh-portfolio-runtime-aihe1p21/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/c/Users/15492/.codex-clean/worktrees/0038-research-integration/QuantMesh
+configfile: pyproject.toml
+collecting ... collected 3 items
+
+tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[0] PASSED [ 33%]
+tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[1] 

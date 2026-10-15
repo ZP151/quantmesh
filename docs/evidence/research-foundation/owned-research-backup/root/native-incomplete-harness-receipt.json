@@ -1,0 +1,12 @@
+{
+  "scope": "ROOT_INTEGRATED_BACKUP_TESTS_ONLY",
+  "root": "/var/tmp/quantmesh-root-backup-tests-aw52bi20",
+  "native_uid": 1000,
+  "python": "/var/tmp/quantmesh-backup-final-xvcv1u9k/venv/bin/python",
+  "files_sha256": {
+    "tools/qualify_research_backup.py": "01bbee995c7a7bdad82c92908e92e44d69f061fed369bc987a07b6fad206b089",
+    "tests/test_research_backup_qualification.py": "b0c1d57d3c5ac19c0d736f62ca92100ffb2968a09d4b3da855b272872a50e003"
+  },
+  "exit": 1,
+  "production_release_qualified": false
+}

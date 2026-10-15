@@ -1,0 +1,54 @@
+diff --git a/services/research_agent/src/qm_research_agent/accounting.py b/services/research_agent/src/qm_research_agent/accounting.py
+index a3dad8a..745feba 100644
+--- a/services/research_agent/src/qm_research_agent/accounting.py
++++ b/services/research_agent/src/qm_research_agent/accounting.py
+@@ -81,6 +81,11 @@ def validate(con, policy):
+         "ON e.job_id=r.job_id AND e.digest=r.digest WHERE r.job_id IS NULL"
+     ).fetchone():
+         raise ValueError("unattributed model effects")
++    if con.execute(
++        "SELECT 1 FROM qm_portfolio_reservations r LEFT JOIN model_effects e "
++        "ON r.job_id=e.job_id AND r.digest=e.digest WHERE e.job_id IS NULL"
++    ).fetchone():
++        raise ValueError("orphan portfolio reservations")
+     return stamp
+ 
+ 
+diff --git a/services/research_agent/tests/test_portfolio_budgets.py b/services/research_agent/tests/test_portfolio_budgets.py
+index bee6175..ce51dbd 100644
+--- a/services/research_agent/tests/test_portfolio_budgets.py
++++ b/services/research_agent/tests/test_portfolio_budgets.py
+@@ -1,5 +1,6 @@
+ """Scripted/local accounting witnesses; no provider billing or production proof."""
+ 
++import sqlite3
+ from concurrent.futures import ThreadPoolExecutor
+ from contextlib import contextmanager
+ from datetime import UTC, datetime, timedelta
+@@ -362,3 +363,26 @@ def test_completed_without_archived_response_cannot_release_old_allowance(local)
+         con.execute("UPDATE model_effects SET status='completed'")
+     local[2][0] = datetime(2026, 2, 1, tzinfo=UTC)
+     assert not reserve(effects, pairs[1])
++
++
++@pytest.mark.parametrize("boundary", ["activation", "admission"])
++def test_orphan_reservation_from_incomplete_import_fails_closed(local, boundary):
++    pairs = jobs(local)
++    effects = ledger(local, operating="0.6")
++    assert reserve(effects, pairs[0])
++    # Simulate an incomplete import using a separate fixture-only connection.
++    # Service transactions retain their existing foreign-key enforcement.
++    with sqlite3.connect(local[0].path) as imported:
++        assert imported.execute("PRAGMA foreign_keys").fetchone()[0] == 0
++        imported.execute(
++            "DELETE FROM model_effects WHERE job_id=? AND digest='a'", (pairs[0][0].job_id,)
++        )
++    if boundary == "activation":
++        with pytest.raises(ValueError):
++            ledger(local, operating="0.6")
++    else:
++        assert not reserve(effects, pairs[1])
++    with local[0]._transaction() as con:
++        assert con.execute("PRAGMA foreign_keys").fetchone()[0] == 1
++        assert con.execute("SELECT price FROM qm_portfolio_reservations").fetchall() == [("0.6",)]
++        assert con.execute("SELECT COUNT(*) FROM model_effects").fetchone()[0] == 0

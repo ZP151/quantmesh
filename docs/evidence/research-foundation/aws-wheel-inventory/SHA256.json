@@ -1,0 +1,177 @@
+[
+  {
+    "path": "0038-aws-numeric-wheel-inventory-with-source-notices.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-inventory-with-source-notices.json",
+    "bytes": 1180,
+    "sha256": "2c0f7c49d0af001ea1362b3e200cb2170da98188b4df17d4e8cd62226f2d334e"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-inventory.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-inventory.json",
+    "bytes": 666,
+    "sha256": "f318c80dc8d2f785b4063f425d49583290d146fe0f7fbf2df6996ae9526a46d5"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-binding.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-binding.log",
+    "bytes": 409,
+    "sha256": "142642b04c07a51960aab0d5c54d9011b1e3373f601e8735c815a84256e15f09"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-diagnostic.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-diagnostic.json",
+    "bytes": 707,
+    "sha256": "8ebbc082a2ec3c29877cdfcec2fc985659cb88ba9851f41f3e1c754704498a39"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-headers.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-headers.json",
+    "bytes": 1362,
+    "sha256": "f465fd62697b54e02e373f410bf5b8f22f4a981879088602670dd32ada7aee49"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-inventory-review.md",
+    "bytes": 2659,
+    "sha256": "c3cec989e67f0274761d36655d49f6c0d0585c87a5b85dc99d41cd2396782107"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-supplements.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-notice-supplements.json",
+    "bytes": 1722,
+    "sha256": "28ccfeabdd527f93b3490b937b1758b059d3f29706696277416e535bece0f548"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-tree-green.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-tree-green.log",
+    "bytes": 1315,
+    "sha256": "b14c18f1384d490d8a79a0213d77bc7c88652394134a61179e4b1264a0cef347"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-tree-red.exit",
+    "bytes": 3,
+    "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-tree-red.log",
+    "bytes": 2138,
+    "sha256": "c3cf43b45488e76f808fe4d2a22832db70a77cff615fcf9b0ae0e52224823a6d"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-tree-with-notices.exit",
+    "bytes": 3,
+    "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  {
+    "path": "0038-aws-numeric-wheel-tree-with-notices.log",
+    "bytes": 1397,
+    "sha256": "9229b2560b17bb5382f73f5ce5238a02f6f5dd95d3014244eabd42adc9bc611d"
+  },
+  {
+    "path": "check_wheel_notice_binding.py",
+    "bytes": 2280,
+    "sha256": "bcbbb9de197b6e73da72f6e7becec012ce1c6fa136bad23bc53ff47964827e55"
+  },
+  {
+    "path": "check_wheel_tree_guards.py",
+    "bytes": 3331,
+    "sha256": "5aec371401307a58bb2eb69625813d3d6e83259df7657fdc23b97d8d820bf342"
+  },
+  {
+    "path": "diagnose_aws_wheel_notices-first-names.py",
+    "bytes": 1680,
+    "sha256": "cb36759e3df48035fad09dc189aa9e0ae17248d09bcded6a151a7c53813e5aaa"
+  },
+  {
+    "path": "diagnose_aws_wheel_notices.py",
+    "bytes": 2418,
+    "sha256": "0870321fd7fe459d6d02ba2c30f6cd2f20eb70753563b49a4178470ec0cca33d"
+  },
+  {
+    "path": "fetch_aws_missing_wheel_notices-review.md",
+    "bytes": 2229,
+    "sha256": "c8dfc00dec1e4c291947622706c3e12a9e46700f98cbfbb04432035097ef5b51"
+  },
+  {
+    "path": "fetch_aws_missing_wheel_notices.py",
+    "bytes": 8188,
+    "sha256": "f127b4504ca6e07fab4162eab5645d78cf9c5b3229e4f675c848f409264eed50"
+  },
+  {
+    "path": "inspect_aws_numeric_wheels-before-notice-supplements.py",
+    "bytes": 10891,
+    "sha256": "7bf195dfdc60e41c071ce747d6fe47f97069fad9effeeb2362cc77fe0d74f783"
+  },
+  {
+    "path": "inspect_aws_numeric_wheels-before-tree-fix.py",
+    "bytes": 10379,
+    "sha256": "c27d1cba3276e8ab417562c4c38a6b447b4893ea3626670cfc3e8a3c1a42e235"
+  },
+  {
+    "path": "inspect_aws_numeric_wheels-review.md",
+    "bytes": 4048,
+    "sha256": "fe1ce106ad19ecdaa35c1b12ef67714783bf1c1104a48a76c65b80eeeb7c50e1"
+  },
+  {
+    "path": "inspect_aws_numeric_wheels.py",
+    "bytes": 13208,
+    "sha256": "f7b99f6393d4768d629e146b138179188e48e9dc9af92b3ef7b71291c68f8bd8"
+  },
+  {
+    "path": "native-176-route-matrix.md",
+    "bytes": 10640,
+    "sha256": "8c49299e9d8be765a7503a2377e00c274a48229b762a753c0dbe5c19f3c1e385"
+  },
+  {
+    "path": "native-176-source-pins.json",
+    "bytes": 3910,
+    "sha256": "ea2b72acd367e6efd848c75717ce0e8ca8bb1371e23ae06f1edd0db743e4b875"
+  },
+  {
+    "path": "native-176-resource-receipt.json",
+    "bytes": 1037,
+    "sha256": "87f92bddd812404d00d3a32f5780c50d34e5eb5decc5c90bf8ae57f51e362fab"
+  },
+  {
+    "path": "native-176-metadata-receipt.txt",
+    "bytes": 230,
+    "sha256": "5323bbc49f0d973990d565dbec993b69af777985a74e77c896291a8a028df3e1"
+  },
+  {
+    "path": "native-176-sha256-manifest.json",
+    "bytes": 653,
+    "sha256": "073e8c87e091fd26b641d84203f43576b08bae073c7274180418330e9bc7b650"
+  },
+  {
+    "path": "0038-input-authority-audit-check.json",
+    "bytes": 153,
+    "sha256": "db49e03c04993e177d30045f55aa936a32fd043746b12964645d85e6f53eb9c4"
+  }
+]

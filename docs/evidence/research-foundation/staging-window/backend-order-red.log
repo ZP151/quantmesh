@@ -1,0 +1,23 @@
+......................................................F..                [100%]
+=================================== FAILURES ===================================
+______________ test_backend_finish_signals_before_closing_handle _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x742323eabef0>
+
+    @pytest.mark.skipif(sys.platform != "linux", reason="retained native backend handle")
+    def test_backend_finish_signals_before_closing_handle(monkeypatch):
+        read, write = os.pipe()
+        calls = []
+    
+        def stop(fd):
+            os.fstat(fd)
+            calls.append(fd)
+    
+>       monkeypatch.setattr(stage, "_stop_backend", stop)
+            ^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'stage' has no attribute '_finish_backend'
+
+tests/test_opend_staging_window.py:289: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_opend_staging_window.py::test_backend_finish_signals_before_closing_handle
+1 failed, 56 passed in 6.26s

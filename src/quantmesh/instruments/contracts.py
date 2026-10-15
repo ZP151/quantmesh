@@ -23,6 +23,7 @@ from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import IDEMPOTENCY_KEY_PATTERN, Instrument, Side, Venue
 from quantmesh.domain.orders import Order, OrderEventType, OrderStatus, OrderType
 from quantmesh.live.contract import Provenance
+from quantmesh.live.session_freshness import SessionFreshness
 
 AdjustmentMode = Literal["unadjusted", "split-adjusted", "total-return"]
 _COMPARISON_KEY = re.compile(r"^[a-z0-9_-]+:[A-Za-z0-9](?:[A-Za-z0-9._-]*[A-Za-z0-9])?$")
@@ -1081,6 +1082,7 @@ class WorkspaceLiveEvidence(StrictContract):
 
     status: Literal["available", "degraded", "unavailable"]
     reason: str | None = None
+    session_freshness: SessionFreshness | None = None
     source: str | None = None
     provenance: str | None = None
     label: str | None = None

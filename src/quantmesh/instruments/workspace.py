@@ -419,6 +419,14 @@ class InstrumentWorkspaceService:
             feed_attached=self._live_feed is not None,
             as_of=generated_at,
         )
+        if self._live_feed is not None:
+            live = live.model_copy(
+                update={
+                    "session_freshness": self._live_feed.session_coverage(
+                        venue, symbol, now=generated_at
+                    )
+                }
+            )
         forecast = _forecast_summary(artifact) if artifact is not None else None
 
         account = valuation.account

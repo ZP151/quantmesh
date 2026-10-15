@@ -49,6 +49,7 @@ into the ambient environment.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -58,11 +59,19 @@ import sys
 import tempfile
 import time
 import traceback
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 STEPS: list[tuple[str, str]] = []
 FULL_PYTEST_TIMEOUT_SECONDS = 10800
+DEFAULT_PROGRESS_INTERVAL_SECONDS = 600
+_PYTEST_PERCENTAGE = re.compile(r"(?<!\d)(100|[1-9]?\d)%")
+_PYTEST_FAILURE_MARKER = re.compile(r"\b(?:FAILED|FAILURES|ERROR)\b")
+_PYTEST_QUIET_STATUS_ROW = re.compile(
+    r"(?m)^[ \t]*([.FEsxX]+)[ \t]*\[\s*(?:100|[1-9]?\d)%\][ \t]*\r?$",
+)
 
 
 def print_console(value: object = "", *, file=None, flush: bool = False) -> None:
@@ -93,6 +102,12 @@ def _venv_script(venv: Path, name: str) -> Path:
     return venv / "bin" / name
 
 
+def _node_command(argv: list[str], *, platform: str | None = None) -> list[str]:
+    """Use Windows batch dispatch only on Windows; Linux runs native Node CLIs."""
+    platform = os.name if platform is None else platform
+    return (["cmd", "/c"] if platform == "nt" else []) + argv
+
+
 def _git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8")
 
@@ -119,19 +134,110 @@ def _kill_step_process(proc: subprocess.Popen) -> None:
         proc.wait()
 
 
+def _timestamp() -> str:
+    return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _emit_event(events_path: Path, event: str, **fields: object) -> None:
+    """Append one flushed, machine-readable lifecycle event to diagnostics."""
+    payload = {"timestamp": _timestamp(), "event": event, **fields}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    with events_path.open("a", encoding="utf-8") as events:
+        events.write(f"{encoded}\n")
+        events.flush()
+    # Lifecycle lines are intentionally sparse: start/end, first failure, and
+    # at most one useful progress update per configured interval.
+    print_console(encoded, flush=True)
+
+
+@dataclass
+class StepLogObserver:
+    """Consume each step log incrementally without losing early failure text."""
+
+    offset: int = 0
+    carry: str = ""
+    percentage: int | None = None
+    file_identity: tuple[int, int] | None = None
+    anchor_start: int = 0
+    anchor: bytes = b""
+    carry_starts_line: bool = True
+
+    def reset(self) -> None:
+        self.offset = 0
+        self.carry = ""
+        self.percentage = None
+        self.anchor_start = 0
+        self.anchor = b""
+        self.carry_starts_line = True
+
+    def _is_new_generation(self, log_path: Path, identity: tuple[int, int], size: int) -> bool:
+        if self.file_identity is not None and identity != self.file_identity:
+            return True
+        if not self.offset or size < self.offset:
+            return size < self.offset
+        with log_path.open("rb") as log:
+            log.seek(self.anchor_start)
+            return log.read(len(self.anchor)) != self.anchor
+
+    def sample(self, log_path: Path) -> tuple[int, int | None, bool]:
+        stat = log_path.stat()
+        identity = (stat.st_dev, stat.st_ino)
+        if self._is_new_generation(log_path, identity, stat.st_size):
+            self.reset()
+        self.file_identity = identity
+        with log_path.open("rb") as log:
+            log.seek(self.offset)
+            text = log.read().decode("utf-8", errors="replace")
+            self.offset = log.tell()
+            self.anchor_start = max(0, self.offset - 256)
+            log.seek(self.anchor_start)
+            self.anchor = log.read(self.offset - self.anchor_start)
+        size = log_path.stat().st_size
+        observed = self.carry + text
+        status_text = observed if self.carry_starts_line else f"\0{observed}"
+        percentages = _PYTEST_PERCENTAGE.findall(observed)
+        if percentages:
+            self.percentage = int(percentages[-1])
+        saw_quiet_failure = any(
+            "F" in statuses or "E" in statuses
+            for statuses in _PYTEST_QUIET_STATUS_ROW.findall(status_text)
+        )
+        saw_failure = bool(_PYTEST_FAILURE_MARKER.search(observed) or saw_quiet_failure)
+        if len(observed) > 256:
+            self.carry_starts_line = observed[-257] == "\n"
+            self.carry = observed[-256:]
+        else:
+            self.carry = observed
+        return size, self.percentage, saw_failure
+
+
+def _slow_tests(log_path: Path) -> list[str]:
+    """Read the bounded pytest duration tail; unavailable summaries stay empty."""
+    with log_path.open("rb") as log:
+        log.seek(max(0, log_path.stat().st_size - 65536))
+        tail = log.read().decode("utf-8", errors="replace")
+    return re.findall(r"(?m)^\d+(?:\.\d+)?s\s+(?:call|setup|teardown)\s+.+$", tail)
+
+
 def run_step(
     name: str,
     cmd: list[str],
     cwd: Path,
     logs: Path,
     timeout: int = 1800,
+    progress_interval_seconds: float = DEFAULT_PROGRESS_INTERVAL_SECONDS,
 ) -> tuple[bool, float]:
     """Run one gate step; stream a header, write live output to the log
     file, and print the failure tail if it fails. Returns
     ``(ok, seconds)``."""
+    if progress_interval_seconds <= 0:
+        raise ValueError("progress_interval_seconds must be positive")
+
     print_console(f"== {name} ==", flush=True)
     started = time.monotonic()
     log_path = logs / f"{len(STEPS) + 1:02d}-{name.replace(' ', '-').replace('/', '-')}.log"
+    events_path = logs / "events.jsonl"
+    timed_out = False
     # Direct unbuffered file output remains observable even without newlines;
     # no reader pipe/thread can hold up timeout cleanup or buffer pytest dots.
     with log_path.open("wb", buffering=0) as log:
@@ -143,15 +249,96 @@ def run_step(
             env={**os.environ, "PYTHONUNBUFFERED": "1", "PYTHONIOENCODING": "utf-8"},
             start_new_session=os.name != "nt",
         ) as proc:
+            last_progress_at = started
+            last_progress_size = 0
+            last_progress_percentage: int | None = None
+            failure_seen = False
+            observer = StepLogObserver()
+
+            def observe() -> None:
+                nonlocal failure_seen, last_progress_at
+                nonlocal last_progress_percentage, last_progress_size
+                now = time.monotonic()
+                log_size, percentage, saw_failure = observer.sample(log_path)
+                elapsed = now - started
+                if saw_failure and not failure_seen:
+                    _emit_event(
+                        events_path,
+                        "step_failure_seen",
+                        name=name,
+                        elapsed_seconds=round(elapsed, 3),
+                        log_path=str(log_path),
+                    )
+                    failure_seen = True
+                progress_changed = (
+                    log_size != last_progress_size or percentage != last_progress_percentage
+                )
+                if now - last_progress_at >= progress_interval_seconds and progress_changed:
+                    _emit_event(
+                        events_path,
+                        "step_progress",
+                        name=name,
+                        elapsed_seconds=round(elapsed, 3),
+                        log_size_bytes=log_size,
+                        pytest_percentage=percentage,
+                        log_path=str(log_path),
+                    )
+                    last_progress_at = now
+                    last_progress_size = log_size
+                    last_progress_percentage = percentage
+
             try:
-                ok = proc.wait(timeout=timeout) == 0
-            except subprocess.TimeoutExpired:
-                _kill_step_process(proc)
-                log.write(f"\nTIMEOUT after {timeout}s\n".encode())
-                ok = False
+                _emit_event(
+                    events_path,
+                    "step_started",
+                    name=name,
+                    pid=proc.pid,
+                    timeout_seconds=timeout,
+                    log_path=str(log_path),
+                )
+                while True:
+                    returncode = proc.poll()
+                    if returncode is not None:
+                        observe()
+                        ok = returncode == 0
+                        break
+                    remaining = timeout - (time.monotonic() - started)
+                    if remaining <= 0:
+                        observe()
+                        returncode = proc.poll()
+                        if returncode is not None:
+                            observe()
+                            ok = returncode == 0
+                            break
+                        timed_out = True
+                        _kill_step_process(proc)
+                        log.write(f"\nTIMEOUT after {timeout}s\n".encode())
+                        ok = False
+                        break
+                    # A small controller sleep makes the step observable
+                    # without keeping callers busy-polling its process or
+                    # repeatedly reading its log from outside the gate.
+                    time.sleep(min(1.0, remaining, progress_interval_seconds))
+                    observe()
+                    returncode = proc.poll()
+                    if returncode is not None:
+                        observe()
+                        ok = returncode == 0
+                        break
             except BaseException:
                 _kill_step_process(proc)
                 raise
+            finally:
+                _emit_event(
+                    events_path,
+                    "step_finished",
+                    name=name,
+                    exit_code=proc.returncode,
+                    timed_out=timed_out,
+                    slow_tests=_slow_tests(log_path),
+                    elapsed_seconds=round(time.monotonic() - started, 3),
+                    log_path=str(log_path),
+                )
     elapsed = time.monotonic() - started
     minutes, seconds = divmod(int(elapsed), 60)
     if ok:
@@ -308,7 +495,7 @@ def main() -> int:
         ),
         step(
             "npm ci (frontend deps)",
-            ["cmd", "/c", "npm", "ci"],
+            _node_command(["npm", "ci"]),
             checkout / "frontend",
             1800,
         ),
@@ -320,7 +507,7 @@ def main() -> int:
         ),
         step(
             "npm audit --audit-level=high",
-            ["cmd", "/c", "npm", "audit", "--audit-level=high"],
+            _node_command(["npm", "audit", "--audit-level=high"]),
             checkout / "frontend",
             600,
         ),
@@ -332,7 +519,7 @@ def main() -> int:
         ),
         step(
             "frontend unit tests (vitest)",
-            ["cmd", "/c", "npx", "vitest", "run"],
+            _node_command(["npx", "vitest", "run"]),
             checkout / "frontend",
             900,
         ),
@@ -342,7 +529,10 @@ def main() -> int:
                 _venv_python(temp / "release-venv"),
                 "-m",
                 "pytest",
-                "-q",
+                # Keep exact failing/running node IDs if a native signal stops
+                # pytest before its terminal assertion summary is printed.
+                "-vv",
+                "--durations=50",
                 # Do not let pytest touch the shared Windows TEMP root:
                 # a locked pytest-current symlink can make an otherwise
                 # green release suite fail during pytest's final cleanup.
@@ -405,7 +595,8 @@ def main() -> int:
     if pytest_logs:
         pytest_log = pytest_logs[0]
         lines = [
-            line for line in pytest_log.read_text(encoding="utf-8", errors="replace").splitlines()
+            line
+            for line in pytest_log.read_text(encoding="utf-8", errors="replace").splitlines()
             if line.strip()
         ]
         counts = _counts(lines[-1])

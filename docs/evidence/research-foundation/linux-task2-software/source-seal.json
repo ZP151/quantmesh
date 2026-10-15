@@ -1,0 +1,38 @@
+{
+  "head": "042fb0b491c13f4535bddbb61290b191d29b1790",
+  "head_tree": "06c80ca3427808c558ea0ef65ff3865ddfff52ec",
+  "branch": "codex/0038-linux-worker-jobs",
+  "uncommitted": true,
+  "qualification": "review-incomplete/remaining-loaded-dependency-origin-P2",
+  "source_semantics": "four-file targeted overlay on prior owned c545 clone; not whole042 clean checkout",
+  "files": {
+    "src/quantmesh/research/worker_build.py": {
+      "sha256": "97fc69ba4f7149ff6835f9ebb57642c583ce5ff2b250138de4da4cf7efcdad4e",
+      "bytes": 11895,
+      "tested_overlay_sha256": "97fc69ba4f7149ff6835f9ebb57642c583ce5ff2b250138de4da4cf7efcdad4e"
+    },
+    "src/quantmesh/research/job_runner.py": {
+      "sha256": "89cb8a7cfe8748fa4785a9d96b9e95785d9310df9864c8e511f21a2ff24a8b68",
+      "bytes": 19516,
+      "tested_overlay_sha256": "89cb8a7cfe8748fa4785a9d96b9e95785d9310df9864c8e511f21a2ff24a8b68"
+    },
+    "tests/test_worker_build.py": {
+      "sha256": "1254f494a9a494703dc2ff87b4a80460784988da5c8c6227ad74df455a9c4541",
+      "bytes": 11590,
+      "tested_overlay_sha256": "1254f494a9a494703dc2ff87b4a80460784988da5c8c6227ad74df455a9c4541"
+    },
+    "tests/test_research_job_runner.py": {
+      "sha256": "6cabf480f8810f5b97bfaa5536015877e4d661ac07a3a81b40e360a727ee240a",
+      "bytes": 24048,
+      "tested_overlay_sha256": "6cabf480f8810f5b97bfaa5536015877e4d661ac07a3a81b40e360a727ee240a"
+    },
+    "docs/runbooks/linux-research-worker.md": {
+      "sha256": "004adc598e4215158a4fbe51f2b50da0ae1189cc34a8a08e2e6bb278d5ab8dd5",
+      "bytes": 15067
+    },
+    "docs/superpowers/plans/2026-10-13-linux-numerical-worker.md": {
+      "sha256": "51690a4de0a1756ae70c2f8ba4e0eebaf22c211136cb4d870c6847f120b162f8",
+      "bytes": 9658
+    }
+  }
+}

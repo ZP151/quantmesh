@@ -1,0 +1,590 @@
+...............................FF.F..F                                   [100%]
+=================================== FAILURES ===================================
+_______________ test_loaded_dependency_shadow_refuses[namespace] _______________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_dependency_shadow_2/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x791f85428950>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_dependency_shadow_2')
+kind = 'namespace'
+
+    @pytest.mark.parametrize("kind", ["python", "extension", "namespace", "package", "spec"])
+    def test_loaded_dependency_shadow_refuses(sealed, monkeypatch, tmp_path, kind):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        admitted = sealed.prefix / "numpy.py"
+        admitted.write_bytes(b"ADMITTED = True\n")
+        _reseal_inventory(sealed)
+        external = tmp_path / "external"
+        external.mkdir()
+        shadow = external / ("numpy.so" if kind == "extension" else "numpy.py")
+        shadow.write_bytes(b"EXTERNAL = True\n")
+        module = SimpleNamespace(__file__=str(shadow))
+        if kind == "namespace":
+            module = SimpleNamespace(__path__=[str(external)])
+        elif kind == "package":
+            module = SimpleNamespace(__file__=str(admitted), __path__=[str(external)])
+        elif kind == "spec":
+            module = SimpleNamespace(
+                __file__=str(admitted), __spec__=SimpleNamespace(origin=str(shadow))
+            )
+        api.sys.modules["numpy"] = module
+        # Legitimate distribution metadata remains admitted throughout.
+        with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+>           api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+tests/test_worker_build.py:355: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_dependency_shadow_2/build.json')
+manifest_sha256 = '8478eb1baae263aea14bc782148449aa6724416084b2ed7e26d27169a56960c0'
+
+    def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
+        """Validate pinned actual bytes, then collect the unchanged five runtime fields.
+    
+        The caller supplies the manifest SHA from independent image admission. This
+        function grants no Linux activation or image/native certificate by itself.
+        """
+        try:
+            data = _json(Path(manifest_path), manifest_sha256)
+            if set(data) != {
+                "schema_version",
+                "source_commit",
+                "source_root",
+                "prefix",
+                "python_executable",
+                "lock_path",
+                "inventory_path",
+                "inventory_sha256",
+                "source_files",
+                "library_paths",
+                "notice_paths",
+            }:
+                raise ValueError
+            if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+                raise ValueError
+            if not isinstance(data["source_commit"], str) or not re.fullmatch(
+                r"[0-9a-f]{40}", data["source_commit"]
+            ):
+                raise ValueError
+            source, prefix, executable = (
+                _path(data[key]) for key in ("source_root", "prefix", "python_executable")
+            )
+            if (
+                sys.platform != "linux"
+                or sys.version_info[:2] != (3, 12)
+                or platform.machine() != "x86_64"
+                or not sys.dont_write_bytecode
+                or os.environ.get("PYTHONDONTWRITEBYTECODE") != "1"
+                or Path(sys.prefix) != prefix
+                or Path(sys.executable) != executable
+                or not executable.is_relative_to(prefix)
+            ):
+                raise ValueError
+            files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+            required = [source, prefix]
+            inventory = _json(_path(data["inventory_path"]), data["inventory_sha256"])
+            if any(str(root) not in inventory["roots"] for root in required):
+                raise ValueError
+            for key in ("library_paths", "notice_paths"):
+                if (
+                    not isinstance(data[key], list)
+                    or not data[key]
+                    or len(set(data[key])) != len(data[key])
+                ):
+                    raise ValueError
+                if any(str(_path(p)) not in files for p in data[key]):
+                    raise ValueError
+            if str(executable) not in files or str(_path(data["lock_path"])) not in files:
+                raise ValueError
+            pins = _pins(_path(data["lock_path"]))
+            declared = data["source_files"]
+            if not isinstance(declared, dict) or not declared:
+                raise ValueError
+            if any(p.is_symlink() for p in (source / "quantmesh").rglob("*")):
+                raise ValueError
+            source_files = {
+                p.relative_to(source).as_posix(): files[str(p)]
+                for p in sorted((source / "quantmesh").rglob("*.py"))
+                if not p.is_symlink()
+            }
+            if source_files != declared:
+                raise ValueError
+            admitted_source = {str(source / relative) for relative in source_files}
+            if str(_path(str(Path(__file__)))) not in admitted_source:
+                raise ValueError
+            for name, module in tuple(sys.modules.items()):
+                if module is None:
+                    continue
+                if name != "quantmesh" and not name.startswith("quantmesh."):
+                    # Installed RECORDs cannot attest code imported before admission.
+                    # Bind every active non-QuantMesh file (including stdlib/extensions)
+                    # to the measured closure, and every package search root. A venv's
+                    # base stdlib can legitimately live outside its distribution prefix.
+                    origin = getattr(module, "__file__", None)
+                    spec_origin = getattr(getattr(module, "__spec__", None), "origin", None)
+                    if name == "__main__" and origin in admitted_source:
+                        # -m / the trusted file entry can alias admitted QuantMesh code.
+                        # Inline -c/stdin code is deliberately not an admitted image entry.
+                        if spec_origin not in {None, origin} or getattr(module, "__path__", None):
+                            raise ValueError
+                        continue
+                    for candidate in (origin, spec_origin):
+                        if candidate and candidate not in {"built-in", "frozen"}:
+                            path = _path(candidate)
+                            if str(path) not in files:
+                                raise ValueError
+                    if origin and spec_origin not in {None, "built-in", "frozen", origin}:
+                        raise ValueError
+                    namespace = getattr(module, "__path__", None)
+                    if namespace is not None:
+                        if not namespace:
+                            raise ValueError
+                        for candidate in namespace:
+                            path = _path(str(candidate))
+                            if (
+>                               not any(path.is_relative_to(root) for root in roots)
+                                                                              ^^^^^
+                                or not path.is_dir()
+                                or path.is_symlink()
+                            ):
+E                           NameError: name 'roots' is not defined
+
+src/quantmesh/research/worker_build.py:291: NameError
+________________ test_loaded_dependency_shadow_refuses[package] ________________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_dependency_shadow_3/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x791f854325d0>
+tmp_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_dependency_shadow_3')
+kind = 'package'
+
+    @pytest.mark.parametrize("kind", ["python", "extension", "namespace", "package", "spec"])
+    def test_loaded_dependency_shadow_refuses(sealed, monkeypatch, tmp_path, kind):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        admitted = sealed.prefix / "numpy.py"
+        admitted.write_bytes(b"ADMITTED = True\n")
+        _reseal_inventory(sealed)
+        external = tmp_path / "external"
+        external.mkdir()
+        shadow = external / ("numpy.so" if kind == "extension" else "numpy.py")
+        shadow.write_bytes(b"EXTERNAL = True\n")
+        module = SimpleNamespace(__file__=str(shadow))
+        if kind == "namespace":
+            module = SimpleNamespace(__path__=[str(external)])
+        elif kind == "package":
+            module = SimpleNamespace(__file__=str(admitted), __path__=[str(external)])
+        elif kind == "spec":
+            module = SimpleNamespace(
+                __file__=str(admitted), __spec__=SimpleNamespace(origin=str(shadow))
+            )
+        api.sys.modules["numpy"] = module
+        # Legitimate distribution metadata remains admitted throughout.
+        with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+>           api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+tests/test_worker_build.py:355: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_dependency_shadow_3/build.json')
+manifest_sha256 = 'b58f86f98cc07197353da2ba687f511ffee028f8bba5ed7dd8330f58c29a6f65'
+
+    def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
+        """Validate pinned actual bytes, then collect the unchanged five runtime fields.
+    
+        The caller supplies the manifest SHA from independent image admission. This
+        function grants no Linux activation or image/native certificate by itself.
+        """
+        try:
+            data = _json(Path(manifest_path), manifest_sha256)
+            if set(data) != {
+                "schema_version",
+                "source_commit",
+                "source_root",
+                "prefix",
+                "python_executable",
+                "lock_path",
+                "inventory_path",
+                "inventory_sha256",
+                "source_files",
+                "library_paths",
+                "notice_paths",
+            }:
+                raise ValueError
+            if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+                raise ValueError
+            if not isinstance(data["source_commit"], str) or not re.fullmatch(
+                r"[0-9a-f]{40}", data["source_commit"]
+            ):
+                raise ValueError
+            source, prefix, executable = (
+                _path(data[key]) for key in ("source_root", "prefix", "python_executable")
+            )
+            if (
+                sys.platform != "linux"
+                or sys.version_info[:2] != (3, 12)
+                or platform.machine() != "x86_64"
+                or not sys.dont_write_bytecode
+                or os.environ.get("PYTHONDONTWRITEBYTECODE") != "1"
+                or Path(sys.prefix) != prefix
+                or Path(sys.executable) != executable
+                or not executable.is_relative_to(prefix)
+            ):
+                raise ValueError
+            files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+            required = [source, prefix]
+            inventory = _json(_path(data["inventory_path"]), data["inventory_sha256"])
+            if any(str(root) not in inventory["roots"] for root in required):
+                raise ValueError
+            for key in ("library_paths", "notice_paths"):
+                if (
+                    not isinstance(data[key], list)
+                    or not data[key]
+                    or len(set(data[key])) != len(data[key])
+                ):
+                    raise ValueError
+                if any(str(_path(p)) not in files for p in data[key]):
+                    raise ValueError
+            if str(executable) not in files or str(_path(data["lock_path"])) not in files:
+                raise ValueError
+            pins = _pins(_path(data["lock_path"]))
+            declared = data["source_files"]
+            if not isinstance(declared, dict) or not declared:
+                raise ValueError
+            if any(p.is_symlink() for p in (source / "quantmesh").rglob("*")):
+                raise ValueError
+            source_files = {
+                p.relative_to(source).as_posix(): files[str(p)]
+                for p in sorted((source / "quantmesh").rglob("*.py"))
+                if not p.is_symlink()
+            }
+            if source_files != declared:
+                raise ValueError
+            admitted_source = {str(source / relative) for relative in source_files}
+            if str(_path(str(Path(__file__)))) not in admitted_source:
+                raise ValueError
+            for name, module in tuple(sys.modules.items()):
+                if module is None:
+                    continue
+                if name != "quantmesh" and not name.startswith("quantmesh."):
+                    # Installed RECORDs cannot attest code imported before admission.
+                    # Bind every active non-QuantMesh file (including stdlib/extensions)
+                    # to the measured closure, and every package search root. A venv's
+                    # base stdlib can legitimately live outside its distribution prefix.
+                    origin = getattr(module, "__file__", None)
+                    spec_origin = getattr(getattr(module, "__spec__", None), "origin", None)
+                    if name == "__main__" and origin in admitted_source:
+                        # -m / the trusted file entry can alias admitted QuantMesh code.
+                        # Inline -c/stdin code is deliberately not an admitted image entry.
+                        if spec_origin not in {None, origin} or getattr(module, "__path__", None):
+                            raise ValueError
+                        continue
+                    for candidate in (origin, spec_origin):
+                        if candidate and candidate not in {"built-in", "frozen"}:
+                            path = _path(candidate)
+                            if str(path) not in files:
+                                raise ValueError
+                    if origin and spec_origin not in {None, "built-in", "frozen", origin}:
+                        raise ValueError
+                    namespace = getattr(module, "__path__", None)
+                    if namespace is not None:
+                        if not namespace:
+                            raise ValueError
+                        for candidate in namespace:
+                            path = _path(str(candidate))
+                            if (
+>                               not any(path.is_relative_to(root) for root in roots)
+                                                                              ^^^^^
+                                or not path.is_dir()
+                                or path.is_symlink()
+                            ):
+E                           NameError: name 'roots' is not defined
+
+src/quantmesh/research/worker_build.py:291: NameError
+_______________ test_loaded_admitted_dependency_and_builtin_pass _______________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_admitted_dependenc0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x791f85432030>
+
+    def test_loaded_admitted_dependency_and_builtin_pass(sealed, monkeypatch):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        package = sealed.prefix / "numpy"
+        package.mkdir()
+        code = package / "__init__.py"
+        code.write_bytes(b"ADMITTED = True\n")
+        _reseal_inventory(sealed)
+        api.sys.modules["numpy"] = SimpleNamespace(
+            __file__=str(code), __path__=[str(package)], __spec__=SimpleNamespace(origin=str(code))
+        )
+        api.sys.modules["sys"] = SimpleNamespace(__spec__=SimpleNamespace(origin="built-in"))
+        api.sys.modules["not_imported"] = None
+>       assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_worker_build.py:371: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_loaded_admitted_dependenc0/build.json')
+manifest_sha256 = '4a284f0230994b8bf87eb4263d5c6ef3187b2de3e88f82d95a0d4d262d1ddea0'
+
+    def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
+        """Validate pinned actual bytes, then collect the unchanged five runtime fields.
+    
+        The caller supplies the manifest SHA from independent image admission. This
+        function grants no Linux activation or image/native certificate by itself.
+        """
+        try:
+            data = _json(Path(manifest_path), manifest_sha256)
+            if set(data) != {
+                "schema_version",
+                "source_commit",
+                "source_root",
+                "prefix",
+                "python_executable",
+                "lock_path",
+                "inventory_path",
+                "inventory_sha256",
+                "source_files",
+                "library_paths",
+                "notice_paths",
+            }:
+                raise ValueError
+            if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+                raise ValueError
+            if not isinstance(data["source_commit"], str) or not re.fullmatch(
+                r"[0-9a-f]{40}", data["source_commit"]
+            ):
+                raise ValueError
+            source, prefix, executable = (
+                _path(data[key]) for key in ("source_root", "prefix", "python_executable")
+            )
+            if (
+                sys.platform != "linux"
+                or sys.version_info[:2] != (3, 12)
+                or platform.machine() != "x86_64"
+                or not sys.dont_write_bytecode
+                or os.environ.get("PYTHONDONTWRITEBYTECODE") != "1"
+                or Path(sys.prefix) != prefix
+                or Path(sys.executable) != executable
+                or not executable.is_relative_to(prefix)
+            ):
+                raise ValueError
+            files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+            required = [source, prefix]
+            inventory = _json(_path(data["inventory_path"]), data["inventory_sha256"])
+            if any(str(root) not in inventory["roots"] for root in required):
+                raise ValueError
+            for key in ("library_paths", "notice_paths"):
+                if (
+                    not isinstance(data[key], list)
+                    or not data[key]
+                    or len(set(data[key])) != len(data[key])
+                ):
+                    raise ValueError
+                if any(str(_path(p)) not in files for p in data[key]):
+                    raise ValueError
+            if str(executable) not in files or str(_path(data["lock_path"])) not in files:
+                raise ValueError
+            pins = _pins(_path(data["lock_path"]))
+            declared = data["source_files"]
+            if not isinstance(declared, dict) or not declared:
+                raise ValueError
+            if any(p.is_symlink() for p in (source / "quantmesh").rglob("*")):
+                raise ValueError
+            source_files = {
+                p.relative_to(source).as_posix(): files[str(p)]
+                for p in sorted((source / "quantmesh").rglob("*.py"))
+                if not p.is_symlink()
+            }
+            if source_files != declared:
+                raise ValueError
+            admitted_source = {str(source / relative) for relative in source_files}
+            if str(_path(str(Path(__file__)))) not in admitted_source:
+                raise ValueError
+            for name, module in tuple(sys.modules.items()):
+                if module is None:
+                    continue
+                if name != "quantmesh" and not name.startswith("quantmesh."):
+                    # Installed RECORDs cannot attest code imported before admission.
+                    # Bind every active non-QuantMesh file (including stdlib/extensions)
+                    # to the measured closure, and every package search root. A venv's
+                    # base stdlib can legitimately live outside its distribution prefix.
+                    origin = getattr(module, "__file__", None)
+                    spec_origin = getattr(getattr(module, "__spec__", None), "origin", None)
+                    if name == "__main__" and origin in admitted_source:
+                        # -m / the trusted file entry can alias admitted QuantMesh code.
+                        # Inline -c/stdin code is deliberately not an admitted image entry.
+                        if spec_origin not in {None, origin} or getattr(module, "__path__", None):
+                            raise ValueError
+                        continue
+                    for candidate in (origin, spec_origin):
+                        if candidate and candidate not in {"built-in", "frozen"}:
+                            path = _path(candidate)
+                            if str(path) not in files:
+                                raise ValueError
+                    if origin and spec_origin not in {None, "built-in", "frozen", origin}:
+                        raise ValueError
+                    namespace = getattr(module, "__path__", None)
+                    if namespace is not None:
+                        if not namespace:
+                            raise ValueError
+                        for candidate in namespace:
+                            path = _path(str(candidate))
+                            if (
+>                               not any(path.is_relative_to(root) for root in roots)
+                                                                              ^^^^^
+                                or not path.is_dir()
+                                or path.is_symlink()
+                            ):
+E                           NameError: name 'roots' is not defined
+
+src/quantmesh/research/worker_build.py:291: NameError
+_____________ test_measured_base_stdlib_outside_venv_prefix_passes _____________
+
+sealed = namespace(data={'schema_version': 1, 'source_commit': 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'source_root': '/var...90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_measured_base_stdlib_outs0/inventory.json'))
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x791f854331a0>
+
+    def test_measured_base_stdlib_outside_venv_prefix_passes(sealed, monkeypatch):
+        api = _api()
+        _runtime(api, sealed, monkeypatch)
+        package = sealed.library.parent / "stdlib_package"
+        package.mkdir()
+        code = package / "__init__.py"
+        code.write_bytes(b"MEASURED_STDLIB = True\n")
+        _reseal_inventory(sealed)
+        api.sys.modules["stdlib_package"] = SimpleNamespace(
+            __file__=str(code), __path__=[str(package)], __spec__=SimpleNamespace(origin=str(code))
+        )
+>       assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_worker_build.py:402: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+manifest_path = PosixPath('/var/tmp/quantmesh-linux-native-90afdbee6add43169483520e384539ae/task2-tests/root-loaded-stdlib-green/test_measured_base_stdlib_outs0/build.json')
+manifest_sha256 = '07f038a380fffd829a881489c14ffe8ed44fc9e54335b2ebebbb6669e51d2c7a'
+
+    def measure_worker_runtime(manifest_path: Path, *, manifest_sha256: str) -> dict:
+        """Validate pinned actual bytes, then collect the unchanged five runtime fields.
+    
+        The caller supplies the manifest SHA from independent image admission. This
+        function grants no Linux activation or image/native certificate by itself.
+        """
+        try:
+            data = _json(Path(manifest_path), manifest_sha256)
+            if set(data) != {
+                "schema_version",
+                "source_commit",
+                "source_root",
+                "prefix",
+                "python_executable",
+                "lock_path",
+                "inventory_path",
+                "inventory_sha256",
+                "source_files",
+                "library_paths",
+                "notice_paths",
+            }:
+                raise ValueError
+            if type(data["schema_version"]) is not int or data["schema_version"] != 1:
+                raise ValueError
+            if not isinstance(data["source_commit"], str) or not re.fullmatch(
+                r"[0-9a-f]{40}", data["source_commit"]
+            ):
+                raise ValueError
+            source, prefix, executable = (
+                _path(data[key]) for key in ("source_root", "prefix", "python_executable")
+            )
+            if (
+                sys.platform != "linux"
+                or sys.version_info[:2] != (3, 12)
+                or platform.machine() != "x86_64"
+                or not sys.dont_write_bytecode
+                or os.environ.get("PYTHONDONTWRITEBYTECODE") != "1"
+                or Path(sys.prefix) != prefix
+                or Path(sys.executable) != executable
+                or not executable.is_relative_to(prefix)
+            ):
+                raise ValueError
+            files = _inventory(_path(data["inventory_path"]), data["inventory_sha256"])
+            required = [source, prefix]
+            inventory = _json(_path(data["inventory_path"]), data["inventory_sha256"])
+            if any(str(root) not in inventory["roots"] for root in required):
+                raise ValueError
+            for key in ("library_paths", "notice_paths"):
+                if (
+                    not isinstance(data[key], list)
+                    or not data[key]
+                    or len(set(data[key])) != len(data[key])
+                ):
+                    raise ValueError
+                if any(str(_path(p)) not in files for p in data[key]):
+                    raise ValueError
+            if str(executable) not in files or str(_path(data["lock_path"])) not in files:
+                raise ValueError
+            pins = _pins(_path(data["lock_path"]))
+            declared = data["source_files"]
+            if not isinstance(declared, dict) or not declared:
+                raise ValueError
+            if any(p.is_symlink() for p in (source / "quantmesh").rglob("*")):
+                raise ValueError
+            source_files = {
+                p.relative_to(source).as_posix(): files[str(p)]
+                for p in sorted((source / "quantmesh").rglob("*.py"))
+                if not p.is_symlink()
+            }
+            if source_files != declared:
+                raise ValueError
+            admitted_source = {str(source / relative) for relative in source_files}
+            if str(_path(str(Path(__file__)))) not in admitted_source:
+                raise ValueError
+            for name, module in tuple(sys.modules.items()):
+                if module is None:
+                    continue
+                if name != "quantmesh" and not name.startswith("quantmesh."):
+                    # Installed RECORDs cannot attest code imported before admission.
+                    # Bind every active non-QuantMesh file (including stdlib/extensions)
+                    # to the measured closure, and every package search root. A venv's
+                    # base stdlib can legitimately live outside its distribution prefix.
+                    origin = getattr(module, "__file__", None)
+                    spec_origin = getattr(getattr(module, "__spec__", None), "origin", None)
+                    if name == "__main__" and origin in admitted_source:
+                        # -m / the trusted file entry can alias admitted QuantMesh code.
+                        # Inline -c/stdin code is deliberately not an admitted image entry.
+                        if spec_origin not in {None, origin} or getattr(module, "__path__", None):
+                            raise ValueError
+                        continue
+                    for candidate in (origin, spec_origin):
+                        if candidate and candidate not in {"built-in", "frozen"}:
+                            path = _path(candidate)
+                            if str(path) not in files:
+                                raise ValueError
+                    if origin and spec_origin not in {None, "built-in", "frozen", origin}:
+                        raise ValueError
+                    namespace = getattr(module, "__path__", None)
+                    if namespace is not None:
+                        if not namespace:
+                            raise ValueError
+                        for candidate in namespace:
+                            path = _path(str(candidate))
+                            if (
+>                               not any(path.is_relative_to(root) for root in roots)
+                                                                              ^^^^^
+                                or not path.is_dir()
+                                or path.is_symlink()
+                            ):
+E                           NameError: name 'roots' is not defined
+
+src/quantmesh/research/worker_build.py:291: NameError
+=============================== warnings summary ===============================
+tests/test_worker_build.py::test_actual_runtime_fields_without_git
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_worker_build.py::test_loaded_dependency_shadow_refuses[namespace]
+FAILED tests/test_worker_build.py::test_loaded_dependency_shadow_refuses[package]
+FAILED tests/test_worker_build.py::test_loaded_admitted_dependency_and_builtin_pass
+FAILED tests/test_worker_build.py::test_measured_base_stdlib_outside_venv_prefix_passes
+4 failed, 34 passed, 1 warning in 1.86s

@@ -1,0 +1,111 @@
+{
+  "before": {
+    "utc": "2026-10-13T15:49:31.055196+00:00",
+    "original_baseline_bytes": 8876772,
+    "root_allocated_start": 11770904,
+    "root_remeasured_upper": 15716984,
+    "root_metadata_bytes": 264933,
+    "all_owned_tests_bytes": 13520596,
+    "new_fixture_bytes": 3946080,
+    "new_source_bytes": 55362,
+    "new_phase_bytes": 196321,
+    "all_evidence_copies_charged": true,
+    "git_forecast_bytes": 100000,
+    "new_batch_upper": 4885305,
+    "introduced_logical_upper_bound": 19491443,
+    "complete_root_frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 208,
+      "additional_raw_and_copy_bytes": 2208023,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "conservative_upper_with_future": 19478927,
+      "software_cap_bytes": 20000000,
+      "free_c_bytes": 99047923712,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_materialization": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "full_new_batch_forecast_retained": true,
+    "limit_bytes": 20000000,
+    "new_batch_limit_bytes": 5500000,
+    "free_c_bytes": 98814672896,
+    "whole_C_5GB_attribution": "PENDING/no reset/no waiver",
+    "live_root_frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 212,
+      "additional_raw_and_copy_bytes": 2220539,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "conservative_upper_with_future": 19491443,
+      "software_cap_bytes": 20000000,
+      "free_c_bytes": 98814836736,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_materialization": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "weak_slice_growth_upper": 271894
+  },
+  "after": {
+    "utc": "2026-10-13T15:49:38.025563+00:00",
+    "original_baseline_bytes": 8876772,
+    "root_allocated_start": 11770904,
+    "root_remeasured_upper": 15716984,
+    "root_metadata_bytes": 264933,
+    "all_owned_tests_bytes": 13520596,
+    "new_fixture_bytes": 3946080,
+    "new_source_bytes": 55362,
+    "new_phase_bytes": 196321,
+    "all_evidence_copies_charged": true,
+    "git_forecast_bytes": 100000,
+    "new_batch_upper": 5004789,
+    "introduced_logical_upper_bound": 19491443,
+    "complete_root_frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 208,
+      "additional_raw_and_copy_bytes": 2208023,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "conservative_upper_with_future": 19478927,
+      "software_cap_bytes": 20000000,
+      "free_c_bytes": 99047923712,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_materialization": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "full_new_batch_forecast_retained": true,
+    "limit_bytes": 20000000,
+    "new_batch_limit_bytes": 5500000,
+    "free_c_bytes": 98814746624,
+    "whole_C_5GB_attribution": "PENDING/no reset/no waiver",
+    "live_root_frontier": {
+      "original_baseline_bytes": 8876772,
+      "prior_conservative_upper": 11770904.0,
+      "additional_files": 212,
+      "additional_raw_and_copy_bytes": 2220539,
+      "new_software_source_test_evidence_git_copy_forecast": 5500000,
+      "conservative_upper_with_future": 19491443,
+      "software_cap_bytes": 20000000,
+      "free_c_bytes": 98814754816,
+      "original_whole_C_attribution": "PENDING/no waiver/no reset",
+      "no_new_local_materialization": true,
+      "actual_remote_PG_receipts_separate": true
+    },
+    "weak_slice_growth_upper": 391378
+  },
+  "sources": {
+    "src/quantmesh/research/worker_provenance.py": {
+      "bytes": 29227,
+      "sha256": "923536d347595a867dcf0bf51d2d5c3afd86cff03fb7426525538188a9465099"
+    },
+    "deploy/research_worker/worker_entry.py": {
+      "bytes": 4623,
+      "sha256": "8d640c2d3f620b6753fb979472e7d714e3dcfe6e36fb718366300b9d5ca7e4be"
+    },
+    "tests/test_worker_provenance.py": {
+      "bytes": 21512,
+      "sha256": "be41fe3e7b094f496a051af7072c1804d343d9613255b8bad81712ee776b406b"
+    }
+  },
+  "status": "INCOMPLETE; six targeted pass, two fail before actual initialized boundary; different family refusal retained"
+}

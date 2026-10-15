@@ -1,0 +1,6 @@
+.
+============================= slowest 5 durations =============================
+0.17s call     tests/test_paper_proposals.py::test_proposal_is_a_preview_and_pins_the_forecast_without_ordering
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+1 passed in 0.43s

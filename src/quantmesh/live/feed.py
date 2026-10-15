@@ -34,6 +34,7 @@ from threading import RLock
 from types import MappingProxyType
 from typing import Any
 
+from quantmesh.data.calendars import CalendarService, SessionPolicy
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
 from quantmesh.live.buffer import LiveBuffer
@@ -44,6 +45,7 @@ from quantmesh.live.contract import (
     SourceState,
     UpdateKind,
 )
+from quantmesh.live.session_freshness import SessionFreshness, evaluate_session_freshness
 from quantmesh.live.supervisor import VenueSupervisor
 
 _POLL_SECONDS = 0.05  # supervisor outbox poll cadence (drain loop)
@@ -263,6 +265,8 @@ class LiveFeed:
         stale: timedelta = timedelta(seconds=90),
         queue_size: int = _MAX_SUBSCRIBER_QUEUE,
         prune_interval: timedelta = _PRUNE_INTERVAL,
+        provider_delays: Mapping[Venue, int | None] | None = None,
+        calendar: CalendarService | None = None,
     ) -> None:
         if not (timedelta(0) < lag < stale):
             raise ValueError("require 0 < lag < stale")
@@ -270,12 +274,16 @@ class LiveFeed:
             raise ValueError("prune_interval must be positive")
         self.lag = lag
         self.stale = stale
+        # No Moomoo latency/entitlement is inferred from route readiness.
+        self.provider_delays = MappingProxyType({Venue.HYPERLIQUID: 0, **(provider_delays or {})})
+        self._calendar = calendar
         self._lake = lake
         self._prune_interval = prune_interval
         self._last_prune_at: datetime | None = None
         self._queue_size = queue_size
         self._lock = RLock()
         self._latest: dict[tuple[str, str, str], MarketUpdate] = {}
+        self._session_candles: dict[tuple[str, str], datetime] = {}
         self._book_sides: dict[tuple[str, str, str], MarketUpdate] = {}
         self._continuity: dict[tuple[str, str, str], _ContinuityProof] = {}
         self._continuity_barriers: set[tuple[str, str, str]] = set()
@@ -298,10 +306,7 @@ class LiveFeed:
         current = now if now is not None else datetime.now(UTC)
         if current.tzinfo is None:
             raise ValueError("prune time must be timezone-aware")
-        if (
-            self._last_prune_at is not None
-            and current - self._last_prune_at < self._prune_interval
-        ):
+        if self._last_prune_at is not None and current - self._last_prune_at < self._prune_interval:
             return 0
         removed = self._lake.prune()
         self._last_prune_at = current
@@ -352,6 +357,28 @@ class LiveFeed:
             )
         self._continuity[key] = proof
         self._latest[key] = cached
+        if (
+            cached.venue is Venue.MOOMOO
+            and cached.kind is UpdateKind.CANDLE
+            and cached.provenance in {Provenance.REAL, Provenance.DELAYED}
+            and cached.payload.get("interval") == "1m"
+            and cached.payload.get("final") is not False
+        ):
+            raw_end = cached.payload.get("provider_end")
+            try:
+                end = datetime.fromisoformat(raw_end) if isinstance(raw_end, str) else None
+                if (
+                    end is not None
+                    and end.tzinfo is not None
+                    and end == cached.data_time + timedelta(minutes=1)
+                    and end <= cached.received_at
+                ):
+                    stream = key[:2]
+                    previous_end = self._session_candles.get(stream)
+                    if previous_end is None or end > previous_end:
+                        self._session_candles[stream] = end
+            except ValueError:
+                pass
         if cached.kind is UpdateKind.L2_SNAPSHOT:
             side = cached.payload.get("side")
             if side in ("bid", "ask"):
@@ -466,6 +493,93 @@ class LiveFeed:
             age_ms=age_ms,
         )
 
+    def _session_view(
+        self,
+        venue: str,
+        instrument: str,
+        update: MarketUpdate | None,
+        now: datetime,
+        completed: Mapping[tuple[str, str], datetime],
+    ) -> dict[str, object]:
+        calendar_id = "unknown"
+        policy = SessionPolicy.REGULAR
+        if venue == Venue.MOOMOO.value and instrument in {"AAPL", "NVDA"}:
+            calendar_id = "XNYS"
+        elif venue == Venue.HYPERLIQUID.value:
+            calendar_id, policy = "24/7", SessionPolicy.CONTINUOUS
+        source_at = None
+        interval = "1m"
+        source_kind = "observation"
+        if update is not None and update.provenance in {Provenance.REAL, Provenance.DELAYED}:
+            source_at = min(update.data_time, update.received_at)
+            if update.kind is UpdateKind.CANDLE:
+                source_kind = "bar_end"
+                interval = str(update.payload.get("interval", "unknown"))
+                # Only the scoped regular Moomoo minute has an admitted end clock.
+                if venue == Venue.MOOMOO.value and interval == "1m":
+                    source_at = completed.get((venue, instrument))
+                elif venue == Venue.HYPERLIQUID.value:
+                    # Existing crypto candles are observations of a mutable bar,
+                    # whose freshness clock is receipt, not completed-bar coverage.
+                    source_at = _freshness_time(update)
+                    source_kind = "observation"
+                    interval = f"{int(self.lag.total_seconds())}s"
+                else:
+                    source_at = None
+            elif venue == Venue.HYPERLIQUID.value:
+                interval = f"{int(self.lag.total_seconds())}s"
+        result = evaluate_session_freshness(
+            calendar_id,
+            policy,
+            now,
+            source_at,
+            interval,
+            self.provider_delays.get(Venue(venue)),
+            calendar=self._calendar,
+            source_kind=source_kind,
+        )
+        return result.model_dump(mode="json")
+
+    def _session_summaries(self, latest, now, completed):
+        grouped = {}
+        # Candles own chart coverage; receipt-timed status never renews it.
+        priorities = {
+            "candle": 0,
+            "quote": 1,
+            "trade": 2,
+            "metrics": 3,
+            "l2_snapshot": 4,
+            "l2_delta": 5,
+        }
+        for (venue, instrument, kind), update in latest:
+            if kind not in priorities:
+                continue
+            key = (venue, instrument)
+            previous = grouped.get(key)
+            if previous is None or priorities[kind] < priorities[previous.kind.value]:
+                grouped[key] = update
+        return {
+            key: self._session_view(*key, update, now, completed) for key, update in grouped.items()
+        }
+
+    def session_coverage(
+        self, venue: Venue, instrument: str, *, now: datetime | None = None
+    ) -> SessionFreshness:
+        """Read-only exact chart coverage, independent from executable quote evidence."""
+        now = now if now is not None else datetime.now(UTC)
+        identity = (venue.value, instrument)
+        with self._lock:
+            completed = {identity: self._session_candles.get(identity)}
+            latest = [
+                (key, update.model_copy(deep=True))
+                for key, update in self._latest.items()
+                if key[:2] == identity
+            ]
+        summary = self._session_summaries(latest, now, completed).get(identity)
+        return SessionFreshness.model_validate(
+            summary or self._session_view(*identity, None, now, completed)
+        )
+
     def latest_state(self, *, now: datetime | None = None) -> dict[str, object]:
         """One entry per venue/instrument identity with latest views by kind.
 
@@ -475,6 +589,7 @@ class LiveFeed:
         now = now if now is not None else datetime.now(UTC)
         instruments: dict[str, dict[str, object]] = {}
         with self._lock:
+            completed = dict(self._session_candles)
             latest = [
                 (key, update.model_copy(deep=True)) for key, update in sorted(self._latest.items())
             ]
@@ -487,13 +602,29 @@ class LiveFeed:
             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
             kinds = entry.setdefault("kinds", {})  # type: ignore[assignment]
             kinds[kind] = _view(update, now, lag=self.lag)  # type: ignore[index]
+            if update.kind is not UpdateKind.STATUS:
+                kinds[kind]["session_freshness"] = self._session_view(  # type: ignore[index]
+                    venue,
+                    instrument,
+                    update,
+                    now,
+                    completed,
+                )
         for (venue, instrument, side), update in book_sides:
             identity = f"{venue}:{instrument}"
             entry = instruments.setdefault(identity, {"venue": venue, "instrument": instrument})
             sides = entry.setdefault("book_sides", {})  # type: ignore[assignment]
             sides[side] = _view(update, now, lag=self.lag)  # type: ignore[index]
         ranks = {FRESH: 0, DELAYED: 1, SYNTHETIC: 2, STALE: 3, UNAVAILABLE: 4}
+        summaries = self._session_summaries(latest, now, completed)
         for entry in instruments.values():
+            key = (entry["venue"], entry["instrument"])
+            entry["session_freshness"] = summaries.get(key) or self._session_view(
+                *key,
+                None,
+                now,
+                completed,
+            )
             kinds = entry.get("kinds", {})
             # A disconnected status can veto availability, but fresh status or
             # metrics must never make an old quote fresh again.
@@ -512,6 +643,7 @@ class LiveFeed:
         now = now if now is not None else datetime.now(UTC)
         sources: dict[str, dict[str, dict[str, object]]] = {}
         with self._lock:
+            completed = dict(self._session_candles)
             latest = [(key, update.model_copy(deep=True)) for key, update in self._latest.items()]
             supervisors = [
                 (supervisor.venue, tuple(supervisor.watchlist)) for supervisor in self._supervisors
@@ -541,6 +673,12 @@ class LiveFeed:
                     },
                 )
                 entry["state"] = str(entry["state"])
+        summaries = self._session_summaries(latest, now, completed)
+        for venue, sources_map in sources.items():
+            for instrument, entry in sources_map.items():
+                entry["session_freshness"] = summaries.get((venue, instrument)) or (
+                    self._session_view(venue, instrument, None, now, completed)
+                )
         venues = [
             {
                 "venue": venue,

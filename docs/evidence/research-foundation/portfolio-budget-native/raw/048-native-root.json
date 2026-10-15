@@ -1,0 +1,16 @@
+{
+  "root": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m",
+  "profile": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/profile-r1-final.json",
+  "checkout": "/var/tmp/quantmesh-portfolio-witness-r_a4n26m/checkout",
+  "candidate_build": "084c86316066297f2c817ce2380cb49099d4ee41",
+  "reviewed_implementation": "b10762883edc1bbad164951d1a1adfb9f0f7457c",
+  "interpreter": "/var/tmp/quantmesh-portfolio-runtime-72a6m2j0/venv/bin/python",
+  "dependency_RECORD_entries": 6669,
+  "licensed_packages": 81,
+  "bytecode_files": 0,
+  "pg_prefix_entries": 748,
+  "pg_prefix_manifest_sha256": "f54df012fca9e020ad14fcfc66555ab4daf0bbca02812b5410f67f0f2bcea3c4",
+  "python_binary_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+  "builder_imported": false,
+  "pg_started": false
+}

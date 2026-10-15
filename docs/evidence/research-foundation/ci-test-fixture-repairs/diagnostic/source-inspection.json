@@ -1,0 +1,4547 @@
+[
+  {
+    "file": "tests/fixture_ws_venue.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/live_clock.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/moomoo_wire.py",
+    "top_level_calls": [
+      {
+        "line": 14,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD', metadata={'market': 'US'})"
+      },
+      {
+        "line": 21,
+        "expression": "Instrument(symbol='00700', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='HKD', metadata={'market': 'HK'})"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/research_fixtures.py",
+    "top_level_calls": [
+      {
+        "line": 17,
+        "expression": "datetime(2026, 1, 5, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_account_store.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_account_file_round_trips_the_complete_immutable_account",
+      "test_account_file_refuses_corrupt_existing_state",
+      "test_journal_recovery_closes_the_append_before_snapshot_crash_window",
+      "test_journal_recovery_refuses_trailing_fill_that_would_make_cash_negative",
+      "test_journal_recovery_refuses_nonfinite_trailing_fill_aggregates",
+      "test_journal_recovery_refuses_state_that_disagrees_with_fill_history",
+      "test_journal_recovery_refuses_account_order_stored_under_the_wrong_key",
+      "test_journal_recovery_refuses_invalid_account_order_derived_state",
+      "test_journal_recovery_refuses_account_orders_absent_from_journal",
+      "test_journal_recovery_refuses_tampered_account_aggregate_field",
+      "test_journal_recovery_refuses_tampered_positions",
+      "test_journal_recovery_refuses_reordered_account_order_prefix",
+      "test_journal_recovery_refuses_duplicate_journal_order_ids",
+      "test_journal_recovery_refuses_regressing_journal_creation_time",
+      "test_journal_recovery_preserves_policy_and_switches_when_adopting_trailing_order"
+    ]
+  },
+  {
+    "file": "tests/test_accounting.py",
+    "top_level_calls": [
+      {
+        "line": 23,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 27,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_buy_fill_debits_cash_by_notional_plus_fee",
+      "test_second_buy_reweights_the_average_cost",
+      "test_sell_credits_cash_and_records_realized_pnl",
+      "test_partial_sell_keeps_the_position_open",
+      "test_unrealized_pnl_uses_the_mark_price",
+      "test_total_pnl_is_equity_based_and_net_of_all_costs",
+      "test_buy_and_hold_pnl_shows_entry_fees",
+      "test_kill_switch_blocks_submission",
+      "test_max_order_quantity_is_enforced",
+      "test_max_notional_is_enforced_for_limit_orders",
+      "test_buy_above_available_cash_is_rejected",
+      "test_position_limit_is_enforced",
+      "test_selling_without_a_position_is_rejected",
+      "test_submit_fills_a_market_buy_and_updates_the_account",
+      "test_submit_leaves_a_non_crossed_limit_order_working",
+      "test_submit_fails_closed_on_a_stale_quote",
+      "test_submit_is_deterministic_for_identical_inputs",
+      "test_submit_rejects_a_reused_client_order_id",
+      "test_submit_is_deterministic_without_a_client_order_id",
+      "test_market_buy_cannot_overdraw_cash_when_slippage_applies"
+    ]
+  },
+  {
+    "file": "tests/test_ai_acceptance.py",
+    "top_level_calls": [
+      {
+        "line": 65,
+        "expression": "ModelMeta(name=MODEL, version='v1.0', endpoint_kind='scripted')"
+      },
+      {
+        "line": 67,
+        "expression": "datetime(2026, 8, 8, 12, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_ai_citation_safety.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_mixed_or_malformed_claim_sources_block",
+      "test_text_mentions_do_not_register_citation_authority",
+      "test_known_and_duplicate_citations_remain_advisory",
+      "test_duplicate_claims_preserve_indexed_critic_blocks",
+      "test_unknown_claim_refusal_is_archived"
+    ]
+  },
+  {
+    "file": "tests/test_ai_decisions.py",
+    "top_level_calls": [
+      {
+        "line": 21,
+        "expression": "ModelMeta(name='fixture-model', version='v1.0', endpoint_kind='scripted')"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_ai_gateway.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_ai_redact.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_ai_retrieval.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_ai_roles.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_ai_tools.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_api.py",
+    "top_level_calls": [
+      {
+        "line": 21,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 25,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_account_summary_matches_account_state",
+      "test_positions_include_unrealized_pnl",
+      "test_orders_list_orders_with_event_histories",
+      "test_order_by_id_returns_the_order",
+      "test_unknown_order_is_404",
+      "test_pnl_reflects_marks_and_account_state",
+      "test_kill_switch_status_is_observable",
+      "test_pnl_names_positions_without_marks",
+      "test_position_without_a_mark_reports_null_unrealized",
+      "test_rejected_order_serializes_reason_and_null_fill_fields",
+      "test_order_placement_is_not_exposed",
+      "test_marks_update_is_reflected",
+      "test_api_is_read_only",
+      "test_factory_app_serves_health"
+    ]
+  },
+  {
+    "file": "tests/test_artifact_manifests.py",
+    "top_level_calls": [
+      {
+        "line": 35,
+        "expression": "datetime(2026, 8, 14, 12, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 36,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 42,
+        "expression": "Instrument(symbol='NVDA', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_same_range_content_change_has_a_new_manifest_id",
+      "test_open_reader_is_stable_after_new_publication",
+      "test_graph_staging_does_not_corrupt_legacy_revision_history",
+      "test_graph_genesis_candidate_is_not_visible_before_commit",
+      "test_graph_staging_rejects_nonforward_knowledge_time",
+      "test_legacy_current_migrates_to_graph_current_without_split_history",
+      "test_missing_graph_current_does_not_fall_back_to_legacy_pointer",
+      "test_deleted_checkpoint_database_cannot_revive_legacy_pointer",
+      "test_owner_write_crash_cannot_expose_the_legacy_pointer",
+      "test_unchanged_graph_member_is_permanently_owned_with_advancing_member",
+      "test_unchanged_graph_member_rejects_coherent_legacy_rollback",
+      "test_collection_graph_rejects_an_uncommitted_external_parent",
+      "test_graph_migration_rejects_deleted_legacy_predecessor",
+      "test_publish_rejects_stale_compare_and_swap",
+      "test_current_pointer_rejects_rollback",
+      "test_restored_old_pointer_cannot_reuse_a_revision",
+      "test_deleted_latest_manifest_and_restored_pointer_cannot_reuse_revision",
+      "test_exact_retry_repairs_only_an_uncommitted_torn_history_tail",
+      "test_different_manifest_cannot_hijack_a_torn_history_tail",
+      "test_common_one_byte_history_tail_cannot_bind_a_different_manifest",
+      "test_torn_history_repair_validates_expected_current_before_mutation",
+      "test_torn_committed_history_record_fails_closed",
+      "test_publish_retry_completes_manifest_pointer_crash_boundary",
+      "test_publish_retry_recovers_before_atomic_genesis_activation",
+      "test_point_current_is_idempotent_after_atomic_genesis_activation",
+      "test_boolean_pointer_revision_is_not_an_integer",
+      "test_forged_initialization_markers_fail_closed",
+      "test_deleted_current_pointer_cannot_reset_revision_history",
+      "test_manifest_read_detects_tampering",
+      "test_normalized_manifest_rejects_bar_instrument_mismatch",
+      "test_equity_manifest_rejects_continuous_calendar",
+      "test_current_pointer_detects_tampering",
+      "test_concurrent_publication_has_one_cas_winner",
+      "test_cross_process_publication_has_one_cas_winner",
+      "test_lake_v2_accessor_does_not_change_v1_dataset_api",
+      "test_lock_hard_link_is_rejected_before_external_file_mutation"
+    ]
+  },
+  {
+    "file": "tests/test_aws_staging_assets.py",
+    "top_level_calls": [
+      {
+        "line": 11,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 11,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_invalid_ref_is_rejected_before_commands_or_filesystem_changes",
+      "test_successful_deployment_activates_exact_healthy_release",
+      "test_default_health_window_covers_slow_lake_startup",
+      "test_health_window_is_bounded_by_elapsed_time",
+      "test_fetched_commit_mismatch_never_activates_release",
+      "test_health_identity_mismatch_restores_previous_release",
+      "test_first_deployment_health_failure_deactivates_and_stops",
+      "test_existing_release_can_be_health_checked_and_reactivated",
+      "test_failed_existing_release_reactivation_restores_current",
+      "test_systemd_unit_is_loopback_demo_paper_and_hardened",
+      "test_explicit_live_deployment_writes_isolated_canonical_profile",
+      "test_moomoo_deployment_installs_sdk_and_keeps_profile_reactivatable",
+      "test_moomoo_profile_requires_live_before_any_side_effect",
+      "test_failure_restores_previous_moomoo_release",
+      "test_cli_rejects_incompatible_moomoo_flags",
+      "test_cli_passes_explicit_moomoo_profile",
+      "test_runtime_or_safety_mismatch_restores_retained_release",
+      "test_retained_release_infers_profile_without_rewriting_environment",
+      "test_retained_noncanonical_profile_is_rejected_before_activation",
+      "test_cli_selects_demo_by_default_and_live_only_explicitly",
+      "test_cli_refuses_to_override_retained_profile",
+      "test_automatic_rollback_checks_retained_identity_profile_and_health",
+      "test_equity_profile_enables_bounded_minute_history_and_accepts_old_rollback"
+    ]
+  },
+  {
+    "file": "tests/test_bitemporal_history.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_correction_does_not_leak_before_knowledge_time",
+      "test_history_before_first_knowledge_time_fails_closed",
+      "test_history_rejects_naive_knowledge_time",
+      "test_changed_revision_cannot_claim_an_earlier_knowledge_time",
+      "test_manifest_written_before_pointer_is_not_visible_by_knowledge_time",
+      "test_historical_retry_after_correction_is_idempotent",
+      "test_revision_is_visible_only_after_knowledge_range_is_complete",
+      "test_manifest_store_rejects_retroactive_knowledge_revision",
+      "test_pending_pointer_recovery_cannot_bypass_knowledge_order"
+    ]
+  },
+  {
+    "file": "tests/test_browser_origin_safety.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_dns_127_prefix_is_not_loopback",
+      "test_noncanonical_browser_origins_refused",
+      "test_literal_local_browser_origins_are_admitted",
+      "test_private_staging_origin_is_exact",
+      "test_hostile_origin_cannot_change_paper_account"
+    ]
+  },
+  {
+    "file": "tests/test_ci_gate_workflow.py",
+    "top_level_calls": [
+      {
+        "line": 9,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 9,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_ci_exposes_pr_main_tag_and_manual_entry_points",
+      "test_classifier_publishes_only_gate_policy_outputs",
+      "test_fast_job_runs_unless_cancelled_and_keeps_frontend_feedback",
+      "test_domain_and_e2e_jobs_consume_classifier_outputs",
+      "test_e2e_only_decision_skips_empty_domain_matrix",
+      "test_composite_workstation_change_expands_parallel_subdomain_matrix",
+      "test_release_job_certifies_escalated_pr_main_tag_and_manual_runs",
+      "test_concurrency_cancels_only_superseded_pull_request_runs",
+      "test_security_workflow_remains_independent_and_dependency_scoped",
+      "test_required_python_check_aggregates_all_gate_failures"
+    ]
+  },
+  {
+    "file": "tests/test_collection_checkpoints.py",
+    "top_level_calls": [
+      {
+        "line": 30,
+        "expression": "datetime(2026, 8, 14, 1, tzinfo=UTC)"
+      },
+      {
+        "line": 31,
+        "expression": "datetime(2026, 8, 14, 2, tzinfo=UTC)"
+      },
+      {
+        "line": 80,
+        "expression": "_PRELINK_CRASH.replace('    if calls == fail_on:\\n        os._exit(17)\\n    return original(source, target)', '    result = original(source, target)\\n    if calls == fail_on:\\n        os._exit(17)\\n    return result')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_graph_commit_atomically_advances_checkpoint_current_and_history",
+      "test_graph_commit_is_cas_for_checkpoint_and_each_dataset",
+      "test_multi_dataset_commit_rolls_back_every_mapping_on_one_lost_cas",
+      "test_graph_advance_rejects_nonforward_knowledge_time",
+      "test_committed_transaction_repairs_its_durable_intent",
+      "test_uncommitted_intent_is_removed_before_retry",
+      "test_commit_journal_recovers_a_deleted_checkpoint_row",
+      "test_checkpoint_index_tampering_fails_closed",
+      "test_checkpoint_body_tampering_fails_against_immutable_journal",
+      "test_graph_read_fails_on_corruption_in_another_dataset",
+      "test_graph_read_detects_commit_id_tampering",
+      "test_current_read_detects_deleted_intermediate_graph_revision",
+      "test_control_lock_rejects_hard_links_before_mutation",
+      "test_interrupted_hard_link_publish_removes_its_temporary_link",
+      "test_restart_repairs_a_committed_journal_temporary_hard_link",
+      "test_restart_recovers_prelink_intent_and_commit_temporaries",
+      "test_restart_recovers_postlink_uncommitted_intent",
+      "test_owner_marker_recovers_after_reservation_commit",
+      "test_writer_lease_refuses_a_nested_owner_before_opening_duckdb",
+      "test_writer_mutations_require_the_owner_thread",
+      "test_pending_graph_reserves_every_target_dataset",
+      "test_writer_lease_refuses_another_process_and_recovers_after_kill",
+      "test_eight_processes_create_one_logical_graph_commit"
+    ]
+  },
+  {
+    "file": "tests/test_collection_identity.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_job_and_run_identity_are_deterministic_and_attempt_is_separate",
+      "test_every_declared_identity_dimension_changes_job_id",
+      "test_provider_cannot_disagree_with_instrument_calendar_or_session"
+    ]
+  },
+  {
+    "file": "tests/test_collection_recovery.py",
+    "top_level_calls": [
+      {
+        "line": 35,
+        "expression": "datetime(2026, 8, 12, 13, 30, tzinfo=UTC)"
+      },
+      {
+        "line": 36,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_retry_after_every_graph_boundary_is_idempotent",
+      "test_completed_checkpoint_fails_closed_when_preflight_disappears",
+      "test_every_manifest_is_bound_to_the_deterministic_collection_run",
+      "test_completed_job_retry_returns_historical_identity_after_newer_job",
+      "test_changed_content_after_raw_crash_is_quarantined",
+      "test_saved_source_snapshot_must_bind_the_raw_envelope_bytes",
+      "test_source_snapshot_preserves_duplicate_payload_multiplicity",
+      "test_deleted_source_snapshot_row_recovers_without_provider_recontact",
+      "test_self_consistent_source_snapshot_row_tampering_fails_closed",
+      "test_completed_retry_revalidates_aggregate_source_object",
+      "test_changed_manifest_after_raw_crash_is_quarantined",
+      "test_job_window_cannot_commit_a_different_source_graph",
+      "test_eight_concurrent_attempts_create_one_logical_graph",
+      "test_pending_graph_reservation_fences_legacy_publication",
+      "test_process_restart_recovers_every_publication_stage",
+      "test_eight_process_coordinators_commit_one_complete_graph"
+    ]
+  },
+  {
+    "file": "tests/test_data_catalog.py",
+    "top_level_calls": [
+      {
+        "line": 19,
+        "expression": "datetime(2026, 8, 14, 12, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_catalog_entry_is_trusted_only_with_exact_passing_quality",
+      "test_empty_catalog_has_no_fabricated_entries",
+      "test_manifest_lookup_rejects_unknown_identity",
+      "test_legacy_v2_lineage_query_remains_read_only",
+      "test_catalog_propagates_tampered_target_as_integrity_failure",
+      "test_historical_lineage_distinguishes_exact_manifest_from_dataset_head"
+    ]
+  },
+  {
+    "file": "tests/test_data_catalog_api.py",
+    "top_level_calls": [
+      {
+        "line": 19,
+        "expression": "datetime(2026, 8, 14, 12, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_catalog_api_lists_entries_and_resolves_exact_lineage",
+      "test_catalog_api_is_typed_when_unbound_or_unknown",
+      "test_catalog_api_does_not_mask_integrity_failure_as_not_found"
+    ]
+  },
+  {
+    "file": "tests/test_datalink.py",
+    "top_level_calls": [
+      {
+        "line": 34,
+        "expression": "DemoScenario(workspace_history=False)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_panel_lists_all_five_connectors",
+      "test_probe_hyperliquid_ok_reports_latency",
+      "test_probe_hyperliquid_missing_sdk_is_instructive",
+      "test_probe_hyperliquid_unreachable_is_degraded",
+      "test_probe_requires_origin_guard",
+      "test_fetch_public_caches_live_rows",
+      "test_fetch_public_falls_back_deterministically",
+      "test_fetch_public_rate_limit_retries_once_then_falls_back",
+      "test_fetch_public_missing_sdk_is_instructive",
+      "test_fetch_public_refuses_empty_symbols",
+      "test_datalink_missing_on_plain_app",
+      "test_csv_import_preview_mapping_commit",
+      "test_json_import_records",
+      "test_parquet_import_via_duckdb",
+      "test_import_refuses_overwrite_of_existing_dataset",
+      "test_import_validation_reasons",
+      "test_import_unreadable_file_is_instructive",
+      "test_import_missing_session_is_instructive",
+      "test_reset_clears_imports_and_datalink",
+      "test_reset_refuses_unrelated_json_in_datalink_cache",
+      "test_reset_refuses_unrelated_file_in_operator_import",
+      "test_import_write_is_origin_guarded"
+    ]
+  },
+  {
+    "file": "tests/test_decision_inbox.py",
+    "top_level_calls": [
+      {
+        "line": 36,
+        "expression": "DemoScenario()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_baseline_inbox_preserves_persisted_watchlist_without_packet_services",
+      "test_not_started_inbox_uses_fresh_exact_live_mark_before_first_packet",
+      "test_inbox_projects_exact_real_evidence_and_persisted_monitoring_session",
+      "test_inbox_sanitizes_corrupt_or_mismatched_exact_closures_without_catalog_fallback",
+      "test_inbox_snapshot_and_get_leave_packet_mark_and_monitoring_inputs_byte_equivalent",
+      "test_reconstructed_inbox_preserves_exact_row_and_session_monitoring_facts",
+      "test_inbox_is_read_only_and_pending_action_beats_newer_draft",
+      "test_inbox_reports_not_started_and_venue_less_watchlist_as_unavailable",
+      "test_inbox_projects_terminal_actions_and_missing_proposal_link",
+      "test_inbox_projects_a_saved_draft_when_no_terminal_action_exists",
+      "test_inbox_prefers_newer_passive_terminal_action_over_older_open_paper",
+      "test_inbox_projects_confirmed_and_blocked_paper_lifecycle_states",
+      "test_inbox_reports_a_missing_paper_proposal_link_as_unavailable",
+      "test_inbox_fails_closed_for_packet_proposal_evidence_identity_mismatch",
+      "test_inbox_corrupt_packet_replay_is_safe_409",
+      "test_inbox_configured_mark_is_unavailable_for_freshness_and_position_is_context_only",
+      "test_inbox_contracts_reject_noncanonical_future_monitoring_and_review_ids",
+      "test_inbox_error_contract_has_only_safe_machine_fields",
+      "test_shadow_paper_watch_review_exact_ids_and_restart",
+      "test_shadow_pending_paper_stays_neutral_when_confirmation_freshness_fails",
+      "test_shadow_missing_exact_order_is_unavailable_without_fallback"
+    ]
+  },
+  {
+    "file": "tests/test_decision_packet_api.py",
+    "top_level_calls": [
+      {
+        "line": 25,
+        "expression": "DemoScenario()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_workspace_uses_the_bound_packet_service_and_save_refuses_expected_id_drift",
+      "test_packet_watch_conditions_accept_only_fixed_kinds_and_never_mutate_packet",
+      "test_packet_outcome_review_get_is_read_only_and_post_is_fenced_restart_safe",
+      "test_packet_outcome_review_refuses_draft_unknown_and_reset_clears_owned_store",
+      "test_demo_reset_restores_pristine_packet_monitoring_files_after_a_check",
+      "test_reject_and_watch_are_exactly_reopenable_and_idempotent",
+      "test_stale_packet_blocks_paper_without_creating_a_proposal",
+      "test_untrusted_packet_blocks_paper_without_creating_a_proposal",
+      "test_packet_bound_paper_action_never_confirms_and_risk_refusal_stays_bound",
+      "test_legacy_proposal_route_requires_an_exact_packet_artifact_binding",
+      "test_clean_demo_restart_reopens_identical_packet_bytes",
+      "test_advancing_workspace_clock_saves_exact_draft_then_refreshes_fresh_alongside_latest",
+      "test_action_replay_uses_exact_parent_after_a_newer_analysis_root_is_saved",
+      "test_concurrent_nonpaper_actions_append_one_idempotent_child",
+      "test_crash_after_proposal_write_retries_without_a_second_proposal",
+      "test_intent_only_crash_recovers_at_original_action_time_across_days",
+      "test_action_intent_content_identity_refuses_schema_valid_tampering",
+      "test_concurrent_paper_actions_create_one_proposal_and_one_child",
+      "test_saved_packet_that_naturally_expires_refuses_before_proposal_write",
+      "test_partial_packet_bound_configuration_still_refuses_bare_artifact",
+      "test_registry_drift_between_preflight_and_propose_has_zero_external_writes",
+      "test_equity_packet_remains_actionable_over_weekend_for_one_market_session",
+      "test_exact_packet_get_distinguishes_missing_from_corrupt_store",
+      "test_decision_inbox_openapi_publishes_the_safe_typed_replay_conflict"
+    ]
+  },
+  {
+    "file": "tests/test_decision_packets.py",
+    "top_level_calls": [
+      {
+        "line": 40,
+        "expression": "datetime(2026, 9, 2, 20, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 41,
+        "expression": "timedelta(days=1)"
+      },
+      {
+        "line": 42,
+        "expression": "Instrument(venue=Venue.MOOMOO, symbol='NVDA', instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_packet_identity_ignores_only_created_at",
+      "test_packet_contract_rejects_scenario_order_and_action_mismatch",
+      "test_store_rejects_missing_parent_or_wrong_next_version",
+      "test_store_reopens_exact_lineage_after_new_instance",
+      "test_store_refuses_identity_drift_and_sibling_transition",
+      "test_composer_uses_observed_history_and_qualitative_30_session_quantiles",
+      "test_packet_boundary_is_available_from_instruments_package",
+      "test_paper_proposal_child_requires_allowed_unblocked_capability",
+      "test_real_forecast_evidence_without_paired_lineage_cannot_form_paper_child",
+      "test_composer_preserves_exact_real_forecast_evidence_and_role_chronology",
+      "test_composer_blocks_future_source_times_and_deduplicates_valuation",
+      "test_store_rejects_changed_analysis_on_child_and_duplicate_root_scope",
+      "test_store_serializes_concurrent_roots_without_lost_updates",
+      "test_workspace_latest_packet_may_have_prior_as_of_but_must_match_scope"
+    ]
+  },
+  {
+    "file": "tests/test_decision_readiness.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_corrupt_exact_catalog_is_unavailable_without_poisoning_other_packets",
+      "test_exact_trusted_history_returns_ready_with_exact_evidence",
+      "test_demo_history_returns_demo_without_catalog_call",
+      "test_demo_history_with_real_forecast_requires_exact_forecast_closure",
+      "test_demo_history_with_unavailable_real_forecast_fails_closed",
+      "test_returned_wrong_manifest_identity_is_sanitized",
+      "test_failed_exact_closure_keeps_packet_generation_as_limiting_evidence",
+      "test_failed_forecast_closure_keeps_older_forecast_generation_as_limiting_evidence",
+      "test_demo_real_forecast_blockers_place_exact_evidence_in_forecast",
+      "test_demo_real_forecast_checkpoint_failure_places_exact_evidence_in_forecast",
+      "test_demo_real_forecast_identity_failure_has_no_fabricated_evidence",
+      "test_missing_history_binding_is_blocked",
+      "test_invalid_history_closure_is_blocked_with_packet_identity",
+      "test_unavailable_closure_does_not_try_another_manifest",
+      "test_optional_forecast_absence_does_not_change_valid_history",
+      "test_real_forecast_requires_its_own_exact_closure",
+      "test_naive_clock_is_rejected"
+    ]
+  },
+  {
+    "file": "tests/test_decision_session.py",
+    "top_level_calls": [
+      {
+        "line": 34,
+        "expression": "datetime(2026, 9, 8, 12, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_refresh_evaluates_registered_packets_in_deterministic_identity_order",
+      "test_refresh_empty_workstation_without_monitoring_returns_no_registered_watches",
+      "test_refresh_reports_no_registered_watches_without_rendering",
+      "test_refresh_refuses_corrupt_registration_replay_before_an_empty_selection",
+      "test_refresh_refuses_corrupt_evaluation_replay_before_empty_selection",
+      "test_refresh_marks_missing_packet_as_a_sanitized_partial_failure",
+      "test_refresh_persists_canonical_replay_and_cursor_across_reconstruction",
+      "test_refresh_persists_a_stale_only_evaluation_without_a_quote",
+      "test_refresh_keeps_real_success_when_another_registered_packet_is_missing",
+      "test_refresh_refuses_an_invalid_initial_or_backwards_completion_clock",
+      "test_refresh_route_is_bodyless_same_origin_and_foreign_origin_writes_nothing",
+      "test_refresh_route_resolves_replaced_current_app_state_services",
+      "test_refresh_route_sanitizes_real_corrupt_evaluation_ledger_without_appending",
+      "test_refresh_route_is_404_when_the_session_service_is_unattached",
+      "test_refresh_after_demo_reset_reads_the_replaced_monitoring_store",
+      "test_session_constructor_has_no_operational_or_order_collaborators"
+    ]
+  },
+  {
+    "file": "tests/test_decision_session_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 27,
+        "expression": "DemoScenario()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_nvda_aapl_refresh_is_bounded_and_exact_results_survive_reconstruction",
+      "test_exact_real_catalog_absence_and_manifest_mismatch_stay_packet_bound",
+      "test_newer_sequence_stale_no_quote_and_partial_failure_preserve_durable_success"
+    ]
+  },
+  {
+    "file": "tests/test_demo.py",
+    "top_level_calls": [
+      {
+        "line": 47,
+        "expression": "DemoScenario(workspace_history=False)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_two_seeds_of_the_same_scenario_are_byte_identical",
+      "test_reset_reproduces_the_identical_root",
+      "test_reset_reuses_one_independent_trusted_inventory",
+      "test_fresh_seed_supplies_trusted_inventory_for_fast_runtime_reset",
+      "test_reset_retains_quarantine_without_recursive_runtime_deletion",
+      "test_different_seed_produces_different_root",
+      "test_re_seed_refuses_a_marked_root",
+      "test_reset_refuses_a_root_without_the_marker",
+      "test_seed_refuses_to_claim_a_nonempty_unmarked_root",
+      "test_reset_refuses_a_forged_marker_without_demo_identity",
+      "test_reset_refuses_a_self_signed_v2_inventory",
+      "test_reset_requires_hashes_for_every_immutable_owned_file",
+      "test_windows_reparse_file_attribute_is_always_unsafe",
+      "test_reset_refuses_unknown_files_even_inside_a_genuine_seeded_root",
+      "test_reset_refuses_a_link_added_below_a_genuine_seeded_root",
+      "test_reset_revalidates_the_atomically_quarantined_root_before_publication",
+      "test_reset_preserves_a_swapped_quarantine",
+      "test_reset_retains_a_swapped_archive_replacement_without_cleanup",
+      "test_reset_restores_demo_when_validated_replacement_is_swapped_before_publish",
+      "test_reset_restores_original_when_published_replacement_is_tampered",
+      "test_load_refuses_a_root_without_the_marker",
+      "test_provenance_contract",
+      "test_every_surface_has_rows",
+      "test_load_is_a_read_and_rebuilds_identical_state",
+      "test_load_recovers_the_seeded_scenario",
+      "test_providers_serve_the_full_demo_universe",
+      "test_status_exposes_the_provenance_contract",
+      "test_every_response_carries_the_demo_label",
+      "test_reset_returns_the_identical_status_and_state",
+      "test_reset_status_lists_and_acknowledges_retained_tree_without_deleting",
+      "test_reset_restores_state_after_writes",
+      "test_cross_origin_reset_is_refused",
+      "test_read_only_api_serves_the_demo_state",
+      "test_no_demo_runtime_on_a_plain_app"
+    ]
+  },
+  {
+    "file": "tests/test_demo_instrument_workspace.py",
+    "top_level_calls": [
+      {
+        "line": 18,
+        "expression": "DemoScenario()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_seeded_demo_has_deep_history_and_truthful_forecast_examples",
+      "test_demo_workspace_forecast_to_paper_loop_resets_to_seeded_state",
+      "test_demo_reset_discards_staged_drafts_from_the_replaced_root",
+      "test_nvda_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly",
+      "test_aapl_decision_packet_action_is_durable_in_under_two_minutes_and_reopens_exactly",
+      "test_crypto_degraded_decision_saves_nonpaper_action_without_creating_evidence_or_orders",
+      "test_stale_nvda_blocks_paper_but_keeps_nonpaper_decisions_and_creates_nothing",
+      "test_second_confirmation_risk_refusal_retains_packet_and_proposal_without_a_fill"
+    ]
+  },
+  {
+    "file": "tests/test_demo_reset_finalization.py",
+    "top_level_calls": [
+      {
+        "line": 19,
+        "expression": "DemoScenario(workspace_history=False)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_final_load_failure_restores_original_and_retains_published_replacement"
+    ]
+  },
+  {
+    "file": "tests/test_demo_reset_runtime.py",
+    "top_level_calls": [
+      {
+        "line": 15,
+        "expression": "DemoScenario(workspace_history=False)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_runtime_returns_typed_degradation_instead_of_reading_half_reset_root",
+      "test_reset_drains_an_admitted_order_before_reseeding",
+      "test_demo_order_and_kill_switch_share_one_account_authority",
+      "test_restart_recovers_journaled_order_after_account_publication_crash",
+      "test_restart_fails_closed_when_account_conflicts_with_journal"
+    ]
+  },
+  {
+    "file": "tests/test_deployment_identity.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_staging_refuses_a_missing_or_non_exact_commit",
+      "test_staging_refuses_missing_or_non_tailscale_https_origin",
+      "test_unknown_deployment_environment_is_rejected",
+      "test_local_settings_need_no_build_ref",
+      "test_live_retention_days_rejects_negative_values",
+      "test_staging_accepts_one_exact_commit",
+      "test_local_refuses_staging_only_identity",
+      "test_staging_allows_only_its_exact_private_origin_for_json_writes",
+      "test_local_health_contract_is_unchanged",
+      "test_staging_health_identifies_the_exact_build_on_both_mounts"
+    ]
+  },
+  {
+    "file": "tests/test_enablement.py",
+    "top_level_calls": [
+      {
+        "line": 35,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 37,
+        "expression": "timedelta(minutes=1)"
+      },
+      {
+        "line": 38,
+        "expression": "timedelta(hours=1)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_equity_adjustments.py",
+    "top_level_calls": [
+      {
+        "line": 17,
+        "expression": "datetime(2026, 8, 10, 13, 30, tzinfo=UTC)"
+      },
+      {
+        "line": 18,
+        "expression": "CanonicalInstrumentId(value='moomoo:US:AAPL:XNAS')"
+      },
+      {
+        "line": 19,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_split_adjustment_changes_ohlc_and_inverse_volume",
+      "test_future_announced_action_is_not_used_for_earlier_knowledge_time",
+      "test_only_pre_effective_bars_are_backward_adjusted",
+      "test_policy_refuses_wrong_instrument_and_ambiguous_actions",
+      "test_split_factor_must_be_finite_positive_number",
+      "test_action_timestamps_must_be_utc_and_announcement_precedes_effective_date",
+      "test_official_factor_and_action_surfaces_cross_check_forward_split",
+      "test_split_rate_accepts_unicode_arrow_from_real_opend_payload",
+      "test_same_ratio_actions_match_nearest_effective_factor_independent_of_order",
+      "test_reverse_split_uses_new_shares_over_old_shares",
+      "test_factor_action_mismatch_refuses_adjustment",
+      "test_dividend_only_factor_rows_need_no_split_action"
+    ]
+  },
+  {
+    "file": "tests/test_eval_harness.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_missing_usage_is_unknown_not_zero",
+      "test_metrics_keep_denominators",
+      "test_catalog_change_blocks_comparison",
+      "test_regression_denominator_is_baseline_passes",
+      "test_comparison_refuses_result_tampering",
+      "test_skip_xfail_teardown_failure_and_empty_checks_not_pass",
+      "test_strict_id_paths_source_acceptance",
+      "test_fixture_and_verifier_bytes_are_pinned",
+      "test_runner_persists_trace_logs_and_refuses_overwrite",
+      "test_known_bad_fixture_fails",
+      "test_skip_timeout_not_pass",
+      "test_frozen_badcase_imports_candidate_source",
+      "test_model_trace_and_network_block",
+      "test_legacy_catalog_is_explicitly_incompatible",
+      "test_bad_injection_cannot_claim_an_improvement",
+      "test_real_failure_precedes_sibling_xfail",
+      "test_comparison_requires_explicit_completion",
+      "test_timeout_retains_full_collected_denominator",
+      "test_unknown_verifier_denominator_is_unknown",
+      "test_comparison_refuses_unstable_catalog",
+      "test_candidate_cannot_supply_unpinned_plugin",
+      "test_freeze_rejects_invalid_cases"
+    ]
+  },
+  {
+    "file": "tests/test_events_calibration.py",
+    "top_level_calls": [
+      {
+        "line": 30,
+        "expression": "datetime(2026, 8, 1, 12, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_events_forecast.py",
+    "top_level_calls": [
+      {
+        "line": 24,
+        "expression": "datetime(2026, 8, 1, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 25,
+        "expression": "timedelta(hours=1)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_events_mapping.py",
+    "top_level_calls": [
+      {
+        "line": 56,
+        "expression": "datetime(2026, 8, 1, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 57,
+        "expression": "timedelta(hours=1)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_events_models.py",
+    "top_level_calls": [
+      {
+        "line": 18,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_fingerprint_is_deterministic",
+      "test_fingerprint_is_normalized_across_case_and_whitespace",
+      "test_a_substantive_rule_change_changes_the_fingerprint",
+      "test_wrong_fingerprint_is_rejected",
+      "test_event_venues_map_to_the_domain_venue_surface",
+      "test_event_market_round_trips_with_resolution",
+      "test_split_resolution_keeps_every_winner",
+      "test_naive_timestamps_are_rejected",
+      "test_duplicate_outcome_names_are_rejected",
+      "test_resolution_names_must_be_outcomes",
+      "test_market_needs_at_least_one_outcome",
+      "test_quote_round_trips",
+      "test_quote_prices_are_bounded_to_the_unit_interval",
+      "test_quote_rejects_non_positive_tick_size_and_negative_fee",
+      "test_quote_timestamp_must_be_aware",
+      "test_quote_side_can_be_empty",
+      "test_implied_probability_bounds"
+    ]
+  },
+  {
+    "file": "tests/test_execution_journal.py",
+    "top_level_calls": [
+      {
+        "line": 28,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, metadata={'market': 'US'})"
+      },
+      {
+        "line": 34,
+        "expression": "datetime(2026, 8, 8, 13, 30, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_new_journal_is_empty",
+      "test_record_then_read_round_trips",
+      "test_duplicate_record_is_refused",
+      "test_update_replaces_the_snapshot_in_place",
+      "test_update_of_unknown_order_is_refused",
+      "test_get_of_unknown_order_raises",
+      "test_persistence_across_instances",
+      "test_corrupt_line_fails_closed_with_attribution",
+      "test_read_refuses_order_state_that_disagrees_with_its_fill_history",
+      "test_duplicate_order_ids_fail_closed_with_both_lines",
+      "test_root_that_is_a_file_fails_closed",
+      "test_writes_leave_no_temp_files",
+      "test_record_and_update_preserve_full_history"
+    ]
+  },
+  {
+    "file": "tests/test_experiments.py",
+    "top_level_calls": [
+      {
+        "line": 14,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 17,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_record_links_pinned_inputs",
+      "test_experiment_id_is_deterministic_setup_only",
+      "test_trusted_lineage_is_part_of_experiment_identity",
+      "test_registry_refuses_unverified_trusted_experiment_lineage",
+      "test_registry_resolves_trusted_experiment_through_exact_catalog",
+      "test_metrics_do_not_change_experiment_identity",
+      "test_different_parameters_are_new_experiments",
+      "test_record_rejects_invalid_dataset_name",
+      "test_record_rejects_nonpositive_revision",
+      "test_record_rejects_bad_commit",
+      "test_record_requires_the_pinned_dataset",
+      "test_record_rejects_stale_pin",
+      "test_commit_defaults_to_current_head",
+      "test_commit_resolution_fails_closed",
+      "test_get_roundtrip_and_missing",
+      "test_registry_persists_across_instances",
+      "test_corrupt_registry_line_fails_closed",
+      "test_tampered_record_fails_closed",
+      "test_resolve_reopens_pinned_dataset_on_clean_checkout",
+      "test_resolve_rejects_unknown_id",
+      "test_non_finite_parameter_fails_closed",
+      "test_non_finite_metric_fails_closed",
+      "test_duplicate_id_in_file_fails_closed",
+      "test_registry_root_is_a_file_fails_closed",
+      "test_duplicate_still_reported_after_lake_advances"
+    ]
+  },
+  {
+    "file": "tests/test_fabric_pipeline.py",
+    "top_level_calls": [
+      {
+        "line": 23,
+        "expression": "datetime(2026, 8, 12, 13, 30, tzinfo=UTC)"
+      },
+      {
+        "line": 24,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_raw_normalized_adjusted_feature_chain_is_complete",
+      "test_raw_tampering_fails_before_normalization",
+      "test_identical_publication_is_idempotent",
+      "test_raw_payload_must_match_normalized_input",
+      "test_source_event_ids_must_match_fixture_rows",
+      "test_lineage_rejects_feature_not_derived_from_parent",
+      "test_aapl_daily_bars_must_match_xnys_sessions",
+      "test_invalid_instrument_metadata_leaves_no_partial_dataset",
+      "test_non_finite_bars_leave_no_partial_dataset",
+      "test_other_fixture_provider_leaves_no_partial_dataset",
+      "test_raw_only_lineage_validates_bar_semantics",
+      "test_lineage_provenance_must_be_rooted_in_raw_envelope",
+      "test_lineage_rejects_real_provenance_for_fixture_tracer"
+    ]
+  },
+  {
+    "file": "tests/test_finrl_x_bakeoff.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_finrl_fake_runner_exports_canonical_paper_only_evidence",
+      "test_finrl_fake_runner_rejects_volatile_or_unsafe_canonical_outputs",
+      "test_nonzero_pip_check_forces_failed_evidence",
+      "test_stale_outputs_are_removed_and_cannot_satisfy_a_later_run",
+      "test_forged_weight_dates_and_missing_boundaries_fail_contract_mapping",
+      "test_committed_evidence_is_portable_and_excludes_volatile_digest_inputs",
+      "test_failed_runner_records_a_portable_exact_failure",
+      "test_export_failure_returns_redacted_evidence_without_phantom_artifacts",
+      "test_generic_runner_failure_is_redacted_and_lists_only_existing_artifacts",
+      "test_malformed_canonical_output_returns_portable_failed_evidence",
+      "test_generic_failure_never_persists_unrelated_absolute_path",
+      "test_artifact_metadata_is_canonicalized_and_unsafe_candidates_are_rejected",
+      "test_artifact_metadata_omits_all_hard_link_aliases",
+      "test_malformed_output_ignores_poisoned_runner_metadata",
+      "test_invalid_runner_measurements_fall_back_to_static_failed_evidence",
+      "test_subprocess_boundary_sanitizes_credentials_and_records_failure",
+      "test_portable_command_redacts_symlink_spelling_and_resolved_target",
+      "test_network_subprocess_rejects_credential_bearing_proxy_url",
+      "test_offline_driver_environment_excludes_all_proxy_variables",
+      "test_timeout_terminates_descendants_and_bounds_collection",
+      "test_windows_containment_setup_failure_never_runs_or_leaks_child",
+      "test_cli_builds_fixture_writes_evidence_and_uses_status_as_exit_code",
+      "test_unmarked_nonempty_work_root_is_preserved_and_rejected",
+      "test_owned_work_root_recreates_checkout_venv_and_outputs",
+      "test_work_root_link_or_reparse_component_is_rejected_without_target_mutation",
+      "test_repository_root_is_rejected_as_a_sensitive_work_root",
+      "test_unsupported_windows_namespace_and_network_lexemes_are_rejected",
+      "test_extended_length_alias_is_rejected_before_owned_target_mutation",
+      "test_extended_length_sensitive_root_alias_never_reaches_preparation"
+    ]
+  },
+  {
+    "file": "tests/test_forecast_outcomes.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_complete_scores_are_hand_calculated_and_interval_edges_are_inclusive",
+      "test_selected_seven_thirty_and_legacy_horizon",
+      "test_missing_middle_timestamp_never_shifts_actuals_or_produces_aggregate_scores",
+      "test_pending_or_empty_paths_never_report_zero_performance",
+      "test_missing_exact_forecast_or_mismatched_expected_times_refuses_comparison",
+      "test_real_registry_api_saved_comparison_wins_after_history_replacement_and_restart"
+    ]
+  },
+  {
+    "file": "tests/test_framework_bakeoff_contract.py",
+    "top_level_calls": [
+      {
+        "line": 12,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_nvda_fixture_is_manifest_gated_and_byte_reproducible",
+      "test_framework_evidence_rejects_an_unpinned_or_nondeterministic_pass",
+      "test_framework_evidence_rejects_score_inputs_outside_zero_to_one_hundred",
+      "test_framework_score_requires_a_pinned_revision",
+      "test_framework_score_rejects_a_total_above_one_hundred",
+      "test_load_pins_returns_immutable_validated_metadata",
+      "test_load_pins_rejects_invalid_repository_metadata",
+      "test_load_pins_rejects_unrecognized_repository_metadata"
+    ]
+  },
+  {
+    "file": "tests/test_framework_scorecard.py",
+    "top_level_calls": [
+      {
+        "line": 30,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_cli_strictly_rejects_malformed_schema_v1_evidence",
+      "test_framework_evidence_direct_construction_rejects_extra_fields",
+      "test_committed_framework_evidence_revalidates_as_strict_schema_v1",
+      "test_framework_score_requires_exact_gate_and_score_mapping_shapes",
+      "test_framework_score_rejects_non_strict_gate_and_score_values",
+      "test_framework_score_rejects_invalid_missing_input_lists",
+      "test_framework_score_rejects_missing_input_with_nonzero_score",
+      "test_framework_score_rejects_policy_contradictions",
+      "test_framework_score_strict_json_reload_rejects_tampering",
+      "test_default_weights_are_the_exact_approved_scorecard",
+      "test_empty_scores_are_zero_filled_and_explicitly_limited",
+      "test_partial_scores_use_zero_only_for_the_missing_categories",
+      "test_complete_scores_use_stable_decimal_rounding",
+      "test_runtime_admission_requires_every_exact_hard_gate_and_score_80",
+      "test_deterministic_gate_uses_top_level_evidence_not_the_checks_mapping",
+      "test_runtime_admission_has_an_inclusive_eighty_boundary",
+      "test_nautilus_isolated_comparator_requires_only_contract_mapping_to_fail",
+      "test_finrl_contract_mismatch_and_failed_install_are_rejected",
+      "test_score_framework_rejects_invalid_score_inputs",
+      "test_score_framework_rejects_unknown_score_inputs",
+      "test_score_framework_rejects_invalid_weights",
+      "test_score_framework_rejects_unknown_or_missing_weights",
+      "test_score_framework_rejects_noncanonical_schema_v1_weights",
+      "test_cli_writes_compact_sorted_atomic_scorecard_from_exact_frameworks",
+      "test_one_byte_evidence_mutation_changes_record_hash",
+      "test_committed_scorecard_pins_exact_source_evidence_bytes",
+      "test_cli_fails_closed_on_malformed_input_without_replacing_output",
+      "test_cli_rejects_duplicate_and_wrong_framework_inputs",
+      "test_cli_prevents_output_aliasing_either_input",
+      "test_atomic_replace_failure_preserves_existing_output"
+    ]
+  },
+  {
+    "file": "tests/test_frontend_security.py",
+    "top_level_calls": [
+      {
+        "line": 11,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 11,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_frozen_frontend_lock_has_only_allowed_licenses",
+      "test_direct_frontend_dependencies_are_platform_neutral",
+      "test_frontend_declares_the_ci_supported_node_floor",
+      "test_frontend_license_review_fails_closed",
+      "test_frontend_audit_and_license_review_are_release_and_ci_gates"
+    ]
+  },
+  {
+    "file": "tests/test_fs.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_atomic_replace_outlasts_brief_windows_file_lock",
+      "test_atomic_replace_fails_closed_after_retry_deadline"
+    ]
+  },
+  {
+    "file": "tests/test_gate_policy.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_workstation_contract_is_partitioned_into_bounded_reviewed_subdomains",
+      "test_each_legacy_workstation_test_selects_its_one_reviewed_subdomain",
+      "test_workstation_source_allowlist_is_exact_and_cross_cutting_only_when_reviewed",
+      "test_workstation_sources_select_exact_reviewed_subdomains",
+      "test_normalizes_separators_and_sorts_all_decision_values",
+      "test_docs_only_change_requires_no_pytest",
+      "test_frontend_only_change_adds_browser_e2e",
+      "test_multi_domain_change_is_deterministic",
+      "test_unmapped_test_inside_known_domain_fails_closed",
+      "test_unmapped_source_inside_known_domain_fails_closed",
+      "test_api_route_change_requires_workstation_e2e",
+      "test_reviewed_python_path_maps_to_its_direct_test_target",
+      "test_reviewed_frontend_component_path_maps_to_its_vitest_target",
+      "test_generic_browser_e2e_test_adds_e2e_without_frontend_source",
+      "test_reviewed_frontend_test_support_path_uses_fast_validation",
+      "test_frontend_support_and_domain_change_uses_domain_without_browser_e2e",
+      "test_safety_critical_paths_always_escalate_to_full",
+      "test_unknown_or_ambiguous_paths_fail_closed",
+      "test_invalid_paths_are_canonicalized_deduplicated_and_order_independent",
+      "test_repeated_forward_or_backslash_separators_are_malformed_deterministically",
+      "test_safety_override_precedes_frontend_and_domain_classification",
+      "test_watchlist_persistence_source_requires_full",
+      "test_reviewed_persisted_format_owner_requires_full",
+      "test_safety_sensitive_e2e_test_stays_full",
+      "test_non_safety_frontend_words_do_not_trigger_full",
+      "test_json_is_compact_and_has_stable_keys_and_values",
+      "test_cli_writes_compact_github_outputs",
+      "test_git_diff_retains_safety_deletion_with_docs_edit",
+      "test_git_diff_retains_both_safety_rename_endpoints",
+      "test_git_diff_retains_type_changes",
+      "test_non_pr_events_select_release_even_for_docs",
+      "test_select_tier_has_four_public_tiers",
+      "test_malformed_path_input_cannot_select_fast",
+      "test_mapping_input_cannot_hide_safety_values"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_collection.py",
+    "top_level_calls": [
+      {
+        "line": 36,
+        "expression": "datetime(2026, 8, 14, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_microstructure_identities_are_provider_semantic_and_shared",
+      "test_trade_identity_rejects_non_integer_wire_values",
+      "test_candle_backfill_is_bounded_by_provider_limit",
+      "test_real_transport_refuses_unadvertised_interval_before_network",
+      "test_direct_network_refuses_unverified_code_identity_before_network",
+      "test_code_identity_is_rechecked_immediately_before_each_symbol_request",
+      "test_collection_rejects_noncanonical_candle_wire_contract",
+      "test_public_candles_publish_four_layer_identity_lineage",
+      "test_explicit_collection_cycle_can_capture_a_later_provider_correction",
+      "test_raw_crash_retries_from_source_snapshot_without_network",
+      "test_injected_http_client_cannot_publish_qualifying_lineage",
+      "test_collection_rejects_gapped_or_truncated_window",
+      "test_collection_rejects_provisional_candle",
+      "test_collection_requires_exclusive_close_boundary",
+      "test_collection_rejects_unaligned_window_before_network",
+      "test_lineage_rejects_forged_transformation_declarations",
+      "test_lineage_revalidation_rejects_forged_gapped_raw_window",
+      "test_lineage_rejects_semantic_but_noncanonical_derived_bytes",
+      "test_collection_rejects_wrong_symbol_before_publication"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_exchange.py",
+    "top_level_calls": [
+      {
+        "line": 43,
+        "expression": "datetime.fromtimestamp(T0 / 1000, tz=UTC)"
+      },
+      {
+        "line": 46,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 51,
+        "expression": "OrderRequest(instrument=BTC, side=Side.SELL, quantity=1.0, limit_price=107.2)"
+      },
+      {
+        "line": 54,
+        "expression": "OrderRequest(instrument=BTC, side=Side.BUY, quantity=1.0, limit_price=107.4)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_in_memory_signer_requires_exactly_32_bytes",
+      "test_signer_from_env_missing_key_fails_closed",
+      "test_signer_from_env_rejects_non_hex_and_wrong_length",
+      "test_signer_from_env_accepts_plain_and_prefixed_keys",
+      "test_sdk_exchange_refuses_a_non_testnet_base_url",
+      "test_sdk_exchange_defaults_to_testnet",
+      "test_sdk_exchange_is_lazy_and_import_guarded",
+      "test_to_cloid_prefixes_exactly_32_lowercase_hex",
+      "test_to_cloid_rejects_bad_shapes",
+      "test_parse_place_ack_resting",
+      "test_parse_place_ack_filled",
+      "test_parse_place_ack_per_order_error",
+      "test_parse_place_ack_top_level_err_raises",
+      "test_parse_place_ack_cloid_echo_mismatch_fails_closed",
+      "test_parse_place_ack_bad_shapes_fail_closed",
+      "test_parse_cancel_ack_success_and_error",
+      "test_parse_cancel_ack_top_level_err_raises",
+      "test_parse_open_order_row",
+      "test_parse_open_order_bad_shapes_fail_closed",
+      "test_parse_fill_row",
+      "test_parse_fill_identity_via_hash_when_tid_missing",
+      "test_parse_fill_without_identity_fails_closed",
+      "test_parse_position_row",
+      "test_parse_position_malformed_leverage_fails_closed",
+      "test_build_snapshot_merges_open_order_and_fills",
+      "test_build_snapshot_marks_fills_only_rows_inactive",
+      "test_build_snapshot_refuses_contradictory_fill_rows",
+      "test_scripted_transport_validates_its_script",
+      "test_scripted_transport_lost_ack_withholds_the_acknowledgement",
+      "test_scripted_transport_places_and_lists_orders",
+      "test_scripted_transport_cancels_known_orders_and_errors_otherwise",
+      "test_scripted_transport_limits_to_limit_orders",
+      "test_sdk_place_limit_routes_to_sdk_order",
+      "test_sdk_place_market_routes_to_sdk_market_open",
+      "test_sdk_place_refuses_reduce_only_market_orders",
+      "test_sdk_cancel_by_oid_and_by_cloid",
+      "test_sdk_cancel_needs_an_identity",
+      "test_sdk_snapshot_builds_from_stub_info",
+      "test_sdk_snapshot_fails_closed_on_bad_shapes",
+      "test_sdk_exceptions_become_unavailable",
+      "test_adapter_place_records_journal_first_then_wires",
+      "test_adapter_place_lost_ack_leaves_pending_unacknowledged",
+      "test_adapter_place_refuses_reused_client_order_id",
+      "test_adapter_place_per_order_error_rejects_with_reason",
+      "test_adapter_place_filled_ack_only_advances_to_accepted",
+      "test_adapter_place_refuses_other_venues",
+      "test_adapter_place_validates_client_order_id_shape",
+      "test_adapter_cancel_by_oid_and_by_cloid",
+      "test_adapter_cancel_by_cloid_when_oid_unknown",
+      "test_adapter_cancel_refused_by_venue_raises"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_provider.py",
+    "top_level_calls": [
+      {
+        "line": 28,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_fixture_bars_parse_through_the_real_parsers",
+      "test_fixture_bars_filter_inclusively",
+      "test_fixture_bars_reject_naive_bounds",
+      "test_fixture_book_and_trades_and_funding",
+      "test_fixture_provider_refuses_foreign_venues",
+      "test_fixture_provider_rejects_an_unrequested_interval",
+      "test_fixture_provider_registers_like_any_m3_provider",
+      "test_live_provider_bars_require_bounded_ranges",
+      "test_live_provider_bars_parse_scripted_rows",
+      "test_live_provider_trades_fail_closed",
+      "test_live_provider_funding_history_parses",
+      "test_live_provider_is_refused_by_the_registry",
+      "test_lake_round_trip_is_gap_free"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_public_info.py",
+    "top_level_calls": [
+      {
+        "line": 16,
+        "expression": "datetime(2026, 8, 14, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_public_info_transport_has_no_execution_surface",
+      "test_candles_use_pinned_mainnet_info_request",
+      "test_candle_capabilities_expose_conservative_inclusive_horizons",
+      "test_transport_refuses_unpinned_url_and_invalid_shape",
+      "test_l2_book_uses_only_public_info_surface",
+      "test_recovery_adapter_unwraps_only_public_market_data"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_reconciliation.py",
+    "top_level_calls": [
+      {
+        "line": 40,
+        "expression": "datetime.fromtimestamp(T0 / 1000, tz=UTC)"
+      },
+      {
+        "line": 43,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_status_table_declares_the_venue_vocabulary",
+      "test_unmappable_surface_status_fails_closed_as_a_finding",
+      "test_open_order_against_live_journal_is_pending_and_clean",
+      "test_fills_complete_inactive_row_derives_filled",
+      "test_inactive_row_with_terminal_journal_matches",
+      "test_inactive_partial_fills_with_live_journal_derive_canceled",
+      "test_journal_filled_ahead_of_inactive_venue_is_drift",
+      "test_open_venue_row_against_canceled_journal_is_drift",
+      "test_open_venue_row_tolerates_journal_partial_fills",
+      "test_cloid_channel_recovers_a_lost_ack_mapping",
+      "test_fills_only_rows_recover_identity_via_cloid",
+      "test_recovered_mapping_re_stamps_the_oid_at_adoption",
+      "test_ambiguous_channels_are_divergent",
+      "test_venue_order_without_journal_counterpart_is_missing",
+      "test_live_journal_order_without_venue_row_is_missing_internal",
+      "test_journal_with_fills_the_venue_forgot_is_missing_internal",
+      "test_ack_terminal_unclaimed_order_is_matched_and_silent",
+      "test_ack_terminal_without_venue_identity_notes_the_silence",
+      "test_order_quantity_drift_is_a_finding",
+      "test_inactive_rows_skip_the_order_quantity_compare",
+      "test_limit_price_drift_is_a_finding",
+      "test_average_price_drift_is_a_finding",
+      "test_fill_without_fee_is_missing_data",
+      "test_fee_drift_is_a_finding",
+      "test_stamped_fill_the_venue_forgot_is_revoked",
+      "test_unexplained_venue_position_is_a_finding",
+      "test_journal_net_without_venue_position_is_a_finding",
+      "test_position_drift_beyond_tolerance_is_a_finding",
+      "test_adoption_stamps_fills_and_lands_filled",
+      "test_adoption_is_idempotent",
+      "test_adoption_refuses_a_fee_less_fill",
+      "test_adoption_refuses_divergent_pairs",
+      "test_adoption_refuses_an_overfill",
+      "test_adoption_skips_ack_terminal_orders_silently",
+      "test_adoption_applies_a_derived_canceled",
+      "test_acceptance_drill_converges_to_a_clean_report"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_rest.py",
+    "top_level_calls": [
+      {
+        "line": 29,
+        "expression": "datetime.fromtimestamp(T0 / 1000, tz=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_construction_refuses_a_non_testnet_base_url",
+      "test_construction_defaults_to_testnet",
+      "test_candles_convert_aware_ranges_to_unix_millis",
+      "test_naive_range_times_fail_closed",
+      "test_non_list_candle_payload_fails_closed",
+      "test_l2_book_and_funding_pass_through",
+      "test_sdk_import_failure_is_typed",
+      "test_sdk_exceptions_become_unavailable",
+      "test_to_ms_rejects_naive_times",
+      "test_scripted_candles_filter_by_window",
+      "test_scripted_candles_missing_key_fails_closed",
+      "test_scripted_l2_book_can_serve_a_fresh_snapshot",
+      "test_scripted_meta_missing_fails_closed"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_risk.py",
+    "top_level_calls": [
+      {
+        "line": 36,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 42,
+        "expression": "datetime(2025, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_clean_limit_order_is_allowed",
+      "test_checks_are_recorded_in_gate_order",
+      "test_non_hyperliquid_instrument_fails_closed",
+      "test_leverage_refusal_carries_observed_and_expected",
+      "test_leverage_exactly_at_the_bound_is_allowed",
+      "test_missing_equity_fails_closed",
+      "test_full_close_skips_the_leverage_check",
+      "test_market_order_without_a_mark_fails_closed",
+      "test_distance_below_the_floor_refuses",
+      "test_no_floor_allows_the_same_position",
+      "test_already_at_or_beyond_liquidation_refuses",
+      "test_flip_direction_rebases_the_entry_estimate",
+      "test_funding_correction_shrinks_the_distance",
+      "test_short_position_distance_uses_the_short_direction",
+      "test_missing_position_liquidation_price_fails_closed",
+      "test_missing_position_entry_price_fails_closed",
+      "test_missing_funding_fails_closed",
+      "test_missing_mark_fails_closed_for_the_distance_estimate",
+      "test_no_position_skips_the_distance_estimate",
+      "test_reducing_order_skips_the_distance_estimate",
+      "test_reduce_only_posture_refuses_non_reductions",
+      "test_reduce_only_posture_allows_reductions",
+      "test_stale_book_refuses",
+      "test_future_book_timestamp_refuses",
+      "test_missing_book_timestamp_refuses",
+      "test_fresh_book_within_the_window_is_allowed",
+      "test_refusals_accumulate_across_checks",
+      "test_context_rejects_negative_book_mid_and_equity",
+      "test_adapter_requires_paired_risk_config",
+      "test_adapter_without_risk_config_places_normally",
+      "test_adapter_gate_refuses_before_anything_is_recorded_or_sent",
+      "test_adapter_gate_allows_a_clean_order",
+      "test_adapter_reduce_only_flag_reaches_the_gate",
+      "test_ledger_anchors_the_first_record",
+      "test_ledger_records_deltas_since_the_last_cumulative",
+      "test_ledger_skips_zero_deltas",
+      "test_ledger_tracks_coins_independently",
+      "test_ledger_fails_closed_on_missing_cumulative",
+      "test_ledger_read_fails_closed_with_line_attribution",
+      "test_ledger_defaults_to_the_orders_dir"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_signal.py",
+    "top_level_calls": [
+      {
+        "line": 18,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 20,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_balanced_book_is_zero",
+      "test_bid_heavy_book_is_positive",
+      "test_ask_heavy_book_is_negative",
+      "test_depth_weights_across_all_levels",
+      "test_one_sided_book_is_a_well_defined_extreme",
+      "test_an_empty_book_fails_closed",
+      "test_series_means_the_snapshots_inside_each_bar_window",
+      "test_snapshot_at_a_bar_boundary_lands_in_the_next_bar",
+      "test_a_bar_without_a_snapshot_fails_closed",
+      "test_a_snapshot_outside_every_window_fails_closed",
+      "test_a_snapshot_before_the_series_fails_closed",
+      "test_non_monotonic_snapshots_fail_closed",
+      "test_symbol_mismatch_fails_closed",
+      "test_no_books_fails_closed",
+      "test_no_bars_fails_closed",
+      "test_mixed_interval_bars_fail_closed"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_stream.py",
+    "top_level_calls": [
+      {
+        "line": 34,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_open_subscribes_exactly_the_declared_channels",
+      "test_candle_frames_accumulate_in_time_order",
+      "test_duplicate_candle_frames_fail_closed",
+      "test_book_frames_replace_the_book_and_trades_append",
+      "test_mids_frames_update_the_mid_table",
+      "test_pong_and_empty_trades_frames_are_ignored",
+      "test_unknown_channels_and_unsubscribed_ids_fail_closed",
+      "test_malformed_frames_fail_closed",
+      "test_ping_fires_on_the_sdk_cadence_while_connected",
+      "test_ping_stops_while_disconnected",
+      "test_disconnect_reports_every_dark_channel",
+      "test_reconnect_resubscribes_and_resyncs_candle_gaps",
+      "test_reconnect_with_unhealed_gaps_reports_a_finding",
+      "test_send_into_a_dead_socket_fails_closed",
+      "test_subscription_identifiers_follow_the_sdk_conventions",
+      "test_ws_url_derivation_follows_the_sdk_rule",
+      "test_backoff_is_exponential_and_capped",
+      "test_pump_reconnects_after_a_failed_connect"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_wallet_isolation.py",
+    "top_level_calls": [
+      {
+        "line": 50,
+        "expression": "bytes(range(32))"
+      },
+      {
+        "line": 50,
+        "expression": "range(32)"
+      },
+      {
+        "line": 51,
+        "expression": "KEY.hex()"
+      },
+      {
+        "line": 52,
+        "expression": "repr(KEY)"
+      },
+      {
+        "line": 54,
+        "expression": "datetime.fromtimestamp(1754600400, tz=UTC)"
+      },
+      {
+        "line": 58,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_public_info_surface_cannot_reach_execution_or_wallet_modules",
+      "test_in_memory_signer_repr_redacts_key_material",
+      "test_signer_from_env_errors_never_echo_the_value",
+      "test_exchange_transport_construction_without_a_key_fails_closed",
+      "test_full_drill_leaves_no_key_material_on_durable_surfaces",
+      "test_refusal_messages_carry_no_key_material"
+    ]
+  },
+  {
+    "file": "tests/test_hyperliquid_wire.py",
+    "top_level_calls": [
+      {
+        "line": 31,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_candle_parses_into_a_canonical_bar",
+      "test_candle_frame_uses_the_same_parser",
+      "test_captured_public_candle_accepts_inclusive_close_millisecond",
+      "test_candle_close_rejects_durations_outside_inclusive_or_exclusive_boundary",
+      "test_candle_interval_mismatch_fails_closed",
+      "test_candle_symbol_mismatch_fails_closed",
+      "test_candle_close_must_land_exactly_one_interval_after_open",
+      "test_candle_non_numeric_prices_fail_closed",
+      "test_candle_nan_fails_closed",
+      "test_candle_missing_price_key_fails_closed",
+      "test_candle_non_mapping_row_fails_closed",
+      "test_l2_book_parses_into_a_canonical_book",
+      "test_l2_book_needs_at_least_two_level_arrays",
+      "test_l2_book_rejects_unknown_extra_level_arrays",
+      "test_l2_book_non_numeric_prices_fail_closed",
+      "test_l2_book_level_without_count_fails_closed",
+      "test_l2_book_disordered_bids_fail_closed",
+      "test_l2_book_symbol_mismatch_fails_closed",
+      "test_trades_parse_with_aggressor_sides",
+      "test_trades_reject_unknown_sides",
+      "test_trades_reject_non_lists",
+      "test_trades_reject_wrong_symbols",
+      "test_funding_parses_rates_and_premiums",
+      "test_funding_non_numeric_rate_fails_closed",
+      "test_funding_rejects_non_lists",
+      "test_all_mids_parses_float_string_prices",
+      "test_all_mids_without_mids_object_fails_closed",
+      "test_all_mids_non_numeric_price_fails_closed",
+      "test_meta_parses_the_perp_universe",
+      "test_meta_missing_key_fails_closed",
+      "test_spot_meta_resolves_token_pairs",
+      "test_spot_meta_unknown_token_index_fails_closed",
+      "test_ms_to_utc_converts_and_rejects_junk",
+      "test_official_bbo_null_sides_are_unavailable",
+      "test_official_bbo_preserves_prices_and_base_sizes",
+      "test_official_bbo_requires_nonnegative_integer_order_count",
+      "test_official_bbo_zero_order_count_is_valid",
+      "test_official_bbo_null_side_does_not_hide_malformed_counterparty_count",
+      "test_official_bbo_malformed_or_crossed_book_fails_closed",
+      "test_official_asset_context_envelope"
+    ]
+  },
+  {
+    "file": "tests/test_ingestion.py",
+    "top_level_calls": [
+      {
+        "line": 16,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 19,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 22,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_ingest_first_run_writes_bars_and_manifest",
+      "test_ingest_is_incremental_and_idempotent",
+      "test_ingest_picks_up_last_day_value_correction",
+      "test_ingest_rebuilds_day_shard_on_retraction",
+      "test_ingest_heals_stale_manifest_when_provider_has_nothing_new",
+      "test_ingest_fails_loudly_on_corrupt_shard_until_repaired",
+      "test_dataset_gate_fails_closed_on_corrupt_shard",
+      "test_coverage_gaps_reports_corrupt_shard_fail_closed",
+      "test_coverage_gaps_interval_grid_no_phantom_days",
+      "test_coverage_gaps_empty_dataset_fails_closed",
+      "test_ingest_refuses_to_heal_vanished_series",
+      "test_ingest_refuses_to_bless_interior_day_loss",
+      "test_ingest_rejects_missing_provider",
+      "test_job_rejects_bad_dataset_name",
+      "test_job_rejects_bad_interval",
+      "test_job_rejects_bad_cadence",
+      "test_run_processes_jobs_in_order",
+      "test_run_preserves_noop_slots",
+      "test_coverage_gaps_clean_dataset_reports_no_gaps",
+      "test_coverage_gaps_missing_day_detected",
+      "test_coverage_gaps_missing_series_detected",
+      "test_coverage_gaps_unexpected_series_and_days_detected",
+      "test_coverage_gaps_requires_manifest",
+      "test_coverage_gaps_rejects_foreign_manifest",
+      "test_ingestion_and_detection_roundtrip"
+    ]
+  },
+  {
+    "file": "tests/test_instrument_api.py",
+    "top_level_calls": [
+      {
+        "line": 27,
+        "expression": "datetime(2026, 8, 1, 12, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_history_mounts_at_root_and_api_with_stable_json",
+      "test_history_uses_one_aware_request_time_for_primary_and_comparison",
+      "test_compare_accepts_repeated_and_comma_separated_values_deduping_in_order",
+      "test_invalid_history_input_is_422",
+      "test_compare_repeated_query_values_are_bounded_even_when_duplicates",
+      "test_missing_service_and_missing_data_are_truthful_stable_errors",
+      "test_programmer_and_validation_errors_remain_observable_as_500",
+      "test_typed_loader_unavailability_remains_a_stable_404",
+      "test_unexpected_loader_fault_is_a_sanitized_500",
+      "test_openapi_operation_ids_are_unique_and_response_is_exact",
+      "test_contiguous_real_or_delayed_live_candle_appends_primary_only",
+      "test_same_last_timestamp_replaces_only_the_last_historical_bar",
+      "test_exact_venue_symbol_kind_selection_survives_cross_venue_symbol_collision",
+      "test_single_arbitrary_sequence_never_proves_a_live_tail",
+      "test_stale_or_post_snapshot_receipt_is_refused",
+      "test_naive_live_receipt_is_refused_without_a_server_error",
+      "test_invalid_matching_live_candle_is_not_joined_and_names_a_limitation",
+      "test_naive_or_future_live_timestamp_is_refused_without_a_server_error",
+      "test_missing_feed_or_matching_candle_leaves_history_unchanged_without_fake_error",
+      "test_adjusted_history_refuses_unadjusted_live_tail",
+      "test_history_get_does_not_change_execution_authority_or_account_state"
+    ]
+  },
+  {
+    "file": "tests/test_instrument_history.py",
+    "top_level_calls": [
+      {
+        "line": 35,
+        "expression": "datetime(2026, 8, 12, 16, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 36,
+        "expression": "datetime(2026, 8, 12, 15, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 37,
+        "expression": "Instrument(symbol='NVDA', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 43,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 49,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_history_rejects_failed_quality_manifest",
+      "test_history_returns_exact_passing_manifest_and_quality_ids",
+      "test_history_ranges_are_the_public_wire_values",
+      "test_history_is_manifest_gated_venue_aware_chronological_and_provenanced",
+      "test_xnys_daily_history_does_not_treat_closed_sessions_as_gaps",
+      "test_legacy_binding_label_never_fabricates_adjusted_close",
+      "test_history_uses_explicit_as_of_inclusively_and_normalizes_to_utc",
+      "test_range_selects_the_planned_preferred_interval",
+      "test_history_uses_only_the_nearest_coarser_fallback_and_records_it",
+      "test_history_rejects_equal_duration_binding_aliases_as_ambiguous",
+      "test_history_treats_one_equivalent_interval_alias_as_preferred",
+      "test_all_ranges_use_nearest_coarser_fallback_and_never_finer",
+      "test_dataset_binding_rejects_unknown_interval",
+      "test_history_never_falls_back_to_a_finer_interval",
+      "test_history_refuses_ambiguous_same_resolution_bindings",
+      "test_history_refuses_unknown_venue_or_symbol",
+      "test_history_reopens_the_dataset_and_refuses_a_stale_manifest",
+      "test_history_refuses_manifest_without_the_bound_coverage",
+      "test_history_refuses_rows_outside_manifest_coverage",
+      "test_history_normalizes_manifest_coverage_before_binding_rows",
+      "test_history_refuses_full_coverage_row_count_or_boundary_drift",
+      "test_history_refuses_full_coverage_extent_drift",
+      "test_history_refuses_loader_identity_or_manifest_identity_drift",
+      "test_history_fails_closed_on_invalid_rows",
+      "test_history_refuses_future_leakage_even_when_a_reader_ignores_the_window",
+      "test_history_refuses_live_tail_or_forecast_rows",
+      "test_history_records_real_interval_gaps_but_does_not_invent_duplicates",
+      "test_history_does_not_report_market_closures_as_data_gaps",
+      "test_history_does_not_report_equity_overnight_as_intraday_gaps",
+      "test_comparison_rebases_only_the_shared_observed_window_without_forward_fill",
+      "test_comparison_selects_the_coarsest_shared_resolution_without_resampling",
+      "test_comparison_refuses_fewer_than_two_shared_points",
+      "test_comparison_refuses_duplicate_keys_and_invalid_base_values",
+      "test_comparison_has_deterministic_key_order_and_stable_serialization",
+      "test_history_and_comparison_responses_are_structurally_immutable",
+      "test_history_detaches_reader_owned_instrument_coverage_and_lists",
+      "test_public_response_dump_keeps_json_arrays_objects_and_strict_round_trip",
+      "test_live_tail_lineage_is_strict_frozen_and_round_trips",
+      "test_live_tail_flag_and_lineage_identity_must_match_exactly",
+      "test_series_strict_json_rejects_forged_live_lineage_age",
+      "test_series_strict_json_rejects_live_receipt_after_as_of",
+      "test_series_strict_json_rejects_live_tail_in_the_middle",
+      "test_series_strict_json_rejects_multiple_live_tails",
+      "test_series_strict_json_rejects_historical_bar_outside_manifest_coverage",
+      "test_series_live_tail_exact_age_and_outside_coverage_round_trip",
+      "test_public_contracts_reject_extra_coercive_or_nonfinite_state",
+      "test_minute_replay_resolution_exception_preserves_exact_source_and_coverage",
+      "test_minute_replay_resolution_exception_rejects_unrelated_series",
+      "test_minute_replay_resolution_exception_cannot_claim_unrecorded_coverage"
+    ]
+  },
+  {
+    "file": "tests/test_instrument_workspace_api.py",
+    "top_level_calls": [
+      {
+        "line": 44,
+        "expression": "datetime(2026, 8, 12, 20, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 45,
+        "expression": "Instrument(venue=Venue.MOOMOO, symbol='NVDA', instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_workspace_uses_one_clock_for_history_comparison_and_response",
+      "test_workspace_keeps_typed_live_absence_and_degradation",
+      "test_workspace_captured_quote_keeps_existing_refusal_guards",
+      "test_workspace_exposes_real_live_lineage_without_relabeling_it",
+      "test_workspace_summarizes_the_latest_forecast_even_when_ineligible",
+      "test_workspace_never_selects_a_forecast_from_after_its_clock",
+      "test_workspace_exposes_position_marks_pnl_risk_switches_and_capability",
+      "test_workspace_never_presents_cash_only_as_exact_equity_when_mark_is_missing",
+      "test_workspace_account_marks_and_proposals_share_one_revision_during_confirmation",
+      "test_workspace_valuation_cannot_observe_a_quote_after_generated_at",
+      "test_workspace_pins_quote_before_live_history_and_next_request_observes_arrival",
+      "test_create_proposal_is_preview_only",
+      "test_confirm_places_exactly_one_order_and_terminal_replay_is_idempotent",
+      "test_concurrent_kill_switch_cannot_be_overwritten_by_stale_confirmation",
+      "test_browser_cannot_supply_server_owned_decision_fields",
+      "test_non_finite_proposal_numbers_are_request_validation_errors",
+      "test_proposal_posts_reject_cross_origin_browsers",
+      "test_unknown_workspace_artifact_and_proposal_are_404",
+      "test_ineligible_and_refused_confirmations_return_typed_409",
+      "test_kernel_refusal_returns_409_with_order_and_reason",
+      "test_missing_workspace_and_proposal_services_are_typed_404"
+    ]
+  },
+  {
+    "file": "tests/test_instrument_workspace_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 25,
+        "expression": "pytest.importorskip('playwright.sync_api', reason='playwright is not installed (install the e2e extra)')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_nvda_inspect_to_paper_loop_and_race_refusal",
+      "test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart",
+      "test_keyboard_locale_reduced_motion_and_mobile_boundary"
+    ]
+  },
+  {
+    "file": "tests/test_iterations.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_create_iteration_writes_record_and_index",
+      "test_slugify_rejects_non_ascii_only_title"
+    ]
+  },
+  {
+    "file": "tests/test_kalshi_market_data.py",
+    "top_level_calls": [
+      {
+        "line": 42,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_fixture_provider_registers_in_the_registry",
+      "test_live_provider_is_refused_by_the_registry",
+      "test_live_provider_is_explicitly_live",
+      "test_discovery_yields_the_recorded_event_markets",
+      "test_fixture_resolution_reads_the_venue_reported_result",
+      "test_non_binary_markets_are_refused",
+      "test_market_quote_matches_the_recorded_best_levels",
+      "test_market_quote_refuses_a_ticker_mismatch",
+      "test_order_book_canonicalizes_to_best_first_derived_asks",
+      "test_order_book_skips_a_derived_ask_at_zero",
+      "test_order_book_refuses_a_wrong_instrument_symbol",
+      "test_order_book_refuses_a_wrong_venue_instrument",
+      "test_bars_derive_from_the_recorded_traded_candles",
+      "test_zero_volume_periods_produce_no_bars",
+      "test_unknown_intervals_are_refused_everywhere",
+      "test_trades_map_the_recorded_rows_with_aggressor_sides",
+      "test_trades_refuse_a_symbol_mismatch",
+      "test_fixture_trades_respect_an_explicit_bounds_filter",
+      "test_market_summaries_cover_the_three_recorded_markets",
+      "test_canonical_events_fixture_matches_the_provider_output",
+      "test_canonical_markets_fixture_matches_the_listing_surface",
+      "test_canonical_books_fixture_matches_the_wire_derived_book",
+      "test_canonical_trades_fixture_matches_the_wire_derived_trades",
+      "test_live_events_require_an_explicit_limit",
+      "test_live_quote_and_resolution_drill_through_the_real_parsers",
+      "test_live_trades_require_a_bounded_aware_range",
+      "test_live_bars_resolve_the_series_chain",
+      "test_live_bars_require_interval_and_bounds_before_any_call",
+      "test_construction_refuses_any_host_but_the_pinned_one",
+      "test_transport_turns_the_recorded_error_shapes_into_typed_refusals",
+      "test_transport_non_json_bodies_become_unavailable",
+      "test_transport_network_failures_become_unavailable"
+    ]
+  },
+  {
+    "file": "tests/test_kalshi_wire.py",
+    "top_level_calls": [
+      {
+        "line": 28,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_events_parse_the_recorded_discovery_page",
+      "test_events_parse_the_strike_date_and_fed_event",
+      "test_event_bundle_parses_event_plus_markets",
+      "test_events_reject_a_missing_row_key",
+      "test_market_parses_the_recorded_active_market",
+      "test_settled_market_carries_the_resolution",
+      "test_markets_parse_the_recorded_list",
+      "test_unknown_status_fails_closed",
+      "test_unknown_market_type_fails_closed",
+      "test_unknown_result_fails_closed",
+      "test_market_missing_expiration_fails_closed",
+      "test_market_error_payload_is_a_typed_refusal",
+      "test_orderbook_parses_the_recorded_ladders",
+      "test_orderbook_rejects_a_non_pair_level",
+      "test_orderbook_rejects_an_out_of_order_ladder",
+      "test_orderbook_rejects_a_price_outside_the_unit_interval",
+      "test_orderbook_rejects_a_negative_size",
+      "test_trades_parse_the_recorded_rows",
+      "test_trades_unknown_ticker_is_an_empty_list_not_an_error",
+      "test_trades_reject_non_complementary_prices",
+      "test_trades_reject_an_unknown_taker_side",
+      "test_candlesticks_parse_the_recorded_series",
+      "test_candlesticks_out_of_order_periods_fail_closed",
+      "test_candlesticks_traded_row_missing_ohlc_fails_closed",
+      "test_candlesticks_parameter_validation_error_is_typed",
+      "test_series_parses_the_recorded_object"
+    ]
+  },
+  {
+    "file": "tests/test_lake.py",
+    "top_level_calls": [
+      {
+        "line": 14,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 17,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 20,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_read_bars_rejects_null_timestamps",
+      "test_read_bars_rejects_symlinked_symbol_dir",
+      "test_write_bars_rejects_symlinked_symbol_dir",
+      "test_write_creates_canonical_partition_layout",
+      "test_write_partitions_by_venue_symbol_interval_and_date",
+      "test_roundtrip_preserves_bars",
+      "test_read_returns_bars_in_stored_order",
+      "test_read_filters_by_time_range",
+      "test_write_is_deterministic",
+      "test_write_replaces_the_days_shard_wholesale",
+      "test_read_empty_dataset_returns_empty_list",
+      "test_write_rejects_empty_sequence",
+      "test_write_rejects_invalid_dataset_names",
+      "test_quality_reports_out_of_order_bars",
+      "test_quality_reports_duplicate_bars",
+      "test_quality_reports_gaps",
+      "test_quality_clean_dataset_reports_nothing",
+      "test_quality_rejects_misaligned_series",
+      "test_settings_lake_root_default_and_env_override",
+      "test_lake_from_settings_uses_configured_root",
+      "test_write_rejects_invalid_symbols",
+      "test_read_rejects_invalid_symbol_and_interval",
+      "test_read_rejects_naive_range_bounds",
+      "test_roundtrip_normalizes_non_utc_aware_timestamps",
+      "test_quality_on_empty_partition_reports_empty",
+      "test_read_range_spans_days",
+      "test_roundtrip_through_root_with_apostrophe"
+    ]
+  },
+  {
+    "file": "tests/test_linux_owned.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_fixed_creation_and_gated_start",
+      "test_profile_refuses_unsafe_identity",
+      "test_clean_cli_environment",
+      "test_creation_failure_never_guesses_container",
+      "test_output_limit_is_failure",
+      "test_terminal_output_cannot_succeed",
+      "test_transient_cleanup_can_retry_exact_ownership",
+      "test_hung_pulse_write_has_deadline",
+      "test_native_timeout_requires_actual_container_exit",
+      "test_native_hung_attachment_is_required",
+      "test_pid1_go_preserves_coalesced_and_fragmented_pulses",
+      "test_qualification_missing_profile_is_nonzero",
+      "test_unsafe_image_refused",
+      "test_refusal_before_create",
+      "test_admission_and_owned_cleanup",
+      "test_actual_oom_is_failure",
+      "test_existing_output_and_symlink_refused",
+      "test_cgroup_admission",
+      "test_standalone_controller",
+      "test_standalone_reparented_descendant_and_sibling"
+    ]
+  },
+  {
+    "file": "tests/test_live_buffer.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_live_buffer_lookup.py",
+    "top_level_calls": [
+      {
+        "line": 15,
+        "expression": "datetime(2026, 9, 13, 10, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_actual_append_lookup_uses_index_on_retained_hit_and_hash_miss",
+      "test_shared_source_id_remains_scoped_and_conflicts_still_quarantine",
+      "test_lookup_scope_columns_cannot_contain_null",
+      "test_prior_schema_reopen_adds_lookup_without_changing_rows_or_quarantine",
+      "test_legacy_missing_identity_column_migrates_before_lookup_index"
+    ]
+  },
+  {
+    "file": "tests/test_live_candle_revisions.py",
+    "top_level_calls": [
+      {
+        "line": 19,
+        "expression": "datetime(2026, 9, 12, 14, 22, tzinfo=UTC)"
+      },
+      {
+        "line": 20,
+        "expression": "timedelta(minutes=1, microseconds=33701)"
+      },
+      {
+        "line": 21,
+        "expression": "timedelta(minutes=1, microseconds=538628)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running",
+      "test_closed_rest_and_websocket_observation_identity_and_recovery_parity",
+      "test_legacy_reopen_retains_evidence_accepts_revision_and_coalesces_history",
+      "test_provisional_identity_is_unchanged"
+    ]
+  },
+  {
+    "file": "tests/test_live_chart_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 27,
+        "expression": "pytest.importorskip('playwright.sync_api', reason='the e2e extra is unavailable')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_packaged_live_charts_update_and_replay_from_both_entry_paths"
+    ]
+  },
+  {
+    "file": "tests/test_live_contract.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_continuity_states_are_an_exact_stable_contract",
+      "test_legacy_sequence_gap_maps_to_known_gap",
+      "test_noncomplete_continuity_preserves_legacy_gap_surface",
+      "test_continuity_and_legacy_gap_have_one_exact_mapping",
+      "test_explicit_contradictory_gap_and_continuity_are_rejected",
+      "test_content_digest_ignores_receipt_but_changes_with_source_content"
+    ]
+  },
+  {
+    "file": "tests/test_live_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 47,
+        "expression": "pytest.importorskip('playwright.sync_api', reason=\"playwright is not installed (dev-only e2e extra: pip install -e '.[dev,e2e]')\")"
+      },
+      {
+        "line": 72,
+        "expression": "timedelta(seconds=5)"
+      },
+      {
+        "line": 73,
+        "expression": "timedelta(seconds=10)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_watchlist_populates_and_streams",
+      "test_instrument_detail_chart_book_and_tape",
+      "test_stale_transition_when_the_venue_goes_quiet",
+      "test_keyboard_only_walk",
+      "test_replay_card_honestly_reports_no_lake",
+      "test_tablet_viewport_has_no_horizontal_overflow",
+      "test_mobile_viewport_scrolls_the_table_not_the_body"
+    ]
+  },
+  {
+    "file": "tests/test_live_feed.py",
+    "top_level_calls": [
+      {
+        "line": 30,
+        "expression": "datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 31,
+        "expression": "timedelta(seconds=30)"
+      },
+      {
+        "line": 32,
+        "expression": "timedelta(seconds=90)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_prune_if_due_runs_immediately_then_on_five_minute_cadence",
+      "test_tick_loop_dispatches_retention_sweep_off_event_loop"
+    ]
+  },
+  {
+    "file": "tests/test_live_fence.py",
+    "top_level_calls": [
+      {
+        "line": 48,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 54,
+        "expression": "datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_blesses_a_healthy_real_quote_into_a_usable_domain_quote",
+      "test_rejects_when_there_is_no_quote_view",
+      "test_rejects_anything_that_is_not_real",
+      "test_rejects_a_sequence_gapped_quote",
+      "test_rejects_missing_positive_continuity_evidence",
+      "test_rejects_a_stale_quote_with_the_explicit_age",
+      "test_rejects_a_quote_without_usable_depth",
+      "test_rejects_a_quote_without_a_receipt_anchor",
+      "test_rejection_priority_is_source_then_gap_then_age",
+      "test_max_age_must_be_positive",
+      "test_resolve_pulls_the_quote_view_from_the_snapshot",
+      "test_submit_flows_a_healthy_fenced_quote_to_fills",
+      "test_submit_records_the_fence_rejection_with_the_explicit_reason",
+      "test_submit_ignores_a_caller_quote_when_the_fence_is_enabled",
+      "test_idempotency_replay_bypasses_the_fence",
+      "test_fence_requires_a_snapshot_and_submit_requires_a_quote_or_fence",
+      "test_without_a_fence_the_caller_quote_is_used_unchanged",
+      "test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks"
+    ]
+  },
+  {
+    "file": "tests/test_live_history.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_live_only_workstation_serves_one_shared_continuity_checked_series",
+      "test_live_only_history_selects_nearest_coarser_interval_and_reports_fallback",
+      "test_live_only_history_fails_closed_for_unsupported_ranges",
+      "test_live_replay_disconnect_barrier_refuses_to_bridge_candles",
+      "test_live_replay_range_excludes_recently_received_old_backfill",
+      "test_live_replay_range_includes_market_data_at_lower_bound",
+      "test_live_replay_range_filters_data_time_before_tail_limit",
+      "test_live_binding_discovery_uses_structured_dataset_class",
+      "test_minute_replay_fallback_requires_usable_preferred_candidate",
+      "test_minute_replay_live_append_after_replay_capture_keeps_exact_coverage",
+      "test_production_minute_candles_revise_append_and_survive_reopen",
+      "test_minute_replay_fallback_does_not_expand_other_venues",
+      "test_minute_replay_collecting_and_gaps_never_fabricate_continuity",
+      "test_minute_replay_fallback_does_not_replace_manifest_history"
+    ]
+  },
+  {
+    "file": "tests/test_live_market_directory.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_live_market_directory_combines_configured_and_discovered_instruments",
+      "test_live_market_directory_never_invents_a_mark",
+      "test_live_main_injects_configured_symbols_into_the_market_directory"
+    ]
+  },
+  {
+    "file": "tests/test_live_marks.py",
+    "top_level_calls": [
+      {
+        "line": 17,
+        "expression": "datetime(2026, 8, 12, 10, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 18,
+        "expression": "Instrument(symbol='BTC', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_healthy_exact_live_quote_marks_account_equity",
+      "test_stale_or_unproven_live_quote_removes_static_mark_and_names_reason",
+      "test_live_workstation_pnl_uses_the_same_exact_quote_mark",
+      "test_missing_live_mark_makes_equity_and_total_pnl_explicitly_incomplete",
+      "test_account_revision_and_marks_are_returned_as_one_immutable_snapshot"
+    ]
+  },
+  {
+    "file": "tests/test_live_moomoo.py",
+    "top_level_calls": [
+      {
+        "line": 45,
+        "expression": "ZoneInfo('America/New_York')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_specs_derive_market_qualified_codes",
+      "test_stock_quote_frame_yields_metrics_update",
+      "test_rt_ticker_frame_yields_trades_with_sides_sequences_and_dedup",
+      "test_stale_venue_clock_emits_nothing",
+      "test_dispatch_fails_closed",
+      "test_connect_probes_and_serves_quote_capability",
+      "test_connect_fails_honestly_when_opend_is_unavailable",
+      "test_connect_refuses_when_quote_capability_is_off",
+      "test_poll_failure_becomes_a_poll_error_frame",
+      "test_live_stack_streams_real_labels_from_a_live_daemon",
+      "test_live_stack_ages_stale_when_the_venue_clock_stops",
+      "test_live_stack_honest_disconnected_when_the_daemon_dies",
+      "test_live_stack_honest_unavailable_when_opend_is_down"
+    ]
+  },
+  {
+    "file": "tests/test_live_moomoo_minutes.py",
+    "top_level_calls": [
+      {
+        "line": 15,
+        "expression": "datetime(2026, 9, 23, 14, 2, 30, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_candle_window_revisions_appends_and_identical_reads_do_not_refresh",
+      "test_gap_is_not_filled_and_old_revision_cannot_rewind_latest",
+      "test_existing_nonminute_equity_candles_keep_receipt_clock",
+      "test_reconnect_does_not_reemit_cached_window_but_keeps_continuity_barrier",
+      "test_candle_polling_is_opt_in_and_bounded",
+      "test_mixed_watchlist_keeps_other_equity_polling_when_minutes_are_enabled"
+    ]
+  },
+  {
+    "file": "tests/test_live_observation_identity.py",
+    "top_level_calls": [
+      {
+        "line": 16,
+        "expression": "datetime(2026, 9, 12, 15, 45, 47, 265680, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_metric_observations_survive_real_feed_buffer",
+      "test_legacy_reopen_and_exact_receipt_replay_preserve_evidence_and_conflicts",
+      "test_identity_uses_normalized_payload_and_utc_instant",
+      "test_metric_burst_keeps_real_pump_subscribers_and_three_symbol_quotes_running"
+    ]
+  },
+  {
+    "file": "tests/test_live_prediction.py",
+    "top_level_calls": [
+      {
+        "line": 46,
+        "expression": "datetime(2026, 8, 9, 12, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 48,
+        "expression": "datetime.fromtimestamp(TS_US / 1000000, tz=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_live_prediction_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 51,
+        "expression": "pytest.importorskip('playwright.sync_api', reason=\"playwright is not installed (dev-only e2e extra: pip install -e '.[dev,e2e]')\")"
+      },
+      {
+        "line": 74,
+        "expression": "timedelta(seconds=5)"
+      },
+      {
+        "line": 75,
+        "expression": "timedelta(seconds=10)"
+      },
+      {
+        "line": 258,
+        "expression": "_venue_fixture('polymarket', pm_plan())"
+      },
+      {
+        "line": 258,
+        "expression": "pm_plan()"
+      },
+      {
+        "line": 259,
+        "expression": "_venue_fixture('kalshi', kalshi_plan())"
+      },
+      {
+        "line": 259,
+        "expression": "kalshi_plan()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_comparison_renders_both_venues",
+      "test_single_venue_pair_renders_honest_unavailable",
+      "test_stale_transition_when_the_venues_go_quiet",
+      "test_keyboard_walk_to_calibration",
+      "test_mobile_viewport_stacks_the_pairs"
+    ]
+  },
+  {
+    "file": "tests/test_live_replay.py",
+    "top_level_calls": [
+      {
+        "line": 32,
+        "expression": "timedelta(seconds=5)"
+      },
+      {
+        "line": 33,
+        "expression": "timedelta(seconds=15)"
+      },
+      {
+        "line": 34,
+        "expression": "datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_live_router.py",
+    "top_level_calls": [
+      {
+        "line": 42,
+        "expression": "datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 43,
+        "expression": "timedelta(seconds=30)"
+      },
+      {
+        "line": 44,
+        "expression": "timedelta(seconds=90)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_live_session_consumers.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_unknown_vendor_latency_is_explicit_across_live_consumers",
+      "test_state_status_and_api_share_policy_without_renewing_quote_authority",
+      "test_partial_candle_preserves_previous_completed_session_coverage",
+      "test_candle_without_verified_end_metadata_cannot_certify_coverage"
+    ]
+  },
+  {
+    "file": "tests/test_live_session_freshness.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_closed_latest_session_uses_pinned_calendar",
+      "test_closed_missing_last_minute_is_missing_coverage",
+      "test_absent_or_older_session_is_missing",
+      "test_declared_delay_during_oct12_intake_does_not_allege_failure",
+      "test_opening_grace_expires_and_open_session_uses_delay",
+      "test_unknown_policy_never_manufactures_fresh",
+      "test_continuous_crypto_still_uses_lag",
+      "test_future_source_clock_is_unknown",
+      "test_daily_end_contract_uses_early_close",
+      "test_off_session_data_cannot_replace_last_regular_session",
+      "test_partial_minute_cannot_certify_completed_coverage",
+      "test_crypto_observation_lag_boundary_uses_raw_source_time",
+      "test_continuous_completed_bars_have_no_midnight_opening_grace",
+      "test_closed_positive_coverage_does_not_need_assumed_latency",
+      "test_closed_unknown_latency_still_refuses_invalid_source"
+    ]
+  },
+  {
+    "file": "tests/test_live_smoke.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_live_supervisor.py",
+    "top_level_calls": [
+      {
+        "line": 38,
+        "expression": "datetime(2026, 8, 9, 10, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 39,
+        "expression": "timedelta(seconds=30)"
+      },
+      {
+        "line": 40,
+        "expression": "timedelta(seconds=90)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_venue_enum_used",
+      "test_fixture_transforms_at_each_send_without_changing_plan"
+    ]
+  },
+  {
+    "file": "tests/test_manifest.py",
+    "top_level_calls": [
+      {
+        "line": 20,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 23,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 26,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_generate_writes_versioned_manifest",
+      "test_manifest_roundtrips_through_json",
+      "test_legacy_manifest_without_dataset_class_remains_compatible",
+      "test_generate_records_structured_dataset_class",
+      "test_regenerate_preserves_existing_dataset_class_when_unspecified",
+      "test_coverage_reflects_lake",
+      "test_generate_bumps_revision_on_regenerate",
+      "test_generate_accepts_explicit_revision",
+      "test_generate_rejects_blank_source_or_license",
+      "test_generate_rejects_invalid_dataset_name",
+      "test_generate_fails_closed_on_unreadable_existing_manifest",
+      "test_validation_rejects_unknown_schema_version",
+      "test_validation_rejects_non_utc_timezone",
+      "test_validation_rejects_bad_dataset_name",
+      "test_validation_rejects_naive_generated_at",
+      "test_validation_rejects_naive_coverage_timestamps",
+      "test_validation_rejects_coverage_start_after_end",
+      "test_validation_rejects_duplicate_coverage_entries",
+      "test_validation_rejects_bad_symbol_in_coverage",
+      "test_gate_requires_manifest",
+      "test_gate_opens_generated_dataset",
+      "test_gate_rejects_stale_manifest_after_data_change",
+      "test_gate_rejects_stale_manifest_after_new_series",
+      "test_gate_reopens_after_regenerate",
+      "test_gate_rejects_manifest_for_another_dataset",
+      "test_gate_rejects_corrupt_manifest",
+      "test_gate_rejects_stale_manifest_same_rows_different_range",
+      "test_gate_rejects_stale_after_series_removal",
+      "test_microsecond_timestamps_roundtrip_through_gate",
+      "test_generate_default_bumps_after_explicit_revision",
+      "test_generate_empty_dataset_writes_empty_coverage",
+      "test_generate_rejects_nonexistent_dataset",
+      "test_generate_skips_stray_files_but_rejects_stray_dirs",
+      "test_generate_rejects_manifest_for_another_dataset",
+      "test_generate_rejects_invalid_explicit_revision",
+      "test_symlinks_in_lake_layout_are_rejected",
+      "test_generate_refuses_vanished_series",
+      "test_generate_refuses_unrewritten_rows_shrink",
+      "test_generate_allows_rewritten_rows_shrink",
+      "test_generate_refuses_rewritten_start_forward",
+      "test_generate_allows_growth_and_new_series",
+      "test_generate_override_by_removing_manifest"
+    ]
+  },
+  {
+    "file": "tests/test_market_calendars.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_xnys_skips_holiday_and_honors_early_close",
+      "test_continuous_calendar_returns_every_utc_day",
+      "test_calendar_rejects_unknown_id_and_inverted_range",
+      "test_xnys_rejects_dates_outside_pinned_package_range",
+      "test_continuous_calendar_rejects_unbounded_date_range",
+      "test_xnys_extended_policy_fails_closed_until_implemented",
+      "test_calendar_rejects_policy_mismatch",
+      "test_xnys_open_tracks_dst_in_utc",
+      "test_session_window_rejects_forged_calendar_identity_and_non_utc_time",
+      "test_session_window_rejects_holiday_and_fabricated_xnys_hours",
+      "test_xnys_lower_boundary_is_typed_and_continuous_boundary_is_supported",
+      "test_calendar_support_upper_boundary_is_inclusive",
+      "test_session_window_is_immutable",
+      "test_due_session_distinguishes_holiday_from_continuous_day",
+      "test_expected_bar_count_honors_regular_and_early_close_sessions",
+      "test_expected_bar_count_intersects_exact_xnys_window",
+      "test_continuous_bar_window_must_match_utc_candle_grid",
+      "test_xnys_daily_identity_uses_venue_local_session_date",
+      "test_partial_xnys_window_must_end_on_candle_grid"
+    ]
+  },
+  {
+    "file": "tests/test_market_data.py",
+    "top_level_calls": [
+      {
+        "line": 23,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 26,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 27,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_bar_accepts_valid_ohlcv",
+      "test_bar_high_below_max_open_close_is_rejected",
+      "test_bar_low_above_min_open_close_is_rejected",
+      "test_bar_rejects_negative_volume",
+      "test_bar_rejects_nonpositive_price",
+      "test_bar_rejects_naive_timestamp",
+      "test_bar_rejects_unknown_interval",
+      "test_bar_accepts_common_intervals",
+      "test_book_accepts_sorted_levels",
+      "test_book_rejects_unsorted_bids",
+      "test_book_rejects_unsorted_asks",
+      "test_book_rejects_duplicate_price_within_a_side",
+      "test_book_rejects_nonpositive_level_price",
+      "test_book_rejects_naive_timestamp",
+      "test_trade_event_accepts_optional_side_and_sequence",
+      "test_trade_event_rejects_nonpositive_price",
+      "test_trade_event_rejects_nonpositive_quantity",
+      "test_trade_event_rejects_negative_sequence",
+      "test_trade_event_rejects_naive_timestamp",
+      "test_interval_to_timedelta_common_intervals",
+      "test_interval_to_timedelta_rejects_garbage",
+      "test_interval_to_timedelta_rejects_zero_amount",
+      "test_bar_rejects_zero_interval",
+      "test_monotonic_violations_empty_for_non_decreasing_values",
+      "test_monotonic_violations_detects_out_of_order_pairs",
+      "test_monotonic_violations_rejects_none_values",
+      "test_find_duplicates_by_key_reports_indices_per_key",
+      "test_find_duplicates_with_identity_on_hashable_rows",
+      "test_find_duplicates_empty_for_unique_rows",
+      "test_find_gaps_none_for_contiguous_series",
+      "test_find_gaps_detects_single_and_multiple_missing_ticks",
+      "test_find_gaps_returns_single_missing_tick_between_adjacent_slots",
+      "test_find_gaps_rejects_non_increasing_input",
+      "test_find_gaps_rejects_naive_timestamps",
+      "test_find_gaps_rejects_single_naive_timestamp",
+      "test_find_gaps_single_aware_timestamp_is_valid_and_gap_free",
+      "test_find_gaps_shifted_regular_grid_has_no_internal_gaps",
+      "test_find_gaps_rejects_series_misaligned_with_interval"
+    ]
+  },
+  {
+    "file": "tests/test_matcher.py",
+    "top_level_calls": [
+      {
+        "line": 22,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 25,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_market_buy_fills_at_the_ask_with_no_slippage",
+      "test_market_buy_pays_slippage_above_the_ask",
+      "test_market_sell_fills_at_the_bid_minus_slippage",
+      "test_market_order_without_a_touch_fails_closed",
+      "test_stale_quote_fails_closed_for_market_orders",
+      "test_market_order_with_zero_volume_fails_closed",
+      "test_terminated_order_is_rejected_by_the_matcher",
+      "test_limit_buy_fills_at_the_ask_when_crossed",
+      "test_limit_buy_does_not_fill_above_the_limit",
+      "test_limit_buy_does_not_fill_without_an_ask",
+      "test_limit_sell_fills_at_the_bid_when_crossed",
+      "test_limit_sell_does_not_fill_below_the_limit",
+      "test_limit_order_against_stale_quote_fails_closed",
+      "test_market_order_partially_fills_when_depth_is_limited",
+      "test_missing_volume_fails_closed_for_market_orders",
+      "test_missing_volume_fails_closed_for_limit_orders",
+      "test_limit_order_partially_fills_when_depth_is_limited",
+      "test_partially_filled_order_matches_only_the_remainder",
+      "test_naive_quote_timestamp_raises_a_clear_error",
+      "test_match_result_cannot_combine_fills_and_rejection",
+      "test_match_step_gives_time_priority_in_submission_order",
+      "test_match_step_skips_terminal_orders",
+      "test_match_is_deterministic_across_repeated_calls"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_cli.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_probe_prints_redacted_report",
+      "test_probe_unavailable_exits_1",
+      "test_probe_auth_required_exits_2",
+      "test_probe_sdk_missing_exits_3",
+      "test_probe_rejects_unknown_command",
+      "test_probe_closes_client_on_failure",
+      "test_readiness_route_unavailable_stops_before_sdk",
+      "test_readiness_json_reports_codes_and_never_checks_orders",
+      "test_readiness_partial_exits_one",
+      "test_readiness_maps_typed_provider_failures",
+      "test_paper_order_without_fixture_is_phase_e_gated",
+      "test_reconcile_without_fixture_is_phase_e_gated",
+      "test_paper_order_records_the_placed_order",
+      "test_paper_order_with_lost_ack_records_unacknowledged",
+      "test_paper_order_rejects_unknown_market",
+      "test_reconcile_is_report_only_by_default",
+      "test_reconcile_apply_adopts_and_converges",
+      "test_reconcile_at_replays_an_earlier_phase",
+      "test_reconcile_tolerances_absorb_fixture_drift"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_client_market_data.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_history_kline_delegates_with_request_args",
+      "test_history_kline_defaults_to_raw_autype_and_open_bounds",
+      "test_history_kline_passes_explicit_autype",
+      "test_history_kline_rejects_unparseable_interval",
+      "test_history_kline_rejects_unknown_autype",
+      "test_rt_ticker_delegates_with_default_num",
+      "test_rt_ticker_rejects_invalid_num",
+      "test_stock_quote_delegates",
+      "test_stock_quote_rejects_invalid_codes",
+      "test_transport_failures_propagate_typed",
+      "test_probe_only_transport_fails_on_market_data_requests",
+      "test_close_closes_transport"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_collection.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_bounded_plan_contains_only_approved_symbols_and_intervals",
+      "test_worker_maps_provider_market_before_opening_opend",
+      "test_worker_reports_unreachable_daemon_before_starting_sdk",
+      "test_collection_window_is_utc_ordered_and_bounded",
+      "test_closed_xnys_session_is_not_a_gap",
+      "test_weekend_observation_is_reported_as_unexpected_not_expected",
+      "test_unavailable_result_cannot_claim_real_manifests",
+      "test_collection_worker_is_process_bounded_and_leaves_no_staged_output",
+      "test_collection_worker_returns_only_staged_json",
+      "test_collection_worker_does_not_buffer_sdk_stdout_or_stderr",
+      "test_collection_worker_has_runtime_home_but_no_credentials",
+      "test_isolated_moomoo_result_is_revalidated_before_publication",
+      "test_raw_payload_revalidation_filters_history_bars_outside_utc_window",
+      "test_raw_payload_rejects_nonterminal_stock_split_cursor_chain",
+      "test_raw_payload_rejects_pages_after_terminal_cursor",
+      "test_raw_payload_rejects_empty_nonterminal_page",
+      "test_raw_payload_rejects_repeated_cursor",
+      "test_raw_surfaces_preserve_endpoint_specific_pagination_evidence",
+      "test_real_bundle_publishes_separate_raw_and_adjusted_lineage",
+      "test_minute_publish_preserves_full_raw_window_widened_bars",
+      "test_publication_validation_rejects_forged_adjusted_lineage",
+      "test_publication_validation_rejects_wrong_raw_role",
+      "test_raw_validation_recomputes_factor_identities_and_event_range",
+      "test_raw_bar_validation_binds_declared_interval_to_source",
+      "test_raw_validation_rejects_cross_symbol_factor_source",
+      "test_publication_validation_rejects_forged_feature_declaration",
+      "test_publication_validation_rejects_forged_action_coverage",
+      "test_empty_action_coverage_is_bound_to_empty_source_evidence",
+      "test_factor_action_mismatch_creates_no_manifest",
+      "test_collector_publishes_nothing_when_worker_is_unavailable",
+      "test_injected_worker_cannot_publish_qualifying_moomoo_evidence",
+      "test_collector_publishes_complete_single_target_result",
+      "test_collector_commits_multi_page_source_snapshot_at_envelope_granularity"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_execution.py",
+    "top_level_calls": [
+      {
+        "line": 33,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD', metadata={'market': 'US'})"
+      },
+      {
+        "line": 40,
+        "expression": "datetime(2026, 8, 8, 13, 30, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_empty_script_is_refused",
+      "test_phase_without_now_is_refused",
+      "test_naive_now_is_refused",
+      "test_phase_with_non_list_rows_is_refused",
+      "test_bad_json_fails_with_line_attribution",
+      "test_missing_script_file_is_refused",
+      "test_state_is_the_latest_phase_at_or_before_now",
+      "test_advance_to_requires_aware_time",
+      "test_time_cannot_move_backwards",
+      "test_place_assigns_broker_ids_deterministically",
+      "test_lost_ack_withholds_the_reply_but_records_the_order",
+      "test_cancel_of_unknown_order_is_refused",
+      "test_snapshot_converts_venue_local_times_to_utc",
+      "test_snapshot_rejects_codes_without_market_prefix",
+      "test_snapshot_rejects_unknown_sides",
+      "test_snapshot_rejects_unparseable_times",
+      "test_snapshot_parses_deals_and_positions_through_the_same_wire",
+      "test_place_stamps_the_broker_order_id",
+      "test_place_derives_limit_or_market_type_from_the_request",
+      "test_place_refuses_a_remark_over_the_broker_limit",
+      "test_place_requires_market_metadata_fail_closed",
+      "test_cancel_without_a_broker_id_is_refused",
+      "test_cancel_and_refresh_pass_through_to_the_transport",
+      "test_sdk_transport_refuses_when_the_sdk_cannot_be_imported"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_live_sdk.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_real_poll_chain_is_quote_only_and_preserves_source",
+      "test_ticker_subscribes_before_read_and_closes",
+      "test_failed_ticker_subscription_never_reads_and_closes",
+      "test_ticker_subscription_exception_closes"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_market_data.py",
+    "top_level_calls": [
+      {
+        "line": 28,
+        "expression": "MoomooDataAdapter()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_daily_us_bars_convert_eastern_time_to_utc",
+      "test_history_pages_map_in_order_without_duplicate_rows",
+      "test_history_pages_reject_duplicate_boundary_row",
+      "test_history_row_code_must_match_requested_instrument",
+      "test_history_ohlcv_requires_finite_non_boolean_numbers",
+      "test_intraday_us_bars_convert_eastern_time_to_utc",
+      "test_intraday_bar_rejects_date_only_time_key",
+      "test_us_bars_respect_daylight_saving_boundary",
+      "test_hk_bars_convert_beijing_time_to_utc",
+      "test_extra_vendor_keys_are_tolerated",
+      "test_kline_row_missing_required_key_fails_closed",
+      "test_kline_row_non_mapping_fails_closed",
+      "test_kline_row_invalid_price_fails_with_row_attribution",
+      "test_kline_unparseable_time_fails_closed",
+      "test_kline_unknown_market_fails_closed",
+      "test_kline_unqualified_code_fails_closed",
+      "test_kline_code_symbol_mismatch_fails_closed",
+      "test_kline_unknown_autype_fails_closed",
+      "test_kline_payload_not_a_mapping_fails_closed",
+      "test_ticker_maps_to_trades",
+      "test_ticker_sequence_is_optional",
+      "test_ticker_unknown_direction_fails_closed",
+      "test_ticker_missing_time_fails_closed",
+      "test_ticker_bad_sequence_type_fails_closed",
+      "test_quote_maps_to_canonical_quote",
+      "test_quote_without_data_time_defaults_to_midnight",
+      "test_quote_requires_last_price",
+      "test_quote_multiple_rows_fail_closed",
+      "test_market_tz_resolves_vendor_local_zones",
+      "test_market_tz_rejects_unknown_market",
+      "test_sdk_code_builds_market_qualified_code",
+      "test_sdk_code_requires_market_metadata"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_minute_candles.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_sdk_current_candles_explicit_raw_regular_subscription_and_cleanup",
+      "test_sdk_strict_status_and_cleanup",
+      "test_sdk_exception_closes_context",
+      "test_invalid_request_never_reaches_sdk",
+      "test_eastern_end_labels_map_to_utc_start_with_dst",
+      "test_regular_session_filters_open_label_and_extended_and_obeys_early_close",
+      "test_holiday_and_weekend_rows_are_not_regular_session_candles",
+      "test_malformed_time_order_or_identity_is_rejected",
+      "test_invalid_source_prices_and_volume_fail_closed",
+      "test_payload_contract_fails_closed",
+      "test_only_scoped_us_moomoo_equities_are_supported",
+      "test_nvda_empty_and_zero_volume_are_admitted"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_opend.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_settings_defaults",
+      "test_settings_env_override",
+      "test_settings_reject_invalid_port",
+      "test_settings_reject_nonpositive_timeouts",
+      "test_probe_reports_capabilities",
+      "test_probe_reports_auth_required",
+      "test_probe_fails_closed_on_malformed_payload",
+      "test_probe_tolerates_extra_vendor_fields",
+      "test_probe_fails_closed_on_non_dict_payload",
+      "test_unavailable_error_propagates_typed",
+      "test_auth_required_error_propagates_typed",
+      "test_close_closes_transport",
+      "test_history_follows_every_page_and_preserves_cursors",
+      "test_history_rejects_repeated_cursor",
+      "test_history_rejects_empty_nonterminal_page",
+      "test_history_cursor_evidence_is_lossless_canonical_json",
+      "test_structural_legacy_transport_gets_explicit_single_page_wrapper",
+      "test_history_enforces_page_row_and_date_bounds",
+      "test_action_payloads_remain_pandas_free_and_splits_follow_pages",
+      "test_stock_splits_reject_empty_nonterminal_page",
+      "test_sdk_history_chain_uses_one_quote_context",
+      "test_sdk_history_rejects_non_integer_status",
+      "test_sdk_history_rejects_wrong_result_arity_as_protocol_error",
+      "test_sdk_actions_reject_boolean_status",
+      "test_sdk_actions_preserve_raw_fields_and_close_quote_context",
+      "test_sdk_scalar_normalization_rejects_infinity_and_handles_nat",
+      "test_sdk_actions_report_incompatible_sdk",
+      "test_sdk_actions_reject_missing_contract_keys",
+      "test_from_settings_builds_sdk_transport",
+      "test_classify_auth_language_is_auth_required",
+      "test_classify_connection_language_is_unavailable",
+      "test_sdk_transport_probe_without_sdk_fails_typed"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_provider.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_fetch_bars_returns_canonical_utc_bars",
+      "test_fetch_bars_do_not_leak_request_side_market_metadata",
+      "test_fetch_bars_converts_utc_bounds_to_venue_local_dates",
+      "test_fetch_bars_filters_by_utc_range",
+      "test_fetch_bars_rejects_naive_bounds",
+      "test_fetch_bars_rejects_reversed_utc_instants_before_date_conversion",
+      "test_fetch_bars_rejects_non_mapping_payload",
+      "test_fetch_bars_cross_checks_interval_echo",
+      "test_fetch_bars_cross_checks_autype_echo",
+      "test_fetch_raw_bundle_keeps_unadjusted_pages_and_source_actions",
+      "test_fetch_raw_bundle_rejects_legacy_single_page_history",
+      "test_fetch_trades_returns_canonical_trades",
+      "test_fetch_order_books_is_out_of_scope",
+      "test_registry_refuses_live_provider",
+      "test_provider_requires_market_metadata",
+      "test_provider_close_closes_client",
+      "test_us_daily_fixture_pipeline_through_lake",
+      "test_us_and_hk_series_share_a_dataset",
+      "test_intraday_fixture_pipeline_through_lake",
+      "test_hk_intraday_fixture_pipeline_through_lake",
+      "test_ingestion_jobs_can_target_the_open_d_provider_surface"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_readiness.py",
+    "top_level_calls": [
+      {
+        "line": 18,
+        "expression": "OpenDCapabilities(quote=True, history_kline=True, order=False, order_query=False, auth_required=False)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_readiness_requires_quote_and_history_for_every_symbol",
+      "test_readiness_preserves_partial_symbol_failure",
+      "test_empty_history_is_unavailable",
+      "test_malformed_payload_is_protocol_error",
+      "test_all_malformed_symbols_set_protocol_error_summary",
+      "test_cross_market_payload_is_protocol_error",
+      "test_readiness_never_calls_order_operations",
+      "test_operation_failure_is_typed_and_redacted",
+      "test_malformed_provider_values_are_redacted",
+      "test_invalid_request_is_rejected_before_provider",
+      "test_history_must_match_requested_interval_and_adjustment"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_readiness_process.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_stalled_provider_is_terminated_and_scratch_removed",
+      "test_worker_receives_only_readiness_configuration",
+      "test_invalid_deadline_never_launches_worker"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_readiness_sdk.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_readiness_real_call_chain_is_quote_only",
+      "test_quote_subscribes_before_read_and_closes",
+      "test_failed_subscription_never_reads_quote_and_closes",
+      "test_malformed_subscription_is_protocol_error_and_closes",
+      "test_malformed_quote_status_cannot_report_ready",
+      "test_worker_report_uses_real_quote_only_chain",
+      "test_worker_restores_os_user_home_required_by_linux_sdk"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_reconciliation.py",
+    "top_level_calls": [
+      {
+        "line": 39,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, metadata={'market': 'US'})"
+      },
+      {
+        "line": 45,
+        "expression": "datetime(2026, 8, 8, 13, 30, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 46,
+        "expression": "datetime(2026, 8, 8, 13, 30, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 47,
+        "expression": "datetime(2026, 8, 8, 13, 30, 1, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_matched_terminal_pair_is_clean",
+      "test_broker_ahead_is_pending_progress",
+      "test_journal_ahead_of_broker_is_divergent",
+      "test_missing_broker_order_is_flagged",
+      "test_unadopted_journal_order_is_listed_as_missing_internal",
+      "test_ambiguous_mapping_is_divergent",
+      "test_remark_recovery_is_noted_not_silent",
+      "test_unmappable_statuses_fail_closed",
+      "test_status_drift_broker_behind_is_divergent",
+      "test_quantity_drift_is_a_finding",
+      "test_journal_fills_beyond_broker_dealt_qty_is_drift",
+      "test_limit_price_drift_is_a_finding",
+      "test_execution_price_drift_is_a_finding",
+      "test_fee_drift_is_a_finding",
+      "test_fee_less_deals_are_missing_data",
+      "test_journal_fees_without_broker_deals_fail_closed",
+      "test_revoked_fill_is_a_finding",
+      "test_unhealthy_deal_is_not_adoptable",
+      "test_creation_time_drift_is_a_finding",
+      "test_unexplained_broker_position_is_a_finding",
+      "test_journal_position_without_broker_position_is_a_finding",
+      "test_position_drift_respects_tolerance",
+      "test_declared_tolerances_absorb_drift",
+      "test_reports_are_byte_reproducible",
+      "test_apply_refuses_divergent_and_missing",
+      "test_apply_imports_pending_progress_and_re_stamps_recovered_ids",
+      "test_apply_adopts_fills_to_terminal_filled",
+      "test_apply_refuses_fee_less_deals",
+      "test_apply_refuses_filled_without_completed_fills",
+      "test_apply_adopts_canceled_terminal_event",
+      "test_apply_adopts_rejected_with_broker_message",
+      "test_apply_second_run_on_matched_pair_changes_nothing",
+      "test_lost_ack_drill_recovers_via_remark_and_converges"
+    ]
+  },
+  {
+    "file": "tests/test_moomoo_workspace_history.py",
+    "top_level_calls": [
+      {
+        "line": 16,
+        "expression": "datetime(2026, 10, 8, 14, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_private_equity_minute_replay_keeps_exact_coverage_and_revisions",
+      "test_private_minute_replay_rejects_mismatched_supplier_metadata",
+      "test_private_minute_fallback_contract_is_exactly_bound",
+      "test_private_replay_keeps_gap_and_fresh_receipt_does_not_make_closed_candle_live",
+      "test_workspace_metrics_last_is_display_only_and_blocks_paper",
+      "test_workspace_quote_retains_priority_over_metrics_last",
+      "test_workspace_metrics_fallback_is_captured_before_competing_ingest",
+      "test_metrics_payload_cannot_invent_workspace_bidask_depth",
+      "test_invalid_metrics_last_retains_typed_absence",
+      "test_just_closed_private_tail_age_is_bound_to_provider_end",
+      "test_private_tail_append_after_replay_capture_rebuilds_exact_coverage",
+      "test_private_minute_session_gap_starts_new_observed_segment"
+    ]
+  },
+  {
+    "file": "tests/test_nautilus_bakeoff.py",
+    "top_level_calls": [
+      {
+        "line": 19,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_fake_runner_preserves_fixture_order_provenance_and_portable_artifacts",
+      "test_fixture_validation_fails_closed_before_runner",
+      "test_unmarked_one_minute_gap_is_rejected_without_fabricating_a_gap_flag",
+      "test_fixture_rejects_caller_injected_sequence_gap_marker",
+      "test_descending_fixture_timestamp_is_distinct_from_duplicate",
+      "test_two_run_digest_difference_fails_the_deterministic_gate",
+      "test_semantic_mismatch_is_retained_and_fails_contract_mapping",
+      "test_nonzero_pip_check_fails_windows_install",
+      "test_tag_revision_mismatch_cannot_be_hidden_by_matching_head",
+      "test_evidence_is_portable_and_excludes_local_identity",
+      "test_unmarked_nonempty_work_root_is_preserved_and_rejected",
+      "test_owned_work_root_removes_stale_outputs_and_environment",
+      "test_owned_reparse_child_fails_closed_without_target_mutation",
+      "test_repository_root_is_rejected_as_sensitive_work_root",
+      "test_windows_namespace_and_network_roots_fail_closed",
+      "test_hard_link_artifact_aliases_are_both_omitted",
+      "test_canonical_runs_must_not_share_physical_files",
+      "test_runner_metadata_cannot_leak_nonportable_paths",
+      "test_portable_https_command_survives_expected_path_redaction",
+      "test_ordinary_urls_are_not_classified_as_network_paths",
+      "test_runner_text_omits_absolute_paths_wherever_they_appear",
+      "test_runner_text_removes_line_breaks_and_remains_bounded",
+      "test_driver_source_has_no_quantmesh_or_live_adapter_imports"
+    ]
+  },
+  {
+    "file": "tests/test_numeric_policy.py",
+    "top_level_calls": [
+      {
+        "line": 28,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 31,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_fee_quantizes_to_six_decimals",
+      "test_fee_sub_micro_quantizes_to_zero",
+      "test_fee_respects_min_fee_floor",
+      "test_round_is_half_to_even",
+      "test_market_slippage_quantizes_price_to_six_decimals",
+      "test_bps_converts_to_decimal_fraction",
+      "test_reconcile_tolerance_defaults_to_exact",
+      "test_tick_size_is_required_and_positive_venue_metadata",
+      "test_matcher_quantization_is_independent_of_venue_tick"
+    ]
+  },
+  {
+    "file": "tests/test_object_store.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_object_store_is_content_addressed_and_idempotent",
+      "test_object_store_detects_existing_object_corruption",
+      "test_object_store_rejects_blank_media_type",
+      "test_v2_namespace_does_not_collide_with_legal_v1_dataset_names",
+      "test_object_store_rejects_a_windows_junction_component"
+    ]
+  },
+  {
+    "file": "tests/test_opend_private_terminal.py",
+    "top_level_calls": [
+      {
+        "line": 15,
+        "expression": "pytest.mark.skipif(sys.platform != 'linux', reason='requires native Linux PTY/pidfd')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_default_preflight_has_no_resource_effect",
+      "test_cli_rejects_arbitrary_targets",
+      "test_invalid_uid_refuses_before_inspection",
+      "test_invalid_descriptor_refuses",
+      "test_admission_returns_only_kernel_metadata_and_does_not_read",
+      "test_each_echo_flag_refuses",
+      "test_nonprivate_mode_refuses",
+      "test_wrong_owner_refuses",
+      "test_regular_file_and_non_tty_character_device_refuse",
+      "test_different_terminals_refuse",
+      "test_replaced_fd_during_inspection_refuses",
+      "test_owned_fixture_proves_transport_cleanup_and_sibling_survival",
+      "test_release_rechecks_echo_before_any_child_input",
+      "test_registration_failure_never_releases_and_waits_for_owned_child",
+      "test_pty_setup_failure_closes_both_owned_descriptors",
+      "test_missing_proc_identity_closes_gate_without_bare_pid_signal",
+      "test_wrong_descriptor_access_mode_refuses",
+      "test_sigint_inside_popen_window_waits_for_the_actual_child",
+      "test_second_pipe_failure_closes_first_owned_pair"
+    ]
+  },
+  {
+    "file": "tests/test_opend_staging_window.py",
+    "top_level_calls": [
+      {
+        "line": 17,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 17,
+        "expression": "Path(__file__)"
+      },
+      {
+        "line": 18,
+        "expression": "importlib.util.spec_from_file_location('stage', ROOT / 'deploy/aws/opend/stage_console.py')"
+      },
+      {
+        "line": 19,
+        "expression": "importlib.util.module_from_spec(SPEC)"
+      },
+      {
+        "line": 21,
+        "expression": "SPEC.loader.exec_module(stage)"
+      },
+      {
+        "line": 22,
+        "expression": "datetime(2026, 10, 13, tzinfo=UTC)"
+      },
+      {
+        "line": 269,
+        "expression": "pytest.mark.skipif(sys.platform != 'linux', reason='native descriptors; root/manager mocked')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_valid_permit_is_staging_authority_only",
+      "test_malformed_or_wrong_authority_denied",
+      "test_unknown_and_credential_claims_denied",
+      "test_default_does_not_inspect_or_spawn",
+      "test_cli_has_no_arbitrary_authority",
+      "test_template_is_distinct_foreground_and_bounded",
+      "test_actual_owned_fixture",
+      "test_protected_reader_denies_link_and_mutable_parent",
+      "test_manager_wrong_authority_denies",
+      "test_manager_exact_contract",
+      "test_generated_configuration_has_fixed_direct_guard_and_no_recording",
+      "test_service_creates_pane_only_after_foreground_exec",
+      "test_installed_unit_pin_matches_exact_template_bytes",
+      "test_activation_transition_preserves_manager_authority",
+      "test_actual_context_terminal_rejection_precedes_release",
+      "test_actual_backend_context_denies_unknown_or_borrowed_before_terminal",
+      "test_actual_profile_admission_denies_before_backend_or_child",
+      "test_final_descriptor_replacement_refuses_actual_synthetic_gate",
+      "test_specific_protected_file_boundary_with_simulated_root_metadata",
+      "test_specific_vendor_descendant_boundary_not_parent_failure",
+      "test_registry_is_retained_before_interrupt_is_unblocked",
+      "test_no_effect_check_window_redacts_unexpected_error",
+      "test_owned_backend_stop_uses_retained_handle_and_preserves_sibling",
+      "test_credential_free_vendor_tree_rejects_mutability",
+      "test_backend_finish_signals_before_closing_handle",
+      "test_admission_failure_never_releases_actual_child",
+      "test_nonce_claim_is_exclusive_and_survives_reopen"
+    ]
+  },
+  {
+    "file": "tests/test_ops.py",
+    "top_level_calls": [
+      {
+        "line": 49,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 51,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_orders.py",
+    "top_level_calls": [
+      {
+        "line": 22,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 25,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_new_order_starts_pending_with_no_fills",
+      "test_quantity_must_be_positive",
+      "test_limit_price_must_be_positive",
+      "test_market_order_allows_no_limit_price",
+      "test_valid_transitions_follow_the_explicit_table",
+      "test_terminal_states_reject_every_event",
+      "test_accepting_an_accepted_order_is_rejected",
+      "test_working_order_cannot_be_accepted_again",
+      "test_partially_filled_order_cannot_be_rejected",
+      "test_fractional_quantities_reach_filled_without_float_error",
+      "test_orders_cannot_be_constructed_with_more_filled_than_quantity",
+      "test_fill_events_are_recorded_with_sequence_and_payload",
+      "test_average_fill_price_is_weighted_by_quantity",
+      "test_overfill_is_rejected_and_order_untouched",
+      "test_fill_without_payload_is_rejected",
+      "test_rejection_and_cancellation_record_the_reason",
+      "test_apply_returns_a_new_order_without_mutating_the_input",
+      "test_from_request_infers_limit_order_type",
+      "test_from_request_infers_market_order_type",
+      "test_from_request_carries_the_client_order_id"
+    ]
+  },
+  {
+    "file": "tests/test_owned_postgres_fixture.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_fixture_rejects_nonliteral_loopback",
+      "test_fixture_accepts_only_literal_loopback",
+      "test_profile_rejects_external_authority",
+      "test_profile_rejects_wrong_official_source",
+      "test_owned_path_refuses_borrowed_directory_and_symlink",
+      "test_environment_has_no_ambient_credentials_or_tracing",
+      "test_password_file_private_and_removed_after_use",
+      "test_output_redacts_password_and_raw_dsn",
+      "test_cleanup_rejects_pid_data_or_executable_mismatch",
+      "test_collision_fails_without_fallback",
+      "test_invalid_profile_cli_does_not_start_cluster_or_echo_values",
+      "test_wrong_binary_bytes_refused_before_execution",
+      "test_actual_process_identity_and_cleanup_fences",
+      "test_gate_count_cannot_certify_partial_suite",
+      "test_gate_refuses_failures_errors_and_skips",
+      "test_runtime_paths_reject_borrowed_symlink",
+      "test_source_admission_allows_only_qualifier_additions"
+    ]
+  },
+  {
+    "file": "tests/test_packet_copilot.py",
+    "top_level_calls": [
+      {
+        "line": 43,
+        "expression": "datetime(2026, 9, 3, 10, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 44,
+        "expression": "ModelMeta(name='fixture-copilot', version='v1', endpoint_kind='scripted')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_legacy_citation_serialization_is_byte_compatible",
+      "test_openapi_citation_contract_exposes_typed_fields",
+      "test_packet_source_resolves_exact_scalar_and_scalar_list_values",
+      "test_packet_source_refuses_bad_pointer_or_digest",
+      "test_citation_contract_keeps_packet_and_legacy_fields_disjoint",
+      "test_contracts_refuse_cross_packet_and_authority_shaped_output",
+      "test_valid_request_records_both_stages_and_reopens_idempotently",
+      "test_failures_degrade_without_persisting_or_mutating_packet",
+      "test_secret_is_redacted_before_analyst_and_critic_calls",
+      "test_store_rejects_tampered_or_duplicate_record_identity",
+      "test_accepted_record_refuses_naive_timestamp",
+      "test_critic_contract_requires_flags_only_for_flag_verdict",
+      "test_copilot_api_idle_ready_and_restart_reopen",
+      "test_copilot_api_model_unavailable_degrades_only_advisory_state",
+      "test_normal_workstation_reopens_accepted_record_without_model",
+      "test_copilot_api_preserves_packet_lookup_and_same_origin_failures"
+    ]
+  },
+  {
+    "file": "tests/test_packet_monitoring.py",
+    "top_level_calls": [
+      {
+        "line": 34,
+        "expression": "datetime(2026, 9, 2, 20, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 35,
+        "expression": "Instrument(venue=Venue.MOOMOO, symbol='NVDA', instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_entry_zone_arms_then_triggers_only_on_outside_to_inside_crossing",
+      "test_shared_observation_builder_preserves_the_packet_watch_mapping",
+      "test_registration_refuses_a_draft_packet",
+      "test_invalidation_requires_equality_or_above_then_strictly_below_and_preserves_event",
+      "test_cursor_refuses_gap_and_stale_uses_completed_xnys_sessions",
+      "test_reopens_exact_registration_and_byte_identical_observation_replays",
+      "test_register_and_check_is_one_durable_activation_record",
+      "test_replay_recomputes_terminal_event_identity",
+      "test_initial_or_continued_in_band_price_never_backfills_entry_trigger",
+      "test_price_causality_fail_closed_for_pre_asof_future_or_gapped_evidence",
+      "test_rejected_price_evidence_never_becomes_the_durable_crossing_cursor",
+      "test_registration_conflict_and_corrupt_replay_fail_closed",
+      "test_validate_replay_refuses_malformed_durable_ledger_bytes",
+      "test_validate_replay_refuses_evaluation_without_a_recorded_registration",
+      "test_stale_uses_xnys_holiday_and_early_close_boundaries",
+      "test_stale_freezes_the_oldest_history_or_forecast_evidence_time",
+      "test_stale_24_7_counts_completed_utc_sessions",
+      "test_replay_refuses_evaluation_with_missing_or_reordered_condition_results",
+      "test_forecast_drift_baseline_is_frozen_from_packet_not_mutable_registry",
+      "test_forecast_drift_uses_same_absolute_target_and_strict_risk_threshold",
+      "test_forecast_drift_compares_a_newer_revision_of_the_same_dataset",
+      "test_forecast_drift_refuses_missing_or_incompatible_candidate"
+    ]
+  },
+  {
+    "file": "tests/test_packet_reviews.py",
+    "top_level_calls": [
+      {
+        "line": 26,
+        "expression": "DemoScenario()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_review_is_one_atomic_idempotent_restart_safe_record",
+      "test_preview_refuses_drafts_and_corrupt_review_store",
+      "test_review_replay_rejects_outer_rehashed_embedded_packet_and_path_tampering",
+      "test_partial_or_unavailable_outcome_rejects_conclusive_classification",
+      "test_outcome_fence_is_stable_between_requests_when_no_local_evidence_changes",
+      "test_complete_daily_path_uses_strict_thresholds_and_discloses_same_bar_ambiguity",
+      "test_path_rejects_missing_forecast_session_future_generation_and_live_tail",
+      "test_post_recomposes_immediately_before_append_and_refuses_source_drift",
+      "test_filled_open_entry_has_fill_metrics_but_never_fabricates_realized_r",
+      "test_risk_refusal_and_operator_invoked_watch_coverage_remain_exact",
+      "test_pending_blocked_and_accepted_unfilled_paper_states_are_exact"
+    ]
+  },
+  {
+    "file": "tests/test_paper_proposals.py",
+    "top_level_calls": [
+      {
+        "line": 27,
+        "expression": "datetime(2026, 8, 12, 20, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 28,
+        "expression": "Instrument(symbol='NVDA', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_proposal_is_a_preview_and_pins_the_forecast_without_ordering",
+      "test_ledger_recovery_is_chronological_not_hash_id_order",
+      "test_ineligible_forecast_creates_a_blocked_non_confirmable_record",
+      "test_confirm_requires_exact_operator_token_then_crosses_quote_fence",
+      "test_confirmation_binds_a_resting_limit_without_fabricating_a_fill",
+      "test_confirmation_replay_is_exactly_once_even_concurrently",
+      "test_two_service_instances_share_one_exactly_once_confirmation_boundary",
+      "test_kernel_refusals_are_preserved_verbatim_and_never_retried",
+      "test_missing_journal_fails_before_submission_and_remains_retryable",
+      "test_confirmation_time_cannot_regress_before_paper_submission",
+      "test_forecast_that_ages_after_preview_is_blocked_before_order",
+      "test_later_retry_recovers_after_order_was_journaled_before_proposal_transition",
+      "test_demo_quote_must_be_explicitly_injected_and_is_marked_in_confirmation",
+      "test_demo_quote_must_match_instrument_and_time",
+      "test_future_real_quote_is_rejected_by_the_paper_kernel",
+      "test_terminal_replay_rejects_a_journal_order_that_changed_intent",
+      "test_terminal_replay_rejects_unexpected_order_identity_fields",
+      "test_confirmation_order_snapshot_is_deeply_immutable",
+      "test_ledger_rejects_tampering_partial_lines_and_illegal_transitions",
+      "test_ledger_recomputes_the_proposal_identity_seal",
+      "test_ledger_seal_covers_the_complete_instrument_and_forecast_lineage",
+      "test_terminal_replay_rejects_coordinated_order_id_tampering",
+      "test_terminal_replay_requires_exact_derived_fill_quantity"
+    ]
+  },
+  {
+    "file": "tests/test_persistence_jsonl.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_round_trip_is_byte_identical",
+      "test_write_replaces_the_whole_store",
+      "test_read_missing_root_or_file_is_empty",
+      "test_blank_lines_are_ignored",
+      "test_read_fails_closed_on_corrupt_line",
+      "test_read_fails_closed_on_schema_violation",
+      "test_read_attributes_the_offending_line_not_the_first",
+      "test_read_fails_closed_on_unreadable_bytes",
+      "test_read_fails_closed_on_duplicate_ids",
+      "test_append_refuses_a_duplicate",
+      "test_append_refuses_duplicate_without_touching_the_store",
+      "test_root_that_is_a_file_is_refused_on_read",
+      "test_root_that_is_a_file_is_refused_on_write",
+      "test_store_path_that_is_a_directory_is_refused",
+      "test_write_refuses_a_directory_path",
+      "test_symlinked_store_file_is_refused",
+      "test_symlinked_root_is_refused",
+      "test_scan_reports_leftover_temp_file",
+      "test_scan_reports_a_symlinked_store_file",
+      "test_scan_is_empty_on_a_clean_store",
+      "test_write_leaves_no_temp_file_behind",
+      "test_failed_replace_leaves_target_unchanged_and_no_orphan",
+      "test_extra_validate_is_applied_on_read",
+      "test_error_type_is_configurable",
+      "test_read_fails_closed_on_duplicate_secondary_key",
+      "test_read_allows_none_secondary_keys",
+      "test_primary_duplicate_uses_configured_article",
+      "test_append_refuses_only_primary_key_collision",
+      "test_update_replaces_the_matching_record",
+      "test_update_is_byte_identical",
+      "test_update_of_missing_record_is_refused",
+      "test_update_of_missing_record_does_not_touch_the_store",
+      "test_check_absent_refuses_duplicate_against_existing",
+      "test_read_without_key_does_not_deduplicate"
+    ]
+  },
+  {
+    "file": "tests/test_polymarket_market_data.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_fixture_provider_registers_in_the_registry",
+      "test_live_provider_is_refused_by_the_registry",
+      "test_live_provider_is_explicitly_live",
+      "test_discovery_yields_the_recorded_event_markets",
+      "test_discovery_resolution_stays_empty_from_gamma",
+      "test_fixture_resolution_reads_the_clob_winner_flags",
+      "test_market_quote_takes_best_levels_order_agnostically",
+      "test_market_quote_refuses_a_symbol_mismatch",
+      "test_order_book_canonicalizes_to_best_first",
+      "test_order_book_refuses_a_wrong_instrument_symbol",
+      "test_order_book_refuses_a_wrong_venue_instrument",
+      "test_bars_and_trades_fail_closed",
+      "test_prices_history_serves_the_recorded_series",
+      "test_canonical_books_fixture_matches_the_wire_derived_book",
+      "test_canonical_events_fixture_round_trips_into_event_markets",
+      "test_live_events_require_an_explicit_limit",
+      "test_live_quote_and_history_drill_through_the_real_parsers",
+      "test_live_history_requires_a_bounded_aware_range",
+      "test_live_order_book_drill",
+      "test_sdk_transport_constructs_the_client_keyless",
+      "test_sdk_transport_missing_sdk_is_typed",
+      "test_sdk_transport_sdk_failures_become_unavailable"
+    ]
+  },
+  {
+    "file": "tests/test_polymarket_wire.py",
+    "top_level_calls": [
+      {
+        "line": 25,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_gamma_events_parses_the_resolved_nba_event",
+      "test_gamma_events_parses_the_active_fed_event",
+      "test_gamma_events_rejects_a_non_list_payload",
+      "test_gamma_token_outcome_count_mismatch_fails_closed",
+      "test_gamma_plain_list_outcomes_are_rejected",
+      "test_gamma_outcome_price_count_mismatch_fails_closed",
+      "test_gamma_non_finite_price_fails_closed",
+      "test_clob_book_parses_the_recorded_yes_token_book",
+      "test_clob_book_error_payload_is_a_typed_refusal",
+      "test_clob_book_allows_empty_levels_but_requires_keys",
+      "test_clob_book_rejects_out_of_range_levels",
+      "test_clob_book_rejects_boolean_prices",
+      "test_clob_book_rejects_a_naive_or_garbage_timestamp",
+      "test_clob_market_parses_the_recorded_fed_market",
+      "test_clob_market_error_payload_is_a_typed_refusal",
+      "test_clob_market_requires_the_fee_contract_fields",
+      "test_prices_history_parses_the_recorded_series",
+      "test_prices_history_error_payload_is_a_typed_refusal",
+      "test_prices_history_requires_the_history_key",
+      "test_prices_history_rejects_out_of_order_rows",
+      "test_prices_history_rejects_array_rows",
+      "test_fee_rate_parses_the_recorded_contract",
+      "test_fee_rate_missing_base_fee_fails_closed",
+      "test_tick_size_parses_the_recorded_contract",
+      "test_tick_size_non_positive_fails_closed"
+    ]
+  },
+  {
+    "file": "tests/test_portfolio_constraints.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_portfolio_optimizer.py",
+    "top_level_calls": [],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_portfolio_reports.py",
+    "top_level_calls": [
+      {
+        "line": 41,
+        "expression": "datetime(2026, 1, 1, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_portfolio_scenarios.py",
+    "top_level_calls": [
+      {
+        "line": 31,
+        "expression": "datetime(2026, 1, 1, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_price_forecast.py",
+    "top_level_calls": [
+      {
+        "line": 35,
+        "expression": "Instrument(symbol='NVDA', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 41,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL, currency='USD')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_forecast_has_three_horizons_quantiles_and_lineage",
+      "test_forecast_preserves_exact_trusted_manifest_and_quality_identity",
+      "test_history_and_forecast_reject_partial_trusted_lineage",
+      "test_artifact_is_deeply_frozen_and_self_consistent",
+      "test_future_flip_does_not_change_earlier_oos_predictions",
+      "test_first_oos_origin_uses_exactly_252_preceding_returns",
+      "test_insufficient_history_is_reported_as_an_ineligible_artifact",
+      "test_quality_is_derived_from_bars_and_stale_artifact_fails_closed",
+      "test_weekday_gap_is_detected_even_when_history_service_could_not_check_calendar",
+      "test_live_tail_and_non_daily_inputs_are_refused_not_relabelled",
+      "test_crypto_future_path_uses_every_calendar_day_and_equity_skips_weekends",
+      "test_registry_writes_byte_stable_artifacts_and_re_resolves_dataset_pin",
+      "test_registry_refuses_unverified_trusted_forecast_lineage",
+      "test_registry_resolves_trusted_forecast_through_exact_catalog",
+      "test_registry_rejects_missing_or_tampered_artifact_file",
+      "test_registry_refuses_a_manifest_revision_that_moved",
+      "test_registry_refuses_same_revision_manifest_coverage_expansion",
+      "test_registry_requires_trusted_calendar_and_adjustment_binding",
+      "test_forecast_cannot_predate_manifest_or_strip_limitations",
+      "test_generated_at_and_model_version_are_part_of_identity",
+      "test_650_sessions_can_pass_every_horizon_without_relaxing_leakage",
+      "test_forecast_cost_and_identity_are_bounded_to_latest_650_sessions",
+      "test_source_and_license_are_part_of_identity_and_adjusted_close_is_refused",
+      "test_artifact_validator_recomputes_metrics_and_eligibility",
+      "test_registry_recomputes_forecast_values_from_pinned_history",
+      "test_registry_rejects_extra_artifact_entries",
+      "test_registry_rejects_malformed_id_before_path_lookup",
+      "test_registry_refuses_link_or_windows_junction_root"
+    ]
+  },
+  {
+    "file": "tests/test_provider_capabilities.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_registry_resolves_one_exact_read_only_capability",
+      "test_registry_never_upgrades_public_data_to_paper_broker_access",
+      "test_registry_rejects_out_of_capability_requests",
+      "test_registry_rejects_non_available_entitlement",
+      "test_registry_allows_multiple_provider_ids_for_one_venue",
+      "test_registry_rejects_duplicate_provider_ids_independent_of_venue_lookup",
+      "test_registry_rejects_descriptor_with_wrong_provider_venue",
+      "test_legacy_fixture_descriptor_is_not_eligible_for_exact_resolution",
+      "test_explicit_fixture_descriptor_cannot_claim_live_access",
+      "test_fixture_implementation_cannot_change_its_mode_to_live",
+      "test_default_fixture_mode_cannot_advertise_live_access",
+      "test_capability_records_enforceable_collection_bounds",
+      "test_entitled_capability_requires_an_aware_probe_time",
+      "test_entitlement_probe_rejects_tzinfo_without_a_utc_offset",
+      "test_cursor_pagination_requires_a_bounded_page_size",
+      "test_registry_rejects_malformed_provider_mode",
+      "test_membership_keeps_legacy_get_semantics_for_live_only_venues",
+      "test_registry_rejects_unknown_provider_and_request_venue_mismatch",
+      "test_descriptor_rejects_ambiguous_capabilities",
+      "test_descriptor_allows_disjoint_limits_for_one_operation",
+      "test_non_bar_history_capability_can_declare_collection_bounds",
+      "test_snapshot_only_capability_forbids_history_limits",
+      "test_bars_request_requires_an_interval",
+      "test_non_bar_request_rejects_an_interval"
+    ]
+  },
+  {
+    "file": "tests/test_providers.py",
+    "top_level_calls": [
+      {
+        "line": 19,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 22,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 25,
+        "expression": "Instrument(symbol='MSFT', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, currency='USD')"
+      },
+      {
+        "line": 29,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_fixture_bars_are_canonical_and_in_provider_order",
+      "test_fixture_bars_filter_by_inclusive_range",
+      "test_fixture_bars_reject_naive_bounds",
+      "test_fixture_bars_reject_wrong_interval",
+      "test_fixture_order_books_are_canonical",
+      "test_fixture_trades_map_sides_and_sequences",
+      "test_moomoo_fixture_bars_check_symbol_and_interval",
+      "test_moomoo_fixture_books_and_trades",
+      "test_missing_fixture_fails_closed",
+      "test_registry_roundtrip_and_missing_venue",
+      "test_registry_rejects_duplicate_venue",
+      "test_registry_rejects_non_fixture_modes",
+      "test_registry_rejects_provider_without_venue",
+      "test_fixture_rejects_instrument_from_another_venue",
+      "test_naive_fixture_timestamp_fails_closed",
+      "test_fixture_timestamps_normalize_offsets",
+      "test_empty_fixture_fails_closed",
+      "test_fixture_trades_reject_unknown_side",
+      "test_fixture_bars_reject_mixed_intervals",
+      "test_moomoo_books_and_trades_check_symbol",
+      "test_books_and_trades_filter_by_inclusive_range",
+      "test_provider_isolation_lake_bytes_are_provider_agnostic"
+    ]
+  },
+  {
+    "file": "tests/test_quality_evidence.py",
+    "top_level_calls": [
+      {
+        "line": 30,
+        "expression": "datetime(2026, 8, 14, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_original_failure_remains_after_amended_pass",
+      "test_evaluation_identity_covers_exact_counts",
+      "test_evaluation_rejects_semantically_inconsistent_evidence",
+      "test_store_rejects_self_addressed_fabricated_pass",
+      "test_evidence_tampering_fails_closed",
+      "test_amendment_must_reference_existing_matching_evidence",
+      "test_evaluation_requires_its_exact_immutable_policy",
+      "test_evaluation_rejects_missing_or_unadmitted_manifest",
+      "test_candidate_evidence_requires_explicit_graph_admission",
+      "test_report_binds_exact_manifest_to_recorded_evaluation"
+    ]
+  },
+  {
+    "file": "tests/test_quality_gate.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_every_pytest_gate_command_has_a_distinct_external_basetemp",
+      "test_non_pytest_gate_commands_do_not_receive_basetemp",
+      "test_executor_removes_the_owned_pytest_basetemp_after_exit",
+      "test_fast_gate_excludes_browser_and_declared_slow_targets",
+      "test_fast_gate_deduplicates_a_reviewed_python_target",
+      "test_fast_gate_runs_a_reviewed_frontend_component_test",
+      "test_npm_and_vitest_argvs_are_shell_free_on_windows_and_posix",
+      "test_mapped_frontend_command_collects_the_existing_vitest_file",
+      "test_domain_gate_has_reviewed_targets_and_mandatory_safety_floor",
+      "test_domain_targets_are_immutable_and_reject_unknown_domain",
+      "test_workstation_subdomain_command_is_complete_bounded_and_keeps_timeout",
+      "test_research_framework_change_has_a_real_non_slow_positional_contract",
+      "test_e2e_gate_discovers_every_matching_test_file",
+      "test_diagnostic_full_is_fail_fast_but_never_certification",
+      "test_fast_base_refuses_every_stronger_decision_with_exact_follow_up_commands",
+      "test_fast_base_docs_only_keeps_safety_floor",
+      "test_executor_timeout_reaps_a_real_grandchild",
+      "test_posix_cleanup_kills_the_group_after_its_leader_exits",
+      "test_posix_timeout_reaps_a_sigterm_resistant_grandchild",
+      "test_quality_gate_script_runs_from_the_repository_root",
+      "test_executor_stops_after_the_first_failed_command",
+      "test_tier_plan_only_does_not_spawn",
+      "test_executor_timeout_retains_machine_readable_evidence",
+      "test_executor_retains_real_slow_test_summary"
+    ]
+  },
+  {
+    "file": "tests/test_quality_policies.py",
+    "top_level_calls": [
+      {
+        "line": 33,
+        "expression": "datetime(2026, 8, 14, 20, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_policy_identity_changes_with_thresholds",
+      "test_hard_completeness_cannot_be_weakened_by_policy",
+      "test_clean_completed_window_passes",
+      "test_bar_latency_starts_at_candle_close_when_provider_time_is_absent",
+      "test_feature_cardinality_uses_the_declared_two_period_window",
+      "test_hard_sla_counts_and_thresholds_fail",
+      "test_post_grace_sla_skips_freshness_and_latency_for_corporate_actions",
+      "test_changed_historical_overlap_is_measured_from_row_content",
+      "test_explicit_amendment_can_reconcile_a_provider_correction",
+      "test_raw_overlap_uses_row_content_not_whole_batch_digest",
+      "test_normalized_split_overlap_uses_typed_row_fingerprints",
+      "test_raw_measurement_reconciles_manifest_rows_with_envelope_events",
+      "test_malformed_normalized_split_object_cannot_pass",
+      "test_grace_and_xnys_holiday_are_not_due",
+      "test_xnys_premarket_window_is_not_due",
+      "test_xnys_daily_bar_cannot_pass_before_session_close",
+      "test_out_of_session_rows_fail_instead_of_hiding_behind_not_due",
+      "test_grace_never_masks_hard_integrity_failures",
+      "test_complete_claim_cannot_pass_before_grace_deadline",
+      "test_unknown_entitlement_is_unavailable",
+      "test_unavailable_state_does_not_mask_hard_integrity_failure",
+      "test_event_stream_has_no_fabricated_bar_denominator",
+      "test_real_dataset_rejects_synthetic_lineage",
+      "test_policy_rejects_venues_outside_current_trusted_data_scope",
+      "test_real_dataset_requires_a_real_raw_envelope_ancestor"
+    ]
+  },
+  {
+    "file": "tests/test_quality_publication.py",
+    "top_level_calls": [
+      {
+        "line": 41,
+        "expression": "datetime(2026, 8, 14, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_authoritative_policies_have_a_post_grace_observation_window",
+      "test_quality_report_is_checkpoint_bound_and_retry_stable",
+      "test_real_graph_uses_default_quality_builder",
+      "test_catalog_projects_exact_committed_quality_and_lineage",
+      "test_fixture_checkpoint_rejects_a_quality_report_identity",
+      "test_real_custom_builder_cannot_relax_the_authoritative_policy",
+      "test_real_custom_builder_cannot_shrink_the_authoritative_window",
+      "test_quality_window_includes_an_inclusive_terminal_bar_open",
+      "test_moomoo_terminal_open_is_included_independently_of_observed_rows",
+      "test_normal_manifest_reads_fail_closed_when_quality_closure_is_missing",
+      "test_quality_corruption_is_isolated_to_the_owning_job_and_datasets"
+    ]
+  },
+  {
+    "file": "tests/test_quote_source_time_safety.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_invalid_or_old_source_is_refused",
+      "test_invalid_or_old_receipt_is_refused",
+      "test_source_horizon_boundary_and_quote_timestamp",
+      "test_resolve_preserves_source_clock"
+    ]
+  },
+  {
+    "file": "tests/test_raw_envelopes.py",
+    "top_level_calls": [
+      {
+        "line": 12,
+        "expression": "datetime(2026, 8, 12, 13, 30, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_schema_v1_canonical_bytes_round_trip_without_new_window_nulls",
+      "test_fixture_envelope_captures_raw_object_and_is_nonqualifying",
+      "test_real_public_envelope_needs_no_entitlement_to_qualify",
+      "test_envelope_rejects_ingestion_before_receipt",
+      "test_envelope_rejects_event_after_knowledge_time"
+    ]
+  },
+  {
+    "file": "tests/test_reconciliation_engine.py",
+    "top_level_calls": [
+      {
+        "line": 35,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.MOOMOO, instrument_type=InstrumentType.EQUITY, metadata={'market': 'US'})"
+      },
+      {
+        "line": 41,
+        "expression": "datetime(2026, 8, 8, 13, 30, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 42,
+        "expression": "datetime(2026, 8, 8, 13, 30, 1, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_finding_builds_a_typed_finding",
+      "test_dedupe_by_id_keeps_last",
+      "test_is_terminal",
+      "test_compare_quantities_order_drift",
+      "test_compare_quantities_skips_undeclared_order_qty",
+      "test_compare_quantities_journal_ahead_is_drift",
+      "test_compare_prices_limit_drift",
+      "test_compare_prices_execution_drift",
+      "test_compare_positions_unexplained_broker_position",
+      "test_compare_positions_drift_respects_tolerance",
+      "test_compare_fees_drift",
+      "test_compare_fees_missing_fee_data",
+      "test_compare_fill_ids_revoked"
+    ]
+  },
+  {
+    "file": "tests/test_recovery.py",
+    "top_level_calls": [
+      {
+        "line": 46,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 47,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_release.py",
+    "top_level_calls": [
+      {
+        "line": 25,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 25,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_release_gate.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_console_summary_replaces_unencodable_log_characters",
+      "test_venv_script_resolves_platform_console_entrypoint",
+      "test_full_pytest_timeout_exceeds_measured_baseline",
+      "test_full_pytest_command_is_exhaustive_with_duration_reporting",
+      "test_run_step_streams_log_before_process_exit",
+      "test_run_step_reports_nonzero_exit_and_retains_failure_tail",
+      "test_run_step_timeout_keeps_partial_log_and_reaps_child",
+      "test_run_step_timeout_reaps_descendants",
+      "test_run_step_emits_low_noise_lifecycle_events",
+      "test_run_step_emits_one_first_failure_event_and_timeout_exit_code",
+      "test_run_step_accepts_zero_exit_during_final_controller_wait",
+      "test_run_step_observes_failure_written_between_sample_and_exit_poll",
+      "test_run_step_detects_quiet_pytest_failure_progress",
+      "test_run_step_detects_mixed_quiet_pytest_failure_progress_early",
+      "test_run_step_detects_all_failure_quiet_status_rows_early",
+      "test_step_log_observer_resets_after_truncate_and_regrow",
+      "test_step_log_observer_ignores_generic_failure_letter_before_percentage",
+      "test_step_log_observer_requires_quiet_status_line_end",
+      "test_run_step_detects_marker_before_large_log_tail",
+      "test_initial_event_failure_reaps_owned_tree"
+    ]
+  },
+  {
+    "file": "tests/test_release_version_tool.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_release_notes_select_highest_pep440_version",
+      "test_version_tags_cover_compatible_patch_candidates"
+    ]
+  },
+  {
+    "file": "tests/test_research_backup_qualification.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_profile_never_accepts_borrowed_authority",
+      "test_profile_requires_exact_fields",
+      "test_default_cli_preflight_has_no_database_repository_or_output",
+      "test_containment_rejects_escape",
+      "test_containment_rejects_existing_restore_target_and_links",
+      "test_private_reader_refuses_links_hardlinks_modes",
+      "test_exact_nonempty_manifest_and_bytes_validate",
+      "test_incomplete_or_changed_bundle_cannot_publish_receipt",
+      "test_receipt_requires_actual_encrypted_snapshot_and_checked_bundle",
+      "test_wrong_signing_notice_or_tool_pin_is_not_an_admitted_tool",
+      "test_cli_refusal_scrubs_configuration",
+      "test_command_output_bound_does_not_limit_owned_database_files",
+      "test_bounded_command_refuses_output_flood_and_timeout",
+      "test_only_new_corrupt_copy_is_made_writable",
+      "test_stale_pid_cannot_stop_an_owned_or_borrowed_process",
+      "test_infrastructure_failure_is_not_a_negative_witness",
+      "test_expected_crypto_refusal_requires_exit_and_matching_tool_evidence",
+      "test_whole_fixture_deadline_covers_noncommand_work",
+      "test_server_log_is_drained_but_capped_without_limiting_data_files",
+      "test_refused_stop_still_removes_generated_pgpass",
+      "test_failed_server_spawn_removes_generated_private_inputs",
+      "test_kernel_identity_failure_keeps_spawned_handle_registered",
+      "test_deadline_interrupt_waits_for_process_handle_registration",
+      "test_command_kernel_identity_failure_is_registered_pending",
+      "test_command_deadline_waits_for_registered_kernel_handle",
+      "test_real_owned_command_deadline_interruption_is_terminal"
+    ]
+  },
+  {
+    "file": "tests/test_research_baselines.py",
+    "top_level_calls": [
+      {
+        "line": 40,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol=symbol)"
+      },
+      {
+        "line": 42,
+        "expression": "WalkForwardSpec(train_bars=30, test_bars=10, step_bars=10)"
+      },
+      {
+        "line": 43,
+        "expression": "CostModel(fee_bps=5, half_spread_bps=5, slippage_bps=2)"
+      },
+      {
+        "line": 44,
+        "expression": "CostModel(fee_bps=0, half_spread_bps=0, slippage_bps=0)"
+      },
+      {
+        "line": 50,
+        "expression": "UniverseMember(venue=Venue.HYPERLIQUID, symbol=symbol)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_momentum_weights_long_top_half",
+      "test_mean_reversion_weights_long_bottom_half",
+      "test_weight_ties_break_on_symbol",
+      "test_risk_parity_weights_inverse_volatility",
+      "test_risk_parity_excludes_zero_volatility_symbols",
+      "test_risk_parity_all_zero_volatility_fails_closed",
+      "test_walk_forward_window_structure",
+      "test_walk_forward_insufficient_bars_fails_closed",
+      "test_walk_forward_misaligned_series_fails_closed",
+      "test_walk_forward_mixed_lengths_fail_closed",
+      "test_walk_forward_unknown_strategy_fails_closed",
+      "test_costs_reduce_returns_and_are_charged_once",
+      "test_metrics_schema_is_fixed",
+      "test_sharpe_is_none_when_returns_are_flat",
+      "test_report_runs_end_to_end",
+      "test_report_artifacts_are_well_formed",
+      "test_report_runner_refuses_revision_mismatch",
+      "test_report_runner_refuses_empty_member",
+      "test_report_runner_refuses_duplicate_member",
+      "test_report_runner_refuses_empty_universe",
+      "test_report_runner_refuses_symbol_on_multiple_venues",
+      "test_report_runner_refuses_unknown_strategy",
+      "test_reproducibility_regenerates_identical_reports",
+      "test_rerun_into_same_registry_is_refused",
+      "test_low_volatility_weights_long_quietest_bottom_half",
+      "test_low_volatility_includes_zero_volatility_symbols",
+      "test_book_imbalance_weights_long_signal_top_half",
+      "test_baseline_weight_ties_break_on_symbol",
+      "test_book_imbalance_without_signals_fails_closed",
+      "test_signal_series_must_match_the_bar_grid",
+      "test_signal_series_must_match_the_universe",
+      "test_book_imbalance_weights_use_train_window_signals_only",
+      "test_low_volatility_report_runs_end_to_end",
+      "test_book_imbalance_report_runs_end_to_end",
+      "test_signal_reports_are_byte_reproducible",
+      "test_signal_inputs_are_part_of_the_report_identity",
+      "test_report_id_includes_the_signals_digest"
+    ]
+  },
+  {
+    "file": "tests/test_research_drift.py",
+    "top_level_calls": [
+      {
+        "line": 64,
+        "expression": "datetime(2026, 1, 5, tzinfo=UTC)"
+      },
+      {
+        "line": 65,
+        "expression": "CostModel(fee_bps=1, half_spread_bps=1, slippage_bps=1)"
+      },
+      {
+        "line": 66,
+        "expression": "WalkForwardSpec(train_bars=30, test_bars=10, step_bars=10)"
+      },
+      {
+        "line": 67,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol=symbol)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_research_ensemble.py",
+    "top_level_calls": [
+      {
+        "line": 52,
+        "expression": "pd.Timestamp('2026-01-05T00:00:00Z').to_pydatetime()"
+      },
+      {
+        "line": 52,
+        "expression": "pd.Timestamp('2026-01-05T00:00:00Z')"
+      },
+      {
+        "line": 53,
+        "expression": "pd.Timestamp('2026-01-06T00:00:00Z').to_pydatetime()"
+      },
+      {
+        "line": 53,
+        "expression": "pd.Timestamp('2026-01-06T00:00:00Z')"
+      },
+      {
+        "line": 55,
+        "expression": "WalkForwardSpec(train_bars=30, test_bars=10, step_bars=10)"
+      },
+      {
+        "line": 56,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol=symbol)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_research_features.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_registry_refuses_unverified_trusted_feature_lineage",
+      "test_registry_resolves_trusted_feature_through_exact_catalog",
+      "test_compute_features_reads_exact_trusted_manifest_without_v1_fallback",
+      "test_compute_features_rejects_trusted_manifest_for_another_instrument"
+    ]
+  },
+  {
+    "file": "tests/test_research_job_artifacts.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_canonical_result_excludes_receipt_time",
+      "test_publish_result_envelope_is_exact_job_owned_bytes",
+      "test_publication_rejects_invalid_numerical_or_lineage_content",
+      "test_job_id_traversal_rejects_before_write"
+    ]
+  },
+  {
+    "file": "tests/test_research_job_options.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_configured_fixture_options",
+      "test_wrong_root_or_no_configured_input_disables",
+      "test_unsupported_or_incomplete_fixture_disables",
+      "test_changed_pin_never_reuses_cached_options",
+      "test_symlink_root_rejected_before_read"
+    ]
+  },
+  {
+    "file": "tests/test_research_job_runner.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_pinned_baseline_matches_existing_engine",
+      "test_changed_inputs_reject_before_execution",
+      "test_two_attempts_have_identical_canonical_bytes_with_separate_receipts",
+      "test_old_attempt_and_cancel_cannot_publish",
+      "test_crash_after_object_upload_leaves_no_success",
+      "test_timeout_kills_only_owned_worker",
+      "test_active_child_is_stopped_on_cancellation",
+      "test_fractional_cpu_is_explicitly_unsupported",
+      "test_windows_launcher_cannot_escape_before_assignment",
+      "test_windows_memory_and_one_cpu_limits_are_real",
+      "test_failed_windows_setup_reaps_direct_child",
+      "test_linux_without_crash_safe_limits_is_explicitly_rejected",
+      "test_boot_eof_does_not_authorize_baseline",
+      "test_runtime_digest_binds_python_build",
+      "test_owner_death_kills_tree_and_preserves_sibling",
+      "test_owned_worker_crash_recovers_within_ninety_seconds"
+    ]
+  },
+  {
+    "file": "tests/test_research_job_store.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_same_key_same_job_and_conflict",
+      "test_expired_attempt_cannot_publish",
+      "test_cancel_revokes_publication",
+      "test_analysis_outbox_is_atomic_and_independent",
+      "test_cancel_analysis_preserves_success",
+      "test_admission_rejects_changed_manifest_and_permission",
+      "test_concurrency_and_artifact_lineage_fail_closed",
+      "test_unavailable_is_sanitized",
+      "test_cli_submit_status_reopen",
+      "test_rejected_admission_never_queues",
+      "test_heartbeat_and_pinned_implementation",
+      "test_cli_errors_never_echo_user_payload",
+      "test_analysis_citations_must_resolve_to_published_evidence",
+      "test_analysis_archive_required_and_verified",
+      "test_successful_analysis_replays_archived_reference",
+      "test_v2_manifest_has_explicit_unsupported_reason",
+      "test_missing_rights_has_explicit_permission_reason"
+    ]
+  },
+  {
+    "file": "tests/test_research_jobs.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_request_and_registry_reject_unsafe_inputs",
+      "test_registry_defaults_and_canonical_digest",
+      "test_all_public_contracts_reject_extra_fields",
+      "test_analysis_failure_before_model_has_no_fabricated_metadata",
+      "test_successful_analysis_requires_generated_metadata_and_citations",
+      "test_fixture_pin_rejects_paths_before_read"
+    ]
+  },
+  {
+    "file": "tests/test_research_jobs_api.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_submit_idempotency_409_and_unavailable_503",
+      "test_unqualified_configuration_cannot_submit",
+      "test_unknown_schema_and_source_identity_reject",
+      "test_transport_maps_options_jobs_and_cancel_without_retry",
+      "test_errors_do_not_echo_credentials_or_follow_redirects",
+      "test_bounded_json_and_options_schema_reject",
+      "test_only_fixed_private_tls_origin",
+      "test_api_validation_never_echoes_secret",
+      "test_local_options_must_use_authoritative_worker_root",
+      "test_historical_report_and_same_key_replay_survive_engine_upgrade",
+      "test_remote_conflict_stays_409",
+      "test_local_and_remote_immutable_report_reload",
+      "test_artifact_identity_schema_and_bounds_reject"
+    ]
+  },
+  {
+    "file": "tests/test_research_models.py",
+    "top_level_calls": [
+      {
+        "line": 39,
+        "expression": "datetime(2026, 1, 5, tzinfo=UTC)"
+      },
+      {
+        "line": 40,
+        "expression": "datetime(2026, 1, 7, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_research_pipelines.py",
+    "top_level_calls": [
+      {
+        "line": 55,
+        "expression": "pd.Timestamp('2026-01-05T00:00:00Z').to_pydatetime()"
+      },
+      {
+        "line": 55,
+        "expression": "pd.Timestamp('2026-01-05T00:00:00Z')"
+      },
+      {
+        "line": 56,
+        "expression": "pd.Timestamp('2026-01-06T00:00:00Z').to_pydatetime()"
+      },
+      {
+        "line": 56,
+        "expression": "pd.Timestamp('2026-01-06T00:00:00Z')"
+      },
+      {
+        "line": 58,
+        "expression": "CostModel(fee_bps=1, half_spread_bps=1, slippage_bps=1)"
+      },
+      {
+        "line": 59,
+        "expression": "WalkForwardSpec(train_bars=30, test_bars=10, step_bars=10)"
+      },
+      {
+        "line": 60,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol=symbol)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_research_reports.py",
+    "top_level_calls": [
+      {
+        "line": 29,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol='AAA')"
+      },
+      {
+        "line": 30,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol='BBB')"
+      },
+      {
+        "line": 31,
+        "expression": "UniverseMember(venue=Venue.MOOMOO, symbol='CCC')"
+      },
+      {
+        "line": 33,
+        "expression": "WalkForwardSpec(train_bars=30, test_bars=10, step_bars=10)"
+      },
+      {
+        "line": 34,
+        "expression": "CostModel(fee_bps=5, half_spread_bps=5, slippage_bps=2)"
+      },
+      {
+        "line": 35,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_cost_model_rate_sums_bps",
+      "test_cost_model_zero_is_allowed",
+      "test_cost_model_rejects_negative",
+      "test_cost_model_rejects_non_finite",
+      "test_window_spec_rejects_one_bar_train",
+      "test_window_spec_rejects_overlapping_segments",
+      "test_window_spec_test_starts",
+      "test_window_spec_insufficient_grid_fails_closed",
+      "test_universe_member_rejects_empty_symbol",
+      "test_report_id_is_deterministic_and_order_independent",
+      "test_report_id_changes_with_setup",
+      "test_report_round_trips_through_model",
+      "test_report_rejects_id_mismatch",
+      "test_report_rejects_unknown_strategy",
+      "test_report_rejects_bad_interval",
+      "test_report_rejects_naive_created_at",
+      "test_report_rejects_non_finite_metric",
+      "test_artifact_paths_derive_from_report_id",
+      "test_registry_records_and_reads_back",
+      "test_registry_refuses_duplicate_id",
+      "test_registry_refuses_dangling_pin",
+      "test_registry_refuses_revision_mismatch",
+      "test_registry_resolve_returns_pinned_dataset",
+      "test_registry_read_fails_closed_on_corrupt_line",
+      "test_registry_read_fails_closed_on_duplicate_ids",
+      "test_registry_resolve_refuses_moved_manifest"
+    ]
+  },
+  {
+    "file": "tests/test_research_service_runtime.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_gate_selects_the_lock_for_its_actual_runtime",
+      "test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime",
+      "test_non_cpython_cannot_use_the_cpython_lock"
+    ]
+  },
+  {
+    "file": "tests/test_research_workstation_wiring.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_unbound_research_is_explicitly_unavailable_without_breaking_markets",
+      "test_research_mutations_use_the_workstation_origin_guard"
+    ]
+  },
+  {
+    "file": "tests/test_runtime.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_build_stores_under_a_demo_root",
+      "test_build_stores_uses_settings_defaults_without_a_root"
+    ]
+  },
+  {
+    "file": "tests/test_scenario_calendar.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_legacy_forecast_retains_pre_xnys_bytes_and_identity",
+      "test_xnys_age_skips_christmas_weekend_and_counts_missing_sessions",
+      "test_xnys_config_fails_closed_for_unsupported_calendar_and_off_grid_history",
+      "test_registry_restarts_and_replays_both_calendar_configurations",
+      "test_xnys_internal_validator_refuses_changed_projection_dates_and_age",
+      "test_demo_xnys_history_has_650_coherent_completed_sessions",
+      "test_legacy_demo_generator_keeps_original_bytes",
+      "test_scoped_demo_seeder_labels_and_reopens_xnys_forecasts",
+      "test_xnys_forecast_uses_holidays_and_ny_daily_grid_across_dst"
+    ]
+  },
+  {
+    "file": "tests/test_scenario_lab.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_legacy_serialization_preserves_pre_extension_canonical_id",
+      "test_legacy_route_dispatches_daily_freshness_by_forecast_version",
+      "test_selected_horizon_changes_targets_and_survives_store_restart",
+      "test_selected_evidence_requires_strict_improvement_and_sample_gate",
+      "test_missing_or_misbound_selected_evidence_abstains",
+      "test_stale_and_artifact_wide_blockers_cannot_be_relaxed",
+      "test_child_cannot_change_frozen_horizon_or_history",
+      "test_workspace_save_binds_exact_horizon_and_reopens_without_current_history",
+      "test_exact_forecast_never_falls_back_or_accepts_misbound_chart",
+      "test_monitor_and_review_choose_seven_but_legacy_keeps_thirty",
+      "test_http_selected_query_and_save_roundtrip",
+      "test_outcome_replay_rejects_changed_selected_session_sequence",
+      "test_new_lab_and_proposal_age_skip_xnys_holidays_while_legacy_keeps_weekdays"
+    ]
+  },
+  {
+    "file": "tests/test_security.py",
+    "top_level_calls": [
+      {
+        "line": 24,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 24,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_server_market_inventory.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_ready_forwarded_gateway_is_personal_pc_and_stale_ingestion",
+      "test_native_listener_does_not_prove_ingestion",
+      "test_closed_data_is_accepted_by_shared_calendar_policy",
+      "test_unknown_delay_or_forward_target_stays_unknown",
+      "test_inventory_declares_crypto_observation_clock_and_lag"
+    ]
+  },
+  {
+    "file": "tests/test_server_market_witness.py",
+    "top_level_calls": [
+      {
+        "line": 16,
+        "expression": "Path('deploy/aws/opend/gateway-profile.json')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_native_identity_contains_actual_process_socket_and_artifact",
+      "test_native_admission_refuses_forward_public_wrong_owner_or_missing_proof",
+      "test_concurrent_pid_or_socket_replacement_invalidates_identity",
+      "test_blocked_profile_stops_before_native_sdk_or_network",
+      "test_saved_identity_claim_cannot_bypass_real_native_admission",
+      "test_complete_bracket_evidence_still_does_not_certify_application_routing_or_pc_independence",
+      "test_closed_latest_session_is_normal_coverage_with_live_acceptance_pending",
+      "test_unresolved_source_clocks_or_policy_cannot_pass",
+      "test_false_acceptance_evidence_fails_closed",
+      "test_json_reader_bounds_response_and_disallows_redirects",
+      "test_owned_child_deadline_and_output_limit_are_enforced",
+      "test_cli_blocked_is_nonzero_and_archives_redacted_pending",
+      "test_output_directory_is_exclusive_and_does_not_overwrite_existing_evidence",
+      "test_invalid_build_and_profile_do_not_echo_untrusted_values",
+      "test_incomplete_or_shared_socket_ownership_is_not_certified",
+      "test_partial_child_result_cannot_escape_whole_child_deadline",
+      "test_market_only_projection_uses_real_contract_and_drops_free_text",
+      "test_account_or_fetched_endpoint_is_refused_before_network",
+      "test_provider_uses_quote_only_client_and_reduces_raw_fields",
+      "test_proposal_boolean_is_strict",
+      "test_bar_lineage_flags_are_strict",
+      "test_sdk_version_mismatch_refuses_client_construction",
+      "test_native_candidate_requires_qualified_flags_even_if_profile_claims_qualified",
+      "test_normal_poll_lag_is_checked_by_shared_policy_not_exact_quote_clock_equality",
+      "test_source_provider_quote_coverage_is_checked_independently",
+      "test_six_native_brackets_are_archived_but_cutover_remains_pending",
+      "test_post_sample_identity_replacement_does_not_publish_candidate_sample",
+      "test_native_proc_enumerator_excludes_only_its_own_directory_scan_fd",
+      "test_proc_identity_read_failure_never_leaves_owned_child_running",
+      "test_linux_cleanup_uses_owned_pidfd_when_proc_recheck_fails",
+      "test_review_invalid_partial_or_receipt_lineage_cannot_pass",
+      "test_configuration_fifo_or_oversize_refused_before_read",
+      "test_runtime_native_reads_run_inside_owned_deadline",
+      "test_market_projection_refuses_non_us_instrument_identity",
+      "test_scoped_candle_receipt_clock_caps_completed_bar_freshness"
+    ]
+  },
+  {
+    "file": "tests/test_server_opend_profile.py",
+    "top_level_calls": [
+      {
+        "line": 11,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 11,
+        "expression": "Path(__file__)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_candidate_has_actual_fixed_artifact_and_requires_qualification",
+      "test_unsafe_or_unpinned_candidates_fail_closed",
+      "test_credential_fields_and_unknown_configuration_are_not_admitted",
+      "test_unit_is_gated_dedicated_loopback_without_credential_args_or_logging",
+      "test_qualified_admission_requires_actual_reviewed_configuration",
+      "test_configuration_drift_cannot_start_approved_binary"
+    ]
+  },
+  {
+    "file": "tests/test_smoke.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_health"
+    ]
+  },
+  {
+    "file": "tests/test_spa_api.py",
+    "top_level_calls": [
+      {
+        "line": 32,
+        "expression": "DemoScenario(workspace_history=False)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_ci_runs_the_exact_frontend_typecheck_after_openapi_staleness_check",
+      "test_read_surface_serves_the_demo_screens",
+      "test_plain_app_has_no_json_surface",
+      "test_kill_switch_json_flips_global_and_per_venue",
+      "test_kill_switch_json_refusals",
+      "test_demo_order_fills_through_the_seeded_pipeline",
+      "test_demo_order_resting_limit_accepts_without_fill",
+      "test_demo_order_idempotency_key_replays",
+      "test_demo_order_refusals",
+      "test_demo_order_refused_under_a_kill_switch",
+      "test_reset_restores_the_pristine_root_after_orders",
+      "test_no_demo_order_on_a_plain_app"
+    ]
+  },
+  {
+    "file": "tests/test_spa_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 40,
+        "expression": "pytest.importorskip('playwright.sync_api', reason=\"playwright is not installed (dev-only e2e extra: pip install -e '.[dev,e2e]')\")"
+      },
+      {
+        "line": 59,
+        "expression": "DemoScenario()"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_demo_paper_workflow_through_the_ui",
+      "test_connector_panel_and_provider_failure",
+      "test_data_catalog_populated_state_has_no_mobile_overflow",
+      "test_csv_import_validation_and_commit",
+      "test_two_click_reset_restores_the_seed",
+      "test_keyboard_only_walk",
+      "test_nvda_workspace_reaches_each_durable_decision_in_under_two_minutes",
+      "test_decision_inbox_opens_the_exact_saved_packet",
+      "test_aapl_decision_inbox_opens_a_saved_watch_packet_after_reload",
+      "test_crypto_degraded_inbox_keeps_paper_blocked_and_saves_exact_watch_at_mobile_width",
+      "test_nvda_packet_copilot_valid_reload_and_unavailable_paths",
+      "test_nvda_packet_monitoring_is_packet_bound_and_survives_workspace_reload",
+      "test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity",
+      "test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigation",
+      "test_stale_nvda_keeps_reject_and_watch_but_disables_paper_and_writes_no_order",
+      "test_nvda_second_confirmation_refusal_keeps_packet_and_proposal_visible",
+      "test_nvda_decision_safety_copy_keyboard_reduced_motion_and_mobile_boundary"
+    ]
+  },
+  {
+    "file": "tests/test_store.py",
+    "top_level_calls": [
+      {
+        "line": 21,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 25,
+        "expression": "datetime(2026, 8, 7, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_save_writes_events_with_monotonic_global_sequences",
+      "test_restore_rebuilds_identical_state",
+      "test_restart_rebuilds_identical_state",
+      "test_replay_is_deterministic_across_stores",
+      "test_save_is_idempotent",
+      "test_restore_on_empty_store_fails_closed",
+      "test_reconcile_is_clean_for_pristine_state",
+      "test_reconcile_detects_tampered_fill_price",
+      "test_reconcile_detects_deleted_event",
+      "test_reconcile_detects_tampered_order_header",
+      "test_reconcile_detects_tampered_config",
+      "test_invalid_transition_tamper_raises_store_corruption",
+      "test_kill_switch_survives_restart",
+      "test_kill_switches_survive_restart",
+      "test_legacy_store_without_kill_switches_column_migrates",
+      "test_corrupt_kill_switches_fails_closed",
+      "test_partially_filled_order_round_trip",
+      "test_rejected_order_round_trip",
+      "test_fills_replay_in_submission_order",
+      "test_restore_keeps_working_orders_working"
+    ]
+  },
+  {
+    "file": "tests/test_trusted_data_soak.py",
+    "top_level_calls": [
+      {
+        "line": 23,
+        "expression": "datetime(2026, 8, 14, 12, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_replay_historical_refuses_empty_catalog",
+      "test_replay_historical_rejects_non_advancing_crypto_frontier",
+      "test_entry_target_id_handles_non_bar_layers_with_none_interval",
+      "test_soak_rejects_seven_reports_generated_after_the_fact",
+      "test_soak_rejects_changed_candidate_baseline",
+      "test_soak_rejects_incomplete_market_evidence",
+      "test_valid_seven_day_chain_is_accepted",
+      "test_store_refuses_second_report_for_one_utc_day",
+      "test_first_report_may_share_the_candidate_freeze_instant",
+      "test_soak_rejects_noncanonical_candidate_bytes",
+      "test_soak_rejects_backfill_even_when_mtime_is_forged",
+      "test_soak_rejects_hard_linked_candidate",
+      "test_soak_rejects_unexpected_report_directory_entry",
+      "test_soak_rejects_a_symlinked_daily_report",
+      "test_report_reparse_check_is_applied_to_each_daily_file",
+      "test_first_observation_refuses_invalid_catalog_without_freezing",
+      "test_data_closure_rejects_a_stale_reused_crypto_head",
+      "test_data_closure_rejects_a_candidate_defined_target_matrix"
+    ]
+  },
+  {
+    "file": "tests/test_trusted_data_tool.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_replay_refuses_tampered_object",
+      "test_replay_outputs_only_after_hash_and_typed_contract_verification",
+      "test_inspect_empty_catalog_is_explicit_and_non_mutating",
+      "test_collect_rejects_unbounded_hyperliquid_window_before_network",
+      "test_clean_install_entrypoint_and_release_gate_probe_are_declared",
+      "test_collection_commit_refuses_a_dirty_checkout"
+    ]
+  },
+  {
+    "file": "tests/test_trusted_instruments.py",
+    "top_level_calls": [
+      {
+        "line": 13,
+        "expression": "date(2026, 8, 14)"
+      },
+      {
+        "line": 14,
+        "expression": "datetime(2026, 8, 14, 12, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 15,
+        "expression": "datetime(2026, 8, 13, 16, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_canonical_instrument_id_accepts_only_the_bounded_universe",
+      "test_canonical_instrument_id_rejects_unplanned_identity",
+      "test_default_catalog_resolves_all_provider_aliases_at_effective_date",
+      "test_default_catalog_knowledge_starts_at_local_iteration_midnight",
+      "test_alias_resolution_is_effective_dated",
+      "test_alias_resolution_separates_effective_time_from_knowledge_time",
+      "test_alias_rejects_empty_window",
+      "test_alias_rejects_provider_outside_bounded_namespaces",
+      "test_alias_rejects_cross_provider_canonical_mapping",
+      "test_alias_rejects_cross_instrument_mapping",
+      "test_catalog_rejects_overlapping_alias_windows",
+      "test_catalog_rejects_unknown_provider_symbol",
+      "test_catalog_id_is_stable_across_alias_order"
+    ]
+  },
+  {
+    "file": "tests/test_watchlist.py",
+    "top_level_calls": [
+      {
+        "line": 23,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_windows_opend_startup.py",
+    "top_level_calls": [
+      {
+        "line": 14,
+        "expression": "Path(__file__).resolve()"
+      },
+      {
+        "line": 14,
+        "expression": "Path(__file__)"
+      },
+      {
+        "line": 17,
+        "expression": "shutil.which('powershell.exe')"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_recovery_waits_or_launches_only_the_missing_owned_component",
+      "test_observe_only_never_mutates_processes_or_retry_state",
+      "test_owned_child_exit_is_retried_after_delay_and_external_listener_is_respected",
+      "test_unknown_process_observation_does_not_launch_gui",
+      "test_gui_launch_is_not_repeated_while_process_start_is_unobserved",
+      "test_native_singleton_rejects_second_helper_without_releasing_first",
+      "test_tunnel_command_keeps_both_endpoints_private_and_preserves_host_verification",
+      "test_failed_or_unrecognized_remote_probe_never_authorizes_spawn",
+      "test_owned_install_is_reversible_and_preserves_unrelated_files",
+      "test_provisioning_refuses_foreign_owned_target_or_replaced_files",
+      "test_scripts_parse_on_windows_powershell_51",
+      "test_live_owned_child_without_remote_listener_does_not_claim_a_working_tunnel",
+      "test_installer_rejects_junction_target_without_writing_external_files",
+      "test_unestablished_owned_child_times_out_without_stopping_external_processes",
+      "test_existing_owned_tunnel_does_not_prevent_recovering_an_exited_gui",
+      "test_uninstall_active_helper_only_removes_startup_and_defers_file_cleanup",
+      "test_bounded_probe_invokes_native_cli_with_host_before_ssh_options",
+      "test_established_child_survives_later_unknown_or_absent_probe",
+      "test_replacement_child_has_its_own_startup_timeout_after_established_child_exits",
+      "test_status_file_failure_does_not_escape_and_stop_recovery"
+    ]
+  },
+  {
+    "file": "tests/test_workspace_session_coverage.py",
+    "top_level_calls": [],
+    "top_level_test_functions": [
+      "test_exact_instrument_coverage_matches_global_policy_without_quote_authority",
+      "test_workspace_coverage_is_read_only_and_cannot_make_a_quote_available"
+    ]
+  },
+  {
+    "file": "tests/test_workstation.py",
+    "top_level_calls": [
+      {
+        "line": 96,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      },
+      {
+        "line": 98,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 180,
+        "expression": "Instrument(symbol='BTC-PERP', venue=Venue.HYPERLIQUID, instrument_type=InstrumentType.PERPETUAL)"
+      },
+      {
+        "line": 183,
+        "expression": "WalkForwardSpec(train_bars=10, test_bars=5, step_bars=10)"
+      },
+      {
+        "line": 184,
+        "expression": "CostModel(fee_bps=5, half_spread_bps=2, slippage_bps=1)"
+      },
+      {
+        "line": 185,
+        "expression": "UniverseMember(venue=Venue.INTERNAL, symbol='AAPL')"
+      },
+      {
+        "line": 989,
+        "expression": "datetime(2026, 8, 1, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 990,
+        "expression": "timedelta(hours=1)"
+      },
+      {
+        "line": 991,
+        "expression": "ForecastWindowSpec(train_observations=10, test_observations=5, step_observations=10)"
+      }
+    ],
+    "top_level_test_functions": []
+  },
+  {
+    "file": "tests/test_workstation_e2e.py",
+    "top_level_calls": [
+      {
+        "line": 37,
+        "expression": "pytest.importorskip('playwright.sync_api', reason=\"playwright is not installed (dev-only e2e extra: pip install -e '.[dev,e2e]')\")"
+      },
+      {
+        "line": 62,
+        "expression": "datetime(2026, 8, 8, 12, 0, 0, tzinfo=UTC)"
+      },
+      {
+        "line": 63,
+        "expression": "Instrument(symbol='AAPL', venue=Venue.INTERNAL, instrument_type=InstrumentType.EQUITY)"
+      }
+    ],
+    "top_level_test_functions": [
+      "test_core_paper_workflow_walk",
+      "test_keyboard_only_navigation",
+      "test_kill_switch_keyboard_only",
+      "test_accessibility_snapshots"
+    ]
+  }
+]

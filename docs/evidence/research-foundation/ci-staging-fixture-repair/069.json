@@ -1,0 +1,178 @@
+[
+  {
+    "line": 2204,
+    "text": "tests/test_live_fence.py::test_real_stack_healthy_quote_flows_and_a_quiet_venue_blocks PASSED [ 44%]"
+  },
+  {
+    "line": 2256,
+    "text": "tests/test_live_moomoo.py::test_live_stack_streams_real_labels_from_a_live_daemon PASSED [ 45%]"
+  },
+  {
+    "line": 2257,
+    "text": "tests/test_live_moomoo.py::test_live_stack_ages_stale_when_the_venue_clock_stops PASSED [ 45%]"
+  },
+  {
+    "line": 2258,
+    "text": "tests/test_live_moomoo.py::test_live_stack_honest_disconnected_when_the_daemon_dies PASSED [ 45%]"
+  },
+  {
+    "line": 2259,
+    "text": "tests/test_live_moomoo.py::test_live_stack_honest_unavailable_when_opend_is_down PASSED [ 45%]"
+  },
+  {
+    "line": 3202,
+    "text": "tests/test_opend_staging_window.py::test_actual_owned_fixture FAILED     [ 64%]"
+  },
+  {
+    "line": 3235,
+    "text": "tests/test_opend_staging_window.py::test_final_descriptor_replacement_refuses_actual_synthetic_gate FAILED [ 64%]"
+  },
+  {
+    "line": 3244,
+    "text": "tests/test_opend_staging_window.py::test_registry_is_retained_before_interrupt_is_unblocked FAILED [ 65%]"
+  },
+  {
+    "line": 3246,
+    "text": "tests/test_opend_staging_window.py::test_owned_backend_stop_uses_retained_handle_and_preserves_sibling FAILED [ 65%]"
+  },
+  {
+    "line": 3249,
+    "text": "tests/test_opend_staging_window.py::test_admission_failure_never_releases_actual_child FAILED [ 65%]"
+  },
+  {
+    "line": 5398,
+    "text": "__________________________ test_actual_owned_fixture ___________________________"
+  },
+  {
+    "line": 5401,
+    "text": "    def test_actual_owned_fixture():"
+  },
+  {
+    "line": 5419,
+    "text": "            or threading.active_count() != 1"
+  },
+  {
+    "line": 5420,
+    "text": "            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL"
+  },
+  {
+    "line": 5422,
+    "text": ">           raise StageDenied(\"unsupported_native\")"
+  },
+  {
+    "line": 5423,
+    "text": "E           stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5426,
+    "text": "_______ test_final_descriptor_replacement_refuses_actual_synthetic_gate ________"
+  },
+  {
+    "line": 5431,
+    "text": "    def test_final_descriptor_replacement_refuses_actual_synthetic_gate(monkeypatch):"
+  },
+  {
+    "line": 5504,
+    "text": "            or threading.active_count() != 1"
+  },
+  {
+    "line": 5505,
+    "text": "            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL"
+  },
+  {
+    "line": 5507,
+    "text": ">           raise StageDenied(\"unsupported_native\")"
+  },
+  {
+    "line": 5508,
+    "text": "E           stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5511,
+    "text": "___________ test_registry_is_retained_before_interrupt_is_unblocked ____________"
+  },
+  {
+    "line": 5514,
+    "text": "    def test_registry_is_retained_before_interrupt_is_unblocked():"
+  },
+  {
+    "line": 5520,
+    "text": "E         Actual message: 'unsupported_native'"
+  },
+  {
+    "line": 5523,
+    "text": "______ test_owned_backend_stop_uses_retained_handle_and_preserves_sibling ______"
+  },
+  {
+    "line": 5526,
+    "text": "    def test_owned_backend_stop_uses_retained_handle_and_preserves_sibling():"
+  },
+  {
+    "line": 5546,
+    "text": "            or threading.active_count() != 1"
+  },
+  {
+    "line": 5547,
+    "text": "            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL"
+  },
+  {
+    "line": 5549,
+    "text": ">           raise StageDenied(\"unsupported_native\")"
+  },
+  {
+    "line": 5550,
+    "text": "E           stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5553,
+    "text": "______________ test_admission_failure_never_releases_actual_child ______________"
+  },
+  {
+    "line": 5556,
+    "text": "    def test_admission_failure_never_releases_actual_child():"
+  },
+  {
+    "line": 5578,
+    "text": "            or threading.active_count() != 1"
+  },
+  {
+    "line": 5579,
+    "text": "            or signal.getsignal(signal.SIGCHLD) != signal.SIG_DFL"
+  },
+  {
+    "line": 5581,
+    "text": ">           raise StageDenied(\"unsupported_native\")"
+  },
+  {
+    "line": 5582,
+    "text": "E           stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5667,
+    "text": "FAILED tests/test_opend_staging_window.py::test_actual_owned_fixture - stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5668,
+    "text": "FAILED tests/test_opend_staging_window.py::test_final_descriptor_replacement_refuses_actual_synthetic_gate - stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5669,
+    "text": "FAILED tests/test_opend_staging_window.py::test_registry_is_retained_before_interrupt_is_unblocked - AssertionError: Regex pattern did not match."
+  },
+  {
+    "line": 5671,
+    "text": "  Actual message: 'unsupported_native'"
+  },
+  {
+    "line": 5672,
+    "text": "FAILED tests/test_opend_staging_window.py::test_owned_backend_stop_uses_retained_handle_and_preserves_sibling - stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5673,
+    "text": "FAILED tests/test_opend_staging_window.py::test_admission_failure_never_releases_actual_child - stage.StageDenied: unsupported_native"
+  },
+  {
+    "line": 5674,
+    "text": "===== 5 failed, 4487 passed, 111 skipped, 9 warnings in 2899.87s (0:48:19) ====="
+  }
+]

@@ -1,0 +1,187 @@
+{
+  "checks": [
+    {
+      "check": "90s wall deadline",
+      "pass": true
+    },
+    {
+      "check": "release preceded by pidfds and namespace handles",
+      "pass": true
+    },
+    {
+      "check": "namespace PID1 kernel termination",
+      "pass": true
+    },
+    {
+      "check": "known sibling survives namespace teardown",
+      "pass": true
+    },
+    {
+      "check": "only loopback interfaces",
+      "pass": true
+    },
+    {
+      "check": "vendor reaped and zero input",
+      "pass": true
+    },
+    {
+      "check": "SDK normal exit",
+      "pass": false
+    },
+    {
+      "check": "public SDK close reaches CLOSED",
+      "pass": false
+    },
+    {
+      "check": "original status and positive server minted connection ID",
+      "pass": false
+    },
+    {
+      "check": "no additional packed RPC",
+      "pass": true
+    },
+    {
+      "check": "SDK and vendor SAME new namespace",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA numpy-2.5.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA pytz-2026.3.post1-py2.py3-none-any.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA simplejson-4.1.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA six-1.17.0-py2.py3-none-any.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA tzdata-2026.3-py2.py3-none-any.whl",
+      "pass": true
+    },
+    {
+      "check": "wheel SHA moomoo_api-10.10.7008-py3-none-any.whl",
+      "pass": true
+    },
+    {
+      "check": "imported SDK module equals exact wheel bytes",
+      "pass": true
+    },
+    {
+      "check": "closure-check exit zero",
+      "pass": true
+    },
+    {
+      "check": "closure-license exit zero",
+      "pass": true
+    },
+    {
+      "check": "sdk-install exit zero",
+      "pass": true
+    }
+  ],
+  "passed": 22,
+  "total": 25,
+  "installed_bytes": [
+    {
+      "wheel": "numpy-2.5.2-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "installed_bytes_equal_wheel_files": 925
+    },
+    {
+      "wheel": "pandas-2.3.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "installed_bytes_equal_wheel_files": 1512
+    },
+    {
+      "wheel": "protobuf-7.36.1-cp310-abi3-manylinux2014_x86_64.whl",
+      "installed_bytes_equal_wheel_files": 62
+    },
+    {
+      "wheel": "pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
+      "installed_bytes_equal_wheel_files": 351
+    },
+    {
+      "wheel": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "installed_bytes_equal_wheel_files": 24
+    },
+    {
+      "wheel": "pytz-2026.3.post1-py2.py3-none-any.whl",
+      "installed_bytes_equal_wheel_files": 615
+    },
+    {
+      "wheel": "simplejson-4.1.2-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl",
+      "installed_bytes_equal_wheel_files": 49
+    },
+    {
+      "wheel": "six-1.17.0-py2.py3-none-any.whl",
+      "installed_bytes_equal_wheel_files": 5
+    },
+    {
+      "wheel": "tzdata-2026.3-py2.py3-none-any.whl",
+      "installed_bytes_equal_wheel_files": 632
+    },
+    {
+      "wheel": "moomoo_api-10.10.7008-py3-none-any.whl",
+      "installed_bytes_equal_wheel_files": 423
+    }
+  ],
+  "source_provenance": {
+    "moomoo/quote/quote_query.py": {
+      "sha256": "19da6fe6515486b9ab1b09077290b36ddbfb820d6aff45466c3e9d3162419836",
+      "functions": [
+        "InitConnect.pack_req",
+        "InitConnect.unpack_rsp"
+      ],
+      "native_path": "/var/tmp/quantmesh-sdk-wire-zz47gnjl/moomoo_api-10.10.7008/moomoo/quote/quote_query.py"
+    },
+    "moomoo/common/open_context_base.py": {
+      "sha256": "d88cc4786ca26b43717d6addf7dca7ce96ba4478c15d7144ad0f2968d8c0dd0d",
+      "functions": [
+        "_send_init_connect_sync",
+        "_handle_init_connect_rsp",
+        "get_sync_conn_id",
+        "status",
+        "close"
+      ],
+      "native_path": "/var/tmp/quantmesh-sdk-wire-zz47gnjl/moomoo_api-10.10.7008/moomoo/common/open_context_base.py"
+    },
+    "moomoo/quote/open_quote_context.py": {
+      "sha256": "ef77c2a66941a8ae8079b5d4dc258286e8426561e1f1b33f00f6c1913d3cc558",
+      "functions": [
+        "__init__",
+        "on_api_socket_reconnected"
+      ],
+      "native_path": "/var/tmp/quantmesh-sdk-wire-zz47gnjl/moomoo_api-10.10.7008/moomoo/quote/open_quote_context.py"
+    },
+    "moomoo/common/utils.py": {
+      "sha256": "51d47fa5e239a7ddf6768a7ffb011927bb8c14aa393b5d15a07a77d4dde8013d",
+      "functions": [
+        "pack_pb_req"
+      ],
+      "native_path": "/var/tmp/quantmesh-sdk-wire-zz47gnjl/moomoo_api-10.10.7008/moomoo/common/utils.py"
+    }
+  },
+  "upstream_patched": false,
+  "profile_observer": "Python call-profile hook observes original pack_pb_req arguments; only InitConnect1001 permitted; no pack/unpack protocol replacement",
+  "handshake_provenance": "InitConnect.unpack_rsp reads rsp_pb.s2c.connID; _send_init_connect_sync checks RET_OK before _handle_init_connect_rsp assigns _opend_conn_id and READY; get_sync_conn_id returns _opend_conn_id. _conn_id is separate local NetManager ID."
+}

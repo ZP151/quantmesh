@@ -1,0 +1,226 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      decision: ${{ steps.policy.outputs.decision }}
+      domains: ${{ toJSON(fromJSON(steps.policy.outputs.decision).domains) }}
+      frontend: ${{ steps.policy.outputs.frontend }}
+      run_browser: ${{ steps.policy.outputs.run_browser }}
+      tier: ${{ steps.policy.outputs.tier }}
+    steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Classify validation impact
+        id: policy
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            python tools/gate_policy.py decide \
+              --base "${{ github.event.pull_request.base.sha }}" \
+              --head "${{ github.event.pull_request.head.sha }}" \
+              --github-output "$GITHUB_OUTPUT"
+          else
+            # Pushes, release tags and manual runs certify broad impact. The
+            # workflow path is intentionally a public fail-closed policy input.
+            python tools/gate_policy.py decide \
+              --paths .github/workflows/ci.yml \
+              --github-output "$GITHUB_OUTPUT"
+          fi
+
+  fast:
+    needs: classify
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install Python validation environment
+        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Review locked frontend licenses
+        run: python tools/npm_license_review.py
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=high
+        working-directory: frontend
+      - name: Check generated OpenAPI client
+        run: npm run check:api
+        working-directory: frontend
+      - name: Type-check frontend
+        run: npm run typecheck
+        working-directory: frontend
+      - name: Lint frontend
+        run: npm run lint
+        working-directory: frontend
+      - name: Test frontend
+        run: npx vitest run
+        working-directory: frontend
+      - name: Check committed frontend bundle
+        run: python tools/build_frontend.py --check
+      - name: Run bounded fast gate
+        run: |
+          python - <<'PY'
+          from tools.gate_policy import GateDecision, GateTier
+          from tools.quality_gate import build_commands, execute_commands
+
+          raise SystemExit(
+              execute_commands(build_commands("fast", GateDecision(GateTier.FAST)))
+          )
+          PY
+
+      - name: Retain gate evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-${{ github.job }}-${{ matrix.domain || 'all' }}
+          path: ${{ runner.temp }}/quantmesh-gate-logs
+          if-no-files-found: ignore
+
+  domain:
+    needs: classify
+    if: >-
+      needs.classify.outputs.domains != '[]' &&
+      (needs.classify.outputs.tier == 'domain' ||
+      needs.classify.outputs.tier == 'browser')
+    strategy:
+      fail-fast: false
+      matrix:
+        domain: ${{ fromJSON(needs.classify.outputs.domains) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install Python validation environment
+        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
+      - name: Run domain gate
+        run: python tools/quality_gate.py domain --domain ${{ matrix.domain }}
+
+      - name: Retain gate evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-${{ github.job }}-${{ matrix.domain || 'all' }}
+          path: ${{ runner.temp }}/quantmesh-gate-logs
+          if-no-files-found: ignore
+
+  browser:
+    needs: classify
+    if: needs.classify.outputs.run_browser == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install Python validation environment
+        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Run browser E2E gate
+        run: python tools/quality_gate.py browser
+
+      - name: Retain gate evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-${{ github.job }}-${{ matrix.domain || 'all' }}
+          path: ${{ runner.temp }}/quantmesh-gate-logs
+          if-no-files-found: ignore
+
+  release:
+    needs: classify
+    if: >-
+      !cancelled() &&
+      (needs.classify.result != 'success' ||
+      github.event_name != 'pull_request' ||
+      !contains(fromJSON('["fast","domain","browser"]'), needs.classify.outputs.tier))
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Set gate evidence directory
+        run: echo "QUANTMESH_GATE_LOGS=$RUNNER_TEMP/quantmesh-gate-logs" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install Python validation environment
+        run: python -m pip install -e ".[dev,research,e2e,moomoo]"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.12.0"
+      - name: Install Chromium
+        run: python -m playwright install --with-deps chromium
+      - name: Certify exact checkout
+        run: python tools/release_gate.py
+
+  # Preserve the pre-existing required CI / python check as an aggregate.
+  python:
+    needs: [classify, fast, domain, browser, release]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Require successful selected gates
+        env:
+          GATE_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          results = json.loads(os.environ["GATE_RESULTS"])
+          required = ("classify", "fast")
+          failed = any(results[name]["result"] != "success" for name in required)
+          failed |= any(value["result"] not in {"success", "skipped"}
+                        for value in results.values())
+          raise SystemExit(1 if failed else 0)
+          PY

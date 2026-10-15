@@ -20,21 +20,23 @@ creates one).
 
 ## Policy
 
-- **Allowed** (permissive, redistributable): MIT, BSD-2-Clause,
+- **Allowed**: permissive licenses MIT, BSD-2-Clause,
   BSD-3-Clause, Apache-2.0, PSF-2.0, ISC, MPL-2.0 (file-level
   copyleft — permissive for redistribution; certifi, tqdm), 0BSD,
   Zlib, CC0-1.0, CNRI-Python (the historical CNRI Python license),
   MIT-CMU (Pillow's MIT variant), MIT-0 (MIT No Attribution,
   OSI-approved; cffi declares it).
-- **Refused**: GPL/AGPL, LGPL, proprietary licenses, source-available
-  restrictions such as the Commons Clause, and anything unclassified.
+- **Refused**: GPL/AGPL, LGPL, EPL, CDDL, proprietary licenses,
+  source-available restrictions such as the Commons Clause, and anything
+  unclassified. Any future exception requires an explicit policy decision and
+  exact package/distribution review.
 - **Untracked installed packages are refused**: the installed
   third-party set must equal the pinned closure (plus the venv's own
   pip/setuptools/wheel build tooling). This is the iteration-0013
   resolution of the ambient `license-expression`/`boolean.py` drift.
-- **`WITH <exception>` SPDX qualifiers relax** the license
-  (e.g. `BSD-2-Clause AND Apache-2.0 WITH LLVM-exception` for
-  llvmlite) and are stripped, never treated as restricting members.
+- **`WITH <exception>` SPDX qualifiers are license-pair checked** before
+  stripping. The current accepted pair is `Apache-2.0 WITH LLVM-exception`
+  (used by llvmlite); unknown exceptions and incompatible pairings fail closed.
 - **Free-text `License` fields read the first line as authoritative**
   when it names a known license: some wheels inline the entire
   `LICENSES/` folder into one field (pandas 2.3.3 Linux builds — BSD
@@ -138,6 +140,10 @@ fails loudly otherwise.
 
 ## Decisions recorded on this surface
 
+- **PostgreSQL runtime** — the operator selected BSD-licensed pg8000 rather
+  than Psycopg, whose `LGPL-3.0-only` metadata fails this unchanged policy.
+  `psycopg` and `psycopg-binary` are absent from the release closure.
+
 - **vectorbt was removed from the `research` extra (ADR-0012
   decision 4)** — it ships as Apache-2.0 **with the Commons Clause**
   (source-available, not OSI: the clause strips the right to sell the
@@ -176,7 +182,7 @@ part of the Python runtime dependency closure:
 
 ## Frontend npm closure (iteration 0020 Task 6, checked 2026-08-12)
 
-ADR-0013 Decision 5 budget: permissive licenses only; any dependency
+ADR-0013 Decision 5 budget: the named permissive frontend set; any dependency
 outside the adopted set enters through a license/maintenance check
 recorded here and in `docs/REUSE_MATRIX.md`. The checks are `npm audit
 --audit-level=high` for advisories plus the fail-closed, stdlib-only
@@ -186,8 +192,9 @@ release gate. **646 packages**
 (lockfile v3, root entry excluded, all platform variants included), **every license
 allowlisted**: MIT 562, ISC 26, MPL-2.0 24, Apache-2.0 11,
 BSD-3-Clause 8, BSD-2-Clause 7, BlueOak-1.0.0 2, 0BSD 1, MIT-0 1,
-OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1, `(MIT OR CC0-1.0)` 1. No GPL/AGPL/LGPL, no
-source-available restriction, no untracked package.
+OFL-1.1 1, CC-BY-4.0 1, Python-2.0 1, `(MIT OR CC0-1.0)` 1. No
+GPL/AGPL/LGPL package is in the frontend npm closure; no source-available
+restriction or untracked package is present.
 
 - MPL-2.0 ×24 is one project: `lightningcss` (Tailwind 4's CSS
   engine) plus its platform binaries — file-level copyleft,
@@ -255,7 +262,7 @@ retain the original parent tarball's integrity and bundled-dependency metadata,
 without inventing standalone registry hashes. npm's mandatory high-severity
 audit is retained; moderate-only findings remain separately visible.
 
-## Inventory (generated 2026-09-03; 76 packages in the release
+## Inventory (generated 2026-10-14; 78 packages in the release
 closure `.[dev,research,e2e,moomoo]`)
 
 Regenerate with `python tools/license_review.py` in an environment
@@ -267,6 +274,7 @@ Version numbers drift with the lock; the license key is the contract.
 | annotated-doc | 0.0.5 | MIT |
 | annotated-types | 0.8.0 | MIT |
 | anyio | 4.15.0 | MIT |
+| asn1crypto | 1.5.1 | MIT |
 | arch | 7.2.0 | BSD-2-Clause |
 | certifi | 2026.7.22 | MPL-2.0 (documented exception) |
 | cffi | 2.1.1 (Linux-only) | MIT-0 |
@@ -303,6 +311,7 @@ Version numbers drift with the lock; the license key is the contract.
 | packaging | 26.3 | Apache-2.0 | BSD-2-Clause |
 | pandas | 2.3.3 | BSD-3-Clause |
 | patsy | 1.0.3 | BSD-3-Clause |
+| pg8000 | 1.31.5 | BSD-3-Clause |
 | playwright | 1.62.0 | Apache-2.0 |
 | pluggy | 1.6.0 | MIT |
 | protobuf | 7.36.1 | BSD-3-Clause |
@@ -325,6 +334,7 @@ Version numbers drift with the lock; the license key is the contract.
 | ruff | 0.16.6 | MIT |
 | scikit-learn | 1.9.0 | BSD-3-Clause |
 | scipy | 1.18.1 | BSD-3-Clause |
+| scramp | 1.4.17 | MIT-0 |
 | SecretStorage | 3.5.0 (Linux-only) | BSD-3-Clause |
 | simplejson | 4.1.2 | MIT (documented exception) |
 | six | 1.17.0 | MIT |

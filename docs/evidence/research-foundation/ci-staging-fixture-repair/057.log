@@ -1,0 +1,12 @@
+usage: quantmesh-data [-h] {collect,replay,inspect} ...
+
+Collect and verify bounded read-only trusted-data evidence.
+
+positional arguments:
+  {collect,replay,inspect}
+    collect             collect one bounded provider window
+    replay              verify and summarize one exact manifest
+    inspect             print catalog and qualification state
+
+options:
+  -h, --help            show this help message and exit

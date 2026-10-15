@@ -1,0 +1,12 @@
+[GNUPG:] NEWSIG
+[GNUPG:] KEY_CONSIDERED CF8F18F2844575973F79D4E191A6868BD3F7A907 0
+[GNUPG:] SIG_ID etRg6d7y8K4XH2AamxvuchlAhNo 2026-07-05 1783238366
+[GNUPG:] GOODSIG 91A6868BD3F7A907 Alexander Neumann <alexander@bumpern.de>
+[GNUPG:] VALIDSIG CF8F18F2844575973F79D4E191A6868BD3F7A907 2026-07-05 1783238366 0 4 0 1 10 00 CF8F18F2844575973F79D4E191A6868BD3F7A907
+[GNUPG:] TRUST_UNDEFINED 0 pgp
+gpg: Signature made Sun Jul  5 15:59:26 2026 +08
+gpg:                using RSA key CF8F18F2844575973F79D4E191A6868BD3F7A907
+gpg: Good signature from "Alexander Neumann <alexander@bumpern.de>" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: CF8F 18F2 8445 7597 3F79  D4E1 91A6 868B D3F7 A907

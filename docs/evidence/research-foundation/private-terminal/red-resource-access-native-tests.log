@@ -1,0 +1,120 @@
+...............................F.FFF                                     [100%]
+=================================== FAILURES ===================================
+_____________ test_pty_setup_failure_closes_both_owned_descriptors _____________
+
+args = (12, 384)
+
+    def refuse(*args):
+>       raise OSError("synthetic permission failure")
+E       OSError: synthetic permission failure
+
+tests/test_opend_private_terminal.py:231: OSError
+
+During handling of the above exception, another exception occurred:
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7522c95a51c0>
+
+    @NATIVE
+    def test_pty_setup_failure_closes_both_owned_descriptors(monkeypatch):
+        import pty
+    
+        original = pty.openpty
+        captured = []
+    
+        def remember():
+            pair = original()
+            captured.extend(pair)
+            return pair
+    
+        def refuse(*args):
+            raise OSError("synthetic permission failure")
+    
+        monkeypatch.setattr(pty, "openpty", remember)
+        monkeypatch.setattr(os, "fchmod", refuse)
+        with pytest.raises(OSError):
+>           with terminal._private_pty():
+
+tests/test_opend_private_terminal.py:236: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/lib/python3.12/contextlib.py:137: in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    @contextmanager
+    def _private_pty():
+        import pty
+        import termios
+    
+        master, slave = pty.openpty()
+        try:
+            os.fchmod(slave, 0o600)
+            attrs = termios.tcgetattr(slave)
+            attrs[3] &= ~(termios.ECHO | termios.ECHONL)
+            termios.tcsetattr(slave, termios.TCSANOW, attrs)
+            os.set_blocking(master, False)
+            attrs[1] &= ~termios.OPOST
+            termios.tcsetattr(slave, termios.TCSANOW, attrs)
+            handles = [master]
+            yield handles, slave
+        finally:
+            # Retain exact descriptor ownership; never probe or close a reused number.
+>           for fd in handles:
+                      ^^^^^^^
+E           UnboundLocalError: cannot access local variable 'handles' where it is not associated with a value
+
+tools/qualify_opend_private_terminal.py:380: UnboundLocalError
+_________________ test_wrong_descriptor_access_mode_refuses[0] _________________
+
+position = 0
+
+    @NATIVE
+    @pytest.mark.parametrize("position", [0, 1, 2])
+    def test_wrong_descriptor_access_mode_refuses(position):
+        with private_pty() as (_, slave):
+            fd = os.open(f"/proc/self/fd/{slave}", os.O_WRONLY if position == 0 else os.O_RDONLY)
+            try:
+                descriptors = [slave, slave, slave]
+                descriptors[position] = fd
+>               with pytest.raises(terminal.TerminalQualificationError, match="descriptor_access"):
+E               Failed: DID NOT RAISE TerminalQualificationError
+
+tests/test_opend_private_terminal.py:269: Failed
+_________________ test_wrong_descriptor_access_mode_refuses[1] _________________
+
+position = 1
+
+    @NATIVE
+    @pytest.mark.parametrize("position", [0, 1, 2])
+    def test_wrong_descriptor_access_mode_refuses(position):
+        with private_pty() as (_, slave):
+            fd = os.open(f"/proc/self/fd/{slave}", os.O_WRONLY if position == 0 else os.O_RDONLY)
+            try:
+                descriptors = [slave, slave, slave]
+                descriptors[position] = fd
+>               with pytest.raises(terminal.TerminalQualificationError, match="descriptor_access"):
+E               Failed: DID NOT RAISE TerminalQualificationError
+
+tests/test_opend_private_terminal.py:269: Failed
+_________________ test_wrong_descriptor_access_mode_refuses[2] _________________
+
+position = 2
+
+    @NATIVE
+    @pytest.mark.parametrize("position", [0, 1, 2])
+    def test_wrong_descriptor_access_mode_refuses(position):
+        with private_pty() as (_, slave):
+            fd = os.open(f"/proc/self/fd/{slave}", os.O_WRONLY if position == 0 else os.O_RDONLY)
+            try:
+                descriptors = [slave, slave, slave]
+                descriptors[position] = fd
+>               with pytest.raises(terminal.TerminalQualificationError, match="descriptor_access"):
+E               Failed: DID NOT RAISE TerminalQualificationError
+
+tests/test_opend_private_terminal.py:269: Failed
+=========================== short test summary info ============================
+FAILED tests/test_opend_private_terminal.py::test_pty_setup_failure_closes_both_owned_descriptors
+FAILED tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[0]
+FAILED tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[1]
+FAILED tests/test_opend_private_terminal.py::test_wrong_descriptor_access_mode_refuses[2]
+4 failed, 32 passed in 2.29s

@@ -1,0 +1,15 @@
+F
+================================== FAILURES ===================================
+_ test_later_retry_recovers_after_order_was_journaled_before_proposal_transition _
+tools\eval_harness\pytest_plugin.py:115: in pytest_runtest_call
+    _injected_check()
+tools\eval_harness\pytest_plugin.py:104: in broken_verifier
+    assert False, "injected known-bad verifier must remain a real failure"
+           ^^^^^
+E   AssertionError: injected known-bad verifier must remain a real failure
+============================= slowest 5 durations =============================
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ===========================
+FAILED tests/test_paper_proposals.py::test_later_retry_recovers_after_order_was_journaled_before_proposal_transition
+1 failed in 0.32s

@@ -1,0 +1,56 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+______________ test_source_admission_does_not_trust_skip_worktree ______________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/source-red-tmp/test_source_admission_does_not0')
+
+    def test_source_admission_does_not_trust_skip_worktree(tmp_path):
+        module = runtime_module()
+        repo = tmp_path / "repo"
+        repo.mkdir(mode=0o700)
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.DEVNULL).decode().strip()
+        git("init")
+        source = repo / "module.py"
+        source.write_text("value = 1\n")
+        git("add", ".")
+        git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "fixture")
+        head = git("rev-parse", "HEAD")
+        git("update-index", "--skip-worktree", "module.py")
+        source.write_text("value = 2\n")
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_runtime.py:322: Failed
+________________ test_source_admission_refuses_ignored_bytecode ________________
+
+tmp_path = PosixPath('/var/tmp/quantmesh-bootstrap-krfg8kx6/source-red-tmp/test_source_admission_refuses_0')
+
+    def test_source_admission_refuses_ignored_bytecode(tmp_path):
+        module = runtime_module()
+        repo = tmp_path / "repo"
+        repo.mkdir(mode=0o700)
+        def git(*args):
+            return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.DEVNULL).decode().strip()
+        git("init")
+        (repo / ".gitignore").write_text("__pycache__/\n")
+        git("add", ".")
+        git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-m", "fixture")
+        head = git("rev-parse", "HEAD")
+        cache = repo / "__pycache__"
+        cache.mkdir()
+        (cache / "module.cpython-312.pyc").write_bytes(b"shadow")
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_runtime.py:340: Failed
+=============================== warnings summary ===============================
+../../../venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-bootstrap-krfg8kx6/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_runtime.py::test_source_admission_does_not_trust_skip_worktree
+FAILED tests/test_runtime.py::test_source_admission_refuses_ignored_bytecode
+2 failed, 38 deselected, 1 warning in 0.13s

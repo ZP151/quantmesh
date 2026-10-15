@@ -1,0 +1,14 @@
+{
+  "exit": 0,
+  "sealed_members": 45,
+  "source_members": 5,
+  "current_source_and_packet_hashes_match": true,
+  "final_Linux_covering": "43passed/1deselected",
+  "leaf_refusal_covering": "5passed",
+  "Windows_unsupported_profile_guard": "3passed/0skip",
+  "original_affected": "2failed/32passed/21skipped retained; specific corrections separately verified",
+  "tests_rerun": false,
+  "native_or_numerical_or_production_certificate": false,
+  "P2_disposition": "held no-follow intended objects/relative I/O and persistent membership refusal covered",
+  "full_Option_A_complete": false
+}

@@ -1,0 +1,161 @@
+FFFFFFF                                                                  [100%]
+================================== FAILURES ===================================
+_ test_gate_selects_the_lock_for_its_actual_runtime[Windows-version0-AMD64-windows-cp313-x86_64-requirements.lock] _
+
+system = 'Windows', version = (3, 13), machine = 'AMD64'
+profile = 'windows-cp313-x86_64', filename = 'requirements.lock'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine", "profile", "filename"),
+        [
+            ("Windows", (3, 13), "AMD64", "windows-cp313-x86_64", "requirements.lock"),
+            ("Linux", (3, 12), "x86_64", "linux-cp312-x86_64", "requirements.linux-cp312.lock"),
+        ],
+    )
+    def test_gate_selects_the_lock_for_its_actual_runtime(system, version, machine, profile, filename):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:17: AssertionError
+_ test_gate_selects_the_lock_for_its_actual_runtime[Linux-version1-x86_64-linux-cp312-x86_64-requirements.linux-cp312.lock] _
+
+system = 'Linux', version = (3, 12), machine = 'x86_64'
+profile = 'linux-cp312-x86_64', filename = 'requirements.linux-cp312.lock'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine", "profile", "filename"),
+        [
+            ("Windows", (3, 13), "AMD64", "windows-cp313-x86_64", "requirements.lock"),
+            ("Linux", (3, 12), "x86_64", "linux-cp312-x86_64", "requirements.linux-cp312.lock"),
+        ],
+    )
+    def test_gate_selects_the_lock_for_its_actual_runtime(system, version, machine, profile, filename):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:17: AssertionError
+_ test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Linux-version0-x86_64] _
+
+system = 'Linux', version = (3, 13), machine = 'x86_64'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine"),
+        [
+            ("Linux", (3, 13), "x86_64"),
+            ("Linux", (3, 12), "aarch64"),
+            ("Windows", (3, 12), "AMD64"),
+            ("Windows", (3, 13), "ARM64"),
+            ("Darwin", (3, 12), "x86_64"),
+        ],
+    )
+    def test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime(system, version, machine):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:35: AssertionError
+_ test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Linux-version1-aarch64] _
+
+system = 'Linux', version = (3, 12), machine = 'aarch64'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine"),
+        [
+            ("Linux", (3, 13), "x86_64"),
+            ("Linux", (3, 12), "aarch64"),
+            ("Windows", (3, 12), "AMD64"),
+            ("Windows", (3, 13), "ARM64"),
+            ("Darwin", (3, 12), "x86_64"),
+        ],
+    )
+    def test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime(system, version, machine):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:35: AssertionError
+_ test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Windows-version2-AMD64] _
+
+system = 'Windows', version = (3, 12), machine = 'AMD64'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine"),
+        [
+            ("Linux", (3, 13), "x86_64"),
+            ("Linux", (3, 12), "aarch64"),
+            ("Windows", (3, 12), "AMD64"),
+            ("Windows", (3, 13), "ARM64"),
+            ("Darwin", (3, 12), "x86_64"),
+        ],
+    )
+    def test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime(system, version, machine):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:35: AssertionError
+_ test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Windows-version3-ARM64] _
+
+system = 'Windows', version = (3, 13), machine = 'ARM64'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine"),
+        [
+            ("Linux", (3, 13), "x86_64"),
+            ("Linux", (3, 12), "aarch64"),
+            ("Windows", (3, 12), "AMD64"),
+            ("Windows", (3, 13), "ARM64"),
+            ("Darwin", (3, 12), "x86_64"),
+        ],
+    )
+    def test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime(system, version, machine):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:35: AssertionError
+_ test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Darwin-version4-x86_64] _
+
+system = 'Darwin', version = (3, 12), machine = 'x86_64'
+
+    @pytest.mark.parametrize(
+        ("system", "version", "machine"),
+        [
+            ("Linux", (3, 13), "x86_64"),
+            ("Linux", (3, 12), "aarch64"),
+            ("Windows", (3, 12), "AMD64"),
+            ("Windows", (3, 13), "ARM64"),
+            ("Darwin", (3, 12), "x86_64"),
+        ],
+    )
+    def test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime(system, version, machine):
+        select = getattr(gate, "runtime_lock", None)
+>       assert callable(select), "runtime-bound lock selection is missing"
+E       AssertionError: runtime-bound lock selection is missing
+E       assert False
+E        +  where False = callable(None)
+
+tests\test_research_service_runtime.py:35: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_research_service_runtime.py::test_gate_selects_the_lock_for_its_actual_runtime[Windows-version0-AMD64-windows-cp313-x86_64-requirements.lock]
+FAILED tests/test_research_service_runtime.py::test_gate_selects_the_lock_for_its_actual_runtime[Linux-version1-x86_64-linux-cp312-x86_64-requirements.linux-cp312.lock]
+FAILED tests/test_research_service_runtime.py::test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Linux-version0-x86_64]
+FAILED tests/test_research_service_runtime.py::test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Linux-version1-aarch64]
+FAILED tests/test_research_service_runtime.py::test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Windows-version2-AMD64]
+FAILED tests/test_research_service_runtime.py::test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Windows-version3-ARM64]
+FAILED tests/test_research_service_runtime.py::test_gate_cannot_substitute_a_known_lock_for_an_unqualified_runtime[Darwin-version4-x86_64]
+7 failed in 0.15s

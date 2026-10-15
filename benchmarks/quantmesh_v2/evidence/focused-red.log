@@ -1,0 +1,160 @@
+....FF....FFFF.FFFFFFFFFFFFFFFF                                          [100%]
+================================== FAILURES ===================================
+_______________ test_catalog_change_blocks_comparison[taxonomy] _______________
+tests\test_eval_harness.py:80: in test_catalog_change_blocks_comparison
+    with pytest.raises(ValueError, match="incompatible"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+____________ test_catalog_change_blocks_comparison[schema_version] ____________
+tests\test_eval_harness.py:80: in test_catalog_change_blocks_comparison
+    with pytest.raises(ValueError, match="incompatible"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+____________ test_comparison_refuses_result_tampering[acceptance] _____________
+tests\test_eval_harness.py:104: in test_comparison_refuses_result_tampering
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________ test_comparison_refuses_result_tampering[fixture_sha256] ___________
+tests\test_eval_harness.py:104: in test_comparison_refuses_result_tampering
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________ test_comparison_refuses_result_tampering[verifier_sha256] __________
+tests\test_eval_harness.py:104: in test_comparison_refuses_result_tampering
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+____ test_comparison_refuses_result_tampering[source_unchanged_during_run] ____
+tests\test_eval_harness.py:104: in test_comparison_refuses_result_tampering
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+__________ test_strict_id_paths_source_acceptance[task_id-../escape] __________
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+________ test_strict_id_paths_source_acceptance[task_id-\u4e2d\u6587] _________
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_______________ test_strict_id_paths_source_acceptance[source-] _______________
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_____________ test_strict_id_paths_source_acceptance[acceptance-] _____________
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+____ test_strict_id_paths_source_acceptance[nodeid-../outside.py::test_x] _____
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_ test_strict_id_paths_source_acceptance[nodeid-tests/x.py::test_x --override] _
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_____ test_strict_id_paths_source_acceptance[nodeid-tests//x.py::test_x] ______
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+______ test_strict_id_paths_source_acceptance[failure_category-runtime] _______
+tests\test_eval_harness.py:124: in test_strict_id_paths_source_acceptance
+    document = core.freeze_dataset(candidate, [case()])
+               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_________________ test_fixture_and_verifier_bytes_are_pinned __________________
+tests\test_eval_harness.py:133: in test_fixture_and_verifier_bytes_are_pinned
+    path = catalog(candidate)
+           ^^^^^^^^^^^^^^^^^^
+tests\test_eval_harness.py:41: in catalog
+    path.write_text(json.dumps(core.freeze_dataset(root, cases or [case()])), encoding="utf-8")
+                               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+____________ test_runner_persists_trace_logs_and_refuses_overwrite ____________
+tests\test_eval_harness.py:144: in test_runner_persists_trace_logs_and_refuses_overwrite
+    result = runner.execute(candidate, catalog(candidate), output, timeout=30)
+                                       ^^^^^^^^^^^^^^^^^^
+tests\test_eval_harness.py:41: in catalog
+    path.write_text(json.dumps(core.freeze_dataset(root, cases or [case()])), encoding="utf-8")
+                               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+________________________ test_known_bad_fixture_fails _________________________
+tests\test_eval_harness.py:159: in test_known_bad_fixture_fails
+    result = runner.execute(candidate, catalog(candidate), candidate / "bad", timeout=30,
+                                       ^^^^^^^^^^^^^^^^^^
+tests\test_eval_harness.py:41: in catalog
+    path.write_text(json.dumps(core.freeze_dataset(root, cases or [case()])), encoding="utf-8")
+                               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_________________________ test_skip_timeout_not_pass __________________________
+tests\test_eval_harness.py:172: in test_skip_timeout_not_pass
+    skipped = runner.execute(candidate, catalog(candidate), candidate / "skip", timeout=30)
+                                        ^^^^^^^^^^^^^^^^^^
+tests\test_eval_harness.py:41: in catalog
+    path.write_text(json.dumps(core.freeze_dataset(root, cases or [case()])), encoding="utf-8")
+                               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+________________ test_frozen_badcase_imports_candidate_source _________________
+tests\test_eval_harness.py:198: in test_frozen_badcase_imports_candidate_source
+    result = runner.execute(candidate, catalog(candidate, [probe]), candidate / "cross", timeout=30)
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_eval_harness.py:41: in catalog
+    path.write_text(json.dumps(core.freeze_dataset(root, cases or [case()])), encoding="utf-8")
+                               ^^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'tools.eval_harness.core' has no attribute 'freeze_dataset'
+_____________________ test_model_trace_and_network_block ______________________
+tests\test_eval_harness.py:222: in test_model_trace_and_network_block
+    sock.connect(("example.com", 443))
+tools\eval_harness\pytest_plugin.py:66: in guarded
+    if not isinstance(address, tuple) or not ip_address(address[0]).is_loopback:
+                                             ^^^^^^^^^^^^^^^^^^^^^^
+..\..\..\..\AppData\Local\Programs\Python\Python313\Lib\ipaddress.py:54: in ip_address
+    raise ValueError(f'{address!r} does not appear to be an IPv4 or IPv6 address')
+E   ValueError: 'example.com' does not appear to be an IPv4 or IPv6 address
+_______________ test_legacy_catalog_is_explicitly_incompatible ________________
+tests\test_eval_harness.py:231: in test_legacy_catalog_is_explicitly_incompatible
+    core.load_dataset(path, tmp_path)
+E   TypeError: load_dataset() takes 1 positional argument but 2 were given
+_______________ test_bad_injection_cannot_claim_an_improvement ________________
+tests\test_eval_harness.py:238: in test_bad_injection_cannot_claim_an_improvement
+    with pytest.raises(ValueError, match="incompatible"):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+============================== warnings summary ===============================
+tests/test_eval_harness.py::test_model_trace_and_network_block
+  C:\Users\15492\.codex-clean\worktrees\6e1e\QuantMesh\output\0038-research-foundation\audited-venv\Lib\site-packages\exchange_calendars\exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_eval_harness.py::test_catalog_change_blocks_comparison[taxonomy]
+FAILED tests/test_eval_harness.py::test_catalog_change_blocks_comparison[schema_version]
+FAILED tests/test_eval_harness.py::test_comparison_refuses_result_tampering[acceptance]
+FAILED tests/test_eval_harness.py::test_comparison_refuses_result_tampering[fixture_sha256]
+FAILED tests/test_eval_harness.py::test_comparison_refuses_result_tampering[verifier_sha256]
+FAILED tests/test_eval_harness.py::test_comparison_refuses_result_tampering[source_unchanged_during_run]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[task_id-../escape]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[task_id-\u4e2d\u6587]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[source-]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[acceptance-]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[nodeid-../outside.py::test_x]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[nodeid-tests/x.py::test_x --override]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[nodeid-tests//x.py::test_x]
+FAILED tests/test_eval_harness.py::test_strict_id_paths_source_acceptance[failure_category-runtime]
+FAILED tests/test_eval_harness.py::test_fixture_and_verifier_bytes_are_pinned
+FAILED tests/test_eval_harness.py::test_runner_persists_trace_logs_and_refuses_overwrite
+FAILED tests/test_eval_harness.py::test_known_bad_fixture_fails - AttributeEr...
+FAILED tests/test_eval_harness.py::test_skip_timeout_not_pass - AttributeErro...
+FAILED tests/test_eval_harness.py::test_frozen_badcase_imports_candidate_source
+FAILED tests/test_eval_harness.py::test_model_trace_and_network_block - Value...
+FAILED tests/test_eval_harness.py::test_legacy_catalog_is_explicitly_incompatible
+FAILED tests/test_eval_harness.py::test_bad_injection_cannot_claim_an_improvement
+22 failed, 9 passed, 1 warning in 3.52s

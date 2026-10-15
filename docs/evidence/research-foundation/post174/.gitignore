@@ -1,0 +1,9 @@
+# Test-owned scratch remains local; only raw top-level logs/traces are evidence.
+!run/logs/
+!run/logs/*/
+run/logs/*/*/
+*.duckdb
+*.parquet
+*.lock
+*.csv
+!*.log

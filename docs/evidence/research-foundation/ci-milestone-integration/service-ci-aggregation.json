@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "existing_five_jobs_unchanged": true,
+  "cases": [
+    {
+      "service_state": "success",
+      "aggregate_exit": 0
+    },
+    {
+      "service_state": "failure",
+      "aggregate_exit": 1
+    },
+    {
+      "service_state": "cancelled",
+      "aggregate_exit": 1
+    },
+    {
+      "service_state": "skipped",
+      "aggregate_exit": 1,
+      "prior_aggregator_would_allow_unverified_service": true
+    }
+  ],
+  "scope": "OWNED_LOCAL_AGGREGATOR_FIXTURE",
+  "remote_ci_pending": true
+}

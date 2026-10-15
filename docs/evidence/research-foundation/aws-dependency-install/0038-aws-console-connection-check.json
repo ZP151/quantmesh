@@ -1,0 +1,14 @@
+{
+  "scope": "actual authorized AWS browser UI inspection only",
+  "old_terminal": "1646424502 SERVER_ERROR512 modal",
+  "new_terminal": "1646424530 initial terminal UI, no observed prompt/result",
+  "new_connection_attempts": 1,
+  "screenshot_attempts": 2,
+  "screenshot_result": "Page.captureScreenshot timeout; no saved screenshot",
+  "instance_UI_status": "Running",
+  "actual_OS_health_verified": false,
+  "remote_command_sent": false,
+  "firewall_or_security_or_keys_changed": false,
+  "paid_resources_created": false,
+  "private_SSH_authentication_still_pending": true
+}

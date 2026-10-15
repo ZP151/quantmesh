@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "observed_at": "2026-10-12T23:09:40.243283+00:00",
+  "previous_root": "C:\\Users\\15492\\.codex-clean\\worktrees\\6e1e\\QuantMesh",
+  "previous_git_present": false,
+  "previous_remaining_output_present": true,
+  "previous_files_modified_by_this_recovery": false,
+  "current_root": "C:\\Users\\15492\\.codex-clean\\worktrees\\0038-research-integration\\QuantMesh",
+  "current_git_registered": true,
+  "current_branch": "codex/0038-research-foundation",
+  "current_head": "c800750b4e6f958a2cb406df53220043140ef6bc",
+  "matches_pushed_head": true,
+  "frozen_5788cf7_is_ancestor": true,
+  "current_clean": true,
+  "common_main_head": "c74ea03f16c9159e96861c0fb60a7af560bc52eb",
+  "origin_main_head": "745a231715336844b26622ac1aa37350f891a011",
+  "cause_of_previous_removal": "unknown",
+  "app_managed_registration": "rejected_not_managed",
+  "recovery_method": "git_worktree_fallback_after_native_tool_cwd_failure",
+  "deployment_or_auth_operation": false
+}

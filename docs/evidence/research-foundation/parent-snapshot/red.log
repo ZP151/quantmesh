@@ -1,0 +1,25 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+________ test_transient_ancestor_swap_around_real_open_refuses[source] _________
+tests/test_fixture_snapshot.py:125: in test_transient_ancestor_swap_around_real_open_refuses
+    with pytest.raises(ValueError if role == "metadata" else DatasetRejected):
+E   Failed: DID NOT RAISE DatasetRejected
+________ test_transient_ancestor_swap_around_real_open_refuses[target] _________
+tests/test_fixture_snapshot.py:125: in test_transient_ancestor_swap_around_real_open_refuses
+    with pytest.raises(ValueError if role == "metadata" else DatasetRejected):
+E   Failed: DID NOT RAISE DatasetRejected
+_______ test_transient_ancestor_swap_around_real_open_refuses[metadata] ________
+tests/test_fixture_snapshot.py:125: in test_transient_ancestor_swap_around_real_open_refuses
+    with pytest.raises(ValueError if role == "metadata" else DatasetRejected):
+E   Failed: DID NOT RAISE ValueError
+=============================== warnings summary ===============================
+../../../../../../../../var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65
+  /var/tmp/quantmesh-portfolio-runtime-9r8rsnwz/venv/lib/python3.12/site-packages/exchange_calendars/exchange_calendar.py:65: DeprecationWarning: The 'generic' unit for NumPy timedelta is deprecated, and will raise an error in the future. This includes implicit conversion of bare integers (e.g. `+ 1`).Please use a specific unit instead.
+    ONE_HOUR = pd.Timedelta("1h")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_fixture_snapshot.py::test_transient_ancestor_swap_around_real_open_refuses[source]
+FAILED tests/test_fixture_snapshot.py::test_transient_ancestor_swap_around_real_open_refuses[target]
+FAILED tests/test_fixture_snapshot.py::test_transient_ancestor_swap_around_real_open_refuses[metadata]
+3 failed, 1 warning in 5.74s
