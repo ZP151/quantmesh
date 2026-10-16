@@ -187,11 +187,26 @@ def _open_absolute_directory(path: Path) -> tuple[int, list[int]]:
         raise WorkerAdmissionRejected("worker_admission_failed") from None
 
 
+def _snapshot_owner_uid() -> int:
+    """Return the current unprivileged POSIX service UID for private snapshots."""
+    if os.name != "posix":
+        raise ValueError
+    getuid = getattr(os, "getuid", None)
+    geteuid = getattr(os, "geteuid", None)
+    if not callable(getuid) or not callable(geteuid):
+        raise ValueError
+    uid, euid = getuid(), geteuid()
+    if type(uid) is not int or type(euid) is not int or uid <= 0 or uid != euid:
+        raise ValueError
+    return uid
+
+
 def _read_snapshot_member(
     directory_fd: int, name: str, maximum: int, *, expected_mode: int = 0o400
 ) -> bytes:
     fd = None
     try:
+        owner_uid = _snapshot_owner_uid()
         if name in {".", ".."} or "/" in name or "\\" in name:
             raise ValueError
         fd = os.open(
@@ -206,7 +221,7 @@ def _read_snapshot_member(
             or before.st_size <= 0
             or before.st_size > maximum
             or stat.S_IMODE(before.st_mode) != expected_mode
-            or before.st_uid != 1000
+            or before.st_uid != owner_uid
         ):
             raise ValueError
         data = bytearray()
@@ -446,6 +461,7 @@ def _verify_distribution_metadata(snapshot_root: Path, runtime: dict, files: obj
     root_fd = metadata_fd = None
     root_chain = []
     try:
+        owner_uid = _snapshot_owner_uid()
         root_fd, root_chain = _open_absolute_directory(snapshot_root)
         metadata_fd = os.open(
             "metadata", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd
@@ -455,10 +471,10 @@ def _verify_distribution_metadata(snapshot_root: Path, runtime: dict, files: obj
         if (
             not stat.S_ISDIR(root_info.st_mode)
             or stat.S_IMODE(root_info.st_mode) != 0o700
-            or root_info.st_uid != 1000
+            or root_info.st_uid != owner_uid
             or not stat.S_ISDIR(metadata_info.st_mode)
             or stat.S_IMODE(metadata_info.st_mode) != 0o700
-            or metadata_info.st_uid != 1000
+            or metadata_info.st_uid != owner_uid
         ):
             raise ValueError
         expected_dirs = set()
@@ -492,7 +508,7 @@ def _verify_distribution_metadata(snapshot_root: Path, runtime: dict, files: obj
                 if (
                     not stat.S_ISDIR(package_info.st_mode)
                     or stat.S_IMODE(package_info.st_mode) != 0o700
-                    or package_info.st_uid != 1000
+                    or package_info.st_uid != owner_uid
                 ):
                     raise ValueError
                 entries = set(os.listdir(package_fd))
@@ -798,7 +814,7 @@ def _runtime_fingerprint(
 class WorkerImageAdmission:
     """Concrete provider consumed by ``LinuxWorkerExecution``.
 
-    The private snapshot is required to be owned by the pinned operator UID,
+    The private snapshot is required to be owned by the current non-root service UID,
     mode 0700 at its root, with mode 0400 single-link regular members.
     """
 
@@ -814,13 +830,14 @@ class WorkerImageAdmission:
     def _snapshot(self) -> dict[str, bytes]:
         root_fd = None
         try:
+            owner_uid = _snapshot_owner_uid()
             root_fd, root_chain = _open_absolute_directory(self.snapshot_root)
             root = os.fstat(root_fd)
             named = self.snapshot_root.lstat()
             if (
                 not stat.S_ISDIR(root.st_mode)
                 or stat.S_IMODE(root.st_mode) != 0o700
-                or root.st_uid != 1000
+                or root.st_uid != owner_uid
                 or _identity(root) != _identity(named)
             ):
                 raise ValueError
@@ -845,7 +862,7 @@ class WorkerImageAdmission:
                 empty_named = os.stat("empty-config", dir_fd=root_fd, follow_symlinks=False)
                 if (
                     not stat.S_ISDIR(empty_info.st_mode)
-                    or empty_info.st_uid != 1000
+                    or empty_info.st_uid != owner_uid
                     or stat.S_IMODE(empty_info.st_mode) != 0o700
                     or os.listdir(empty_config_fd)
                     or _identity(empty_info) != _identity(empty_named)
@@ -863,7 +880,7 @@ class WorkerImageAdmission:
                 if (
                     not stat.S_ISDIR(metadata_stat.st_mode)
                     or stat.S_IMODE(metadata_stat.st_mode) != 0o700
-                    or metadata_stat.st_uid != 1000
+                    or metadata_stat.st_uid != owner_uid
                     or _identity(metadata_stat) != _identity(metadata_named)
                 ):
                     raise ValueError
