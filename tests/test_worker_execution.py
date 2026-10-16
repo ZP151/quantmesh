@@ -8,6 +8,8 @@ import sys
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Event, current_thread
+from threading import enumerate as active_threads
 
 import pytest
 from test_linux_owned import _inspect_for_create
@@ -234,6 +236,225 @@ def test_context_resets_on_exception_nested_default_and_independent_thread(monke
     assert job_runner.run_next_job(None, "read", None, None) is None
 
 
+def test_worker_stop_scope_resets_on_nested_and_exceptional_exit():
+    from threading import Event
+
+    module = api()
+    outer, inner = Event(), Event()
+    assert module._stop_event.get() is None
+    with module._worker_stop_scope(outer):
+        assert module._stop_event.get() is outer
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            assert pool.submit(module._stop_event.get).result() is None
+        with module._worker_stop_scope(inner):
+            assert module._stop_event.get() is inner
+        assert module._stop_event.get() is outer
+        with pytest.raises(RuntimeError, match="scope failure"):
+            with module._worker_stop_scope(inner):
+                raise RuntimeError("scope failure")
+        assert module._stop_event.get() is outer
+    assert module._stop_event.get() is None
+
+
+@linux_owner
+def test_worker_stop_prevents_claim_when_runner_call_races_stop(small_fixture, monkeypatch):
+    from threading import Event
+
+    module = api()
+    runner, store, lake, calls, _, _, _ = configured(monkeypatch, small_fixture)
+    job = store.submit("local", "daemon-stop-before-claim", request_for(lake))
+    stop = Event()
+    stop.set()
+
+    with module._worker_stop_scope(stop):
+        result = runner.run_next_job(store, "daemon-owner-slot-0", lake, store.artifact_root)
+
+    assert result is None and calls == []
+    assert store.get("local", job.job_id).state == "queued"
+
+
+@linux_owner
+def test_worker_stop_racing_with_claim_leaves_lease_without_heartbeat(small_fixture, monkeypatch):
+    from threading import Event
+
+    module = api()
+    runner, store, lake, calls, _, _, attachment = configured(monkeypatch, small_fixture)
+    job = store.submit("local", "daemon-stop-after-claim", request_for(lake))
+    stop = Event()
+    claim = store.claim
+    heartbeats = []
+
+    def claim_then_stop(owner, now):
+        record = claim(owner, now)
+        stop.set()
+        return record
+
+    heartbeat = store.heartbeat
+
+    def record_heartbeat(*args):
+        heartbeats.append(args)
+        return heartbeat(*args)
+
+    monkeypatch.setattr(store, "claim", claim_then_stop)
+    monkeypatch.setattr(store, "heartbeat", record_heartbeat)
+    with module._worker_stop_scope(stop):
+        result = runner.run_next_job(store, "daemon-owner-slot-0", lake, store.artifact_root)
+
+    assert result.state == "running" and result.attempt == 1
+    assert result.cancel_requested is False and result.artifacts == []
+    assert heartbeats == [] and calls == [] and attachment.closed is False
+    retry = store.claim("replacement-owner", result.lease_expires_at + timedelta(seconds=1))
+    assert retry is not None and retry.job_id == job.job_id and retry.attempt == 2
+
+
+@linux_owner
+def test_worker_stop_leaves_claimed_attempt_for_lease_reclaim(small_fixture, monkeypatch):
+    from threading import Event
+
+    module = api()
+    runner, store, lake, calls, _, pulses, attachment = configured(
+        monkeypatch, small_fixture, running=True
+    )
+    job = store.submit("local", "daemon-stop-reclaim", request_for(lake))
+    stop = Event()
+    original_send = attachment.send
+
+    def stop_after_start(value):
+        original_send(value)
+        if value.startswith("go:"):
+            stop.set()
+
+    attachment.send = stop_after_start
+    with module._worker_stop_scope(stop):
+        result = runner.run_next_job(store, "daemon-owner-slot-0", lake, store.artifact_root)
+
+    assert result.state == "running" and result.attempt == 1
+    assert result.cancel_requested is False and result.artifacts == []
+    assert pulses == []
+    assert ["rm", "--force", "f" * 64] in calls and attachment.closed
+
+    retry_time = result.lease_expires_at + timedelta(seconds=1)
+    retry = store.claim("replacement-owner", retry_time)
+    assert retry is not None and retry.job_id == job.job_id and retry.attempt == 2
+    assert (
+        store.finish(job.job_id, "daemon-owner-slot-0", 1, "failed", [], "worker_failed") is False
+    )
+
+
+@linux_owner
+def test_worker_stop_after_blob_upload_leaves_no_authoritative_report(small_fixture, monkeypatch):
+    from threading import Event
+
+    from quantmesh.research.worker_daemon import WorkerDaemon
+
+    runner, store, lake, _, _, _, attachment = configured(monkeypatch, small_fixture)
+    job = store.submit("local", "daemon-stop-before-finish", request_for(lake))
+    stop = Event()
+    publish = job_runner.publish_result
+    published = []
+
+    def publish_then_stop(claimed, raw, root):
+        ref = publish(claimed, raw, root)
+        published.append(ref)
+        stop.set()
+        return ref
+
+    monkeypatch.setattr(job_runner, "publish_result", publish_then_stop)
+    WorkerDaemon(
+        runner=runner,
+        store=store,
+        inputs_root=lake,
+        artifacts_root=store.artifact_root,
+    ).run(stop)
+
+    result = store.get("local", job.job_id)
+    assert result.state == "running" and result.attempt == 1
+    assert result.cancel_requested is False and result.artifacts == []
+    assert len(published) == 1
+    assert (store.artifact_root / published[0].object_key).is_file()
+    assert attachment.closed
+
+
+@linux_owner
+def test_worker_stop_before_publish_does_not_upload_or_finish(small_fixture, monkeypatch):
+    from threading import Event
+
+    from quantmesh.research.worker_daemon import WorkerDaemon
+
+    runner, store, lake, _, _, _, attachment = configured(monkeypatch, small_fixture)
+    job = store.submit("local", "daemon-stop-before-publish", request_for(lake))
+    stop = Event()
+    validate = job_runner._validated_child_result
+    publish = job_runner.publish_result
+    published = []
+
+    def validate_then_stop(*args, **kwargs):
+        raw = validate(*args, **kwargs)
+        stop.set()
+        return raw
+
+    def record_publish(*args, **kwargs):
+        published.append(True)
+        return publish(*args, **kwargs)
+
+    monkeypatch.setattr(job_runner, "_validated_child_result", validate_then_stop)
+    monkeypatch.setattr(job_runner, "publish_result", record_publish)
+    WorkerDaemon(
+        runner=runner,
+        store=store,
+        inputs_root=lake,
+        artifacts_root=store.artifact_root,
+    ).run(stop)
+
+    result = store.get("local", job.job_id)
+    assert result.state == "running" and result.attempt == 1 and result.artifacts == []
+    assert published == [] and attachment.closed
+
+
+@linux_owner
+def test_worker_daemon_slot_failure_closes_sibling_owned_child(small_fixture, monkeypatch):
+    from threading import Event, current_thread
+
+    from quantmesh.research.worker_daemon import WorkerDaemon, WorkerDaemonError
+
+    runner, store, lake, calls, _, _, attachment = configured(
+        monkeypatch, small_fixture, running=True
+    )
+    job = store.submit("local", "daemon-sibling-cleanup", request_for(lake))
+    child_started = Event()
+    original_verify = runner.execution.admission.verify
+
+    def fail_second_slot_after_child_start(profile):
+        if current_thread().name == "research-worker-1":
+            assert child_started.wait(3)
+            raise RuntimeError("private admission detail")
+        return original_verify(profile)
+
+    monkeypatch.setattr(runner.execution.admission, "verify", fail_second_slot_after_child_start)
+    original_start = type(runner.execution).start
+
+    def start_and_signal(execution, *args, **kwargs):
+        child = original_start(execution, *args, **kwargs)
+        if execution is runner.execution:
+            child_started.set()
+        return child
+
+    monkeypatch.setattr(type(runner.execution), "start", start_and_signal)
+
+    with pytest.raises(WorkerDaemonError, match="worker_daemon_failed"):
+        WorkerDaemon(
+            runner=runner,
+            store=store,
+            inputs_root=lake,
+            artifacts_root=store.artifact_root,
+        ).run(Event())
+
+    result = store.get("local", job.job_id)
+    assert result.state == "running" and result.attempt == 1 and result.artifacts == []
+    assert ["rm", "--force", "f" * 64] in calls
+    assert attachment.closed
+
+
 def test_worker_refuses_to_create_container_without_parent_binding_provider(
     monkeypatch, small_fixture
 ):
@@ -418,6 +639,91 @@ def test_heartbeat_denial_stops_owned_tree_before_more_pulses(small_fixture, mon
     assert heartbeats == [0.0, 15.0] and len(pulses) == 14
     assert ["rm", "--force", "f" * 64] in calls and attachment.closed
     store.request_cancel("local", job.job_id)
+
+
+@linux_owner
+def test_stop_racing_job_read_prevents_heartbeat_and_pulse(small_fixture, monkeypatch):
+    runner, store, lake, calls, _, pulses, attachment = configured(
+        monkeypatch, small_fixture, running=True
+    )
+    store.submit("local", "stop-during-read", request_for(lake))
+    stop = Event()
+    original_get = store.get
+    original_heartbeat = store.heartbeat
+    heartbeats = []
+    ticks = [0.0]
+
+    def get_and_stop(operator_id, job_id):
+        record = original_get(operator_id, job_id)
+        if not attachment.closed and any(call[0] == "create" for call in calls):
+            ticks[0] = 2.0
+            stop.set()
+        return record
+
+    def count_heartbeat(*args):
+        heartbeats.append(args)
+        return original_heartbeat(*args)
+
+    monkeypatch.setattr(store, "get", get_and_stop)
+    monkeypatch.setattr(store, "heartbeat", count_heartbeat)
+    monkeypatch.setattr(job_runner.time, "monotonic", lambda: ticks[0])
+    monkeypatch.setattr(job_runner, "HEARTBEAT_SECONDS", 1.0)
+
+    with api()._worker_stop_scope(stop):
+        result = runner.run_next_job(store, "worker", lake, store.artifact_root)
+
+    assert result.state == "running" and result.artifacts == []
+    assert len(heartbeats) == 1  # initial lease heartbeat only
+    assert pulses == []
+    assert ["rm", "--force", "f" * 64] in calls and attachment.closed
+
+
+@linux_owner
+def test_daemon_slot_failure_closes_sibling_owned_child(small_fixture, monkeypatch):
+    from quantmesh.research.worker_daemon import WorkerDaemon, WorkerDaemonError
+
+    runner, store, lake, calls, _, _, attachment = configured(
+        monkeypatch, small_fixture, running=True
+    )
+    job = store.submit("local", "sibling-cleanup", request_for(lake))
+    child_started = Event()
+    verify = runner.execution.admission.verify
+
+    def fail_after_sibling_start(profile):
+        if current_thread().name == "research-worker-0":
+            assert child_started.wait(5)
+            raise RuntimeError("untrusted admission detail")
+        return verify(profile)
+
+    monkeypatch.setattr(runner.execution.admission, "verify", fail_after_sibling_start)
+    execution_type = type(runner.execution)
+    original_start = execution_type.start
+
+    def signal_child_started(execution, *args, **kwargs):
+        child = original_start(execution, *args, **kwargs)
+        child_started.set()
+        return child
+
+    monkeypatch.setattr(execution_type, "start", signal_child_started)
+    daemon = WorkerDaemon(
+        runner=runner,
+        store=store,
+        inputs_root=lake,
+        artifacts_root=store.artifact_root,
+    )
+
+    with pytest.raises(WorkerDaemonError, match="worker_daemon_failed"):
+        daemon.run(Event())
+
+    assert child_started.is_set()
+    assert ["rm", "--force", "f" * 64] in calls
+    assert attachment.closed
+    assert not any(
+        thread.is_alive() and thread.name.startswith("research-worker-")
+        for thread in active_threads()
+    )
+    record = store.get("local", job.job_id)
+    assert record.state == "running" and record.attempt == 1 and record.artifacts == []
 
 
 @linux_owner

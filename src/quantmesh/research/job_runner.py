@@ -48,7 +48,7 @@ from quantmesh.research.jobs import (
 from quantmesh.research.linux_owned import LinuxContainmentError
 from quantmesh.research.reports import ReportRegistry, StrategyReport
 from quantmesh.research.strategy_registry import get_strategy, validate_dataset
-from quantmesh.research.worker_execution import _execution
+from quantmesh.research.worker_execution import _execution, _stop_event
 
 _POLL_SECONDS = 0.1
 _MAX_OUTPUT_BYTES = 16 * 1024 * 1024
@@ -482,9 +482,14 @@ def run_next_job(
     store: JobStore, owner: str, inputs_root: Path, artifacts_root: Path
 ) -> JobRecord | None:
     """Claim one job; execute a private snapshot; fence immutable report publication."""
+    stop_event = _stop_event.get()
+    if stop_event is not None and stop_event.is_set():
+        return None
     job = store.claim(owner, datetime.now(UTC))
     if job is None:
         return None
+    if stop_event is not None and stop_event.is_set():
+        return store.get(job.operator_id, job.job_id)
     attempt = (
         Path(artifacts_root).absolute()
         / job.job_id
@@ -496,6 +501,8 @@ def run_next_job(
     started = time.monotonic()
     error = "worker_failed"
     try:
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         _contained(Path(artifacts_root), attempt)
         attempt.mkdir(parents=True, exist_ok=False)
         if execution is not None and sys.platform != "linux":
@@ -510,7 +517,13 @@ def run_next_job(
         )
         (bundle / "job.json").write_text(job.model_dump_json(), encoding="utf-8")
         (bundle / "runtime.json").write_bytes(_canonical(runtime))
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
+        # This check is the cooperative-stop boundary for the following call:
+        # an already-entered store operation may finish, but no later operation starts.
         if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
+            return store.get(job.operator_id, job.job_id)
+        if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         child = (
             execution.start(job, runtime, bundle, output)
@@ -519,7 +532,14 @@ def run_next_job(
         )
         heartbeat = time.monotonic()
         last_pulse = heartbeat
-        while (code := child.poll()) is None:
+        while True:
+            if stop_event is not None and stop_event.is_set():
+                return store.get(job.operator_id, job.job_id)
+            code = child.poll()
+            if code is not None:
+                break
+            if stop_event is not None and stop_event.is_set():
+                return store.get(job.operator_id, job.job_id)
             if time.monotonic() - started >= job.request.budget.timeout_seconds:
                 error = "timeout"
                 raise TimeoutError("owned worker deadline exceeded")
@@ -535,13 +555,22 @@ def run_next_job(
             ):
                 return current
             if time.monotonic() - heartbeat >= HEARTBEAT_SECONDS:
+                if stop_event is not None and stop_event.is_set():
+                    return current
                 if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
                     return store.get(job.operator_id, job.job_id)
                 heartbeat = time.monotonic()
             if time.monotonic() - last_pulse >= 1:
+                if stop_event is not None and stop_event.is_set():
+                    return current
                 child.pulse()
                 last_pulse = time.monotonic()
-            time.sleep(_POLL_SECONDS)
+            if stop_event is None:
+                time.sleep(_POLL_SECONDS)
+            else:
+                stop_event.wait(_POLL_SECONDS)
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         if time.monotonic() - started >= job.request.budget.timeout_seconds:
             error = "timeout"
             raise TimeoutError("owned worker deadline exceeded")
@@ -559,17 +588,30 @@ def run_next_job(
         # Parent validates the actual child receipt and numerical schema before publication.
         if execution is not None:
             execution.validate_exit(child, job, runtime)
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         raw = _validated_child_result(job, owner, runtime, output)
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
             return store.get(job.operator_id, job.job_id)
         if execution is not None:
             # Re-read the exact parent binding immediately before publication.
             execution.validate_exit(child, job, runtime)
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
+        # Treat this check as the stop linearization point for publication.
         ref = publish_result(job, raw, Path(artifacts_root))
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "succeeded", [ref], None)
     except DatasetRejected:
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], "dataset_rejected")
     except (UnsupportedLimits, UnsupportedSnapshotProfile) as unsupported:
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         (attempt / "failure.json").write_bytes(
             _canonical(
                 dict(
@@ -582,8 +624,18 @@ def run_next_job(
                 )
             )
         )
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], "worker_failed")
-    except (ValueError, OSError, subprocess.SubprocessError, LinuxContainmentError):
+    except LinuxContainmentError:
+        if stop_event is not None and not stop_event.is_set():
+            raise
+        if stop_event is not None:
+            return store.get(job.operator_id, job.job_id)
+        store.finish(job.job_id, owner, job.attempt, "failed", [], error)
+    except (ValueError, OSError, subprocess.SubprocessError):
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
     finally:
         if child is not None:
