@@ -4,6 +4,7 @@ This document records which open-source projects are reused, why they are used, 
 
 | Component | Upstream | Role | Integration mode | Expected change | License note |
 | --- | --- | --- | --- | --- | --- |
+| Experimental official-strategy fixture | `vnpy/vnpy`4.5.0, `vnpy/vnpy_ctastrategy`1.4.1, `vnpy/vnpy_sqlite`1.1.3 | Fixed synthetic DoubleMA/AtrRSI product workflow, issue177 / DraftPR179 / ADR0029 pending integration | Explicit Windows external-process adapter, unchanged official imports, separate API/report, default API disabled | QuantMesh adapter/UI and generated SPA only; no core lock or runtime redistribution | MIT upstream notices/source pins retained externally; full Qt/PySide/shiboken/LGPL and transitive release closure not admitted; isolation does not authorize redistribution |
 | Research platform | `microsoft/qlib` | Factor research, datasets, ML workflow, backtesting | Git submodule/reference implementation | Medium | MIT; preserve notices |
 | Vectorized research | `polakowo/vectorbt` | Pattern/reference for parameter sweeps | Excluded from runtime | None | Apache-2.0 with Commons Clause; refused by the release-license policy |
 | Probabilistic forecasting candidate | `unit8co/darts` | Statistical/ML forecasts, historical backtests and quantile paths | Isolated spike, then optional adapter | Medium | Apache-2.0; review its full dependency closure before admission |

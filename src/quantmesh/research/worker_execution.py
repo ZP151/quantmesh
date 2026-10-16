@@ -8,9 +8,12 @@ There is deliberately no saved-record/qualified-boolean provider here.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from pathlib import Path
+from threading import Event
 from typing import TYPE_CHECKING, Protocol
 
 from quantmesh.research.jobs import JobRecord
@@ -29,6 +32,19 @@ if TYPE_CHECKING:
 _execution: ContextVar[LinuxWorkerExecution | None] = ContextVar(
     "quantmesh_worker_execution", default=None
 )
+_stop_event: ContextVar[Event | None] = ContextVar("quantmesh_worker_stop_event", default=None)
+
+
+@contextmanager
+def _worker_stop_scope(stop_event: Event) -> Iterator[None]:
+    """Bind cooperative daemon stop to this execution context and restore nesting."""
+    token = _stop_event.set(stop_event)
+    try:
+        yield
+    finally:
+        _stop_event.reset(token)
+
+
 _COMMAND = (
     "/usr/local/bin/python3",
     "-B",

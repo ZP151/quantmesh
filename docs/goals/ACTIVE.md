@@ -1,5 +1,138 @@
 # Active Goal — iteration0038 Option A
 
+## Parallel product delivery and recovery correction (2026-10-16 Singapore)
+
+The operator explicitly selected vn.py reuse for issue177. Draft
+[PR179](https://github.com/ZP151/quantmesh/pull/179), head7d3e807/tree7bf2593b,
+delivers the optional Windows fixed-synthetic workflow: official DoubleMA/AtrRSI
+selection, numeric parameters and cost units, native progress, parent-reconciled
+report, browser SHA verification and actual JSON download. Two bounded reviews
+pass; native repeat/cost/lifecycle/cashbook evidence and frontend436tests pass.
+The downloaded12936-byte built-SPA report SHA is
+57134549cb2f95127c3a129d24656ccb03723d25f057469643f062a4780f6720;
+root independently verifies it and the five current source hashes. This is an
+experimental user-loop milestone, not production, profitability, durable active
+job recovery, Linux/runtime-redistribution or advisory admission. ADR0029 remains
+in that independent PR; the default API does not mount the experimental routes.
+The one Windows full backend run is INCOMPLETE/exit-1 after bounded identity-stop;
+the observed original case separately passes51.45s and the full run later advances.
+Cause remains undetermined. Linux required CI and applicable human review remain
+open; neither PR179 nor full Option A is complete or merge-ready.
+
+Separately, PR178 oldhead446ab10 cannot merge even if CI passes: actual pg_dump
+custom format interpreted --file=- as a literal filename and left stdout empty.
+All native failure evidence and the20278-byte archive are preserved. The Planner
+reduced a new correction slice to default stdout plus early zero-output refusal;
+accepted1d21911 is integrated here as c26bbfe. Actual affected45+55tests pass.
+Public interfaces, schema, tool pin, credentials and limits remain unchanged.
+New-source native capture/encrypted fresh restore and final exact-head CI/human
+gates are still required. Existing d90 private PG/API acceptance remains valid;
+Worker/advisory activation and real provider/source recovery remain open.
+
+## Private PG/API running; Worker/backup integration awaits final gates (2026-10-16 Singapore)
+
+The new private PostgreSQL/API are now enabled and running from reviewed merged
+d90e3ac, separate from the next software candidate. Actual TLS1.3/256bit SCRAM
+role has no superuser/createDB/createRole/replication/bypassRLS privileges;
+plaintext, wrong CA and wrong password fail. Authenticated health200 reports
+actual_build d90e3ac, advisory-only, model unavailable and Worker pending;
+unauthenticated health401. Actual PG768MiB/CPU75%/64PID and API512MiB/CPU50%/
+128PID cgroups have swap0 and matching MainPID/executable/start identities.
+Owned stop/restart removes old92926/92954, then PG93089/API93104 reopen the same
+PG system identifier7696939994682018330. This is a new-service stop/restart
+rollback witness, not a numerical-job/report recovery or existing-app rollback.
+Independent one-shot metadata readback confirms root-owned unit bytes, enabled/
+active states, exact source/tree/81lock, loopback listeners, oldPID absence and
+unauthenticated401. It uses root's saved authenticated200 evidence, not a new
+credential read. The collector's public trust-bundle/individual-CA hash mismatch
+is documented; it does not establish a new trust-bundle digest. Existing app,
+rollback, Windows source/tunnel and all model-key files remain untouched.
+
+One initial preparation command omitted the documented source WorkingDirectory;
+default preflight refused before SQL/listener. With cwd fixed it passes; fresh
+data/credentials were not regenerated. Preserve this failure and its receipt.
+Host budget reserves two2048MiB Workers, PG768/API512/Worker-controller384/
+advisory384/gateway256/Docker256MiB, leaving1216634880B for the OS. The Docker
+reserve is not a newly enforced daemon cap, and Docker-launched children are
+not claimed to belong to the Worker controller unit.
+
+Root integrates the seven already-reviewed Worker/backup leaves through72e407e.
+Final code affected suite on an exact fresh native Linux checkout440passed/
+26conditional skips/2existing warnings/63.42s; Ruff and format9files/diff pass.
+The first mixed test launcher omitted service PYTHONPATH; the second incorrectly
+exported Git directory variables across fixture git-init tests and used service
+cwd for root CLI tests. All failures remain. That launcher changed shared
+core.bare=true; root preserved its config, restored only core.bare=false and
+verified unchanged HEAD/clean tracked tree, without reset/source rollback.
+The final native checkout inherits no Git directory variables and uses root cwd.
+New source remains unmerged/undeployed pending exact-head CI and applicable
+actual human approval; d90 PG/API deployment does not certify this new Worker.
+
+The bundle libpq known-finding fix b5140c8 is accepted after actual parser
+RED/GREEN and99affected passes; no third structural review. The same backup
+chat now qualifies actual same-snapshot pg_dump/restic/fresh restore using only
+ignored harness/evidence and admitted tools, not a new product qualifier CLI.
+No production/full-Worker/off-host recovery claim follows from that local test.
+
+The user separately authorizes a vn.py API-to-UI fixed-fixture vertical slice in
+the product research chat, issue177, following its42-check upstream bake-off.
+Its independent branch/worktree owns the explicit experimental Windows runner,
+new versioned reports and opt-in UI/API. It cannot alter formal PG/Worker
+signatures, baseline validator or81-wheel closure. Root owns shared records.
+This new human instruction supersedes the earlier research-only scope; it does
+not replace full Option A or authorize model/trading/cloud effects.
+
+Evidence: output/0038-merged-private-deployment/{pg-api-prepared,activation-result}.json;
+19c1/output/0038-private-pg-api-independent/; output/0038-private-recovery-integration-native/;
+output/0038-private-recovery-integration-import-corrected/shared-git-repair.json.
+Persistent numerical Worker/recovery, encrypted restore, real advisory and
+server-owned gateway/source acceptance remain open. Full A ACTIVE.
+
+## PR176 approved and merged; exact private source/runtime staged (2026-10-16 Singapore)
+
+The user confirms two independent human reviewers including Safety Owner
+approve exact170e066 and authorizes its normal code merge. Current CI38759759750
+passes5142core/142skip/60golden checks. The single fresh premerge observation
+finds the same head/basefb66, all required checks successful and no actionable
+review. Normal match-head squash at2026-10-15T16:43:19Z yieldsd90e3ac0c8a48464794f10874045c137e22ba974;
+candidate/merge complete treef2135ce2de92a00db9376ad8aed809d2be131c04 matches, fetched full diff0.
+The observer summary's stale tested-merge field was corrected against raw
+release logs to5b2b8ff42c3ec0043d70b2cf0dd26658c995b717; original evidence retained.
+No repeat CI/human question or PR175 gate is needed.
+
+Actual research-host intake confirms existing2CPU/8GB and no installed research
+API/PG/Worker/advisory units. Reviewed merged source is now staged at
+/home/ubuntu/qm-research/releases/d90e3ac0c8a48464794f10874045c137e22ba974/source;
+the copied existing locked81-wheel runtime is outside source at
+/home/ubuntu/qm-research/runtime/venv. Actual source/import/license/dependency
+admission passes7.625s with actual_build=d90e3ac0c8a48464794f10874045c137e22ba974,
+unchanged lock07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a.
+No dependency installation, service/config activation, SQL connection or key/
+provider read occurred. Staged363946096B; combined original whole+new1317519461B
+under5GB, parent+new772301795B under1GB, free158823743488B above50GB.
+This is an actual persistent source/runtime stage, not running-service acceptance.
+
+Worker software39d0e64/21892d7/b603120 remains separate, not yet integrated or
+deployed. Recovery-manifest e11a57b has accepted exact-source actual readonly
+capture/concurrent-writer and mutation-negative qualification; this certifies
+manifest capture only. New bundle b941dee is withheld: root's second bounded
+review reproduces a real libpq180006 service-file serialization bug without any
+database connection. Same backup chat is correcting this single known finding;
+no third structural review or Task2 encrypted-restore execution is authorized.
+
+Next: private PG/TLS/role/config and host-resource policy, independently checked
+rollback/unit startup, then new legal analysis-requested fixed-fixture task and
+report SHA binding before real advisory. Coherent Worker/backup integration and
+their required CI/human/runtime recovery gates remain. Preserve application
+69515b79/paper=true/live=false, rollbackc8e1813, Windows gateway and original
+tunnel. Server-owned OpenD install/auth/source switch is still open. No new paid
+resources. Full Option A ACTIVE; formal168h NOT_REQUIRED.
+
+Evidence: output/0038-release-readiness/pr176-reviewed-merge.json;
+output/0038-merged-private-deployment/{read-only-intake,stage-checked}.json;
+output/0038-orchestration/backup-bundle-review-round2.json. The next tracked
+release plan is docs/superpowers/plans/2026-10-16-private-research-release.md.
+
 ## PR176 fixed-date replay fixtures repaired; next exact-head CI pending (2026-10-15)
 
 CI38749233362 on287fe68 ended FAILURE:5140passed/2failed/142skipped,
