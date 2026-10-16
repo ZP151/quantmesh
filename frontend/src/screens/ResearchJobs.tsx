@@ -4,6 +4,7 @@ import { Page } from '@/components/page'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api, type ResearchJobOptions, type ResearchJobRecord, type ResearchJobRequest } from '@/lib/api'
+import { VnpyFixturePanel } from './VnpyFixturePanel'
 
 // Operate: extend the incumbent black/green workstation. One configuration column,
 // one durable status/report column. Fixture truth, nonzero costs and lineage stay
@@ -73,6 +74,21 @@ function unavailable(value: number | null | undefined): string {
 const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
 
 export function ResearchJobsScreen() {
+  const [engine, setEngine] = useState('baseline')
+  return <>
+    <div className="mb-4 flex flex-wrap items-center gap-3 px-1 text-sm">
+      <label htmlFor="research-engine">Research engine</label>
+      <select id="research-engine" className="h-9 rounded-md border border-input bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring"
+        value={engine} onChange={event => setEngine(event.target.value)}>
+        <option value="baseline">QuantMesh registered baselines</option>
+        <option value="vnpy">vn.py official strategies · fixture experiment</option>
+      </select>
+    </div>
+    {engine === 'vnpy' ? <VnpyFixturePanel /> : <BaselineResearchJobsScreen />}
+  </>
+}
+
+function BaselineResearchJobsScreen() {
   const retainedRequest = useRef(readSaved()?.submission.request).current
   const [saved, setSaved] = useState<Saved | null>(readSaved)
   const [job, setJob] = useState<ResearchJobRecord | null>(() => readSaved()?.job ?? null)
