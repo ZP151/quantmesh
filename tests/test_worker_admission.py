@@ -14,6 +14,7 @@ from quantmesh.research.worker_admission import (
     WorkerImageAdmission,
     _canonical,
     _metadata_text,
+    _read_snapshot_member,
     _runtime_fingerprint,
     _verify_distribution_metadata,
 )
@@ -126,6 +127,62 @@ def _snapshot():
         "rows": rows,
     }
     return manifest, inventory, runtime, lock_raw
+
+
+def _private_admission_snapshot(tmp_path):
+    import quantmesh.research.worker_admission as admission
+
+    root = tmp_path / "snapshot"
+    root.mkdir(mode=0o700)
+    (root / "metadata").mkdir(mode=0o700)
+    (root / "empty-config").mkdir(mode=0o700)
+    digests = {}
+    for field, (filename, _) in admission._SNAPSHOTS.items():
+        raw = f"private snapshot member: {filename}".encode()
+        digests[field] = _sha(raw)
+        (root / filename).write_bytes(raw)
+        (root / filename).chmod(0o400)
+    (root / "receipt.json").write_bytes(b"{}")
+    (root / "receipt.json").chmod(0o600)
+    digests["image_config_sha256"] = digests["oci_config_sha256"]
+    digests["image_id"] = f"sha256:{digests['oci_manifest_sha256']}"
+    provider = WorkerImageAdmission(_pins(**digests), root)
+    return provider, root
+
+
+def _simulate_snapshot_owner_uid(monkeypatch, uid=10001, *, foreign_inode=None):
+    """Map only stat-result UIDs while preserving descriptor/name identity."""
+    import quantmesh.research.worker_admission as admission
+
+    real_stat = os.stat
+    real_fstat = os.fstat
+
+    def map_uid(info):
+        mapped_uid = uid
+        if foreign_inode == (info.st_dev, info.st_ino):
+            mapped_uid = uid + 1
+        return SimpleNamespace(
+            st_dev=info.st_dev,
+            st_ino=info.st_ino,
+            st_mode=info.st_mode,
+            st_nlink=info.st_nlink,
+            st_size=info.st_size,
+            st_mtime_ns=info.st_mtime_ns,
+            st_ctime_ns=info.st_ctime_ns,
+            st_uid=mapped_uid,
+            st_gid=info.st_gid,
+        )
+
+    def mapped_stat(path, *args, **kwargs):
+        return map_uid(real_stat(path, *args, **kwargs))
+
+    def mapped_fstat(fd):
+        return map_uid(real_fstat(fd))
+
+    monkeypatch.setattr(admission.os, "getuid", lambda: uid)
+    monkeypatch.setattr(admission.os, "geteuid", lambda: uid)
+    monkeypatch.setattr(admission.os, "stat", mapped_stat)
+    monkeypatch.setattr(admission.os, "fstat", mapped_fstat)
 
 
 def test_fingerprint_is_recomputed_from_bound_source_and_metadata_bytes():
@@ -245,9 +302,9 @@ def test_kernel_raw_policy_references_only_address_the_held_namespace():
 
 
 @pytest.mark.skipif(
-    os.name != "posix" or os.getuid() != 1000, reason="private snapshot owner contract"
+    os.name != "posix" or os.getuid() == 0, reason="private snapshot owner contract"
 )
-def test_metadata_snapshot_recomputes_hashes_from_actual_files(tmp_path):
+def test_metadata_snapshot_recomputes_hashes_from_actual_files(tmp_path, monkeypatch):
     raw_metadata = b"Name: fixture\r\nVersion: 1.0\r\n"
     raw_record = b"fixture RECORD\r\n"
     directory = "/usr/local/lib/python3.12/site-packages/fixture-1.0.dist-info"
@@ -288,6 +345,21 @@ def test_metadata_snapshot_recomputes_hashes_from_actual_files(tmp_path):
         },
     )
 
+    owner_uid = root.stat().st_uid
+    monkeypatch.setattr(os, "getuid", lambda: owner_uid + 1)
+    monkeypatch.setattr(os, "geteuid", lambda: owner_uid + 1)
+    with pytest.raises(WorkerAdmissionRejected):
+        _verify_distribution_metadata(
+            root,
+            {"rows": [row]},
+            {
+                f"{directory}/METADATA": _sha(raw_metadata),
+                f"{directory}/RECORD": _sha(raw_record),
+            },
+        )
+    monkeypatch.setattr(os, "getuid", lambda: owner_uid)
+    monkeypatch.setattr(os, "geteuid", lambda: owner_uid)
+
     row["text_sha256"]["METADATA"] = _sha(b"tampered")
     with pytest.raises(Exception):
         _verify_distribution_metadata(
@@ -298,6 +370,204 @@ def test_metadata_snapshot_recomputes_hashes_from_actual_files(tmp_path):
                 f"{directory}/RECORD": _sha(raw_record),
             },
         )
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or os.getuid() == 0,
+    reason="snapshot members require POSIX descriptor semantics",
+)
+def test_snapshot_member_accepts_current_nonroot_process_uid(tmp_path):
+    root = tmp_path / "snapshot-member"
+    root.mkdir(mode=0o700)
+    member = root / "metadata.json"
+    member.write_bytes(b"private metadata")
+    member.chmod(0o400)
+    directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        assert _read_snapshot_member(directory_fd, member.name, 4096) == b"private metadata"
+    finally:
+        os.close(directory_fd)
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX snapshot descriptor semantics")
+def test_snapshot_and_distribution_metadata_accept_simulated_uid_10001(tmp_path, monkeypatch):
+    import quantmesh.research.worker_admission as admission
+
+    provider, root = _private_admission_snapshot(tmp_path)
+    raw_metadata = b"Name: fixture\r\nVersion: 1.0\r\n"
+    raw_record = b"fixture RECORD\r\n"
+    package = root / "metadata" / "fixture-1.0.dist-info"
+    package.mkdir(mode=0o700)
+    (package / "METADATA").write_bytes(raw_metadata)
+    (package / "RECORD").write_bytes(raw_record)
+    for member in package.iterdir():
+        member.chmod(0o400)
+    _, text_metadata_hash = _metadata_text(raw_metadata)
+    _, text_record_hash = _metadata_text(raw_record)
+    directory = "/usr/local/lib/python3.12/site-packages/fixture-1.0.dist-info"
+    row = {
+        "name": "fixture",
+        "version": "1.0",
+        "metadata_directory": directory,
+        "text_sha256": {
+            "METADATA": text_metadata_hash,
+            "RECORD": text_record_hash,
+            "direct_url.json": _sha(b""),
+        },
+        "raw_sha256": {
+            "METADATA": _sha(raw_metadata),
+            "RECORD": _sha(raw_record),
+            "direct_url.json": _sha(b""),
+        },
+    }
+    files = {
+        f"{directory}/METADATA": _sha(raw_metadata),
+        f"{directory}/RECORD": _sha(raw_record),
+    }
+
+    _simulate_snapshot_owner_uid(monkeypatch)
+
+    assert provider._snapshot()
+    admission._verify_distribution_metadata(root, {"rows": [row]}, files)
+
+
+@pytest.mark.parametrize("process_uid", [0, "foreign"])
+@pytest.mark.skipif(
+    os.name != "posix", reason="snapshot members require POSIX descriptor semantics"
+)
+def test_snapshot_member_rejects_root_and_foreign_process_uids(tmp_path, monkeypatch, process_uid):
+    import quantmesh.research.worker_admission as admission
+
+    root = tmp_path / "snapshot-member"
+    root.mkdir(mode=0o700)
+    member = root / "metadata.json"
+    member.write_bytes(b"private metadata")
+    member.chmod(0o400)
+    owner_uid = member.stat().st_uid
+    actual_process_uid = 0 if process_uid == 0 else owner_uid + 1
+    directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        monkeypatch.setattr(admission.os, "getuid", lambda: actual_process_uid)
+        monkeypatch.setattr(admission.os, "geteuid", lambda: actual_process_uid)
+        with pytest.raises(WorkerAdmissionRejected):
+            _read_snapshot_member(directory_fd, member.name, 4096)
+    finally:
+        os.close(directory_fd)
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or os.getuid() == 0,
+    reason="private snapshot owner contract is POSIX-only",
+)
+def test_snapshot_accepts_current_nonroot_process_uid(tmp_path):
+    provider, _ = _private_admission_snapshot(tmp_path)
+    assert provider._snapshot()
+
+
+@pytest.mark.parametrize("process_uid", [0, "foreign"])
+@pytest.mark.skipif(os.name != "posix", reason="private snapshot owner contract is POSIX-only")
+def test_snapshot_rejects_root_or_foreign_process_uid(tmp_path, monkeypatch, process_uid):
+    import quantmesh.research.worker_admission as admission
+
+    provider, root = _private_admission_snapshot(tmp_path)
+    owner_uid = root.stat().st_uid
+
+    process_uid = 0 if process_uid == 0 else owner_uid + 1
+    monkeypatch.setattr(admission.os, "getuid", lambda: process_uid)
+    monkeypatch.setattr(admission.os, "geteuid", lambda: process_uid)
+    with pytest.raises(WorkerAdmissionRejected):
+        provider._snapshot()
+
+
+@pytest.mark.parametrize(
+    "component", ["root", "empty-config", "metadata", "package", "snapshot-member"]
+)
+@pytest.mark.skipif(os.name != "posix", reason="POSIX snapshot descriptor semantics")
+def test_snapshot_rejects_a_single_foreign_component_owner(tmp_path, monkeypatch, component):
+    import quantmesh.research.worker_admission as admission
+
+    provider, root = _private_admission_snapshot(tmp_path)
+    package = root / "metadata" / "fixture-1.0.dist-info"
+    package.mkdir(mode=0o700)
+    (package / "METADATA").write_bytes(b"Name: fixture\nVersion: 1.0\n")
+    (package / "RECORD").write_bytes(b"fixture RECORD\n")
+    for member in package.iterdir():
+        member.chmod(0o400)
+    target = {
+        "root": root,
+        "empty-config": root / "empty-config",
+        "metadata": root / "metadata",
+        "package": package,
+        "snapshot-member": root / "oci-manifest.json",
+    }[component]
+    info = os.stat(target, follow_symlinks=False)
+    _simulate_snapshot_owner_uid(monkeypatch, foreign_inode=(info.st_dev, info.st_ino))
+
+    if component == "package":
+        raw_metadata = b"Name: fixture\nVersion: 1.0\n"
+        raw_record = b"fixture RECORD\n"
+        directory = "/usr/local/lib/python3.12/site-packages/fixture-1.0.dist-info"
+        _, metadata_hash = _metadata_text(raw_metadata)
+        _, record_hash = _metadata_text(raw_record)
+        row = {
+            "name": "fixture",
+            "version": "1.0",
+            "metadata_directory": directory,
+            "text_sha256": {
+                "METADATA": metadata_hash,
+                "RECORD": record_hash,
+                "direct_url.json": _sha(b""),
+            },
+            "raw_sha256": {
+                "METADATA": _sha(raw_metadata),
+                "RECORD": _sha(raw_record),
+                "direct_url.json": _sha(b""),
+            },
+        }
+        with pytest.raises(WorkerAdmissionRejected):
+            admission._verify_distribution_metadata(
+                root,
+                {"rows": [row]},
+                {
+                    f"{directory}/METADATA": _sha(raw_metadata),
+                    f"{directory}/RECORD": _sha(raw_record),
+                },
+            )
+    else:
+        with pytest.raises(WorkerAdmissionRejected):
+            provider._snapshot()
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX snapshot descriptor semantics")
+def test_snapshot_member_rejects_different_real_and_effective_uids(tmp_path, monkeypatch):
+    import quantmesh.research.worker_admission as admission
+
+    root = tmp_path / "snapshot-member"
+    root.mkdir(mode=0o700)
+    member = root / "metadata.json"
+    member.write_bytes(b"private metadata")
+    member.chmod(0o400)
+    owner_uid = member.stat().st_uid
+    directory_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        monkeypatch.setattr(admission.os, "getuid", lambda: owner_uid)
+        monkeypatch.setattr(admission.os, "geteuid", lambda: owner_uid + 1)
+        with pytest.raises(WorkerAdmissionRejected):
+            _read_snapshot_member(directory_fd, member.name, 4096)
+    finally:
+        os.close(directory_fd)
+
+
+def test_snapshot_member_fails_closed_without_posix_uid(monkeypatch):
+    import quantmesh.research.worker_admission as admission
+
+    def unexpected_open(*_args, **_kwargs):
+        raise AssertionError("non-POSIX owner validation must fail before opening a member")
+
+    monkeypatch.setattr(admission.os, "name", "nt")
+    monkeypatch.setattr(admission.os, "open", unexpected_open)
+    with pytest.raises(WorkerAdmissionRejected):
+        _read_snapshot_member(-1, "metadata.json", 4096)
 
 
 def test_pins_reject_noncanonical_image_and_unexpected_prefix():
@@ -521,7 +791,6 @@ def test_parent_binding_uses_exact_ready_and_current_process_identity(monkeypatc
     monkeypatch.setattr(admission, "_proc_identity", lambda _pid: bad_label)
     with pytest.raises(WorkerAdmissionRejected):
         provider.prepare_parent_binding(process, job, runtime, ready)
-
 
     state_with_gids = identity
     changing = iter(

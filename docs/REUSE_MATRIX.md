@@ -1,10 +1,80 @@
 # QuantMesh Reuse Matrix
 
+## Approved private identity cutover; snapshot owner correction (2026-10-16 Singapore)
+
+PR178 and PR179 are merged, with complete candidate/merge trees checked. The
+bounded vn.py synthetic Windows product slice is complete; its accepted Windows
+full-suite limitation and external runtime redistribution restriction remain.
+Do not repeat their CI, review, source staging or earlier native qualifications.
+
+The operator explicitly approved the dedicated locked/nologin qm-research
+UID/GID10001, service-only Worker Docker group access, private shared roots and
+controlled private API e2 cutover. Actual systemd namespace preflights pass as
+10001 with zero capabilities and NNP: source, existing81-wheel runtime and config
+are read-only; only the fixture is writable; private home paths are hidden. The
+API has no Docker group and its access is denied. The Worker-only probe has
+groups988/10001 and reaches the existing Engine without sudo Docker or socket/
+host group changes. No dependency, environment or paid resource was added.
+
+Fresh read-only RR counts before and after stopping the old API confirm zero
+jobs/outbox/model effects/reservations and empty old lake/artifact roots. The
+private API now runs e2a69c5 as10001, authenticated health200/unauthenticated401,
+PID99929 and unit SHA2151e9464c087d5d3b3b38ccf6e5a98b35389d7e2c1220fb182f7b35c9f7aaaf.
+Actual API512MiB/high384/swap0/CPU50/PID128 controls pass. PostgreSQL remains on
+its original identity/unit/data and PID93089; the original d90 API unit/config
+remain available for rollback. Existing trading app, Windows/tunnel and model
+key/provider are untouched. This is API identity/cutover acceptance only.
+
+An exact e2 source-only image is prepared at
+sha256:1be6769b0b97c5a10303e6fdddc2deff5b057bcaf6caf72c08857daaf4ab8d17,
+with194files/2804327bytes; its preparation container is removed. The first
+attempt refused before container creation because its old harness expected5
+images rather than the freshly observed10. That failure is preserved; a new
+attempt nonce corrects only the count after checking the exact Engine/base.
+The successful phase leaves parent935255635B<1GB, whole1860624543B<5GB and
+free158636118016B>50GB. This image is not admitted as a numerical Worker.
+
+An actual native helper probe under10001 identifies a product blocker in
+merged e2: seven private-snapshot owner checks assume1000 and reject the
+service's own10001-owned0400 single-link metadata. The narrow correction now
+derives a matching positive real/effective POSIX process UID internally and
+uses it at all seven checks. Root, mixed UID, unavailable identity and foreign
+owners fail closed;22pins, modes, FD/no-follow and held/named identity checks,
+kernel root ownership and image child10001 remain fixed. No public UID override
+or configuration field is added. This unmerged correction is not deployed.
+
+Issue170 software evidence on base5661033c: initial owner regressions fail
+7/9 against old source; final WSL owner tests8pass/20deselected and complete
+admission file28pass. A consistent simulated UID10001 positive reaches every
+changed comparison; seven isolated one-comparison reversions all fail that
+test. This is software simulation, not post-fix native qualification. First
+review found only test coverage/root-baseline gaps; bounded test-only changes
+closed them and round2 passes with no remaining actionable findings. Full
+src/tests/tools Ruff, affected-file format, whitespace and submodule metadata
+checks pass; the existing NumPy deprecation warning remains. Windows full-suite
+and new exact-head required CI are not claimed. Evidence is retained under
+output/0038-snapshot-owner-fix/, including both review rounds and failed runs.
+The tracked plan is docs/superpowers/plans/2026-10-16-worker-snapshot-owner.md.
+Normal merge/deployment still require exact-head CI and Class C approval by
+two independent humans including Safety Owner. Prior operational/code approvals
+do not certify the new diff. No third structural review or old validation rerun.
+
+Separately, an actual10001 namespace probe reads only the two exact live OCI
+blobs through read-only binds while host containerd remains0700. No host ACL,
+mode or capability expansion is used. Permanent Worker remains uninstalled;
+all22-pin native admission, two-job/cancel/reclaim/report recovery, production
+backup/restore, real advisory and server OpenD acceptance remain open. Full
+Option A remains active; provider calls remain zero and168h is NOT_REQUIRED.
+
+Evidence: output/0038-pr178-merged-deployment/identity-api-cutover-root-checked.json;
+worker-image-owner-red-root-checked.json in the same directory. All first
+attempt failures and previous qualification artifacts are retained.
+
 This document records which open-source projects are reused, why they are used, and how much adaptation is expected.
 
 | Component | Upstream | Role | Integration mode | Expected change | License note |
 | --- | --- | --- | --- | --- | --- |
-| Experimental official-strategy fixture | `vnpy/vnpy`4.5.0, `vnpy/vnpy_ctastrategy`1.4.1, `vnpy/vnpy_sqlite`1.1.3 | Fixed synthetic DoubleMA/AtrRSI product workflow, issue177 / DraftPR179 / ADR0029 pending integration | Explicit Windows external-process adapter, unchanged official imports, separate API/report, default API disabled | QuantMesh adapter/UI and generated SPA only; no core lock or runtime redistribution | MIT upstream notices/source pins retained externally; full Qt/PySide/shiboken/LGPL and transitive release closure not admitted; isolation does not authorize redistribution |
+| Experimental official-strategy fixture | `vnpy/vnpy`4.5.0, `vnpy/vnpy_ctastrategy`1.4.1, `vnpy/vnpy_sqlite`1.1.3 | Fixed synthetic DoubleMA/AtrRSI product workflow, issue177 / merged PR179 / ADR0029 | Explicit Windows external-process adapter, unchanged official imports, separate API/report, default API disabled | QuantMesh adapter/UI and generated SPA only; no core lock or runtime redistribution | MIT upstream notices/source pins retained externally; full Qt/PySide/shiboken/LGPL and transitive release closure not admitted; isolation does not authorize redistribution |
 | Research platform | `microsoft/qlib` | Factor research, datasets, ML workflow, backtesting | Git submodule/reference implementation | Medium | MIT; preserve notices |
 | Vectorized research | `polakowo/vectorbt` | Pattern/reference for parameter sweeps | Excluded from runtime | None | Apache-2.0 with Commons Clause; refused by the release-license policy |
 | Probabilistic forecasting candidate | `unit8co/darts` | Statistical/ML forecasts, historical backtests and quantile paths | Isolated spike, then optional adapter | Medium | Apache-2.0; review its full dependency closure before admission |
