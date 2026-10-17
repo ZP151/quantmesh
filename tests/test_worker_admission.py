@@ -301,6 +301,261 @@ def test_kernel_raw_policy_references_only_address_the_held_namespace():
             admission._kernel_policy_revision(info, "raw_abi", target)
 
 
+@pytest.mark.skipif(os.name != "posix", reason="inherited policy descriptors are POSIX-only")
+@pytest.mark.parametrize(
+    "case",
+    [
+        "success",
+        "ordinary_success",
+        "non_eacces",
+        "foreign_matching",
+        "wrong_inode",
+        "writable",
+        "postread_writable",
+        "nonregular",
+        "missing",
+        "o_path",
+        "abi_eacces",
+        "pread_error",
+        "overflow",
+        "changed_identity",
+        "changed_revision",
+    ],
+)
+def test_kernel_policy_fd_fallback_is_bounded_and_fails_closed(tmp_path, monkeypatch, case):
+    import concurrent.futures
+    import errno
+    import fcntl
+    import stat
+
+    import quantmesh.research.worker_admission as admission
+
+    raw = (
+        b"x" * (admission._MAX_POLICY + 1)
+        if case == "overflow"
+        else b"kernel policy bytes from the live descriptor" * 97
+    )
+    wrong_path = tmp_path / "other-policy"
+    if case == "wrong_inode":
+        wrong_path.write_bytes(raw)
+    revision = tmp_path / "namespace" / "raw_data" / "124"
+    profile = tmp_path / "profile"
+    revision.mkdir(parents=True)
+    profile.mkdir()
+    (revision / "raw_data").write_bytes(raw)
+    (revision / "abi").write_text("v5\n", encoding="ascii")
+    (revision / "sha256").write_text(_sha(raw) + "\n", encoding="ascii")
+    for member, target in (
+        ("raw_data", "../../raw_data/124/raw_data"),
+        ("raw_abi", "../../raw_data/124/abi"),
+        ("raw_sha256", "../../raw_data/124/sha256"),
+    ):
+        (profile / member).symlink_to(target)
+
+    real_open = os.open
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    namespace_fd = real_open(tmp_path / "namespace", flags)
+    profile_fd = real_open(profile, flags)
+    revision_fd = real_open(revision, flags)
+    source_fd = real_open(revision / "raw_data", os.O_RDONLY)
+    extra_fds = []
+    try:
+        try:
+            saved_fd3 = os.dup(3)
+        except OSError:
+            saved_fd3 = None
+        os.dup2(source_fd, 3)
+        raw_identity = os.stat(revision / "raw_data")
+        fixture_paths = [
+            tmp_path / "namespace",
+            tmp_path / "namespace" / "raw_data",
+            revision,
+            revision / "raw_data",
+            revision / "abi",
+            revision / "sha256",
+            profile,
+            profile / "raw_data",
+            profile / "raw_abi",
+            profile / "raw_sha256",
+        ]
+        if case == "wrong_inode":
+            fixture_paths.append(wrong_path)
+        fixture_inodes = {
+            (info.st_dev, info.st_ino)
+            for path in fixture_paths
+            for info in (os.stat(path, follow_symlinks=False),)
+        }
+        raw_inode = (raw_identity.st_dev, raw_identity.st_ino)
+        revision_identity = os.fstat(revision_fd)
+        revision_inode = (revision_identity.st_dev, revision_identity.st_ino)
+        real_stat = os.stat
+        real_fstat = os.fstat
+        real_pread = os.pread
+        pread_calls = []
+
+        def mapped(info):
+            if (info.st_dev, info.st_ino) not in fixture_inodes:
+                return info
+            mode = info.st_mode
+            if stat.S_ISLNK(mode):
+                mode = stat.S_IFLNK | 0o444
+            return type(
+                "KernelStat",
+                (),
+                {
+                    key: (
+                        1000
+                        if key == "st_uid"
+                        and case == "foreign_matching"
+                        and (info.st_dev, info.st_ino) == raw_inode
+                        else 0
+                        if key in {"st_uid", "st_gid"}
+                        else 0
+                        if key == "st_size" and (info.st_dev, info.st_ino) == raw_inode
+                        else mode
+                        if key == "st_mode"
+                        else getattr(info, key)
+                    )
+                    for key in (
+                        "st_dev",
+                        "st_ino",
+                        "st_mode",
+                        "st_nlink",
+                        "st_size",
+                        "st_mtime_ns",
+                        "st_ctime_ns",
+                        "st_uid",
+                        "st_gid",
+                    )
+                },
+            )()
+
+        def mapped_stat(path, *args, **kwargs):
+            return mapped(real_stat(path, *args, **kwargs))
+
+        def mapped_fstat(fd):
+            return mapped(real_fstat(fd))
+
+        def denied_raw_open(path, open_flags, *args, **kwargs):
+            if (
+                path == "raw_data" or (case == "abi_eacces" and path == "abi")
+            ) and "dir_fd" in kwargs:
+                parent = real_fstat(kwargs["dir_fd"])
+                if (parent.st_dev, parent.st_ino) == revision_inode:
+                    if case == "ordinary_success" and path == "raw_data":
+                        return real_open(path, open_flags, *args, **kwargs)
+                    if case == "abi_eacces" and path == "abi":
+                        raise PermissionError(errno.EACCES, "permission denied")
+                    number = errno.EPERM if case == "non_eacces" else errno.EACCES
+                    raise PermissionError(number, "permission denied")
+            return real_open(path, open_flags, *args, **kwargs)
+
+        def partial_pread(fd, count, offset):
+            pread_calls.append(offset)
+            if case == "pread_error":
+                raise OSError(errno.EIO, "read failed")
+            if case == "changed_identity" and len(pread_calls) == 1:
+                (revision / "raw_data").rename(revision / "raw_data.old")
+                (revision / "raw_data").write_bytes(raw)
+            if case == "changed_revision" and len(pread_calls) == 1:
+                (profile / "raw_data").unlink()
+                (profile / "raw_data").symlink_to("../../raw_data/125/raw_data")
+            if case == "postread_writable" and len(pread_calls) == 1:
+                os.dup2(extra_fds[-1], 3)
+            return real_pread(fd, count if case == "overflow" else min(count, 13), offset)
+
+        monkeypatch.setattr(admission.os, "open", denied_raw_open)
+        monkeypatch.setattr(admission.os, "stat", mapped_stat)
+        monkeypatch.setattr(admission.os, "fstat", mapped_fstat)
+        monkeypatch.setattr(admission.os, "pread", partial_pread)
+
+        if case == "wrong_inode":
+            extra_fds.append(real_open(wrong_path, os.O_RDONLY))
+            os.dup2(extra_fds[-1], 3)
+        elif case == "writable":
+            extra_fds.append(real_open(revision / "raw_data", os.O_RDWR))
+            os.dup2(extra_fds[-1], 3)
+        elif case == "postread_writable":
+            extra_fds.append(real_open(revision / "raw_data", os.O_RDWR))
+        elif case == "nonregular":
+            read_end, write_end = os.pipe()
+            extra_fds.extend((read_end, write_end))
+            os.dup2(read_end, 3)
+        elif case == "missing":
+            os.close(3)
+        elif case == "o_path":
+            if not hasattr(os, "O_PATH"):
+                pytest.skip("O_PATH is Linux-specific")
+            extra_fds.append(real_open(revision / "raw_data", os.O_PATH))
+            os.dup2(extra_fds[-1], 3)
+
+        if case == "abi_eacces":
+            assert fcntl.fcntl(3, fcntl.F_GETFL) & os.O_ACCMODE == os.O_RDONLY
+            assert stat.S_ISREG(real_fstat(3).st_mode)
+            assert mapped(real_fstat(3)).st_uid == 0
+            with pytest.raises(WorkerAdmissionRejected):
+                admission._read_kernel_member(revision_fd, "abi", 32)
+            assert not pread_calls
+        elif case in {"success", "ordinary_success"}:
+            if case == "success":
+                with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+                    results = list(
+                        pool.map(
+                            lambda _: admission._read_kernel_policy_bytes(profile_fd, namespace_fd),
+                            range(2),
+                        )
+                    )
+            else:
+                results = [admission._read_kernel_policy_bytes(profile_fd, namespace_fd)]
+            assert all(result == (raw, "v5", _sha(raw)) for result in results)
+            if case == "success":
+                assert len(results) == 2
+                assert pread_calls
+            else:
+                assert not pread_calls
+            assert fcntl.fcntl(3, fcntl.F_GETFL) & os.O_ACCMODE == os.O_RDONLY
+            assert os.lseek(3, 0, os.SEEK_CUR) == 0
+            assert stat.S_ISREG(real_fstat(3).st_mode)
+        else:
+            with pytest.raises(WorkerAdmissionRejected):
+                admission._read_kernel_policy_bytes(profile_fd, namespace_fd)
+            if case in {
+                "non_eacces",
+                "foreign_matching",
+                "wrong_inode",
+                "writable",
+                "nonregular",
+                "missing",
+                "o_path",
+                "abi_eacces",
+            }:
+                assert not pread_calls
+            elif case == "pread_error":
+                assert len(pread_calls) == 1
+            elif case == "overflow":
+                assert pread_calls
+                assert pread_calls[-1] == admission._MAX_POLICY
+            elif case in {"changed_identity", "changed_revision", "postread_writable"}:
+                assert pread_calls
+        for descriptor in extra_fds:
+            os.close(descriptor)
+        extra_fds.clear()
+    finally:
+        for descriptor in extra_fds:
+            os.close(descriptor)
+        os.close(source_fd)
+        os.close(revision_fd)
+        os.close(profile_fd)
+        os.close(namespace_fd)
+        try:
+            os.close(3)
+        except OSError:
+            pass
+        if saved_fd3 is not None:
+            os.dup2(saved_fd3, 3)
+            os.close(saved_fd3)
+
+
 @pytest.mark.skipif(
     os.name != "posix" or os.getuid() == 0, reason="private snapshot owner contract"
 )
