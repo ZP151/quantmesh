@@ -8,6 +8,7 @@ binding a child) the exact live container process.
 from __future__ import annotations
 
 import email.parser
+import errno
 import hashlib
 import json
 import os
@@ -26,6 +27,11 @@ from quantmesh.research.worker_build import (
     validate_registered_job,
 )
 from quantmesh.research.worker_kernel import build_kernel_policy, verify_mountinfo
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows keeps the module importable.
+    fcntl = None
 
 _MAX_JSON = 32 * 1024 * 1024
 _MAX_POLICY = 1024 * 1024
@@ -260,11 +266,16 @@ def _read_kernel_member(directory_fd: int, name: str, maximum: int) -> bytes:
             "sha256",
         }:
             raise ValueError
-        fd = os.open(
-            name,
-            os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0),
-            dir_fd=directory_fd,
-        )
+        try:
+            fd = os.open(
+                name,
+                os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_NONBLOCK", 0),
+                dir_fd=directory_fd,
+            )
+        except PermissionError as exc:
+            if name != "raw_data" or exc.errno != errno.EACCES:
+                raise
+            return _read_inherited_kernel_policy_fd(directory_fd, maximum)
         before = os.fstat(fd)
         if not stat.S_ISREG(before.st_mode):
             raise ValueError
@@ -288,6 +299,50 @@ def _read_kernel_member(directory_fd: int, name: str, maximum: int) -> bytes:
     finally:
         if fd is not None:
             os.close(fd)
+
+
+def _read_inherited_kernel_policy_fd(directory_fd: int, maximum: int) -> bytes:
+    """Read the manager-opened live policy FD without consuming its offset."""
+    if fcntl is None or not callable(getattr(os, "pread", None)):
+        raise ValueError
+    descriptor = 3
+    before = os.fstat(descriptor)
+    access_flags = fcntl.fcntl(descriptor, fcntl.F_GETFL)
+    path_flag = getattr(os, "O_PATH", 0)
+    if (
+        not stat.S_ISREG(before.st_mode)
+        or before.st_uid != 0
+        or access_flags & os.O_ACCMODE != os.O_RDONLY
+        or (path_flag and access_flags & path_flag)
+    ):
+        raise ValueError
+    named_before = os.stat("raw_data", dir_fd=directory_fd, follow_symlinks=False)
+    if not stat.S_ISREG(named_before.st_mode) or _same_stat(before) != _same_stat(named_before):
+        raise ValueError
+
+    data = bytearray()
+    offset = 0
+    while len(data) <= maximum:
+        chunk = os.pread(descriptor, min(64 * 1024, maximum + 1 - len(data)), offset)
+        if not chunk:
+            break
+        data.extend(chunk)
+        offset += len(chunk)
+    after = os.fstat(descriptor)
+    named_after = os.stat("raw_data", dir_fd=directory_fd, follow_symlinks=False)
+    after_flags = fcntl.fcntl(descriptor, fcntl.F_GETFL)
+    if (
+        len(data) > maximum
+        or not stat.S_ISREG(after.st_mode)
+        or after.st_uid != 0
+        or after_flags & os.O_ACCMODE != os.O_RDONLY
+        or (path_flag and after_flags & path_flag)
+        or not stat.S_ISREG(named_after.st_mode)
+        or _same_stat(before) != _same_stat(after)
+        or _same_stat(after) != _same_stat(named_after)
+    ):
+        raise ValueError
+    return bytes(data)
 
 
 def _is_kernel_namespace_link(info: os.stat_result, target: str) -> bool:

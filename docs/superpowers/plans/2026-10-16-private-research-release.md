@@ -1,5 +1,55 @@
 # Private Research Release and Recovery — Issue171 / iteration0038
 
+## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
+
+This checkpoint supersedes the historical owner-correction status below.
+PR178, PR179 and PR180 are merged; do not repeat their CI or human approval.
+PR180 merged as 6aa231315cf710bfed287337c4a08977665d3731 with complete tree
+83531328bfe5cb7d5494e0fa98f473d17d5583af independently matched. Its native
+UID10001 snapshot-owner checks pass, including refusal of foreign/root owners.
+Merged source, the existing 81-package runtime and source image
+5af1ece66f2d4b33f690639cf0f9657adb627c08451438ab21eab4722d1cfd50 are prepared.
+The default Worker CLI passes; full live admission still fails when the Worker
+opens kernel raw_data with EACCES. These are separate acceptance results.
+
+The operator explicitly approved the bounded live-policy FD design and its
+implementation through call_6ab1860457684097b71f21d845eb8ba3. A new branch from
+merged 6aa, codex/0038-worker-live-policy-fd, now carries the specification and
+plan in docs/superpowers/{specs,plans}/2026-10-17-worker-live-policy-fd.md.
+The source/test leaf is implemented and passed two bounded software review
+rounds. The first round's R1/R2 test gaps were corrected with runtime bytes frozen;
+four isolated mutants each fail at the intended guard, with actual pytest import
+path/SHA checked. Final evidence is 18 kernel tests and 94 affected tests passed.
+Root independently checked raw evidence, exact source/test hashes, full Ruff,
+changed-file formatting, whitespace and submodule pins. The full-format probe
+also found 199 unchanged files with zero overlap; that failure is preserved.
+The initial real EACCES RED and all exploratory failures remain under
+output/0038-kernel-policy-live-fd-fix/; independent review and root receipts are
+under output/0038-kernel-policy-live-fd-integration/.
+
+The next gate is new exact-head CI, followed by new Class C two-human merge
+approval including SafetyOwner. Design approval does not approve the future
+code merge. Earlier operational approvals remain consumed and must not be
+requested again. No unmerged source has been deployed.
+
+Only EACCES while opening the fixed held revision's raw_data may use FD3 after
+root-owned regular-file, read-only, non-O_PATH and full live-inode checks before
+and after bounded positional reads. Preserve all 22 pins, public interfaces,
+revision checks, host permissions and capabilities. Native proof observed two
+threads with 16 total reads of 62633 bytes at the same digest and offset zero;
+virtual stat size zero is not the payload length. That temporary profile was
+removed; future native acceptance needs a fresh profile/revision after merge.
+
+Private API remains e2/UID10001/PID99929 and PostgreSQL PID93089 at their last
+actual observation. Permanent Worker and advisory are not installed; provider
+usage remains zero. Existing pinned pg_dump and host TLS libpq passed a native
+loader/version/TLS-attribute preflight without SQL, capture or restore.
+Full Option A still requires permanent Worker/recovery, production encrypted
+backup/restore, advisory and server OpenD acceptance. No dependencies, new
+environment or paid resources were added. Last observed parent usage is
+990934679B against 1GB, whole1916303587B against 5GB, free158560460800B; every
+future stage needs a fresh forecast and must retain all prior failures.
+
 ## Approved private identity cutover; snapshot owner correction (2026-10-16 Singapore)
 
 PR178 and PR179 are merged, with complete candidate/merge trees checked. The
