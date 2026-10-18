@@ -1,10 +1,10 @@
-"""Explicit local vn.py fixture app; production workstation does not mount it."""
+"""Explicit opt-in local vn.py fixture composition and standalone launcher."""
 
 from contextlib import asynccontextmanager
 from pathlib import Path
 from uuid import UUID
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Request
 
 from quantmesh.api.research_jobs import _SafeRoute
 from quantmesh.research.vnpy_fixture import FixtureManager, FixtureRequest, options
@@ -63,11 +63,10 @@ def create_vnpy_fixture_router(manager: FixtureManager | None) -> APIRouter:
     return router
 
 
-def create_fixture_app(manager: FixtureManager):
-    from quantmesh.api.workstation import create_workstation_app
-    from quantmesh.execution.accounting import PaperAccount
+def attach_fixture_runtime(app: FastAPI, manager: FixtureManager) -> None:
+    """Attach one admitted manager while retaining the workstation's lifecycle."""
+    from quantmesh.api.workstation import _json_guard_origin
 
-    app = create_workstation_app(account=PaperAccount(cash=100000), host="127.0.0.1")
     existing_lifespan = app.router.lifespan_context
 
     @asynccontextmanager
@@ -79,7 +78,24 @@ def create_fixture_app(manager: FixtureManager):
             manager.close()
 
     app.router.lifespan_context = lifespan
-    app.include_router(create_vnpy_fixture_router(manager), prefix="/api")
+
+    def guard_fixture_write(request: Request) -> None:
+        if request.method == "POST":
+            _json_guard_origin(request, "vn.py fixture")
+
+    app.include_router(
+        create_vnpy_fixture_router(manager),
+        prefix="/api",
+        dependencies=[Depends(guard_fixture_write)],
+    )
+
+
+def create_fixture_app(manager: FixtureManager):
+    from quantmesh.api.workstation import create_workstation_app
+    from quantmesh.execution.accounting import PaperAccount
+
+    app = create_workstation_app(account=PaperAccount(cash=100000), host="127.0.0.1")
+    attach_fixture_runtime(app, manager)
     return app
 
 
