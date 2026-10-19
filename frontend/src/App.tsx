@@ -7,6 +7,7 @@ import { AuditScreen } from '@/screens/Audit'
 import { CockpitScreen } from '@/screens/Cockpit'
 import { ConnectorsScreen } from '@/screens/Connectors'
 import { DataCatalogScreen } from '@/screens/DataCatalog'
+import { DataReadinessScreen } from '@/screens/DataReadiness'
 import { ImportsScreen } from '@/screens/Imports'
 import { MarketsScreen } from '@/screens/Markets'
 import { LegacyCockpitRedirect } from '@/screens/LegacyCockpitRedirect'
@@ -62,6 +63,7 @@ export default function App() {
         />
         <Route path="prediction" element={<PredictionScreen />} />
         <Route path="research/jobs" element={<ResearchJobsScreen />} />
+        <Route path="research/data-readiness" element={<DataReadinessScreen />} />
         <Route path="research/experiments" element={<ExperimentsScreen />} />
         <Route path="research/promotions" element={<PromotionsScreen />} />
         <Route path="research/forecasts" element={<ForecastsScreen />} />
