@@ -67,6 +67,7 @@ from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
+from quantmesh.api.realdata_snapshots import create_realdata_snapshots_router
 from quantmesh.api.research_jobs import create_research_jobs_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
 from quantmesh.data.catalog import TrustedDataCatalog
@@ -113,6 +114,7 @@ from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
+from quantmesh.research.realdata_snapshots import SnapshotCatalog
 from quantmesh.research.reports import ReportRegistry
 from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
 from quantmesh.settings import settings
@@ -1091,6 +1093,7 @@ def create_workstation_app(
     packet_monitoring: DecisionWatchStore | None = None,
     packet_reviews: DecisionReviewStore | None = None,
     research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
+    research_snapshots_root: Path | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1313,6 +1316,10 @@ def create_workstation_app(
         dependencies=[Depends(guard_research_write)],
         generate_unique_id_function=lambda route: f"api_research_jobs_{route.name}",
     )
+    app.state.research_snapshots = (
+        SnapshotCatalog(research_snapshots_root) if research_snapshots_root is not None else None
+    )
+    app.include_router(create_realdata_snapshots_router(), prefix="/api")
 
     # Venue-aware observed history is double-mounted like the live surface:
     # root for direct local clients and /api for the SPA. Both handlers read
@@ -1741,6 +1748,11 @@ def main(argv: list[str] | None = None) -> None:
         help="loopback port override (default: QUANTMESH_WORKSTATION_PORT or 8765)",
     )
     parser.add_argument(
+        "--research-snapshots-root",
+        type=Path,
+        help="opt in to local SPY snapshot import/storage outside a resettable demo root",
+    )
+    parser.add_argument(
         "--vnpy-python",
         type=Path,
         help="opt in to synthetic vn.py research using this existing Windows Python runtime",
@@ -1756,6 +1768,12 @@ def main(argv: list[str] | None = None) -> None:
         help="vn.py job/report output directory outside a resettable demo root",
     )
     args = parser.parse_args(argv)
+
+    if args.research_snapshots_root is not None and args.demo:
+        demo_root = (args.demo_root if args.demo_root is not None else settings.demo_root).resolve()
+        snapshots_root = args.research_snapshots_root.resolve()
+        if snapshots_root == demo_root or demo_root in snapshots_root.parents:
+            parser.error("--research-snapshots-root must be outside the resettable demo root")
 
     fixture_paths = (args.vnpy_python, args.vnpy_fixture, args.vnpy_root)
     fixture_enabled = any(path is not None for path in fixture_paths)
@@ -1977,6 +1995,8 @@ def main(argv: list[str] | None = None) -> None:
                 data_catalog=trusted_catalog,
                 host=host,
             )
+    if args.research_snapshots_root is not None:
+        app.state.research_snapshots = SnapshotCatalog(args.research_snapshots_root)
     if fixture_enabled:
         from quantmesh.api.vnpy_fixture import attach_fixture_runtime
         from quantmesh.research.vnpy_fixture import FixtureManager

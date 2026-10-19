@@ -1,5 +1,16 @@
 # QuantMesh Reuse Matrix
 
+## Local SPY snapshot qualification P1 — issue184, 2026-10-19
+
+P1 reuses the repository's ObjectStore/ObjectRef and pinned CalendarService
+behind a narrow local historical-snapshot adapter. It adds no packages and copies
+no upstream engine or strategy source. The existing externally installed vn.py
+runtime and its redistribution limits remain governed by ADR0029. Raw source
+market data stays local; public endpoint access is not verified entitlement.
+The initial snapshot retains unknown rights/PIT and an unresolved issuer/Yahoo
+dividend conflict. See [ADR0030](adr/0030-local-snapshot-qualification.md) and the
+[P1 iteration checkpoint](iterations/0038-realdata-workstation-p1.md).
+
 ## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
 
 This checkpoint supersedes the historical owner-correction status below.

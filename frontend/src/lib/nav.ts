@@ -42,6 +42,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Live cockpit', labelKey: 'nav.cockpit', path: '/cockpit', icon: Radio, group: 'Markets', groupKey: 'group.markets' },
   { label: 'Prediction markets', labelKey: 'nav.prediction', path: '/prediction', icon: Scale, group: 'Markets', groupKey: 'group.markets' },
   { label: 'Research jobs', labelKey: 'nav.researchJobs', path: '/research/jobs', icon: FlaskConical, group: 'Research', groupKey: 'group.research' },
+  { label: 'Data readiness', labelKey: 'nav.dataReadiness', path: '/research/data-readiness', icon: Database, group: 'Research', groupKey: 'group.research' },
   { label: 'Experiments', labelKey: 'nav.experiments', path: '/research/experiments', icon: FlaskConical, group: 'Research', groupKey: 'group.research' },
   { label: 'Promotions', labelKey: 'nav.promotions', path: '/research/promotions', icon: Rocket, group: 'Research', groupKey: 'group.research' },
   { label: 'Forecasts', labelKey: 'nav.forecasts', path: '/research/forecasts', icon: Gauge, group: 'Research', groupKey: 'group.research' },

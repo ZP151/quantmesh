@@ -5,6 +5,27 @@ function placeholders(text: string): string[] {
   return (text.match(/\{\{(\w+)\}\}/g) ?? []).sort()
 }
 
+describe('demo copy preserves imported research provenance', () => {
+  it.each(['shell.demoSession', 'shell.footerDemo', 'shell.demoTitle'] as const)(
+    '%s distinguishes seeded synthetic data from imported research evidence in both locales', key => {
+      expect(messages.en[key]).toMatch(/seeded demo account and data.*synthetic/i)
+      expect(messages.en[key]).toMatch(/imported research evidence retains its source labels/i)
+      expect(messages.en[key]).not.toMatch(/(?:every|all) surface/i)
+      expect(messages['zh-CN'][key]).toContain('种子演示账户与数据为合成数据')
+      expect(messages['zh-CN'][key]).toContain('导入的研究证据保留各自来源标签')
+      expect(messages['zh-CN'][key]).not.toMatch(/所有界面|所有页面/)
+    },
+  )
+
+  it('keeps demo orders paper-only and kernel-gated and identifies the reset root', () => {
+    expect(messages.en['shell.demoSession']).toMatch(/every order.*paper-only.*kernel-gated/i)
+    expect(messages['zh-CN']['shell.demoSession']).toContain('所有订单仍仅限模拟并受内核约束')
+    expect(messages.en['shell.demoTitle']).toContain('reset replaces this demo root')
+    expect(messages['zh-CN']['shell.demoTitle']).toContain('重置替换此演示根目录')
+    expect(placeholders(messages.en['shell.demoTitle'])).toEqual(['{{anchor}}', '{{root}}'])
+  })
+})
+
 /** Locale coverage (iteration 0017): the type system already forbids a
  * missing zh-CN key at compile time (indexing messages['zh-CN'] with a
  * MessageKey), but these runtime checks also pin key-for-key parity,
