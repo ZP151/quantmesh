@@ -402,7 +402,12 @@ class ProposalLedger:
 
 
 class PaperDecisionService:
-    """Two-stage proposal service over the existing paper order authority."""
+    """Two-stage proposal service over the existing paper order authority.
+
+    ``fresh_submission_guard`` is an optional public synthetic-mode binding. It
+    runs inside the account transaction after historical replay and before any
+    fresh submission effects. Unset callers retain the kernel rejection audit.
+    """
 
     def __init__(
         self,
@@ -416,6 +421,7 @@ class PaperDecisionService:
         snapshot_provider: Callable[[Instrument, datetime], ExactUpdateSnapshot | None],
         quote_fence: QuoteFence,
         demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
+        fresh_submission_guard: Callable[[PaperAccount, Instrument], None] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self.ledger = ledger
@@ -427,6 +433,7 @@ class PaperDecisionService:
         self._snapshot_provider = snapshot_provider
         self._quote_fence = quote_fence
         self._demo_quote_provider = demo_quote_provider
+        self.fresh_submission_guard = fresh_submission_guard
         self._now = now
 
     @property
@@ -734,6 +741,9 @@ class PaperDecisionService:
                     confirmation_at=existing.created_at.astimezone(UTC),
                     quote_provenance=provenance,
                 )
+
+            if self.fresh_submission_guard is not None:
+                self.fresh_submission_guard(self._account_provider(), proposal.instrument)
 
             try:
                 artifact = self._resolve_artifact(proposal.artifact_id)

@@ -1,13 +1,24 @@
 # QuantMesh Product Roadmap
 
+## Approved local paper controls P3 — 2026-10-20
+
+The operator approved [issue196](https://github.com/ZP151/quantmesh/issues/196):
+extend the current synthetic paper kill-switch flow with pause reasons, current
+account/journal/cap/version preflight, explicit resume and durable audit/replay.
+The final local synthetic user loop is verified, including stale refusal,
+one real-kernel paper fill, replay/original downloads and cold paused reopen;
+round2 is READY and draft delivery closeout is pending. Default/live
+authority and the historical REJECT/consumed-OOS evidence remain unchanged.
+See the [P3 iteration](../iterations/0038-paper-controls-p3.md).
+
 ## Local frozen-experiment inspection P2 — 2026-10-19
 
 The operator approved [issue191](https://github.com/ZP151/quantmesh/issues/191):
 import the retained SMA100/SPY experiment, inspect its consumed OOS and recorded
 verdict beside verified P1 data associations, and download/reopen the original
 evidence. The local user loop is verified from merged P1 main31b1c74 and delivered
-in [Draft PR195](https://github.com/ZP151/quantmesh/pull/195); source merge is
-pending. This does not rerun the strategy, upgrade data
+in [PR195](https://github.com/ZP151/quantmesh/pull/195), normally squash-merged
+to dddc678 after requiredCI39275587067 passed. This does not rerun the strategy, upgrade data
 qualification or grant trading authority. See the
 [P2 iteration](../iterations/0038-frozen-experiment-p2.md) and
 [approved specification](../superpowers/specs/2026-10-19-frozen-experiment-p2.md).

@@ -212,18 +212,22 @@ class PaperAccountStore:
         account: PaperAccount,
         *,
         publish: Callable[[PaperAccount], None] | None = None,
+        transaction_validator: Callable[[PaperAccount], None] | None = None,
     ) -> None:
         self._account = account
         self._publish = publish
         self._lock = RLock()
+        self.transaction_validator = transaction_validator
 
     def get(self) -> PaperAccount:
         with self._lock:
             return self._account
 
     @contextmanager
-    def transaction(self) -> Iterator[None]:
+    def transaction(self, *, validate: bool = True) -> Iterator[None]:
         with self._lock:
+            if validate and self.transaction_validator is not None:
+                self.transaction_validator(self._account)
             yield
 
     def replace(self, account: PaperAccount) -> PaperAccount:
