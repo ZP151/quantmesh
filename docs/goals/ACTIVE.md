@@ -1,4 +1,74 @@
-# Active Goal — iteration0038 Option A
+# Active Goal — iteration0038 local workstation product loop
+
+## Operable workstation slice verified — 2026-10-18
+
+The operator cleared the historical app Goal and requested its replacement. The
+new product Goal is active until this verified local page is handed over. Ordinary
+workstation startup now accepts explicit existing-runtime vn.py flags; the normal
+entry serves strategy parameters/costs, progress/cancel, verified reports and a
+session-only A/B comparison with original JSON downloads. See
+`docs/research/vnpy-fixture.md` for the repeatable launch and acceptance steps.
+
+Fresh browser acceptance at `http://127.0.0.1:8765/app/research/jobs` used three new
+owned native attempts: A succeeded, a second was cancelled, B succeeded. DoubleMA
+8/18 at6bps and12bps produced31 fills each; the displayed candidate balance delta
+is-1.89256USD. Both downloaded JSON files match their source artifacts byte-for-byte
+and by SHA256 (12936/12935bytes). Desktop and375px content stay within their viewports.
+Backend52 focused tests, frontend31 focused tests, final TypeScript/package build,
+Ruff and independent review round1 READY passed. No old full suite was repeated.
+Evidence: `output/0038-product-parallel-20261018/acceptance/browser-root-checked.json`.
+
+The preview is synthetic and loopback-only, with an explicitly selected vn.py
+engine. The separate baseline research service remains unavailable. Comparison
+reference is in-memory in the current browser session; active jobs do not recover
+after restart. No SSH/server deployment/model calls occurred in this product slice.
+
+## Product-first reset — explicit operator direction, 2026-10-18
+
+The operator explicitly reprioritized a verifiable quant workstation and requested
+about four parallel tasks, immediate removal of redundant server work, and a goal/
+automation check. This supersedes historical instructions making all Full Option A
+server gates prerequisites for local functional iteration. No incomplete production
+acceptance is relabeled complete.
+
+Current outcome: use the existing official vn.py strategies from the ordinary local
+workstation, configure parameters/costs, run or cancel a bounded synthetic backtest,
+retain and compare two compatible verified reports, and download both original JSON
+artifacts. Keep paper=true/live=false and explicit opt-in external runtime limits.
+
+Four lanes: official-product reuse, backend/startup wiring, report comparison, and
+root-owned browser acceptance/integration. Three bounded investigation briefs are
+delivered under output/0038-product-parallel-20261018/. At most two source writers
+own disjoint backend/frontend files; the other roles verify and integrate. This is
+the explicit current operator override of the older two-track scheduling limit,
+not authorization for four agents to edit the same files.
+
+Actual current merged-tree demo audit finds baseline research unavailable and the
+vn.py selector unable to start jobs without the separate optional app. Existing
+completed reports lack a two-run comparison action. The operator explicitly
+approved both bounded short designs and parallel implementation in a direct root
+message on2026-10-18. Approval is consumed; do not ask again. Root will deliver an
+actually operable browser page; no server tasks or additional long spec cycle.
+
+Removed from automatic active work: SSH/staging/image/native-policy hardening,
+repeat backups/drills/old CI/reviews/full suites, OpenD migration and paid model
+acceptance. Keep their historical evidence and honest unfinished production status.
+Only resume a server item if the operator explicitly reprioritizes it or current
+evidence proves it directly blocks the chosen local user action.
+
+Heartbeat ci remains ACTIVE at its existing interval; its prompt is reduced from
+48028 to2265 characters and now targets product outcomes, independent ownership and
+changed-behavior checks. The old automation config is retained in ignored output.
+The operator cleared the historical Full A app Goal and explicitly requested a
+replacement. Root created a new ACTIVE product Goal on2026-10-18: deliver and verify
+the ordinary local workstation backtest/report-comparison/download loop. Historical
+server acceptance is deferred and remains unfinished.
+
+Latest infrastructure facts are preserved separately: c644/tree f240 source and
+existing81 runtime admitted, image08ca prepared; API remains e2, permanent Worker/
+production recovery/advisory/OpenD unfinished. No repeat successful stage/image.
+Evidence: output/0038-product-parallel-20261018/coordination-reset.json and
+output/0038-pr181-merged-deployment/source-image-20261018-root-checked.json.
 
 ## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
 

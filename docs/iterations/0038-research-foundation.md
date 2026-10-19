@@ -1,5 +1,80 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Ordinary workstation vn.py and A/B comparison delivered — 2026-10-18
+
+Issue177 follow-up: the approved local product slice now attaches the existing
+fixture manager through explicit ordinary-workstation CLI flags, composes shutdown
+cleanup, guards write origins, and rejects resettable demo output containment.
+No new runtime, engine or dependency was introduced. The frontend retains verified
+report A across New fixture job, compares a verified compatible B by native metrics
+and daily sessions, refuses mismatched provenance, preserves unavailable values,
+and downloads each original JSON. ADR0029 and the operator guide describe the limits.
+
+Fresh browser proof: new A and B both succeeded, a separate new attempt cancelled;
+DoubleMA8/18 costs6 versus12bps yielded31 fills each and balance delta-1.89256USD.
+Actual downloads12936/12935bytes match their original artifact SHA256. Backend52 and
+frontend31 focused tests passed; the minimal explicit-boolean TypeScript correction
+then passed23 focused tests plus TypeScript and the final packaged SPA build. Ruff,
+whitespace, pinned submodules and one independent source review passed. The initial
+build narrowing error and local preview launcher failures are retained; no product
+runtime was weakened to pass checks. No broad historical suite or server gate reran.
+
+Preview: `http://127.0.0.1:8765/app/research/jobs`, select the explicit vn.py engine.
+Evidence: `output/0038-product-parallel-20261018/acceptance/browser-root-checked.json`
+and `review-round1.md`. Comparison reference is session-only; external active jobs
+remain non-durable. Fixed synthetic workflow evidence does not certify performance,
+production Worker recovery, advisory or server OpenD. Those remain honestly deferred.
+
+The operator cleared the historical FullA app Goal; root created the requested new
+local product Goal. Heartbeat ci tracks this bounded product outcome and stays quiet
+after delivery unless there is new authorized actionable work.
+
+## Product-first reset — explicit operator direction, 2026-10-18
+
+The operator explicitly reprioritized a verifiable quant workstation and requested
+about four parallel tasks, immediate removal of redundant server work, and a goal/
+automation check. This supersedes historical instructions making all Full Option A
+server gates prerequisites for local functional iteration. No incomplete production
+acceptance is relabeled complete.
+
+Current outcome: use the existing official vn.py strategies from the ordinary local
+workstation, configure parameters/costs, run or cancel a bounded synthetic backtest,
+retain and compare two compatible verified reports, and download both original JSON
+artifacts. Keep paper=true/live=false and explicit opt-in external runtime limits.
+
+Four lanes: official-product reuse, backend/startup wiring, report comparison, and
+root-owned browser acceptance/integration. Three bounded investigation briefs are
+delivered under output/0038-product-parallel-20261018/. At most two source writers
+own disjoint backend/frontend files; the other roles verify and integrate. This is
+the explicit current operator override of the older two-track scheduling limit,
+not authorization for four agents to edit the same files.
+
+Actual current merged-tree demo audit finds baseline research unavailable and the
+vn.py selector unable to start jobs without the separate optional app. Existing
+completed reports lack a two-run comparison action. The operator explicitly
+approved both bounded short designs and parallel implementation in a direct root
+message on2026-10-18. Approval is consumed; do not ask again. Root will deliver an
+actually operable browser page; no server tasks or additional long spec cycle.
+
+Removed from automatic active work: SSH/staging/image/native-policy hardening,
+repeat backups/drills/old CI/reviews/full suites, OpenD migration and paid model
+acceptance. Keep their historical evidence and honest unfinished production status.
+Only resume a server item if the operator explicitly reprioritizes it or current
+evidence proves it directly blocks the chosen local user action.
+
+Heartbeat ci remains ACTIVE at its existing interval; its prompt is reduced from
+48028 to2265 characters and now targets product outcomes, independent ownership and
+changed-behavior checks. The old automation config is retained in ignored output.
+The operator subsequently cleared the historical FullA app Goal and requested a
+new active local product Goal, which root created. The historical server scope is
+deferred unfinished and is not a prerequisite for this local product slice.
+
+Latest infrastructure facts are preserved separately: c644/tree f240 source and
+existing81 runtime admitted, image08ca prepared; API remains e2, permanent Worker/
+production recovery/advisory/OpenD unfinished. No repeat successful stage/image.
+Evidence: output/0038-product-parallel-20261018/coordination-reset.json and
+output/0038-pr181-merged-deployment/source-image-20261018-root-checked.json.
+
 ## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
 
 This checkpoint supersedes the historical owner-correction status below.

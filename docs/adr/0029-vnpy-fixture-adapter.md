@@ -22,8 +22,11 @@ copied upstream engine or strategy implementation. Pin official source SHA256s,
 fixture SHA256, exact versions, request and adapter/runner hashes to identity.
 
 Expose a separate version1 fixture-only API through an explicit local app factory
-and `python -m quantmesh.api.vnpy_fixture`. The default workstation does not mount
-these routes. The UI provides a clearly labeled engine selector alongside existing
+and `python -m quantmesh.api.vnpy_fixture`. The ordinary workstation can opt in
+with all three explicit `--vnpy-python`, `--vnpy-fixture` and `--vnpy-root` paths
+(operator-approved2026-10-18). Without these flags it does not mount these routes.
+Attachment preserves the workstation lifespan and POST origin guard; report output
+must stay outside the resettable demo root. The UI provides a clearly labeled engine selector alongside existing
 baselines. No baseline DTO/validator/store/PG/Worker argument or dependency lock
 changes. One local owned child at a time,120seconds/1024MiB/one CPU core using the
 existing Windows Job Object primitive. Requests select fixed classes and numeric
@@ -34,7 +37,11 @@ two map to native additive slippage. Native reports retain daily marking, fills
 and nonfinite/unavailable-statistic semantics. Parent validation independently
 reconciles signed cash, fees, slippage, positions and five daily balances, and
 requires complete replay plus init/start/stop callbacks. Canonical report bytes
-are content addressed, checked on read, and SHA-verified by the browser.
+are content addressed, checked on read, and SHA-verified by the browser. A verified
+reference may remain in the current browser session while a second job runs.
+Comparison requires the same complete native provenance and daily sessions, shows
+configuration/cost differences and native metrics, and downloads each original
+artifact independently. It does not compare native and baseline accounting schemas.
 
 ## Consequences
 

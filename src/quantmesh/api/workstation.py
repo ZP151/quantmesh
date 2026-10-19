@@ -1740,7 +1740,37 @@ def main(argv: list[str] | None = None) -> None:
         metavar="PORT",
         help="loopback port override (default: QUANTMESH_WORKSTATION_PORT or 8765)",
     )
+    parser.add_argument(
+        "--vnpy-python",
+        type=Path,
+        help="opt in to synthetic vn.py research using this existing Windows Python runtime",
+    )
+    parser.add_argument(
+        "--vnpy-fixture",
+        type=Path,
+        help="pinned synthetic CSV for the opt-in vn.py fixture experiment",
+    )
+    parser.add_argument(
+        "--vnpy-root",
+        type=Path,
+        help="vn.py job/report output directory outside a resettable demo root",
+    )
     args = parser.parse_args(argv)
+
+    fixture_paths = (args.vnpy_python, args.vnpy_fixture, args.vnpy_root)
+    fixture_enabled = any(path is not None for path in fixture_paths)
+    if fixture_enabled:
+        if not all(path is not None for path in fixture_paths):
+            parser.error("--vnpy-python, --vnpy-fixture and --vnpy-root must be supplied together")
+        if settings.environment != "local":
+            parser.error("vn.py fixture requires the local workstation environment")
+        if args.demo:
+            demo_root = (
+                args.demo_root if args.demo_root is not None else settings.demo_root
+            ).resolve()
+            fixture_root = args.vnpy_root.resolve()
+            if fixture_root == demo_root or demo_root in fixture_root.parents:
+                parser.error("--vnpy-root must be outside the resettable demo root")
 
     host = settings.workstation_host
     if not _is_loopback(host):
@@ -1947,6 +1977,18 @@ def main(argv: list[str] | None = None) -> None:
                 data_catalog=trusted_catalog,
                 host=host,
             )
+    if fixture_enabled:
+        from quantmesh.api.vnpy_fixture import attach_fixture_runtime
+        from quantmesh.research.vnpy_fixture import FixtureManager
+
+        try:
+            manager = FixtureManager(args.vnpy_python, args.vnpy_fixture, args.vnpy_root)
+        except (OSError, ValueError):
+            parser.error(
+                "vn.py fixture runtime unavailable; verify the existing Windows Python, "
+                "pinned fixture and writable output paths"
+            )
+        attach_fixture_runtime(app, manager)
     uvicorn.run(app, host=host, port=port)
 
 

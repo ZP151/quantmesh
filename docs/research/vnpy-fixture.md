@@ -1,6 +1,31 @@
 # vn.py fixture workflow — issue177
 
-## Start locally
+## Start from the ordinary workstation
+
+The ordinary launcher can explicitly attach the same admitted fixture runtime;
+all three `--vnpy-*` paths are required together. It keeps existing workstation
+routes and lifecycle. Without these flags the experimental runtime stays disabled.
+
+```powershell
+$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+python -m quantmesh.api.workstation --demo --demo-root output/local-demo `
+  --vnpy-python output/0038-strategy-framework-research/bakeoff/.venv-vnpy/Scripts/python.exe `
+  --vnpy-fixture output/0038-strategy-framework-research/bakeoff/fixture.csv `
+  --vnpy-root output/local-vnpy-jobs --port 8765
+```
+
+Use the already retained runtime and fixture; this command installs nothing.
+Keep job/report output outside the resettable demo root. Open
+`http://127.0.0.1:8765/app/research/jobs` and select **vn.py official strategies ·
+fixture experiment**. Configure costs/parameters, run, and open the verified report.
+Choose **Keep as comparison reference**, then **New fixture job**. After the next
+report verifies, compare its native results with the retained reference and use
+**Download reference JSON** / **Download candidate JSON** for the original bytes.
+The reference lasts only in the current mounted browser session; download both
+reports before leaving or reloading. Incompatible provenance or daily sessions
+refuse comparison. Missing statistics remain unavailable, never zero.
+
+## Standalone compatibility launcher
 
 Use a separately installed Windows Python3.12 environment containing official
 vnpy4.5.0, vnpy_ctastrategy1.4.1 and vnpy_sqlite1.1.3. This slice does not install,

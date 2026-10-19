@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { vnpyFixtureApi as api, type FixtureEnvelope, type FixtureJob, type FixtureOptions,
+import { VnpyReportComparison } from './VnpyReportComparison'
+import type { VerifiedFixtureReport } from '@/lib/vnpy-report-comparison'
+import { vnpyFixtureApi as api, type FixtureJob, type FixtureOptions,
   type FixtureReport, type FixtureRequest } from '@/lib/vnpy-fixture-api'
 
 const STORAGE = 'quantmesh.vnpy-fixture.v1'
@@ -34,7 +36,8 @@ export function VnpyFixturePanel() {
     ?? { fee_bps: 5, half_spread_price: 0.005, slippage_price: 0.005 })
   const [saved, setSaved] = useState<Retained | null>(restore)
   const [job, setJob] = useState<FixtureJob | null>(() => restore()?.job ?? null)
-  const [report, setReport] = useState<{ envelope: FixtureEnvelope; value: FixtureReport } | null>(null)
+  const [report, setReport] = useState<VerifiedFixtureReport | null>(null)
+  const [reference, setReference] = useState<VerifiedFixtureReport | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pollStopped, setPollStopped] = useState(false)
@@ -215,7 +218,13 @@ export function VnpyFixturePanel() {
         </section>
         {report && <section className="space-y-4 rounded-lg border border-border p-4" aria-label="Verified native report">
           <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">Native vn.py report</h3>
-            <Button variant="outline" onClick={download}>Download report JSON</Button></div>
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setReference(report)}
+                disabled={reference?.envelope.sha256 === report.envelope.sha256}>
+                {reference?.envelope.sha256 === report.envelope.sha256 ? 'Kept as comparison reference' : 'Keep as comparison reference'}
+              </Button>
+              <Button variant="outline" onClick={download}>Download report JSON</Button>
+            </div></div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             {([['End balance (USD)', 'end_balance'], ['Fills', 'total_trade_count'], ['Fees (USD)', 'total_commission'],
               ['Spread + slippage (USD)', 'total_slippage']] as const).map(([label, key]) => <div key={key}>
@@ -236,6 +245,9 @@ export function VnpyFixturePanel() {
           <details className="text-xs"><summary className="cursor-pointer">Inspect report and lineage JSON</summary>
             <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(report.value, null, 2)}</pre></details>
         </section>}
+        {reference && <VnpyReportComparison reference={reference}
+          candidate={report?.envelope.sha256 === reference.envelope.sha256 ? null : report}
+          onClearReference={() => setReference(null)} />}
       </section>
     </div>
   </Page>

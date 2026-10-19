@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { createHash, webcrypto } from 'node:crypto'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
@@ -111,4 +111,70 @@ it('allows a new fixture after restart makes a retained active job unknown', asy
   await screen.findByRole('alert')
   await user.click(screen.getByRole('button', { name: 'New fixture job' }))
   await waitFor(() => expect(screen.getByRole('button', { name: 'Run vn.py backtest' })).toBeEnabled())
+})
+
+it('keeps verified report A through a new job and downloads the exact A and B comparison artifacts', async () => {
+  const user = userEvent.setup()
+  const identity = {
+    fixture_sha256: 'b'.repeat(64), engine_sha256: 'c'.repeat(64),
+    versions: { vnpy: '4.5.0', vnpy_ctastrategy: '1.4.1', vnpy_sqlite: '1.1.3' },
+    strategy_sources: { DoubleMaStrategy: 'd'.repeat(64), AtrRsiStrategy: 'e'.repeat(64) },
+    adapter_sha256: 'f'.repeat(64), runner_sha256: '1'.repeat(64),
+    cost_units: { fee_bps: 'bps of turnover', half_spread_price: 'USD/unit/fill', slippage_price: 'USD/unit/fill' },
+    capital_usd: 100000, contract_size: 1, tick: 0.01, annual_days: 252,
+    replay_period: ['2013-10-07', '2013-10-11'], exchange_timezone: 'America/New_York', fixture_only: true,
+  }
+  const requestB = { ...request, costs: { ...request.costs, fee_bps: 10 } }
+  const textA = JSON.stringify({ ...report, identity })
+  const textB = JSON.stringify({ ...report, identity, request: requestB, request_digest: '2'.repeat(64),
+    statistics: { ...report.statistics, end_balance: 100043.91, total_commission: 3.14 } })
+  const shaA = createHash('sha256').update(textA).digest('hex')
+  const shaB = createHash('sha256').update(textB).digest('hex')
+  mocks.submit.mockResolvedValueOnce({ ...job, report_sha256: shaA })
+    .mockResolvedValueOnce({ ...job, job_id: 'job2', request: requestB, request_digest: '2'.repeat(64), report_sha256: shaB })
+  mocks.report.mockResolvedValueOnce({ schema_version: 1, sha256: shaA, request_digest: digest, text: textA })
+    .mockResolvedValueOnce({ schema_version: 1, sha256: shaB, request_digest: '2'.repeat(64), text: textB })
+  const { Blob: NodeBlob } = await import('node:buffer')
+  const downloaded: globalThis.Blob[] = []
+  const filenames: string[] = []
+  const originalBlob = globalThis.Blob
+  vi.stubGlobal('Blob', NodeBlob)
+  const createUrl = vi.fn((blob: globalThis.Blob) => { downloaded.push(blob); return `blob:verified-${downloaded.length}` })
+  const revokeUrl = vi.fn()
+  vi.stubGlobal('URL', class extends URL {
+    static createObjectURL = createUrl
+    static revokeObjectURL = revokeUrl
+  })
+  const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+    filenames.push(this.download)
+  })
+  try {
+    render(<VnpyFixturePanel />)
+    await screen.findByRole('option', { name: 'AtrRsiStrategy' })
+    await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
+    await user.click(await screen.findByRole('button', { name: 'Open verified report' }))
+    await user.click(await screen.findByRole('button', { name: 'Keep as comparison reference' }))
+    await user.click(screen.getByRole('button', { name: 'New fixture job' }))
+    const retained = screen.getByRole('region', { name: 'Native report comparison' })
+    expect(within(retained).getByText(shaA, { exact: false })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Fee (bps)'), { target: { value: '10' } })
+    await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
+    await user.click(await screen.findByRole('button', { name: 'Open verified report' }))
+    const comparison = await screen.findByRole('region', { name: 'Native report comparison' })
+    expect(within(comparison).getByText(shaA, { exact: false })).toBeInTheDocument()
+    expect(within(comparison).getByText(shaB, { exact: false })).toBeInTheDocument()
+    await user.click(within(comparison).getByRole('button', { name: 'Download reference JSON' }))
+    await user.click(within(comparison).getByRole('button', { name: 'Download candidate JSON' }))
+    expect(await downloaded[0].text()).toBe(textA)
+    expect(await downloaded[1].text()).toBe(textB)
+    expect(filenames[0]).toContain(shaA)
+    expect(filenames[1]).toContain(shaB)
+    await waitFor(() => expect(revokeUrl).toHaveBeenCalledTimes(2), { timeout: 1600 })
+    await user.click(within(comparison).getByRole('button', { name: 'Clear comparison reference' }))
+    expect(screen.queryByRole('region', { name: 'Native report comparison' })).toBeNull()
+  } finally {
+    click.mockRestore()
+    vi.stubGlobal('Blob', originalBlob)
+    vi.unstubAllGlobals()
+  }
 })
