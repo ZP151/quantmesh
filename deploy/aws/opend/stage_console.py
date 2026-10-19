@@ -784,8 +784,21 @@ def start_staging_console(window):
                         raise StageDenied("backend_denied")
                 finally:
                     os.close(check["backend_pidfd"])
+                # Manager, descriptor and source checks can consume the launch
+                # window. Recheck both clocks and the exact permit after them.
+                final_permit = (
+                    load_staging_window(persistent=True)
+                    if window.persistent
+                    else load_staging_window()
+                )
+                if (
+                    final_permit.claims != window.claims
+                    or time.monotonic() >= deadline
+                    or datetime.now(UTC) >= window.expires
+                ):
+                    raise StageDenied("deadline")
 
-            child.release(final_admission)
+            child.release(final_admission, deadline=deadline, expires=window.expires)
             while child.alive():
                 if window.persistent:
                     # Freshness was checked immediately before release. Once released,
@@ -881,10 +894,14 @@ class _Owned:
     def alive(self):
         return not self.terminal and not select.select([self.pidfd], [], [], 0)[0]
 
-    def release(self, admission=lambda: None):
+    def release(self, admission=lambda: None, *, deadline=None, expires=None):
         admission()
         if not self.alive() or _identity(self.pid, self.pidfd) != self.identity:
             raise StageDenied("missing_handle")
+        if (deadline is not None and time.monotonic() >= deadline) or (
+            expires is not None and datetime.now(UTC) >= expires
+        ):
+            raise StageDenied("deadline")
         os.write(self.gate, b"R")
         self.released = True
         if _report(self.report, 1) != b"R":
