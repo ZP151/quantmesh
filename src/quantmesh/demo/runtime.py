@@ -27,6 +27,7 @@ prefix), so the SPA and the RC1 contract call the same handlers.
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from threading import Condition, Lock
@@ -59,7 +60,9 @@ from quantmesh.demo.seeder import (
 )
 from quantmesh.domain.models import Instrument, OrderRequest, Quote, Side
 from quantmesh.execution.account_store import PaperAccountStore, recover_account_from_journal
+from quantmesh.execution.accounting import RiskLimits
 from quantmesh.instruments.copilot import PacketCopilotService
+from quantmesh.ops.paper_controls import PaperControls, acquire_leases
 from quantmesh.settings import settings
 
 
@@ -276,6 +279,8 @@ def demo_router() -> APIRouter:
 
     @router.post("/demo/reset")
     def demo_reset(request: Request) -> dict[str, object]:
+        if getattr(request.app.state, "paper_controls", None) is not None:
+            raise HTTPException(status_code=409, detail="paper_control_demo_reset_refused")
         runtime = getattr(request.app.state, "demo", None)
         if runtime is None:
             raise HTTPException(status_code=404, detail="no demo runtime is attached")
@@ -417,6 +422,8 @@ def create_demo_app(
     seed: int | None = None,
     workspace_history: bool = True,
     host: str | None = None,
+    paper_control_root: Path | None = None,
+    paper_limits: RiskLimits | None = None,
 ) -> FastAPI:
     """A workstation app bound to one labeled demo root.
 
@@ -428,6 +435,46 @@ def create_demo_app(
     dirs are never opened.
     """
     root = Path(root) if root is not None else Path(settings.demo_root)
+    leases = None
+    if paper_control_root is not None:
+        control_path = Path(paper_control_root).absolute()
+        demo_path = root.absolute()
+        if (
+            settings.environment != "local"
+            or control_path == demo_path
+            or demo_path in control_path.parents
+            or control_path in demo_path.parents
+        ):
+            raise ValueError("paper control requires separate roots in local demo mode")
+        leases = acquire_leases(control_path, demo_path)
+    try:
+        return _assemble_demo_app(
+            root=root,
+            seed=seed,
+            workspace_history=workspace_history,
+            host=host,
+            paper_control_root=paper_control_root,
+            paper_limits=paper_limits,
+            leases=leases,
+        )
+    except BaseException:
+        if leases is not None:
+            for lease in leases[1]:
+                lease.close()
+        raise
+
+
+def _assemble_demo_app(
+    *,
+    root: Path,
+    seed: int | None,
+    workspace_history: bool,
+    host: str | None,
+    paper_control_root: Path | None,
+    paper_limits: RiskLimits | None,
+    leases,
+) -> FastAPI:
+    """Assembly stays inside the caller's process-lifetime synthetic leases."""
     scenario = DemoScenario(
         seed=seed if seed is not None else settings.demo_seed,
         workspace_history=workspace_history,
@@ -439,6 +486,8 @@ def create_demo_app(
             seeded.account,
             seeded.journal.all(),
         )
+        if recovered_account != seeded.account and paper_control_root is not None:
+            raise ValueError("controlled demo account and journal require operator recovery")
         if recovered_account != seeded.account:
             # Demo orders are journal-first. If a process stops after the
             # append but before the account snapshot is published, replay the
@@ -496,8 +545,32 @@ def create_demo_app(
         workspace_clock=lambda: seeded.scenario.anchor,
         host=host,
     )
+    if paper_control_root is not None:
+        app.state.paper_controls = PaperControls(
+            root=Path(paper_control_root),
+            account_store=app.state.account_store,
+            account_path=root / "account.json",
+            journal=seeded.journal,
+            limits=paper_limits,
+            scenario=repr(seeded.scenario),
+            leases=leases,
+        )
+        existing_lifespan = app.router.lifespan_context
+        controls = app.state.paper_controls
+
+        @asynccontextmanager
+        async def controlled_lifespan(application: FastAPI):
+            try:
+                async with existing_lifespan(application):
+                    yield
+            finally:
+                controls.close()
+
+        app.router.lifespan_context = controlled_lifespan
     paper_decisions = getattr(app.state, "paper_decisions", None)
-    if paper_decisions is not None:
+    if paper_decisions is not None and paper_control_root is not None:
+        paper_decisions.fresh_submission_guard = app.state.paper_controls.validate_fresh_submission
+    if paper_decisions is not None and paper_control_root is None:
         journal_keys = {
             order.idempotency_key
             for order in seeded.journal.all()

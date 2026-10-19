@@ -231,3 +231,47 @@ Normal commit/push supersedes0a446b7 for fresh exact-head CI. The release owner
 owns that gate and conditional merge; none is claimed here. This bounded writer
 is STOP/released after delivery. PR193 remains044febd and must await actual189
 receipt before its separately scoped normal integration.
+
+## Consolidated workspace boundary diagnosis and current-main sync —2026-10-20
+
+Run39295546565 at2e9a03b reached the third workspace browser case and failed its
+Chinese390px/reduced-motion document-width assertion at line560. Both earlier
+NVDA and daily-session cases passed in that run. Main authorized one concentrated
+fixture/contract audit and the complete instrument-workspace E2E module, rather
+than successive one-assertion pushes. Original failure log is retained. Prior
+signature/count causes and their evidence remain in
+output/0038-uiux-continuous/PR189-WORKSPACE-CONSOLIDATED-DIAGNOSIS.json.
+
+The unchanged isolated third case passed locally:1passed in95.88s,5existing
+warnings, final document390/viewport390/fonts loaded/no offending elements.
+This is not a reproduction or proof of a fix. CI uses Linux Chromium156 while
+local acceptance uses the installed supported Windows Edge154 channel. Ordered
+complete-module diagnosis passed:7passed in720.92s with5existing warnings. The
+ignored observation adapter recorded the original assertion result as true, with
+document390/viewport390/fonts loaded/no offending elements both immediately and
+after screenshot. No assertion, timeout or runtime layout changed for this probe;
+the complete test module remains byte-identical to2e9a03b. Neither the isolated nor
+ordered run reproduces the Linux CI overflow; its root cause remains unproven.
+
+Normal main integration consumed actual PR197 receipt:008b3536006ecfdfc652bf54062346fcfd350ba9,
+tree1316af4567b682d93e6b86f2e8016831403cfe27, parentd0230240 from PR186. The shared
+origin/main advanced from PR186 to PR197 before merge began. Source merged cleanly;
+only generated resources conflicted. P2 routes, P3 Ops/paper controls/CommandPalette
+equal actual main; accepted DataReadiness source equals2e9a03b. One TypeScript/Vite
+build from combined source passed; generated package and dist bytes match. Existing
+chunk/plugin advisories remain. API currency passed with explicit existing Python313
+and this worktree's PYTHONPATH; the default-environment stale result is preserved.
+No dependencies, PR186/197 CI observations, old layout suite or PR193 change.
+
+At the release owner's request a process-state snapshot recorded PID45540/start
+18:42:18UTC, elapsed584.26s, log0bytes and no final probe yet. Direct pytest had
+no module wall timeout; a prospective1800s supervision bound was then recorded,
+matching the CI browser gate. The existing run finished normally within that bound;
+no suite was relaunched. The snapshot and terminal log both remain preserved.
+
+Ruff check/format, whitespace, source preservation and package-byte checks pass.
+This normal merge is a current-main candidate, not a claimed overflow fix. Failed
+run39295546565 remains evidence; fresh exact-head CI must establish the Linux
+boundary before conditional merge. Return the concentrated unproven-root limitation
+to the coordinator/release owner without speculative CSS, weakened assertions or
+blind rerun. UI STOP/writer released after delivery; PR193 stays frozen at044febd.
