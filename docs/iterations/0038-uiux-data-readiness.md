@@ -313,3 +313,45 @@ real Linux failure geometry may justify one minimal root-cause fix batch; if the
 evidence is insufficient or requires product structure changes, return the exact
 gap to Planner. No overflow fix, CI success or merge is claimed. PR193 remains
 frozen at044febd; no new Goal, automation, dependency or workflow change.
+
+## Evidence-backed key-level wrap fix —2026-10-20
+
+Planner consumed the one real Linux diagnostic run39314587808 at164a919.
+Retained JSON reports document/body394 versus viewport/client390, loaded fonts,
+zh-CN/reduced motion and zero overflowing element rectangles. Its PNG shows the
+three raw key-level values concatenating beyond their columns under 看涨结构.
+The exact source is MarketCanvas.tsx/LevelFact, not ScenarioEvidence: the parent
+already uses three minmax(0,1fr) columns and min-w-0, while the numeric dd has no
+break opportunity. Text can overflow a bounded element without widening its box,
+explaining the zero-element result. Mapping agrees with the screenshot; no
+further diagnostic candidate or structural review is needed for this narrow fix.
+
+Quant boundary: preserve the complete server-owned numbers and their authority.
+No rounding, recalculation, precision reduction, data admission or trading change.
+Implementer added only overflow-wrap:anywhere to LevelFact's dd using the existing
+utility. Column count, values, typography, controls and all other source remain
+unchanged. Rebuilt packaged assets once from the same combined P2/P3/UI sources.
+
+Verifier added cell scrollWidth<=clientWidth checks to the existing390px Chinese/
+reduced-motion E2E, retaining all eight old assertions in order. Before fix this
+case fails locally: all cells106px wide but text119/112/119px (1failed,50.38s).
+After the one-utility change:1passed,50.31s,5existing warnings. All three cells now
+measure106/106; document/body/viewport390, fonts loaded. Values remain exactly
+115.13060827994977,118.7120627398097,115.13060827994977. Ordinary viewport screenshot
+confirms readable wrapping in the original columns; one confirmation pass only.
+
+MarketCanvas's focused render cases now include long fractional values and retain
+the original integer case:9passed, full precision preserved. TypeScript/Vite,
+targeted Oxlint, Ruff/format, whitespace and package/dist byte equality pass;
+Impeccable detector returns[]. Existing chunk advisory retained. Bounded diff review
+confirms only one production class, its regression coverage and generated assets;
+P2/P3/DataReadiness and PR193 remain unchanged. No new structural review, dependency,
+workflow, timeout, strategy/OOS or old broad suite. Windows Edge is the actual local
+browser; Linux acceptance still belongs to final exact-head CI.
+
+Failed Linux artifact is preserved under authoritativeoutput/0038-uiux-continuous/
+PR189-CI39314587808-browser-artifact/. Local RED/GREEN, measured glyph rectangles,
+untouched PNG and checks are PR189-key-level-*. Deliver one normal final commit/
+push to the unified release owner; no manual CI rerun, CI success or merge claimed.
+This bounded fix batch is complete and writer released after delivery. PR193 stays
+frozen at044febd until the actual189 merge receipt, with no further polishing.

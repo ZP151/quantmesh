@@ -674,6 +674,13 @@ def test_keyboard_locale_reduced_motion_and_mobile_boundary(browser, base_url) -
         page.get_by_role("heading", name="NVDA", exact=True).wait_for()
 
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+        levels = page.get_by_role("region", name="市场结构与关键价位", exact=True).locator("dl dd")
+        level_boxes = levels.evaluate_all("""elements => elements.map(element => ({
+            value:element.textContent, clientWidth:element.clientWidth,
+            scrollWidth:element.scrollWidth
+        }))""")
+        assert len(level_boxes) == 3
+        assert all(box["scrollWidth"] <= box["clientWidth"] for box in level_boxes), level_boxes
         assert page.get_by_role("main").count() == 1
         page.get_by_role("img", name=re.compile("NVDA 市场图表")).wait_for()
         page.get_by_role("table", name=re.compile("NVDA 图表数据")).wait_for()
