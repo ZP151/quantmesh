@@ -106,7 +106,7 @@ targeted round2 only.
   capture readable desktop/375px ordinary screenshots, preserving source binding.
 - [x] Independent whole-slice review, at most two rounds and one bounded fix
   batch. Record every ruling, remaining limit and role result in the iteration.
-- [ ] Commit/push coherent green checkpoint and draft PR for issue196, attach PR,
+- [x] Commit/push coherent green checkpoint and draft PR for issue196, attach PR,
   report exact head/evidence to main. Future P3 merge is a separate authority.
-- [ ] Evaluate full P1â†’P2â†’P3 objective using actual delivered evidence; do not
+- [x] Evaluate full P1â†’P2â†’P3 objective using actual delivered evidence; do not
   relabel synthetic engineering success as strategy or production qualification.

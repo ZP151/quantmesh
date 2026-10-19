@@ -1,7 +1,7 @@
 # Iteration0038 — guarded local paper controls, P3
 
 Issue: [196](https://github.com/ZP151/quantmesh/issues/196).
-Date: 2026-10-20. Status: actual loop verified; round2 READY; draft delivery pending.
+Date: 2026-10-20. Status: delivered in [Draft PR197](https://github.com/ZP151/quantmesh/pull/197).
 Plan: `docs/superpowers/plans/2026-10-20-paper-controls-p3.md`.
 
 ## Planner
@@ -174,6 +174,23 @@ An optional PIL metadata probe was unavailable; standard-library JPEG header
 inspection succeeded without installation or image modification. These are
 verifier-helper corrections, not hidden product changes or passing first runs.
 All59original research source/copy file hashes remain unchanged.
+
+### Delivery checkpoint
+
+Tested/reviewed runtime commit: `77f49ec2f2fdd1e503cfd708cfe47d1cee2df416`.
+Branch `codex/0038-paper-controls-p3` is pushed and Draft PR197 is attached to the
+product chat. `parent/source-commit-binding.json` compares all28actual runtime
+files with commit blobs: identical bytes or repository LF normalization only.
+The final closeout changes documentation only. Exact final head and local
+receipts are retained in the ignored P3 delivery record and reported to main.
+
+The approved P1→P2→P3 local product objective is fulfilled: P1 PR187 merged31b1c74;
+P2 PR195 mergeddddc678 with its recorded consumed-OOS verdict; P3's guarded manual
+synthetic control loop is verified and independently READY in Draft PR197.
+This completes the scoped local research/control user loops, not data rights/PIT,
+economic strategy qualification, real forward execution or a production release.
+P3 merge remains unapproved; no new-head CI-success claim or deployment is made.
+Owned cold preview50368/8868 and original evidence remain available paused.
 
 First actual CLI boundary: ownedPID69600/port8868 failed during assembly, before
 listening. Installed FastAPI lacks `app.add_event_handler`; mocked CLI pass-through

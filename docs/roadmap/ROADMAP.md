@@ -7,7 +7,8 @@ extend the current synthetic paper kill-switch flow with pause reasons, current
 account/journal/cap/version preflight, explicit resume and durable audit/replay.
 The final local synthetic user loop is verified, including stale refusal,
 one real-kernel paper fill, replay/original downloads and cold paused reopen;
-round2 is READY and draft delivery closeout is pending. Default/live
+round2 is READY and [Draft PR197](https://github.com/ZP151/quantmesh/pull/197)
+delivers runtime77f49ec. Default/live
 authority and the historical REJECT/consumed-OOS evidence remain unchanged.
 See the [P3 iteration](../iterations/0038-paper-controls-p3.md).
 
