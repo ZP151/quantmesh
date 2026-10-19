@@ -1,5 +1,14 @@
 # QuantMesh Reuse Matrix
 
+## Guarded local paper controls P3 — issue196, 2026-10-20
+
+P3 reuses PaperAccountStore/File, existing journal reconstruction, PaperAccount
+risk/matching and the current demo/order/kill-switch flow. The transaction callback
+is optional and bound only by explicit synthetic rehearsal configuration. Audit
+persistence and OS leases follow existing repository disciplines; no third-party
+source or dependency is introduced. Live ApprovalLedger is not reused as paper
+resume authority. See [ADR0033](adr/0033-local-paper-control-preflight.md).
+
 ## Local frozen-experiment inspection P2 — issue191, 2026-10-19
 
 P2 reuses ObjectStore/ObjectRef and the public verified P1 SnapshotCatalog behind

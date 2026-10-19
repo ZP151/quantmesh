@@ -1,4 +1,6 @@
 import { KeyRound, Power } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { PaperControlPanel, type PaperAvailability } from './PaperControlPanel'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,6 +10,8 @@ import { Notice, Surface, useSurface } from '@/components/state'
 import { api, ApiError } from '@/lib/api'
 import { venueLabel } from '@/lib/format'
 import { usePreferences } from '@/lib/preferences'
+import { paperControlsCopy } from '@/lib/paper-controls-copy'
+import type { PaperStatus } from '@/lib/paper-controls-api'
 
 // --- Kill switch ----------------------------------------------------------
 
@@ -15,12 +19,18 @@ import { usePreferences } from '@/lib/preferences'
  * The kill-switch control: the global bit plus every venue the
  * workstation knows. The flip POSTs to the same account object the
  * kernel gate reads — this UI is only its mirror, the refusal is
- * real. Disarm is always possible.
+ * real. Explicit synthetic mode delegates disarm to verified paper controls.
  */
 export function KillSwitchScreen() {
+  const [paperAvailability, setPaperAvailability] = useState<PaperAvailability>('loading')
   const query = useSurface(['kill-switch'], api.killSwitch)
   const queryClient = useQueryClient()
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
+  const syncPaperState = useCallback((state: PaperStatus) => {
+    queryClient.setQueryData(['kill-switch'], (previous: Record<string, unknown> | undefined) => ({
+      ...previous, kill_switch: state.paused, kill_switches: state.venue_stops,
+    }))
+  }, [queryClient])
   const flip = useMutation({
     mutationFn: ({ engage, venue }: { engage: boolean; venue?: string }) =>
       engage ? api.engageKillSwitch(venue) : api.disarmKillSwitch(venue),
@@ -34,9 +44,10 @@ export function KillSwitchScreen() {
   return (
     <Page
       title={t('screen.killSwitch.title')}
-      description={t('screen.killSwitch.description')}
+      description={paperAvailability === 'unavailable' ? t('screen.killSwitch.description') : paperControlsCopy[locale].pageDescription}
     >
-      <Surface query={query} title={t('screen.killSwitch.title')}>
+      <PaperControlPanel onAvailabilityChange={setPaperAvailability} onStateChange={syncPaperState} />
+      {paperAvailability === 'unavailable' && <Surface query={query} title={t('screen.killSwitch.title')}>
         {(state) => (
           <div className="space-y-5">
             <Card className={state.kill_switch ? 'border-destructive/50' : ''}>
@@ -92,7 +103,7 @@ export function KillSwitchScreen() {
             )}
           </div>
         )}
-      </Surface>
+      </Surface>}
     </Page>
   )
 }

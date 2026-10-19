@@ -1,13 +1,15 @@
 import { useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Dialog } from '@base-ui/react/dialog'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RotateCcw, Search } from 'lucide-react'
 import { api } from '@/lib/api'
 import { NAV_ITEMS } from '@/lib/nav'
 import { usePreferences } from '@/lib/preferences'
 import { cn } from '@/lib/utils'
 import { scenarioLabPath } from '@/lib/instrument-route'
+import { paperControlsApi } from '@/lib/paper-controls-api'
+import { paperControlsCopy } from '@/lib/paper-controls-copy'
 
 interface PaletteItem {
   key: string
@@ -33,7 +35,13 @@ export function CommandPalette({
 }) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
+  const paperCopy = paperControlsCopy[locale]
+  const paper = useQuery({ queryKey: ['paper-controls', 'palette'], queryFn: paperControlsApi.status,
+    enabled: open, retry: false, staleTime: 0, refetchOnWindowFocus: false, refetchOnMount: 'always' })
+  // Only the adapter's exact capability-off503 opens legacy commands.
+  const legacyAllowed = open && !paper.isFetching && paper.isError
+    && 'code' in paper.error && paper.error.code === 'unavailable'
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -55,8 +63,10 @@ export function CommandPalette({
     }))
     const actions: PaletteItem[] = [
       { key: 'ks-engage', label: t('palette.engageKill'), hint: t('palette.refuseOrders'), run: () => void killSwitch.mutate(true) },
-      { key: 'ks-disarm', label: t('palette.disarmKill'), hint: t('palette.allowPaper'), run: () => void killSwitch.mutate(false) },
-      ...(demoAttached
+      legacyAllowed
+        ? { key: 'ks-disarm', label: t('palette.disarmKill'), hint: t('palette.allowPaper'), run: () => void killSwitch.mutate(false) }
+        : { key: 'paper-controls', label: paperCopy.guardedAction, hint: paperCopy.guardedHint, run: () => navigate('/ops/kill-switch') },
+      ...(demoAttached && legacyAllowed
         ? [
             { key: 'demo-reset', label: t('palette.resetDemo'), hint: t('palette.restoreDemo'), run: () => void resetDemo.mutate() },
           ]
@@ -73,7 +83,7 @@ export function CommandPalette({
     return [...instruments, ...screens, ...actions].filter(
       (item) => item.label.toLowerCase().includes(needle) || item.hint.toLowerCase().includes(needle),
     )
-  }, [query, navigate, killSwitch, resetDemo, demoAttached, t])
+  }, [query, navigate, killSwitch, resetDemo, demoAttached, t, legacyAllowed, paperCopy])
 
   function runItem(item: PaletteItem | undefined) {
     if (!item) return
