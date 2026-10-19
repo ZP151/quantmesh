@@ -796,8 +796,13 @@ class LinuxOwnedProcess:
             _check_launch_deadline()
             self.transport.send(start_message)
             self.started = time.monotonic()
-        except LaunchDeadlineExceeded:
-            self.close()
+        except LaunchDeadlineExceeded as expired:
+            try:
+                self.close()
+            except Exception as cleanup_error:
+                # Preserve timeout classification and retain the failed cleanup
+                # as its cause. The runner must stop on unproven containment.
+                raise expired from cleanup_error
             raise
         except (LinuxContainmentError, ValueError, KeyError, TypeError) as exc:
             try:

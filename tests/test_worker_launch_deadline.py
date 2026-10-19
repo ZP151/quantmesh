@@ -145,3 +145,33 @@ def test_go_writer_thread_captures_original_deadline_before_actual_pipe_write(mo
     finally:
         deadline._launch_deadline.reset(token)
     assert stream.getvalue() == b""
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="Linux fake-Engine cleanup boundary")
+def test_expiry_cleanup_failure_records_timeout_and_stops_instead_of_claiming_cleanup(
+    monkeypatch, small_fixture
+):
+    runner, store, lake, calls, _, _, _ = configured(monkeypatch, small_fixture)
+    job = store.submit("local", "cleanup-expiry", request_for(lake, budget={"timeout_seconds": 1}))
+    clock = [100.0]
+    monkeypatch.setattr(job_runner.time, "monotonic", lambda: clock[0])
+    invoke = linux_owned.LinuxExecutionProfile.invoke
+
+    def lost(profile, args):
+        if args[0] == "inspect" and clock[0] == 102.0:
+            raise linux_owned.LinuxContainmentError("engine_unavailable")
+        result = invoke(profile, args)
+        if args[0] == "create":
+            clock[0] = 102.0
+        return result
+
+    monkeypatch.setattr(linux_owned.LinuxExecutionProfile, "invoke", lost)
+    with pytest.raises(linux_owned.LinuxContainmentError) as stopped:
+        runner.run_next_job(store, "deadline-owner", lake, store.artifact_root)
+    record = store.get("local", job.job_id)
+    assert record.state == "failed" and record.error_code == "timeout"
+    deadline = importlib.import_module("quantmesh.research._launch_deadline")
+    assert isinstance(stopped.value.__cause__, deadline.LaunchDeadlineExceeded)
+    assert isinstance(stopped.value.__cause__.__cause__, linux_owned.LinuxContainmentError)
+    assert not any(c[0] == "rm" for c in calls)  # Unknown owner is never a cleanup success.
+    assert deadline._launch_deadline.get() is None

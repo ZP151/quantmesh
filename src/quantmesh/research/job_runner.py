@@ -666,10 +666,12 @@ def run_next_job(
         if stop_event is not None:
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
-    except LaunchDeadlineExceeded:
+    except LaunchDeadlineExceeded as expired:
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], "timeout")
+        if expired.__cause__ is not None:
+            raise LinuxContainmentError("deadline_cleanup_unproven") from expired
     except (ValueError, OSError, subprocess.SubprocessError):
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
