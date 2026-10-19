@@ -1,0 +1,45 @@
+# DISARMED candidate. No installation/start authority is granted by this template.
+[Unit]
+Description=QuantMesh single-operator persistent private OpenD console %i
+ConditionPathExists=/etc/quantmesh/opend/persistent-session.json
+
+[Service]
+Type=exec
+User=quantmesh-opend
+Group=quantmesh-opend
+WorkingDirectory=/opt/quantmesh/opend/10.10.7008
+Environment=HOME=/var/lib/quantmesh-opend
+Environment=PATH=/usr/bin:/bin
+Environment=LANG=C.UTF-8
+ExecCondition=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --check-window --nonce %i --persistent
+ExecStartPre=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --prepare --nonce %i --persistent
+ExecStart=/usr/bin/tmux -D -f /run/quantmesh-opend-console-%i/tmux.conf -S /run/quantmesh-opend-console-%i/socket
+ExecStartPost=/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --create-pane --nonce %i --persistent
+StandardInput=null
+StandardOutput=null
+StandardError=null
+RuntimeDirectory=quantmesh-opend-console-%i
+RuntimeDirectoryMode=0700
+StateDirectory=quantmesh-opend-stage
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+ReadWritePaths=/var/lib/quantmesh-opend /var/lib/quantmesh-opend-stage /run/quantmesh-opend-console-%i
+RuntimeMaxSec=infinity
+MemoryMax=1G
+MemoryHigh=768M
+MemorySwapMax=0
+CPUQuota=50%
+TasksMax=128
+TimeoutStartSec=15
+TimeoutStopSec=15
+KillMode=control-group
+Restart=no
