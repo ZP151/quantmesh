@@ -1,5 +1,15 @@
 # QuantMesh Reuse Matrix
 
+## Local frozen-experiment inspection P2 — issue191, 2026-10-19
+
+P2 reuses ObjectStore/ObjectRef and the public verified P1 SnapshotCatalog behind
+a narrow inspection adapter. It introduces no dependency or executable upstream
+source. Original historical Python source is preserved only as inert package
+evidence, never imported or executed. The forecast ExperimentRegistry is not
+reused because its forecast-error semantics differ. Raw source bytes stay local;
+rights/PIT gaps and existing vn.py external-runtime redistribution limits remain
+unchanged. See [ADR0031](adr/0031-frozen-experiment-inspection.md).
+
 ## Local SPY snapshot qualification P1 — issue184, 2026-10-19
 
 P1 reuses the repository's ObjectStore/ObjectRef and pinned CalendarService

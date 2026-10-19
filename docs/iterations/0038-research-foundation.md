@@ -3550,3 +3550,17 @@ host mutation, credential access, provider call or OpenD login followed the fix.
 Planner: release review found original deadline could expire in admission/handoff before create/start/GO. Actual operator conditional merge instruction and supervisor single-source-writer window are consumed; separate from OpenD194 branch. Implementer: a private absolute-deadline ContextVar crosses outer runtime/metadata/heartbeat, inner admission/handoff, create/attach/READY/binding and final GO writer; public signatures and original budget unchanged. A new thread captures deadline explicitly before pipe write. Constructor retains exact-owned cleanup and deadline failure records timeout with cooperative-stop priority. No global cleanup deadline block. Researcher: no strategy/data/cost/lease/slot/pin/credential/trading boundary changes. Verifier:10 new deterministic RED failures on previous source,10GREEN; native affected first174pass/21skip with8 subprocess import failures, corrected explicit native src PYTHONPATH yields86pass including all8 failures and10 deadline cases. No new environment installed, no global GIT override. Broad Ruff/affected formatting/whitespace pass. New branch review/current CI and merged-only server acceptance remain pending; old cace human review is not presented as independent human review of changed bytes.
 
 P1 correction reviewround1 found cleanup could replace the timeout exception. Regression RED reproduces wrong outward classification/continuation; constructor now retains timeout with cleanup as explicit cause. Runner records timeout then raises containment refusal when cleanup is unproven, so daemon cannot continue claiming work under unknown ownership. Exact-owned inspect/rm refusal is retained and never reported as cleanup success. Final affected native117pass (new11 deadline cases, Linux owned, Worker execution/daemon), with earlier import-context failures preserved. Fresh round2 pending, no deploy.
+## Issue192 — explicit Operator persistent private console (2026-10-19)
+
+Planner: direct human explicitly requests single-person approval and long-running private OpenD login, then necessary checks/direct window without repeated approval. Actual Operator is one human in all roles; no independent two-person claim. Researcher: login is not SDK/market/source qualification; no app route or trading authority changes. Implementer: separate schema2 permit/service in existing guard, original900second schema1 preserved; no new dependencies. Verifier: new exact native tests RED5/10 on old source, current affected native98pass; Windows65pass/33native skips. Source-host/private-window evidence and release gates remain pending. Reviewer: fresh independent branch review requested; no vendor executed. Plan docs/superpowers/plans/2026-10-19-opend-persistent-console.md; raw output/192-opend.
+
+### Issue185 exact current-main integration — 2026-10-20 Singapore
+
+The final deadline correction at a15fc132 received independent review round2
+READY with zero P1/P2 after117 native affected passes. Integrating main dddc678
+preserves every reviewed Worker runtime and regression-test blob unchanged;
+the only conflict is this append-only ledger, and both histories are retained.
+OpenD194 and product195 remain separate merged slices. The unified release owner
+alone observes the new exact-head CI and merges186; server deployment still
+requires the actual merged full-tree receipt and then real two-job recovery.
+No old stage/backup/restore proof is rerun, and no new human approval is requested.

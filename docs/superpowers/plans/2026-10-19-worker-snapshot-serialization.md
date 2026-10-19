@@ -43,7 +43,7 @@ Public run_next_job(store, owner, inputs_root, artifacts_root) remains unchanged
   the existing Linux tool environment; preserve unsupported Windows baseline result.
 - [x] Run broad Ruff, affected formatting, whitespace and submodule checks; record
   existing unrelated failures without repairs. Commit coherent tested slice.
-- [ ] Fresh independent whole-branch review (max2 rounds); fix bounded findings
+- [x] Fresh independent whole-branch review (max2 rounds); fix bounded findings
   with observed regression evidence. Push own branch, open/attach PR, inspect
   required exact-head CI. Do not merge/deploy without new applicable human gate.
 
@@ -59,4 +59,5 @@ independent review/current CI evidence and explicit later native acceptance limi
 
 - [x] Reproduce original deadline expiry during outer/inner fingerprint, handoff, prerequisites, create return, inspect, READY, binding and actual GO writer scheduling (10 deterministic RED cases).
 - [x] Private original-deadline context/helper across job_runner, worker_execution and linux_owned; no public signature or global cleanup gate.
-- [ ] Focused native affected suite and fresh independent correction review; normal integrate current main and send new exact head/CI to unified release owner.
+- [x] Focused native affected suite and fresh independent correction review:117 native passed, round2 READY zero P1/P2.
+- [ ] Integrate current main dddc678 without changing reviewed Worker blobs and send new exact head/tree/base/CI to the exclusive unified release owner; merged-only deployment remains separate.
