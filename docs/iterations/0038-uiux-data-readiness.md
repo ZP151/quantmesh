@@ -158,3 +158,36 @@ dda29d7 for release verification; earlier history remains, with no force/reset.
 The release owner must consume the final exacthead/CI, not a prior candidate. No
 CI success, actionable-thread closure or merge claimed here. Integration is done;
 this writer is STOP/released for main/server/P3 scheduling, with no extra193/polish.
+
+## Required-CI browser fixture compatibility —2026-10-20
+
+Main authorized a narrow test-only fix after PR189 run39287794502 at1400966
+failed its browser job118180119368. The NVDA heading timeout was secondary:
+instruments/api.py passes named horizon/forecast_id to render; the real workspace
+supports both, but the two local browser-test wrappers omitted them. Planner and
+implementer scope is only this fixture contract plus this record. Research/data
+qualification, runtime, generated assets and PR193 remain unchanged; no new data,
+backtest or trading authority is introduced.
+
+Both wrappers now accept and forward the two explicit parameters unchanged.
+Four parameterized contract cases cover default/selected values through both
+wrappers and preserve the intentional AAPL OSError without reaching the delegate.
+They first reproduced4failures with unexpected keyword argument horizon, then
+passed4/4 after the fix. Existing browser assertions remain intact; there is no
+generic kwargs acceptance, exception swallowing or business-code workaround.
+Bounded diff review checked those scope and refusal invariants.
+
+Verifier reran the original failing case
+tests/test_instrument_workspace_e2e.py::test_nvda_inspect_to_paper_loop_and_race_refusal:
+1passed in159.57s, retaining5existing dependency deprecation warnings. The local
+run used the already installed supported Edge Chromium channel through the ignored
+retained launch adapter because the local default Chromium revision is absent;
+CI keeps its matching browser installation. Ruff check/format and whitespace pass.
+No dependency installation or broad old-suite rerun. Logs are retained under
+authoritativeoutput/0038-uiux-continuous/PR189-stub-contract-{RED,GREEN}.log and
+PR189-workspace-original-GREEN.log, alongside the original failed CI log.
+
+The new commit supersedes1400966 only after normal push; the release owner must
+gate its exact new head with fresh CI. No CI success, thread closure or merge is
+claimed. After delivery this narrow writer window is STOP/released; PR193 stays
+frozen at044febd35febe7d9e5f2afaebd58d56cd5d05630.

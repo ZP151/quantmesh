@@ -62,8 +62,10 @@ class _ControlledWorkspace:
     def set_quote(self, symbol: str, *, at, sequence: int, price: float) -> None:
         self.quotes[symbol] = (at, sequence, price)
 
-    def render(self, venue, symbol, selected_range, *, peers=()):
-        workspace = self.delegate.render(venue, symbol, selected_range, peers=peers)
+    def render(self, venue, symbol, selected_range, *, peers=(), horizon=None, forecast_id=None):
+        workspace = self.delegate.render(
+            venue, symbol, selected_range, peers=peers, horizon=horizon, forecast_id=forecast_id
+        )
         quote = self.quotes.get(symbol)
         if quote is None:
             return workspace
@@ -175,10 +177,45 @@ class _OneSymbolFailureWorkspace:
         self.delegate = delegate
         self.symbol = symbol
 
-    def render(self, venue, symbol, selected_range, *, peers=()):
+    def render(self, venue, symbol, selected_range, *, peers=(), horizon=None, forecast_id=None):
         if symbol == self.symbol:
             raise OSError("bounded local acceptance failure")
-        return self.delegate.render(venue, symbol, selected_range, peers=peers)
+        return self.delegate.render(
+            venue, symbol, selected_range, peers=peers, horizon=horizon, forecast_id=forecast_id
+        )
+
+
+@pytest.mark.parametrize("wrapper_kind", ["controlled", "one-symbol-failure"])
+@pytest.mark.parametrize("horizon,forecast_id", [(None, None), (7, "forecast-" + "a" * 24)])
+def test_workspace_wrappers_forward_render_selection(wrapper_kind, horizon, forecast_id) -> None:
+    """Keep the browser substitutes compatible with the real API render call."""
+    calls = []
+    rendered = object()
+
+    class RecordingWorkspace:
+        def render(
+            self, venue, symbol, selected_range, *, peers=(), horizon=None, forecast_id=None
+        ):
+            calls.append((venue, symbol, selected_range, peers, horizon, forecast_id))
+            return rendered
+
+    service = _ControlledWorkspace(RecordingWorkspace())
+    if wrapper_kind == "one-symbol-failure":
+        service = _OneSymbolFailureWorkspace(service, "AAPL")
+    peers = (("hyperliquid", "BTC"),)
+    assert (
+        service.render(
+            "moomoo", "NVDA", "6m", peers=peers, horizon=horizon, forecast_id=forecast_id
+        )
+        is rendered
+    )
+    assert calls == [("moomoo", "NVDA", "6m", peers, horizon, forecast_id)]
+    if wrapper_kind == "one-symbol-failure":
+        with pytest.raises(OSError, match="bounded local acceptance failure"):
+            service.render(
+                "moomoo", "AAPL", "6m", peers=peers, horizon=horizon, forecast_id=forecast_id
+            )
+        assert len(calls) == 1  # the intentional AAPL refusal never reaches the delegate
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -361,8 +398,9 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     page.get_by_text("Immutable proposal preview", exact=True).wait_for()
     page.get_by_label("Confirmation token").fill(race_token)
     with page.expect_response(
-        lambda response: "/api/paper/proposals/" in response.url
-        and response.url.endswith("/confirm")
+        lambda response: (
+            "/api/paper/proposals/" in response.url and response.url.endswith("/confirm")
+        )
     ) as refused:
         page.get_by_role("button", name="Confirm paper proposal").click()
     assert refused.value.status == 409
