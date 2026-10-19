@@ -20,6 +20,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from quantmesh.research._launch_deadline import (
+    LaunchDeadlineExceeded,
+    _check_launch_deadline,
+    _launch_deadline,
+)
 from quantmesh.research.jobs import RunBudget
 from quantmesh.research.linux_bootstrap import MAX_OUTPUT_BYTES, output_size, verify_limits
 
@@ -362,6 +367,8 @@ class _Transport:
     """Bounded stdout/stderr draining, including a hung CLI or oversized response."""
 
     def __init__(self, argv: list[str], env: dict[str, str], *, lines=False):
+        if lines:
+            _check_launch_deadline()
         self.process = subprocess.Popen(
             argv,
             env=env,
@@ -423,11 +430,19 @@ class _Transport:
             raise LinuxContainmentError("control_lost")
         finished = threading.Event()
         failed = threading.Event()
+        # New threads do not inherit ContextVars. Capture the original value,
+        # then recheck inside the GO writer immediately before its pipe write.
+        deadline = _launch_deadline.get() if value.startswith("go") else None
+        expired = []
 
         def write():
             try:
+                if deadline is not None:
+                    _check_launch_deadline(deadline)
                 self.process.stdin.write((value + "\n").encode("ascii"))
                 self.process.stdin.flush()
+            except LaunchDeadlineExceeded as error:
+                expired.append(error)
             except (OSError, ValueError):
                 failed.set()
             finally:
@@ -435,7 +450,10 @@ class _Transport:
 
         # Killing a wedged attachment unblocks its pipe writer; PID1 owns the tree.
         threading.Thread(target=write, daemon=True).start()
-        if not finished.wait(CONTROL_WRITE_SECONDS) or failed.is_set():
+        completed = finished.wait(CONTROL_WRITE_SECONDS)
+        if expired:
+            raise expired[0]
+        if not completed or failed.is_set():
             self.overflow.set()
             self.process.kill()
             raise LinuxContainmentError("control_lost")
@@ -657,6 +675,7 @@ class LinuxOwnedProcess:
         ):
             raise LinuxContainmentError("unsafe_mounts")
         self.evidence.update(profile.prerequisites())
+        _check_launch_deadline()
         self._expected_inspect_command = [
             "-B",
             "-I",
@@ -720,13 +739,17 @@ class LinuxOwnedProcess:
             *command,
         ]
         try:
+            _check_launch_deadline()
             returned = profile.invoke(args)
             if not re.fullmatch(r"[0-9a-f]{64}", returned):
                 raise LinuxContainmentError("invalid_container_id")
             self.container_id = returned
+            _check_launch_deadline()
             self._inspect()
+            _check_launch_deadline()
             self.transport = _attach(profile, returned)
             ready = self.transport.receive(CLI_TIMEOUT)
+            _check_launch_deadline()
             if ready.get("event") != "ready" or ready.get("bootstrap_sha256") != bootstrap_digest():
                 raise LinuxContainmentError("unqualified_bootstrap")
             verify_limits(ready["limits"], budget.memory_mib)
@@ -740,6 +763,7 @@ class LinuxOwnedProcess:
             else:
                 try:
                     raw, binding_sha256 = prepare_parent_binding(self, ready)
+                    _check_launch_deadline()
                     if (
                         type(raw) is not bytes
                         or not isinstance(binding_sha256, str)
@@ -764,11 +788,22 @@ class LinuxOwnedProcess:
                     )
                     self.evidence["parent_binding_sha256"] = binding_sha256
                     start_message = f"go:{binding_sha256}"
+                except LaunchDeadlineExceeded:
+                    raise
                 except Exception as exc:
                     raise LinuxContainmentError("parent_binding_failed") from exc
                 self._inspect()
+            _check_launch_deadline()
             self.transport.send(start_message)
             self.started = time.monotonic()
+        except LaunchDeadlineExceeded as expired:
+            try:
+                self.close()
+            except Exception as cleanup_error:
+                # Preserve timeout classification and retain the failed cleanup
+                # as its cause. The runner must stop on unproven containment.
+                raise expired from cleanup_error
+            raise
         except (LinuxContainmentError, ValueError, KeyError, TypeError) as exc:
             try:
                 self.close()

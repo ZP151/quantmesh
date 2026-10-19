@@ -3498,6 +3498,69 @@ test. Raw evidence unchanged; output/0038-release-readiness/automated-audit.json
 approval-packet.json and report-browser-handoff.json record the bounded audit.
 Operator key metadata is configured; account/model access remains unverified.
 
+## Approved concurrent Worker snapshot repair — 2026-10-19
+
+Issue [185](https://github.com/ZP151/quantmesh/issues/185). Planner: one action,
+two registered jobs in the persistent Worker; prevent a sibling attempt mkdir
+from rejecting another valid protected snapshot. The operator's concentrated
+B approval explicitly accepted this narrow design. Independent branch from
+origin/main c644 keeps product/OpenD/advisory credentials and deployed source out
+of scope. Quant Researcher: no changes to data admission, costs, time ordering,
+math, confidence or promotion; synthetic concurrency evidence grants no market
+or live-trading authority.
+
+Implementer: process-local deadline/stop-aware preparation guard spans attempt
+mkdir through _snapshot, releases before numerical startup, and preserves all
+FD/ctime/pin/resource/slot/lease/publication checks and public signatures.
+Tracked spec/plan: docs/superpowers/{specs,plans}/2026-10-19-worker-snapshot-serialization.md.
+Verifier: final identical tests against original c644 RED3fail/1pass; final
+implementation4pass. Stopped-waiter mutant fails at TimeoutError, current guard
+passes after synchronizing on actual acquire entry. Wider Linux targeted run
+95pass/21skip/1fail; sole failure was native Git parsing a Windows worktree pointer.
+That exact test passes with explicit GIT_DIR for this same worktree. Windows
+baseline collection lacked pg8000; no dependency/environment install was made.
+Final native validation uses a separate normal Git checkout at c644 with exact
+source/test SHA overlays and no global Git environment override:96pass/21skip.
+A local full-suite attempt with the cross-platform Git override was stopped and
+retained as unqualified; fixture subprocesses must not inherit that override.
+The exact owned pytest was stopped through retained pidfd after all threads
+were stopped and no child processes remained. No full-local-suite pass is claimed;
+current required CI remains the merge gate.
+Full src/tests/tools Ruff, affected-file format and whitespace pass; submodule
+gitlink pins are unchanged (checkout does not initialize their contents).
+
+Reviewer: first round found a stopped-waiter test synchronization gap, fixed
+with RED mutant/GREEN evidence; second round READY with no blocking finding.
+Class B runtime scheduling, requiring one independent human review plus current
+required CI before merge. Automated review is not human merge approval. Deferred
+minor: no separate test advances the deadline during copying; the existing copy
+has its own bounded checks and post-copy original-deadline refusal is not hard
+interruption. SQLite journal fixture data was placed away from protected
+ancestry to isolate the diagnosed PostgreSQL production mkdir race; arbitrary
+external/multiprocess writers remain fail-closed. All failed runs are retained.
+
+Evidence: output/185-snapshot-serialization/ in the isolated worktree; server
+operator receipts and login instructions stay in the server closeout directory.
+This checkpoint is software evidence only. Current PR CI/new human merge gate
+and merged-source two-OCI-job/restart acceptance remain required. No research
+host mutation, credential access, provider call or OpenD login followed the fix.
+
+### Issue185 release P1 — final launch deadline correction (2026-10-19)
+
+Planner: release review found original deadline could expire in admission/handoff before create/start/GO. Actual operator conditional merge instruction and supervisor single-source-writer window are consumed; separate from OpenD194 branch. Implementer: a private absolute-deadline ContextVar crosses outer runtime/metadata/heartbeat, inner admission/handoff, create/attach/READY/binding and final GO writer; public signatures and original budget unchanged. A new thread captures deadline explicitly before pipe write. Constructor retains exact-owned cleanup and deadline failure records timeout with cooperative-stop priority. No global cleanup deadline block. Researcher: no strategy/data/cost/lease/slot/pin/credential/trading boundary changes. Verifier:10 new deterministic RED failures on previous source,10GREEN; native affected first174pass/21skip with8 subprocess import failures, corrected explicit native src PYTHONPATH yields86pass including all8 failures and10 deadline cases. No new environment installed, no global GIT override. Broad Ruff/affected formatting/whitespace pass. New branch review/current CI and merged-only server acceptance remain pending; old cace human review is not presented as independent human review of changed bytes.
+
+P1 correction reviewround1 found cleanup could replace the timeout exception. Regression RED reproduces wrong outward classification/continuation; constructor now retains timeout with cleanup as explicit cause. Runner records timeout then raises containment refusal when cleanup is unproven, so daemon cannot continue claiming work under unknown ownership. Exact-owned inspect/rm refusal is retained and never reported as cleanup success. Final affected native117pass (new11 deadline cases, Linux owned, Worker execution/daemon), with earlier import-context failures preserved. Fresh round2 pending, no deploy.
 ## Issue192 — explicit Operator persistent private console (2026-10-19)
 
 Planner: direct human explicitly requests single-person approval and long-running private OpenD login, then necessary checks/direct window without repeated approval. Actual Operator is one human in all roles; no independent two-person claim. Researcher: login is not SDK/market/source qualification; no app route or trading authority changes. Implementer: separate schema2 permit/service in existing guard, original900second schema1 preserved; no new dependencies. Verifier: new exact native tests RED5/10 on old source, current affected native98pass; Windows65pass/33native skips. Source-host/private-window evidence and release gates remain pending. Reviewer: fresh independent branch review requested; no vendor executed. Plan docs/superpowers/plans/2026-10-19-opend-persistent-console.md; raw output/192-opend.
+
+### Issue185 exact current-main integration — 2026-10-20 Singapore
+
+The final deadline correction at a15fc132 received independent review round2
+READY with zero P1/P2 after117 native affected passes. Integrating main dddc678
+preserves every reviewed Worker runtime and regression-test blob unchanged;
+the only conflict is this append-only ledger, and both histories are retained.
+OpenD194 and product195 remain separate merged slices. The unified release owner
+alone observes the new exact-head CI and merges186; server deployment still
+requires the actual merged full-tree receipt and then real two-job recovery.
+No old stage/backup/restore proof is rerun, and no new human approval is requested.

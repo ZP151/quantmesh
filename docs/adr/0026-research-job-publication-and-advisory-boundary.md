@@ -127,3 +127,16 @@ control-write refusal in child/descendant, actual scripted worker success and
 timeout with a descendant, manager loss and sibling survival. It does not
 qualify the full merged runtime, permanent services, provider availability,
 paid model effect or broader Option A recovery. Keep those gates separate.
+
+## Concurrent snapshot preparation — 2026-10-19
+
+Issue185 serializes recursive attempt/bundle directory creation and protected
+fixture copying through one process-local lock. Creating a sibling job directory
+must not change an ancestor ctime while another thread's snapshot holds it.
+Release before runtime measurement or numerical child execution; keep both global
+job slots and all existing no-follow FD/identity/ctime validation unchanged.
+Lock waiting consumes the original monotonic timeout and observes Worker stop.
+Existing snapshot copying retains its own bounded check; original-deadline refusal
+is checked after copying, not a claim of hard interruption during a filesystem call.
+Other processes/external writers remain fail-closed; this is not a distributed
+namespace lock or acceptance of colocated SQLite-journal ancestor mutation.
