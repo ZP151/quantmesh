@@ -1,4 +1,4 @@
-"""Disarmed, expiring OpenD staging console. Never an authentication receipt.
+"""Pinned expiring stage or explicit single-operator persistent private console.
 
 Only --start (or the fixed service pane) can release the pinned vendor. Default
 preflight has no effects; --owned-fixture uses synthetic children only. No path,
@@ -35,11 +35,13 @@ HELPER_SHA = "c18a81701ce432cb93e1ac2243b31add34f3ec10944dc381b92ff8e1d0133b63"
 VALIDATOR_SHA = "53fb2821b21dc695a2934dd20d6822f69714e960585e371181d20d0b81441736"
 PROFILE_SHA = "0e0b15be83e2b7b435d4e6dbb94f2cbd9c7833e681c4af517e361f5b80b40e17"
 UNIT_SHA = "e108294e59e624d17b0f75034930c9ae3fe1f3d3353c44a90586069e1e0cfdac"
+PERSISTENT_UNIT_SHA = "b23d91ec4d5b377d57d8a0cae1971974d4268f1faa3a5fed06dc0d0add867890"
 CONFIG_SHA = "d6c9c112004bd0866dacc5d0e4fae4d715fcd6db250cd68cae859f787583bffb"
 VENDOR_SHA = "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601"
 BASE = Path("/opt/quantmesh/opend")
 LAUNCHER = BASE / "stage_console.py"
 PERMIT = Path("/etc/quantmesh/opend/staging-window.json")
+PERSISTENT_PERMIT = Path("/etc/quantmesh/opend/persistent-session.json")
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
 CONFIG = Path("/etc/quantmesh/opend/OpenD.xml")
 VENDOR = BASE / "10.10.7008/OpenD"
@@ -102,6 +104,10 @@ class StagingWindow:
     def expires(self):
         return _utc(self.claims["expires_at"])
 
+    @property
+    def persistent(self):
+        return self.claims.get("schema_version") == 2
+
 
 def _utc(value):
     if type(value) is not str:
@@ -117,11 +123,17 @@ def _utc(value):
 
 def validate_staging_window(window, *, now, identity, hashes):
     c = window.claims
-    if type(c) is not dict or set(c) != FIELDS:
+    if type(c) is not dict or set(c) != (
+        FIELDS | {"session_lifetime"} if window.persistent else FIELDS
+    ):
         raise StageDenied()
     exact = dict(
-        schema_version=1,
-        purpose="opend_initialization_qualification",
+        schema_version=2 if window.persistent else 1,
+        purpose=(
+            "opend_persistent_private_console"
+            if window.persistent
+            else "opend_initialization_qualification"
+        ),
         tmux_version="3.4",
         machine_sha256=MACHINE_SHA,
         tmux_sha256=TMUX_SHA,
@@ -130,6 +142,8 @@ def validate_staging_window(window, *, now, identity, hashes):
         new_device_approved=True,
         market_right_transfer_approved=True,
     )
+    if window.persistent:
+        exact["session_lifetime"] = "until_operator_stop"
     if any(type(c[k]) is not type(v) or c[k] != v for k, v in exact.items()):
         raise StageDenied()
     for key, length in [("nonce", 32), ("approved_build", 40), ("launcher_sha256", 64)]:
@@ -145,11 +159,12 @@ def validate_staging_window(window, *, now, identity, hashes):
     reviewers = c["human_reviewers"]
     if (
         type(reviewers) is not list
-        or len(reviewers) != 2
+        or len(reviewers) != (1 if window.persistent else 2)
         or any(
             type(r) is not str or not re.fullmatch(r"[A-Za-z0-9_.@-]{1,80}", r) for r in reviewers
         )
-        or len(set(reviewers)) != 2
+        or len(set(reviewers)) != len(reviewers)
+        or (window.persistent and reviewers != ["Operator"])
         or type(c["safety_owner"]) is not str
         or c["safety_owner"] not in reviewers
     ):
@@ -261,7 +276,9 @@ def _json(data):
         raise StageDenied() from None
 
 
-def load_staging_window(path=PERMIT):
+def load_staging_window(path=None, *, persistent=False):
+    if path is None:
+        path = PERSISTENT_PERMIT if persistent else PERMIT
     return StagingWindow(_json(_bytes(path)))
 
 
@@ -345,11 +362,13 @@ def _vendor_tree(path):
 
 
 def _paths(window):
-    return Path("/run") / ("quantmesh-opend-stage-" + window.nonce)
+    prefix = "quantmesh-opend-console-" if window.persistent else "quantmesh-opend-stage-"
+    return Path("/run") / (prefix + window.nonce)
 
 
 def _unit(window):
-    return "quantmesh-opend-stage@" + window.nonce + ".service"
+    prefix = "quantmesh-opend-console@" if window.persistent else "quantmesh-opend-stage@"
+    return prefix + window.nonce + ".service"
 
 
 def _owned_dir(path):
@@ -408,8 +427,23 @@ MANAGER_FIXED = dict(
 )
 
 
+def _manager_contract(window):
+    if not window.persistent:
+        return MANAGER_FIXED
+    return {
+        **MANAGER_FIXED,
+        "RuntimeMaxUSec": "infinity",
+        "FragmentPath": "/etc/systemd/system/quantmesh-opend-console@.service",
+        "MemoryMax": "1073741824",
+        "MemoryHigh": "805306368",
+        "MemorySwapMax": "0",
+        "CPUQuotaPerSecUSec": "500ms",
+        "TasksMax": "128",
+    }
+
+
 def _validate_manager(window, properties, *, preparing=False):
-    if any(properties.get(k) != v for k, v in MANAGER_FIXED.items()):
+    if any(properties.get(k) != v for k, v in _manager_contract(window).items()):
         raise StageDenied("backend_denied")
     if (
         properties.get("Id") != _unit(window)
@@ -449,8 +483,9 @@ def _command(argv):
 
 
 def _manager(window, *, preparing=False):
-    _bytes(Path(MANAGER_FIXED["FragmentPath"]), UNIT_SHA)
-    names = list(MANAGER_FIXED) + [
+    contract = _manager_contract(window)
+    _bytes(Path(contract["FragmentPath"]), PERSISTENT_UNIT_SHA if window.persistent else UNIT_SHA)
+    names = list(contract) + [
         "Id",
         "MainPID",
         "ActiveState",
@@ -517,6 +552,7 @@ def _pane_command(window):
         "--pane",
         "--nonce",
         window.nonce,
+        *(["--persistent"] if window.persistent else []),
     ]
 
 
@@ -718,14 +754,21 @@ def start_staging_console(window):
             child = _spawn_gated(
                 tuple(held),
                 fixture=False,
-                seconds=min(900, math.ceil(deadline - time.monotonic())),
+                seconds=0
+                if window.persistent
+                else min(900, math.ceil(deadline - time.monotonic())),
                 executable=executable,
                 vendor_argv=profile["runtime"]["argv"],
                 registry=registered,
+                **({"persistent": True} if window.persistent else {}),
             )
 
             def final_admission():
-                latest = load_staging_window()
+                latest = (
+                    load_staging_window(persistent=True)
+                    if window.persistent
+                    else load_staging_window()
+                )
                 if latest.claims != window.claims or time.monotonic() >= deadline:
                     raise StageDenied("deadline")
                 check = inspect_staging_context(latest)
@@ -744,6 +787,13 @@ def start_staging_console(window):
 
             child.release(final_admission)
             while child.alive():
+                if window.persistent:
+                    # Freshness was checked immediately before release. Once released,
+                    # this explicit Operator session lasts until owned stop/exit.
+                    if select.select([context["backend_pidfd"]], [], [], 0)[0]:
+                        break
+                    select.select([child.pidfd, context["backend_pidfd"]], [], [], 0.2)
+                    continue
                 remaining = min(
                     deadline - time.monotonic(),
                     (window.expires - datetime.now(UTC)).total_seconds(),
@@ -754,7 +804,7 @@ def start_staging_console(window):
             child.close()
         return dict(
             status="stopped",
-            scope="EXPIRING_STAGE_ONLY",
+            scope="PERSISTENT_PRIVATE_CONSOLE_ONLY" if window.persistent else "EXPIRING_STAGE_ONLY",
             **FALSE_FLAGS,
             child_terminal=child.terminal,
             child_returncode=child.returncode,
@@ -862,7 +912,18 @@ class _Owned:
         self.closed = True
 
 
-def _child(gate, report, terminal_fds, seconds, parent, fixture, role, executable, vendor_argv):
+def _child(
+    gate,
+    report,
+    terminal_fds,
+    seconds,
+    parent,
+    fixture,
+    role,
+    executable,
+    vendor_argv,
+    persistent=False,
+):
     """Gated child; terminal descriptors pass directly, with no relay or capture."""
     try:
         for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGALRM):
@@ -896,7 +957,7 @@ def _child(gate, report, terminal_fds, seconds, parent, fixture, role, executabl
 
             os.setsid()
             fcntl.ioctl(0, termios.TIOCSCTTY, 0)
-        signal.setitimer(signal.ITIMER_REAL, seconds)
+        signal.setitimer(signal.ITIMER_REAL, 0 if persistent else seconds)
         os.write(report, b"R")
         if not fixture:
             os.close(gate)
@@ -920,7 +981,7 @@ def _child(gate, report, terminal_fds, seconds, parent, fixture, role, executabl
             select.select([], [], [], 60)
         else:
             # Synthetic blocked child uses no terminal byte reads or writes.
-            select.select([], [], [], seconds + 1)
+            select.select([], [], [], 60 if persistent else seconds + 1)
         os._exit(0)
     except BaseException:
         os._exit(41)
@@ -936,11 +997,16 @@ def _spawn_gated(
     executable=None,
     vendor_argv=None,
     registry=None,
+    persistent=False,
 ):
     _native()
     if terminal_fds is not None and type(terminal_fds) is int:
         terminal_fds = (terminal_fds,) * 3
-    if role not in {"blocked", "parent"} or not 0 < seconds <= 900:
+    if (
+        role not in {"blocked", "parent"}
+        or type(persistent) is not bool
+        or not (seconds == 0 if persistent else 0 < seconds <= 900)
+    ):
         raise StageDenied("context_denied")
     descriptors = []
     pid = handle = None
@@ -967,6 +1033,7 @@ def _spawn_gated(
                 role,
                 executable,
                 vendor_argv,
+                persistent,
             )
             os._exit(41)
         os.close(gate_r)
@@ -1153,11 +1220,16 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group()
     for name in ("start", "check-window", "prepare", "create-pane", "pane", "owned-fixture"):
         mode.add_argument("--" + name, action="store_true")
+    parser.add_argument("--persistent", action="store_true")
     parser.add_argument(
         "--nonce",
         type=lambda s: s if re.fullmatch(r"[0-9a-f]{32}", s) else parser.error("invalid nonce"),
     )
     args = parser.parse_args(argv)
+    if args.persistent and not (
+        args.start or args.check_window or args.prepare or args.create_pane or args.pane
+    ):
+        parser.error("persistent requires a service mode")
     if args.nonce and not (
         args.start or args.check_window or args.prepare or args.create_pane or args.pane
     ):
@@ -1167,7 +1239,11 @@ def main(argv=None):
         if args.owned_fixture:
             receipt = run_owned_fixture()
         elif args.start or args.check_window or args.prepare or args.create_pane or args.pane:
-            window = load_staging_window()
+            window = (
+                load_staging_window(persistent=True) if args.persistent else load_staging_window()
+            )
+            if window.persistent != args.persistent:
+                raise StageDenied()
             _admit(window)
             if args.nonce != window.nonce:
                 raise StageDenied()
