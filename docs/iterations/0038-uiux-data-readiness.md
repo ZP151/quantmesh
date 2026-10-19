@@ -96,3 +96,39 @@ evidence. No old layout test/build/screenshot suite was rerun.
 PR189 still needs its own exact-head release gate and merge authority. PR187's
 operator approval is not transferred. UI03/UI04 retain the original pending
 human choice; no repeated question, new implementation, Goal or automation.
+
+## Automated375px geometry regression —2026-10-20
+
+Release reviewthreadPRRT_kwDOTwH6TM6t-HkC identified missing CI coverage for the
+already accepted geometry. Main explicitly assigned a single test-only writer
+window; no new design approval. Added
+tests/test_spa_e2e.py::test_data_readiness_mobile_geometry_375 using existing real
+SPA/server/page fixtures and the established route-fixture pattern. A synthetic
+snapshot exposes all seven page-local targets and long URL/digests without data
+import or research admission. Assertions cover separate file/import rows,44px
+minimum rendered heights and no horizontal document overflow. Fonts settle before
+measurement; viewport375x812 is set before navigation to avoid resize transitions.
+Existing browser-gate discovery already includes this module; no CI/harness change.
+
+Targeted RED serves retained pre-fix31b1c74 static assets through an ignored test
+plugin:1failed, detecting the shared row and undersized controls. Same selected
+test against unchanged PR189 assets:1passed. Ruff check/format and whitespace pass.
+Default local Playwright1.63 Chromiumrevision1243 is absent (retained cache1234), so
+its availability probe skipped; that is not counted as a pass. Actual RED/GREEN
+used the supported already installed Edge Chromium channel via an ignored local
+launch adapter. Repository browser fixture is unchanged; CI retains its standard
+matching-Chromium installation. No dependencies installed or broad suite run.
+Initial sharedpytest-temp cleanup permission failure and browser skip are retained;
+subsequent runs use separate owned basetemp directories, preserving all evidence.
+Logs/plugins/baseline under authoritativeoutput/0038-uiux-continuous/PR189-e2e-*.
+
+This commit changes only the E2E module and this record: production source and
+packaged assets equal11f54e3; PR193head044febd is untouched. No merge or fresh CI
+success/thread resolution is claimed; the release owner applies the exact-head gate.
+
+Consumed actualPR195 receiptpr195-postmerge-20261019.json: mergeddddc6783,
+treebef3ce79f79cbc0be082a197af6921b77307f407. Read-only merge-tree prediction finds
+generatedJS rename/index conflicts between189 and that main. No merge was performed
+inside this explicitly test-only/no-bundle window. Combined-source asset integration
+must retain P2 route plus UI and be coordinated separately, never choose one bundle
+wholesale. After normal push this writer window is released to the main/server owner.
