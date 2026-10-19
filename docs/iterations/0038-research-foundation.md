@@ -3497,3 +3497,7 @@ actual paid acceptance. No runtime edit, deployment, SSH, CI rerun or full local
 test. Raw evidence unchanged; output/0038-release-readiness/automated-audit.json,
 approval-packet.json and report-browser-handoff.json record the bounded audit.
 Operator key metadata is configured; account/model access remains unverified.
+
+## Issue192 — explicit Operator persistent private console (2026-10-19)
+
+Planner: direct human explicitly requests single-person approval and long-running private OpenD login, then necessary checks/direct window without repeated approval. Actual Operator is one human in all roles; no independent two-person claim. Researcher: login is not SDK/market/source qualification; no app route or trading authority changes. Implementer: separate schema2 permit/service in existing guard, original900second schema1 preserved; no new dependencies. Verifier: new exact native tests RED5/10 on old source, current affected native98pass; Windows65pass/33native skips. Source-host/private-window evidence and release gates remain pending. Reviewer: fresh independent branch review requested; no vendor executed. Plan docs/superpowers/plans/2026-10-19-opend-persistent-console.md; raw output/192-opend.

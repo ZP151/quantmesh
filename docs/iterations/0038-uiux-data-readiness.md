@@ -132,3 +132,29 @@ generatedJS rename/index conflicts between189 and that main. No merge was perfor
 inside this explicitly test-only/no-bundle window. Combined-source asset integration
 must retain P2 route plus UI and be coordinated separately, never choose one bundle
 wholesale. After normal push this writer window is released to the main/server owner.
+
+## Authorized combined-main integration —2026-10-20
+
+Main extended the same window to finish necessary nonforce integration. Preserved
+the regression commitdda29d7 and normally merged actualorigin/main
+dddc67830da77b621c4d543de65fc6fd6e61e6c9/treebef3ce79f79cbc0be082a197af6921b77307f407.
+No runtime source conflict: P2App/nav/messages/FrozenExperiments/client remain
+byte-identical toactualmain, while DataReadiness/test module remain identical to
+dda29d7. Other backend/frontend runtime paths have no unintended delta frommain.
+Source-blob proof: authoritativeoutput/0038-uiux-continuous/PR189-combined-source-proof.json.
+
+Only generatedJS rename/index conflicts occurred. Ran TypeScript/Vite build once
+from the real combined sources, copied thatdist to package and removed only stale
+generated files after verifying the fixed isolated bundle target. No ours/theirs
+source or bundle choice; all merge conflicts resolved. P2route and mechanical UI
+therefore coexist in the generated package; package/dist file counts and bytes match.
+Type/buildPASS, generatedAPI client current, whitespacePASS. Same selected375px
+regression against this new package:1passed on retained supported Edge channel.
+Existing dependency deprecation, chunk and plugin-time warnings retained. No old
+fullsuite, extra review, dependency install or repeat product acceptance.
+
+PR193head044febd remains untouched. This final normal-sync candidate supersedes
+dda29d7 for release verification; earlier history remains, with no force/reset.
+The release owner must consume the final exacthead/CI, not a prior candidate. No
+CI success, actionable-thread closure or merge claimed here. Integration is done;
+this writer is STOP/released for main/server/P3 scheduling, with no extra193/polish.
