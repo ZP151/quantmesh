@@ -9,8 +9,11 @@ keyboard operation, Simplified-Chinese rendering, reduced motion, and the
 
 from __future__ import annotations
 
+import json
+import os
 import re
 import socket
+import sys
 import threading
 import time
 from datetime import timedelta
@@ -30,6 +33,119 @@ playwright_expect = playwright.expect
 
 HOST = "127.0.0.1"
 WORKSPACE_PATH = "/app/instruments/moomoo/NVDA?range=6m"
+
+
+def _record_workspace_boundary_failure(page, failure: AssertionError) -> None:
+    """Observe a failed synthetic page without replacing its assertion result."""
+    try:
+        observation = page.evaluate("""() => {
+            const rect = el => {
+                const r = el.getBoundingClientRect();
+                return {left:r.left, right:r.right, top:r.top, bottom:r.bottom,
+                    width:r.width, height:r.height};
+            };
+            const selector = el => {
+                const path = [];
+                while (el && el !== document.body) {
+                    const index = [...el.parentElement.children].indexOf(el) + 1;
+                    path.unshift(`${el.localName}:nth-child(${index})`);
+                    el = el.parentElement;
+                }
+                return ['body', ...path].join(' > ');
+            };
+            const box = el => {
+                const style = getComputedStyle(el);
+                return {selector:selector(el), tag:el.tagName,
+                    classes:el.getAttribute('class'), rect:rect(el),
+                    clientWidth:el.clientWidth, scrollWidth:el.scrollWidth,
+                    display:style.display, position:style.position,
+                    overflowX:style.overflowX, minWidth:style.minWidth,
+                    maxWidth:style.maxWidth, whiteSpace:style.whiteSpace,
+                    fontFamily:style.fontFamily, fontSize:style.fontSize};
+            };
+            const offenders = [...document.querySelectorAll('body *')]
+                .filter(el => { const r=el.getBoundingClientRect();
+                    return r.width > 0 && r.right > innerWidth + 0.5; })
+                .sort((a,b) => b.getBoundingClientRect().right
+                    - a.getBoundingClientRect().right);
+            return {
+                document:{scrollWidth:document.documentElement.scrollWidth,
+                    clientWidth:document.documentElement.clientWidth,
+                    rect:rect(document.documentElement)},
+                body:{scrollWidth:document.body.scrollWidth,
+                    clientWidth:document.body.clientWidth, rect:rect(document.body)},
+                viewport:{width:innerWidth, height:innerHeight,
+                    visualWidth:visualViewport?.width, scale:visualViewport?.scale},
+                devicePixelRatio, scrollX, scrollY,
+                reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,
+                fonts:document.fonts.status, language:document.documentElement.lang,
+                userAgent:navigator.userAgent, offenderCount:offenders.length,
+                offenders:offenders.slice(0,24).map(el => ({...box(el),
+                    parent:el.parentElement ? box(el.parentElement) : null}))
+            };
+        }""")
+        observation["platform"] = sys.platform
+        print("WORKSPACE_BOUNDARY_FAILURE=" + json.dumps(observation, ensure_ascii=False))
+        if log_root := os.environ.get("QUANTMESH_GATE_LOGS"):
+            root = Path(log_root)
+            root.mkdir(parents=True, exist_ok=True)
+            stem = root / f"workspace-mobile-boundary-{time.monotonic_ns()}"
+            stem.with_suffix(".json").write_text(
+                json.dumps(observation, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+            )
+            page.screenshot(path=str(stem.with_suffix(".png")))
+    except (playwright.Error, OSError) as diagnostic_error:
+        raise failure from diagnostic_error
+
+
+@pytest.mark.parametrize("probe_error", [False, True])
+def test_boundary_diagnostics_preserve_original_failure(probe_error, capsys, monkeypatch) -> None:
+    monkeypatch.delenv("QUANTMESH_GATE_LOGS", raising=False)
+    original = AssertionError("original boundary assertion")
+    diagnostic_error = playwright.Error("diagnostic page unavailable")
+
+    class FailedPage:
+        def evaluate(self, script):
+            if probe_error:
+                raise diagnostic_error
+            return {"document": {"scrollWidth": 412}, "viewport": {"width": 390}}
+
+    with pytest.raises(AssertionError) as observed:
+        try:
+            raise original
+        except AssertionError as failure:
+            _record_workspace_boundary_failure(FailedPage(), failure)
+            raise
+    assert observed.value is original
+    output = capsys.readouterr().out
+    if probe_error:
+        assert observed.value.__cause__ is diagnostic_error
+        assert output == ""
+    else:
+        payload = json.loads(output.removeprefix("WORKSPACE_BOUNDARY_FAILURE="))
+        assert payload["document"]["scrollWidth"] == 412
+        assert payload["viewport"]["width"] == 390
+
+
+def test_boundary_diagnostics_use_existing_gate_artifact_root(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    monkeypatch.setenv("QUANTMESH_GATE_LOGS", str(tmp_path))
+    screenshots = []
+
+    class FailedPage:
+        def evaluate(self, script):
+            return {"document": {"scrollWidth": 412}, "viewport": {"width": 390}}
+
+        def screenshot(self, *, path):
+            screenshots.append(Path(path))
+
+    _record_workspace_boundary_failure(FailedPage(), AssertionError("original boundary"))
+    retained = list(tmp_path.glob("workspace-mobile-boundary-*.json"))
+    assert len(retained) == 1
+    assert json.loads(retained[0].read_text())["document"]["scrollWidth"] == 412
+    assert screenshots == [retained[0].with_suffix(".png")]
+    assert "WORKSPACE_BOUNDARY_FAILURE=" in capsys.readouterr().out
 
 
 def _wait_for_server(server: uvicorn.Server) -> None:
@@ -588,5 +704,8 @@ def test_keyboard_locale_reduced_motion_and_mobile_boundary(browser, base_url) -
         volume.focus()
         page.keyboard.press("Enter")
         assert "volume=1" in page.url
+    except AssertionError as failure:
+        _record_workspace_boundary_failure(page, failure)
+        raise
     finally:
         context.close()

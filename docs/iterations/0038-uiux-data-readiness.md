@@ -275,3 +275,41 @@ run39295546565 remains evidence; fresh exact-head CI must establish the Linux
 boundary before conditional merge. Return the concentrated unproven-root limitation
 to the coordinator/release owner without speculative CSS, weakened assertions or
 blind rerun. UI STOP/writer released after delivery; PR193 stays frozen at044febd.
+
+## One authorized Linux failure-diagnostic candidate —2026-10-20
+
+Exact-head run39306537948 atedd4b15 again failed the same width assertion.
+Its browser artifact contains only pytest/events logs, with no actual widths,
+DOM rectangles, font state or screenshot. Root cause remains unproven. Main
+explicitly corrected the earlier CI-breadth stop condition: one necessary test-only
+diagnostic commit may trigger normal PR CI and its other selected gates. Do not
+manually rerun broad jobs, install a Linux environment or alter CI policy.
+
+This candidate changes only this record and the workspace E2E module. The failing
+case now records diagnostics inside its AssertionError path, then re-raises the
+same original assertion. All eight original assertions have identical ASTs; the
+native width expression/value, timeouts, browser fixtures and production layout
+remain unchanged. A diagnostic Playwright/IO error is chained to that same
+assertion rather than swallowed or substituted for it.
+
+Post-failure output includes viewport/body/document widths, exact structural
+selectors and rectangles for up to24 overflowing elements and their parents,
+computed sizing/overflow/font styles, font status and device/browser parameters.
+No text, form values, credentials, cookies or storage are collected. In CI, the
+helper writes JSON and one viewport PNG to the existing QUANTMESH_GATE_LOGS folder,
+which the unchanged workflow already retains. A passing case emits nothing.
+
+Two original-error propagation cases first failed without the helper; after the
+implementation, those plus the artifact-root contract passed3/3 in2.17s. A bounded
+pure-HTML check on the installed Windows Edge identified a known480px element,
+document488/viewport390, retained JSON/PNG and rethrew the same original assertion.
+Its fitting control passed without new artifacts. This validates the diagnostic
+mechanism, not the Linux defect. Ruff/format, whitespace and source-scope checks
+pass; no old workstation or broad suite reran. Evidence under authoritative
+output/0038-uiux-continuous/PR189-CI-diagnostic-*; run39306537948 remains preserved.
+
+The release owner consumes this candidate's normal exact-head CI once. Only its
+real Linux failure geometry may justify one minimal root-cause fix batch; if the
+evidence is insufficient or requires product structure changes, return the exact
+gap to Planner. No overflow fix, CI success or merge is claimed. PR193 remains
+frozen at044febd; no new Goal, automation, dependency or workflow change.
