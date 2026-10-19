@@ -1,5 +1,52 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Approved concurrent Worker snapshot repair — 2026-10-19
+
+Issue [185](https://github.com/ZP151/quantmesh/issues/185). Planner: one action,
+two registered jobs in the persistent Worker; prevent a sibling attempt mkdir
+from rejecting another valid protected snapshot. The operator's concentrated
+B approval explicitly accepted this narrow design. Independent branch from
+origin/main c644 keeps product/OpenD/advisory credentials and deployed source out
+of scope. Quant Researcher: no changes to data admission, costs, time ordering,
+math, confidence or promotion; synthetic concurrency evidence grants no market
+or live-trading authority.
+
+Implementer: process-local deadline/stop-aware preparation guard spans attempt
+mkdir through _snapshot, releases before numerical startup, and preserves all
+FD/ctime/pin/resource/slot/lease/publication checks and public signatures.
+Tracked spec/plan: docs/superpowers/{specs,plans}/2026-10-19-worker-snapshot-serialization.md.
+Verifier: final identical tests against original c644 RED3fail/1pass; final
+implementation4pass. Stopped-waiter mutant fails at TimeoutError, current guard
+passes after synchronizing on actual acquire entry. Wider Linux targeted run
+95pass/21skip/1fail; sole failure was native Git parsing a Windows worktree pointer.
+That exact test passes with explicit GIT_DIR for this same worktree. Windows
+baseline collection lacked pg8000; no dependency/environment install was made.
+Final native validation uses a separate normal Git checkout at c644 with exact
+source/test SHA overlays and no global Git environment override:96pass/21skip.
+A local full-suite attempt with the cross-platform Git override was stopped and
+retained as unqualified; fixture subprocesses must not inherit that override.
+The exact owned pytest was stopped through retained pidfd after all threads
+were stopped and no child processes remained. No full-local-suite pass is claimed;
+current required CI remains the merge gate.
+Full src/tests/tools Ruff, affected-file format and whitespace pass; submodule
+gitlink pins are unchanged (checkout does not initialize their contents).
+
+Reviewer: first round found a stopped-waiter test synchronization gap, fixed
+with RED mutant/GREEN evidence; second round READY with no blocking finding.
+Class B runtime scheduling, requiring one independent human review plus current
+required CI before merge. Automated review is not human merge approval. Deferred
+minor: no separate test advances the deadline during copying; the existing copy
+has its own bounded checks and post-copy original-deadline refusal is not hard
+interruption. SQLite journal fixture data was placed away from protected
+ancestry to isolate the diagnosed PostgreSQL production mkdir race; arbitrary
+external/multiprocess writers remain fail-closed. All failed runs are retained.
+
+Evidence: output/185-snapshot-serialization/ in the isolated worktree; server
+operator receipts and login instructions stay in the server closeout directory.
+This checkpoint is software evidence only. Current PR CI/new human merge gate
+and merged-source two-OCI-job/restart acceptance remain required. No research
+host mutation, credential access, provider call or OpenD login followed the fix.
+
 ## Ordinary workstation vn.py and A/B comparison delivered — 2026-10-18
 
 Issue177 follow-up: the approved local product slice now attaches the existing

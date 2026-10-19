@@ -21,6 +21,7 @@ import time
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
+from threading import Lock
 
 from quantmesh.data._fixture_read_scope import bind_reader
 from quantmesh.research._fixture_handles import (
@@ -55,6 +56,9 @@ _MAX_OUTPUT_BYTES = 16 * 1024 * 1024
 _MAX_INPUT_METADATA_BYTES = 256 * 1024
 _SOURCE_ROOT = Path(__file__).resolve().parents[2]
 _REPO = _SOURCE_ROOT.parent
+# Sibling attempt mkdir changes ancestors held by protected snapshot copies.
+# Coordinate preparation within this process without relaxing namespace checks.
+_SNAPSHOT_LOCK = Lock()
 
 
 def runtime_fingerprint(
@@ -503,15 +507,35 @@ def run_next_job(
     try:
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
-        _contained(Path(artifacts_root), attempt)
-        attempt.mkdir(parents=True, exist_ok=False)
-        if execution is not None and sys.platform != "linux":
-            raise UnsupportedLimits("Linux execution requires Linux owner")
         bundle = attempt / "bundle" if execution is not None else attempt
         output = attempt / "output" if execution is not None else attempt
-        if execution is not None:
-            bundle.mkdir(mode=0o700)
-        _snapshot(job, Path(inputs_root).absolute(), bundle / "inputs")
+        while True:
+            if stop_event is not None and stop_event.is_set():
+                return store.get(job.operator_id, job.job_id)
+            remaining = job.request.budget.timeout_seconds - (time.monotonic() - started)
+            if remaining <= 0:
+                error = "timeout"
+                raise TimeoutError("snapshot preparation deadline exceeded")
+            if _SNAPSHOT_LOCK.acquire(timeout=min(_POLL_SECONDS, remaining)):
+                break
+        try:
+            if stop_event is not None and stop_event.is_set():
+                return store.get(job.operator_id, job.job_id)
+            if time.monotonic() - started >= job.request.budget.timeout_seconds:
+                error = "timeout"
+                raise TimeoutError("snapshot preparation deadline exceeded")
+            _contained(Path(artifacts_root), attempt)
+            attempt.mkdir(parents=True, exist_ok=False)
+            if execution is not None and sys.platform != "linux":
+                raise UnsupportedLimits("Linux execution requires Linux owner")
+            if execution is not None:
+                bundle.mkdir(mode=0o700)
+            _snapshot(job, Path(inputs_root).absolute(), bundle / "inputs")
+        finally:
+            _SNAPSHOT_LOCK.release()
+        if time.monotonic() - started >= job.request.budget.timeout_seconds:
+            error = "timeout"
+            raise TimeoutError("snapshot preparation deadline exceeded")
         runtime = (
             execution.runtime_fingerprint() if execution is not None else runtime_fingerprint()
         )
