@@ -76,12 +76,12 @@ export function DataReadinessScreen() {
   }
 
   return <Page title={t('readiness.title')} description={t('readiness.description')}
-    actions={<Button variant="outline" size="sm" onClick={refresh} disabled={busy !== null}>
+    actions={<Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={refresh} disabled={busy !== null}>
       <RefreshCw className="size-3.5" aria-hidden="true" />{t('readiness.refresh')}
     </Button>}>
     <section aria-labelledby="snapshot-import" className="space-y-3 border-y border-border py-4">
       <h3 id="snapshot-import" className="text-sm font-semibold">{t('readiness.importTitle')}</h3>
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1 space-y-1.5">
           <label htmlFor="snapshot-zip" className="block text-xs font-medium">{t('readiness.file')}</label>
           <input id="snapshot-zip" type="file" accept=".zip,application/zip" disabled={!configured || busy !== null}
@@ -94,7 +94,7 @@ export function DataReadinessScreen() {
               else setFile(selected)
             }} />
         </div>
-        <Button onClick={importSnapshot} disabled={!file || !configured || busy !== null}>
+        <Button className="max-sm:min-h-11" onClick={importSnapshot} disabled={!file || !configured || busy !== null}>
           <Upload className="size-4" aria-hidden="true" />{t('readiness.import')}
         </Button>
       </div>
@@ -114,7 +114,7 @@ export function DataReadinessScreen() {
       {history.length > 0 && <ul className="divide-y divide-border">
         {history.map(item => <li key={item.snapshot_id} className="flex min-w-0 flex-wrap items-center gap-2 py-2">
           <Button variant="outline" size="sm" disabled={!configured || busy !== null} onClick={() => open(item.snapshot_id)}
-            aria-pressed={report?.snapshot_id === item.snapshot_id} className="h-auto min-h-9 w-full min-w-0 max-w-full whitespace-normal break-all text-left sm:w-auto">
+            aria-pressed={report?.snapshot_id === item.snapshot_id} className="h-auto min-h-9 w-full min-w-0 max-w-full whitespace-normal break-all text-left max-sm:min-h-11 sm:w-auto">
             {t('readiness.reopen', { date: item.imported_at, id: item.snapshot_id.slice(0, 12) })}
           </Button>
           <Badge variant="outline">{t(`readiness.${item.evidence_kind}`)}</Badge>
@@ -235,12 +235,12 @@ function SnapshotDetail({ report, busy, download }: {
     </section>
     <section className="min-w-0 space-y-3 border-t border-border pt-4">
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={() => download('archive')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.original')}</Button>
-        <Button variant="outline" size="sm" onClick={() => download('report')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.report')}</Button>
+        <Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => download('archive')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.original')}</Button>
+        <Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => download('report')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.report')}</Button>
       </div>
       <p className="max-w-3xl text-xs text-muted-foreground">{t('readiness.pinned')}</p>
       <details className="min-w-0">
-        <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{t('readiness.lineage')}</summary>
+        <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:min-h-11 max-sm:py-3">{t('readiness.lineage')}</summary>
         <dl className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-x-4 gap-y-2 text-xs">
           <Fact label={t('readiness.snapshotId')}>{report.snapshot_id}</Fact>
           <Fact label={t('readiness.reportDigest')}>{report.report_digest}</Fact>
