@@ -26,3 +26,5 @@ Verification is software evidence with real local POSIX snapshot I/O and an
 inert execution seam. Actual two-OCI-job/restart acceptance remains a later
 merged-source deployment gate. New applicable human merge review and current CI
 are required; approval of this design does not approve the future PR merge.
+
+Release P1 correction: carry the SAME absolute original monotonic deadline through runtime measurement, metadata/heartbeat, second admission, bundle handoff and actual OCI create/start/GO boundaries. A private ContextVar preserves public signatures; capture its value explicitly into the GO pipe writer thread. Expiry is a timeout, respects cooperative stop priority, and retains exact-owned cleanup even when construction fails before the caller receives a child. Cleanup inspect/rm is never globally blocked by launch expiry. No hard interruption of already-entered syscall/RPC is claimed. Actual user conditional merge/implementation approval is consumed; no repeat human question.

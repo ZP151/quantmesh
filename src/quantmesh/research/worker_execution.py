@@ -16,6 +16,7 @@ from pathlib import Path
 from threading import Event
 from typing import TYPE_CHECKING, Protocol
 
+from quantmesh.research._launch_deadline import _check_launch_deadline
 from quantmesh.research.jobs import JobRecord
 from quantmesh.research.linux_bootstrap import verify_limits
 from quantmesh.research.linux_owned import (
@@ -122,12 +123,14 @@ class LinuxWorkerExecution:
 
         if self.runtime_fingerprint() != runtime:
             raise LinuxContainmentError("worker_admission_changed")
+        _check_launch_deadline()
         if "execution_profile" in runtime:
             validate_registered_job(job, runtime["execution_profile"])
         prepare = getattr(self.admission, "prepare_parent_binding", None)
         if not callable(prepare):
             raise LinuxContainmentError("parent_binding_required")
         handoff_worker_bundle(bundle, self.profile.uid, self.profile.gid)
+        _check_launch_deadline()
         return LinuxOwnedProcess(
             self.profile,
             list(_COMMAND),

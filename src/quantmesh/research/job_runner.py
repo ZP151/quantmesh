@@ -30,6 +30,11 @@ from quantmesh.research._fixture_handles import (
     require_snapshot_profile,
 )
 from quantmesh.research._fixture_reader import FixtureReader
+from quantmesh.research._launch_deadline import (
+    LaunchDeadlineExceeded,
+    _check_launch_deadline,
+    _launch_deadline,
+)
 from quantmesh.research.baselines import run_baseline_report
 from quantmesh.research.fixture_snapshot import copy_fixture_snapshot
 from quantmesh.research.job_artifacts import (
@@ -503,6 +508,7 @@ def run_next_job(
     child = None
     execution = _execution.get()
     started = time.monotonic()
+    deadline_token = _launch_deadline.set(started + job.request.budget.timeout_seconds)
     error = "worker_failed"
     try:
         if stop_event is not None and stop_event.is_set():
@@ -539,8 +545,10 @@ def run_next_job(
         runtime = (
             execution.runtime_fingerprint() if execution is not None else runtime_fingerprint()
         )
+        _check_launch_deadline()
         (bundle / "job.json").write_text(job.model_dump_json(), encoding="utf-8")
         (bundle / "runtime.json").write_bytes(_canonical(runtime))
+        _check_launch_deadline()
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         # This check is the cooperative-stop boundary for the following call:
@@ -549,6 +557,7 @@ def run_next_job(
             return store.get(job.operator_id, job.job_id)
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
+        _check_launch_deadline()
         child = (
             execution.start(job, runtime, bundle, output)
             if execution is not None
@@ -657,11 +666,18 @@ def run_next_job(
         if stop_event is not None:
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
+    except LaunchDeadlineExceeded:
+        if stop_event is not None and stop_event.is_set():
+            return store.get(job.operator_id, job.job_id)
+        store.finish(job.job_id, owner, job.attempt, "failed", [], "timeout")
     except (ValueError, OSError, subprocess.SubprocessError):
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
     finally:
-        if child is not None:
-            child.close()
+        try:
+            if child is not None:
+                child.close()
+        finally:
+            _launch_deadline.reset(deadline_token)
     return store.get(job.operator_id, job.job_id)

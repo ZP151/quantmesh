@@ -54,3 +54,9 @@ tests/test_worker_daemon.py -q --basetemp <fresh native-owned path>.
 
 Acceptance: all new cases execute on POSIX, no unsafe mutation exemptions,
 independent review/current CI evidence and explicit later native acceptance limits.
+
+## Release P1 bounded correction
+
+- [x] Reproduce original deadline expiry during outer/inner fingerprint, handoff, prerequisites, create return, inspect, READY, binding and actual GO writer scheduling (10 deterministic RED cases).
+- [x] Private original-deadline context/helper across job_runner, worker_execution and linux_owned; no public signature or global cleanup gate.
+- [ ] Focused native affected suite and fresh independent correction review; normal integrate current main and send new exact head/CI to unified release owner.
