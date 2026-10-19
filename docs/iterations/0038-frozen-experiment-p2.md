@@ -1,8 +1,8 @@
 # Iteration0038 — frozen experiment inspection, P2
 
 Issue: [191](https://github.com/ZP151/quantmesh/issues/191).
-Status: source implemented and checked; final-source page/review acceptance pending.
-No merge claim.
+Status: local user loop verified; independent round1 READY; delivered as
+[Draft PR195](https://github.com/ZP151/quantmesh/pull/195). Source merge is pending.
 Spec/plan: `docs/superpowers/{specs,plans}/2026-10-19-frozen-experiment-p2.md`.
 Architecture: [ADR0031](../adr/0031-frozen-experiment-inspection.md).
 
@@ -51,7 +51,9 @@ The retained package has 46 members and 1,037,090 bytes; archive SHA256:
 All 45 source members are byte-identical; the manifest is newly constructed.
 No original source was executed. Existing frontend dependencies were physically
 copied into this checkout; no install, symlink/shared write or upgrade occurred.
-Current synthetic TDD results will be recorded at the completed boundary.
+The original synthetic RED/GREEN evidence and intermediate failures remain in
+the local implementer deliverable. The final source checkpoint is
+`71b9547c0eeb45d4ad695c3bce8d8cd721b6b3f7`; subsequent closeout changes are docs only.
 
 First backend boundary: the retained RED log shows 19 missing-feature failures;
 the subsequent focused run passes 19 synthetic tests. Parent additionally imported
@@ -69,7 +71,8 @@ accepted. Parent added two synthetic regressions and observed both fail, then
 pinned the original causal close>SMA100 and next-session daily-OPEN assumptions.
 The selected backend checks then passed 52 tests. The reviewer inspected this
 bounded correction and marked the source finding addressed. No UI/client/asset
-change was required. Final-source cold reopen and image review remain pending.
+change was required. Final-source cold reopen and ordinary desktop/mobile image
+review pass. The single whole-slice report concludes READY with no open findings.
 Maximum two rounds; a third structural failure returns to scope reduction.
 
 ## Verifier
@@ -89,12 +92,47 @@ SHA `793c87d4…`; report 15,898 bytes,
 SHA `de3fa726b500b902264af3e315ffd4dae2616e56bb526347835f2d96be3604fc`.
 All nine HTTP artifact responses match originals and advertised SHA256.
 Actual duplicate import preserves one history entry and the first receipt.
-Controlled restart/cold page reopen and final desktop/phone evidence are pending.
+Final-source controlled restart and actual page history/reopen preserve the entire
+DTO, one history entry and exact UTC first-import time
+`2026-10-19T14:57:47.550130+00:00`. The running source is the checked checkpoint,
+PID37496 at `http://127.0.0.1:8866/app/research/frozen-experiments`. Its served JS
+and CSS equal the committed bundle bytes; JS SHA256 is
+`b74f55ec6f1b8904a9ddde7a25cac5fde292c12e3c1d3dd536e5b2f553a5311c`.
+
+One final desktop/mobile batch was visually inspected. CSS widths1280/375 have
+body and document scroll widths1265/360 respectively, including the normal
+vertical scrollbar; horizontal overflow is contained. Ordinary phone views show
+the verdict/OOS, primary result and original-evidence downloads. Actual PNG
+files are encoding-only copies of browser JPEG captures with identical decoded
+pixel hashes; no crop, resize or annotation. Browser error log is empty.
+Evidence under `output/0038-frozen-experiment-p2/parent/` includes
+`acceptance-source-binding.json`, `cold-reopen.json`,
+`actual-browser-download-verification.json`,
+`actual-http-download-verification.json`, `screenshot-encoding.json` and the
+three `mobile-*.png` files. The independent report is
+`output/0038-frozen-experiment-p2/review-round1.md`.
 Old full suites, old CI, P1 acceptance and consumed OOS are not rerun. Raw data
-and local outputs remain outside Git. The P1 preview/source/store are untouched.
+and local outputs remain outside Git. This session did not modify or stop the
+P1 preview/source/store. A later read-only check found8864not listening; that
+external preview observation was reported to main without taking its ownership
+or restarting it. No P2 acceptance depends on that separate preview.
+
+## Review boundaries and rulings
+
+| Boundary | Ruling and reason | Remaining limit |
+| --- | --- | --- |
+| Economics, bootstrap, ledger, profitability/alpha | Preserve imported results; the approved action excludes new evaluation. | No independent economic validation. |
+| Chronology, blind status, trial completeness, PIT/rights/executable costs | Keep unverified/unknown and consumed states; byte associations cannot establish these facts. | New evidence is still required. |
+| P1 redesign, historical defects, old suites/CI, providers/deployment and unseen P3 | Retain separate owners and historical evidence; none is needed to complete this action. | No broader release or P3 claim. |
+| Comprehensive accessibility/browser/theme/locale certification | Accept inspected semantics, targeted tests and actual supplied views. | Expanded disclosures, all locales/themes and assistive technology were not visually certified. |
+| Future merge/release/trading authority | Deliver a draft PR under the existing review gates. | No such authority is granted here. |
+
+The existing Impeccable design sidecar drift is recorded for a separately
+requested refresh; this slice does not repair unrelated design metadata.
 
 ## Continuation
 
-Complete P2 and report exact source/evidence to main. Keep full P1→P2→P3 goal
-active; design approval for P2 does not authorize unseen P3 controls or future
-source merge. No server/deployment, paid resource or live authority changes.
+P2 is delivered for review. Continue the full P1→P2→P3 objective through a
+separately presented P3 design; approval for P2 does not authorize unseen P3
+controls or future source merge. No server/deployment, paid resource or live
+authority changes.

@@ -93,16 +93,16 @@ acceptance evidence in `output/0038-frozen-experiment-p2/parent/`.
   worktree before invoking it. Expected successful build and current API check.
 - [x] Run fresh focused backend/frontend integration, changed-file Ruff/format,
   TypeScript and `git diff --check`; record exact commands, counts and exits.
-- [ ] Use isolated P2 snapshot/experiment stores and another loopback port.
+- [x] Use isolated P2 snapshot/experiment stores and another loopback port.
   Import the retained original-byte package, inspect actual UI, verify original
   download digests, dedup and first receipt after controlled cold reopen.
-- [ ] Capture one desktop/mobile batch with ordinary readable viewports; inspect
+- [x] Capture one desktop/mobile batch with ordinary readable viewports; inspect
   real images, contain horizontal overflow and preserve raw capture provenance.
-- [ ] Independent bounded whole-slice review; at most one fix batch and second
+- [x] Independent bounded whole-slice review; at most one fix batch and second
   review. Record role outputs and any remaining risk in the iteration.
-- [ ] At a coherent green boundary, commit/push and create a draft PR for issue191;
+- [x] At a coherent green boundary, commit/push and create a draft PR for issue191;
   attach it, report exact head and release shared-file window to main.
-- [ ] Keep source merge and unseen P3 design as separate approval gates. Report
+- [x] Keep source merge and unseen P3 design as separate approval gates. Report
   continuation of the full P1→P2→P3 objective, not premature completion.
 
 ## Recovery
@@ -111,3 +111,11 @@ Read Git status/history, issue191, this spec/plan, P2 iteration and the canonica
 P2 contract/progress in the authority checkout's ignored product output. Check
 existing task logs before rerunning. Current task checkboxes are acceptance
 state, not a substitute for recorded observed command output.
+
+## Completed checkpoint
+
+Source71b9547; Draft PR195. Parent selected backend52/frontend72, actual original
+import/download/dedup/cold reopen, final desktop/mobile evidence and independent
+round1 READY are recorded in the P2 iteration. One Important source finding was
+fixed with2RED→52GREEN. Final closeout is docs only; no future merge or P3 design
+approval is inferred.

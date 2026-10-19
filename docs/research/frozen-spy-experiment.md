@@ -1,7 +1,7 @@
 # Inspect the frozen SPY experiment — issue191
 
-Status: implementation and local acceptance in progress. This guide describes
-the approved interface; final observed acceptance is recorded in the
+Status: local user loop verified in Draft PR195; source merge pending. This
+guide describes the checked interface; final observed acceptance is recorded in the
 [P2 iteration](../iterations/0038-frozen-experiment-p2.md).
 
 ## Local startup

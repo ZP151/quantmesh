@@ -1,6 +1,8 @@
 # ADR0031 — Frozen historical experiment inspection
 
-Status: approved design; implementation and acceptance pending.
+Status: accepted for the verified local P2 slice; source merge pending in
+[Draft PR195](https://github.com/ZP151/quantmesh/pull/195). No economic,
+production or trading admission is implied.
 Date: 2026-10-19. Issue: [191](https://github.com/ZP151/quantmesh/issues/191).
 
 ## Context

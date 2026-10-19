@@ -5,8 +5,9 @@
 The operator approved [issue191](https://github.com/ZP151/quantmesh/issues/191):
 import the retained SMA100/SPY experiment, inspect its consumed OOS and recorded
 verdict beside verified P1 data associations, and download/reopen the original
-evidence. Implementation is in progress from merged P1 main31b1c74; no final
-acceptance or merge is claimed. This does not rerun the strategy, upgrade data
+evidence. The local user loop is verified from merged P1 main31b1c74 and delivered
+in [Draft PR195](https://github.com/ZP151/quantmesh/pull/195); source merge is
+pending. This does not rerun the strategy, upgrade data
 qualification or grant trading authority. See the
 [P2 iteration](../iterations/0038-frozen-experiment-p2.md) and
 [approved specification](../superpowers/specs/2026-10-19-frozen-experiment-p2.md).
