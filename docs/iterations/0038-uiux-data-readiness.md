@@ -191,3 +191,43 @@ The new commit supersedes1400966 only after normal push; the release owner must
 gate its exact new head with fresh CI. No CI success, thread closure or merge is
 claimed. After delivery this narrow writer window is STOP/released; PR193 stays
 frozen at044febd35febe7d9e5f2afaebd58d56cd5d05630.
+
+## Required-CI daily-session expectation correction —2026-10-20
+
+Release owner returned a new material failure from run39292566007/head0a446b7,
+browser job118196809563: the mobile daily-session test expected No action1 after
+a successful refresh. Its previous NVDA inspect/paper/race case now passes in CI.
+Main/release owner authorized this bounded diagnosis/fix, retaining failed evidence
+and PR193 freeze. Planner scope is this one browser case plus iteration evidence;
+no third structural review, new product scope, old broad suite or blind CI rerun.
+
+Quant/reviewer boundary: attention buckets do not upgrade evidence readiness.
+Local original single-case RED reproduced the identical assertion:1failed in250.03s.
+Failure-page text and inbox agree on AAPLwatching, BTC-USD/SOL-USDnot_started and
+NVDAwatch_triggered. Existing attentionBucket explicitly places not_started before
+unavailable readiness, yielding No action3/Triggered1/Blocked0. Both missing-packet
+rows retain unavailable readiness and no_saved_packet. Actualmaindddc6783 and this
+candidate have identical Watchlist source blobs and emitted bucket-function bytes;
+this is an old test expectation mismatch, not render timing or a bundle regression.
+Both incompatible assertions and bucketing date to the originald14fa635 commit.
+
+Implementer corrected the English No action and Chinese Blocked expected counts,
+added English Blocked0/Chinese No action3 checks, and exercised the No action filter:
+all three exact symbols visible, NVDA excluded, both original missing-evidence
+messages retained. Existing refresh/focus/triggered/exact-packet/restart/partial-
+failure/Chinese/overflow/reset assertions remain. No runtime or bundle change,
+new wait, exception catch or removed assertion. Bounded diff review checks this
+scope; the accepted source/data/trading semantics and PR193 remain unchanged.
+
+Verifier: corrected original single browser case1passed in450.08s with5existing
+dependency warnings; Ruff check/format and whitespace pass. Actual RED/GREEN used
+the retained supported Edge Chromium channel via the ignored local adapter; no
+default-browser skip counted as success and no dependency installed. Logs,
+failed-page text/inbox/screenshot and source-bundle comparison
+are under authoritativeoutput/0038-uiux-continuous/PR189-mobile-*; failed CI log is
+PR189-CI39292566007-browser-failed.log. Original failures remain preserved.
+
+Normal commit/push supersedes0a446b7 for fresh exact-head CI. The release owner
+owns that gate and conditional merge; none is claimed here. This bounded writer
+is STOP/released after delivery. PR193 remains044febd and must await actual189
+receipt before its separately scoped normal integration.

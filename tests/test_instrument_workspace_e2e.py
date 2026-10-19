@@ -450,7 +450,17 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     assert response.value.status == 200
     page.get_by_text("2 watches checked · 1 triggered", exact=True).wait_for()
     playwright_expect(refresh).to_be_focused()
-    assert page.get_by_role("button", name="No action 1", exact=True).is_visible()
+    # Not-started rows belong to No action even when saved evidence is unavailable.
+    no_action = page.get_by_role("button", name="No action 3", exact=True)
+    assert no_action.is_visible()
+    assert page.get_by_role("button", name="Blocked 0", exact=True).is_visible()
+    no_action.click()
+    for symbol in ("AAPL", "BTC-USD", "SOL-USD"):
+        playwright_expect(page.get_by_role("row").filter(has_text=symbol)).to_be_visible()
+    assert page.get_by_role("row").filter(has_text="NVDA").count() == 0
+    playwright_expect(
+        page.get_by_text("No saved DecisionPacket exists yet.", exact=True)
+    ).to_have_count(2)
 
     triggered = page.get_by_role("button", name="Triggered 1", exact=True)
     triggered.focus()
@@ -524,7 +534,8 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     page.get_by_text("已检查 2 个观察 · 已触发 1 个", exact=True).wait_for()
     assert chinese_refresh.evaluate("element => element === document.activeElement")
     assert page.get_by_role("button", name="已触发 1", exact=True).is_visible()
-    assert page.get_by_role("button", name="受阻 2", exact=True).is_visible()
+    assert page.get_by_role("button", name="受阻 0", exact=True).is_visible()
+    assert page.get_by_role("button", name="无需操作 3", exact=True).is_visible()
     assert page.get_by_text(re.compile(r"上次本地检查")).first.is_visible()
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
     chinese_text = page.get_by_role("main").inner_text()
