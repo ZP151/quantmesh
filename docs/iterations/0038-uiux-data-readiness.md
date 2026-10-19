@@ -1,9 +1,11 @@
 # Iteration0038 — Data readiness UI/UX batch01
 
 Issue: [188](https://github.com/ZP151/quantmesh/issues/188). Mode: Operate.
-This is a separate bounded frontend repair, dependent on PR187. The branch
-starts at actualorigin/main d4bee7f and fast-forwards the explicit unmerged
-dependency95df504; it never changes PR187's branch/head or its release gate.
+This is a separate bounded frontend repair. PR187 merged normally as31b1c74
+on2026-10-19 at06:02:22UTC; its tree494d2acc equals the original95df504 candidate.
+This branch originally started at actualorigin/main d4bee7f with that explicit
+dependency. It now normally merges31b1c74 and PR189 targetsmain, preserving the
+UI repair. It never changes PR187's branch/head or its independent release gate.
 
 ## Planner / product
 
@@ -75,3 +77,22 @@ the source and packagedJS/CSS against95df504 and confirmed only the intended
 responsive classes/reference changes. Final lint and whitespace checks pass.
 New PR requires its own review/CI; PR187's conditional merge authority does not
 authorize this PR. No merge or CI success is claimed here.
+
+## PR187 merged baseline reconciliation —2026-10-19
+
+Consumed the release owner's existing postmerge receipt under
+output/0038-pr187-release-gate/postmerge-20261019T060510Z.json in the realdata
+worktree; no PR187 CI/security/layout gates were rerun. Actualorigin/main31b1c74
+and original95df504 both have tree494d2acc2113be375ab0312aba0c610f3c6fd397.
+
+Normal nonforce merge3c92d0f resolved squash-history add/add and generated-asset
+rename conflicts using the exact verified UI candidatecb4f746. The complete
+reconciled tree remains21331216aaeed0c2f5cd3b2e7645c87b4450aaa9, byte-identical to
+that candidate. A follow-up documentation checkpoint updates only this record;
+frontend source, browser probe and packaged assets do not change. Whitespace,
+ancestry and complete-tree/path comparisons provide the targeted reconciliation
+evidence. No old layout test/build/screenshot suite was rerun.
+
+PR189 still needs its own exact-head release gate and merge authority. PR187's
+operator approval is not transferred. UI03/UI04 retain the original pending
+human choice; no repeated question, new implementation, Goal or automation.
