@@ -1,8 +1,9 @@
 # Iteration0038 — real-data qualification user loop, P1
 
 Issue: [184](https://github.com/ZP151/quantmesh/issues/184).
-Status: local user loop verified; independent round2 READY / ship. Normal branch
-integration and Draft PR closeout follow the consumed PR182 merge receipt.
+Status: local user loop verified; independent round2 READY / ship; delivered in
+[Draft PR187](https://github.com/ZP151/quantmesh/pull/187). Future PR review/merge
+is pending; the local user loop is not production or research admission.
 
 ## Planner
 
@@ -22,6 +23,14 @@ The release owner's actual postmerge receipt was consumed: PR182 squash merged a
 `71317a416d18312a7c652de51e981b468d6e53ae` equals the approved candidate tree.
 This task did not rerun PR182 CI/review or perform its merge. The P1 PR requires
 its own future review and merge authority.
+
+P1's tested source checkpoint is `5bde30e`. Normal merge `3e1c2be` includes the
+actual PR182 squash as an ancestor. Equivalent squash-history conflicts in the
+iteration/startup/generated resources were resolved to the already tested P1
+content after proving the incoming main tree equals its approved baseline.
+The whole merged tree equals the tested P1 tree
+`ac1213f94feb50b6024c597565622498c58e3146`; no force or source-behavior change
+was needed. The subsequent closeout commit updates this checkpoint only.
 
 Explicit exclusions: new backtest engine, provider onboarding, new dependencies,
 paid data/models, server/deployment work, credential changes, live trading, and
