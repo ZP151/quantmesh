@@ -1,5 +1,14 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Real-data qualification P1 — issue184, 2026-10-19
+
+The operator approved the concrete P1 snapshot-import design. Its isolated
+implementation, quant constraints and role evidence are recorded in
+[the P1 checkpoint](0038-realdata-workstation-p1.md). This is a new local product
+slice started on PR182's accepted candidate; its release-owner merge receipt
+now confirms squash d4bee7f with an identical complete tree. Historical OOS is not rerun and data
+permission/PIT/corporate-action gaps remain insufficient.
+
 ## Ordinary workstation vn.py and A/B comparison delivered — 2026-10-18
 
 Issue177 follow-up: the approved local product slice now attaches the existing
