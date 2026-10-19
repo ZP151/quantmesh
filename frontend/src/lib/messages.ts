@@ -15,6 +15,7 @@
 export const messages = {
   en: {
     'nav.dataReadiness': 'Data readiness',
+    'nav.frozenExperiments': 'Frozen experiments',
     'readiness.title': 'Data readiness',
     'readiness.description': 'Import one local SPY daily snapshot and inspect the evidence that limits its research use.',
     'readiness.importTitle': 'Import a local snapshot',
@@ -1271,6 +1272,7 @@ export const messages = {
   },
   'zh-CN': {
     'nav.dataReadiness': '数据就绪检查',
+    'nav.frozenExperiments': '冻结实验',
     'readiness.title': '数据就绪检查',
     'readiness.description': '导入一份本地 SPY 日线快照，检查其研究用途与证据限制。',
     'readiness.importTitle': '导入本地快照',

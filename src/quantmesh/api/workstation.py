@@ -67,6 +67,7 @@ from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
+from quantmesh.api.frozen_experiments import create_frozen_experiments_router
 from quantmesh.api.realdata_snapshots import create_realdata_snapshots_router
 from quantmesh.api.research_jobs import create_research_jobs_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
@@ -114,6 +115,7 @@ from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
+from quantmesh.research.frozen_experiments import FrozenExperimentCatalog
 from quantmesh.research.realdata_snapshots import SnapshotCatalog
 from quantmesh.research.reports import ReportRegistry
 from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
@@ -1094,6 +1096,7 @@ def create_workstation_app(
     packet_reviews: DecisionReviewStore | None = None,
     research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
     research_snapshots_root: Path | None = None,
+    frozen_experiments_root: Path | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1132,6 +1135,8 @@ def create_workstation_app(
     renders the cross-venue comparison from the feed's latest state —
     no board without its feed, no fabricated probability.
     """
+    if frozen_experiments_root is not None and research_snapshots_root is None:
+        raise WorkstationConfigError("frozen experiments require a configured snapshot root")
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
         raise WorkstationConfigError(
@@ -1320,6 +1325,12 @@ def create_workstation_app(
         SnapshotCatalog(research_snapshots_root) if research_snapshots_root is not None else None
     )
     app.include_router(create_realdata_snapshots_router(), prefix="/api")
+    app.state.frozen_experiments = (
+        FrozenExperimentCatalog(frozen_experiments_root, app.state.research_snapshots)
+        if frozen_experiments_root is not None
+        else None
+    )
+    app.include_router(create_frozen_experiments_router(), prefix="/api")
 
     # Venue-aware observed history is double-mounted like the live surface:
     # root for direct local clients and /api for the SPA. Both handlers read
@@ -1753,6 +1764,11 @@ def main(argv: list[str] | None = None) -> None:
         help="opt in to local SPY snapshot import/storage outside a resettable demo root",
     )
     parser.add_argument(
+        "--frozen-experiments-root",
+        type=Path,
+        help="opt in to frozen experiment inspection; requires --research-snapshots-root",
+    )
+    parser.add_argument(
         "--vnpy-python",
         type=Path,
         help="opt in to synthetic vn.py research using this existing Windows Python runtime",
@@ -1768,6 +1784,17 @@ def main(argv: list[str] | None = None) -> None:
         help="vn.py job/report output directory outside a resettable demo root",
     )
     args = parser.parse_args(argv)
+
+    if args.frozen_experiments_root is not None:
+        if args.research_snapshots_root is None:
+            parser.error("--frozen-experiments-root requires --research-snapshots-root")
+        if args.demo:
+            demo_root = (
+                args.demo_root if args.demo_root is not None else settings.demo_root
+            ).resolve()
+            experiment_root = args.frozen_experiments_root.resolve()
+            if experiment_root == demo_root or demo_root in experiment_root.parents:
+                parser.error("--frozen-experiments-root must be outside the resettable demo root")
 
     if args.research_snapshots_root is not None and args.demo:
         demo_root = (args.demo_root if args.demo_root is not None else settings.demo_root).resolve()
@@ -1997,6 +2024,10 @@ def main(argv: list[str] | None = None) -> None:
             )
     if args.research_snapshots_root is not None:
         app.state.research_snapshots = SnapshotCatalog(args.research_snapshots_root)
+    if args.frozen_experiments_root is not None:
+        app.state.frozen_experiments = FrozenExperimentCatalog(
+            args.frozen_experiments_root, app.state.research_snapshots
+        )
     if fixture_enabled:
         from quantmesh.api.vnpy_fixture import attach_fixture_runtime
         from quantmesh.research.vnpy_fixture import FixtureManager

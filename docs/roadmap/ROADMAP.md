@@ -1,5 +1,19 @@
 # QuantMesh Product Roadmap
 
+## Local frozen-experiment inspection P2 — 2026-10-19
+
+The operator approved [issue191](https://github.com/ZP151/quantmesh/issues/191):
+import the retained SMA100/SPY experiment, inspect its consumed OOS and recorded
+verdict beside verified P1 data associations, and download/reopen the original
+evidence. The local user loop is verified from merged P1 main31b1c74 and delivered
+in [Draft PR195](https://github.com/ZP151/quantmesh/pull/195); source merge is
+pending. This does not rerun the strategy, upgrade data
+qualification or grant trading authority. See the
+[P2 iteration](../iterations/0038-frozen-experiment-p2.md) and
+[approved specification](../superpowers/specs/2026-10-19-frozen-experiment-p2.md).
+The full product objective continues through a separately designed P3 local
+paper/shadow control loop; P2 approval does not approve unseen P3 behavior.
+
 ## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
 
 This checkpoint supersedes the historical owner-correction status below.
