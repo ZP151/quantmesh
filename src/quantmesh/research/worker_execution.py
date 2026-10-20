@@ -260,10 +260,11 @@ def _worker_diagnostic_update(method: str, *args) -> None:
         pass
 
 
-def _observe_worker_call(stage: str, call, *args, **kwargs):
+def _observe_worker_call(stage: str, call):
+    """Observe a deferred operation, including callable/argument evaluation."""
     _worker_diagnostic_update("enter", stage)
     try:
-        result = call(*args, **kwargs)
+        result = call()
     except BaseException as error:
         _worker_diagnostic_update("failure", type(error))
         raise

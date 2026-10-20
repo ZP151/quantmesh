@@ -37,7 +37,7 @@ runner and stop token with fake child/store/numerical seams; service renderer
 cases in the same file use the actual bootstrap main with config/runtime seams.
 Existing tests may be updated only if necessary for these owned interfaces.
 
-Private interfaces: `_observe_worker_call(stage, call, *args, **kwargs)` returns
+Private interfaces: `_observe_worker_call(stage, deferred_call)` returns
 the exact call result or bare-reraises its original exception; observation errors
 are suppressed. `_worker_diagnostic_scope(slot_state)` resets its ContextVar.
 `_bind_worker_job(job)` accepts validated32-hex ID/positive bounded attempt only.
@@ -95,4 +95,24 @@ tests/test_worker_failure_observation.py`.
 
 Acceptance: expected RED observed; focused GREEN; same ten behavioral outcomes;
 safe bounded stderr capture; no operational visibility/90-second claim. One
-reviewable diff/checkpoint for issue198, with no local commit until root authorizes.
+reviewable diff/checkpoint for issue202, with no local commit until root authorizes.
+
+## Review correction: argument evaluation belongs to its operation
+
+The user's independent AI-assisted review identifies eager argument evaluation
+before the observation boundary (human review remains incomplete). Reproduce
+through the real daemon/runner with job serialization and claim-clock failures;
+retain canonical serialization as a control. Defer each already observed call's
+callable resolution and argument evaluation inside a synchronous zero-argument
+callable. Preserve evaluation order, exactly-once invocation, all execution
+predicates and exception identity; no new operation, stage or public API.
+
+- [x] Capture actual failing regression before source edits (2failed/1controlpass).
+- [x] Correct only existing observation call boundaries; verify unwrapped call
+      ASTs remain identical and failures now identify the intended fixed stage.
+- [x] Run focused affected checks (85passed), full Ruff/changed format/whitespace.
+- [x] Independent round2 READY: P2 resolved, five frozen hashes match, all56
+      deferred expressions preserve the original unwrapped operations/control flow.
+- [x] Prepare ordinary follow-up commit/push; normal new-head CI remains a merge
+      gate. Record its new head and superseded old-head CI in the root handoff.
+- [x] Record explicit user fact: AI-assisted review only; human review incomplete.

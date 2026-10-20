@@ -110,7 +110,9 @@ class WorkerDaemon:
                                 diagnostics[slot].reset()
                             except BaseException:
                                 pass
-                        _observe_worker_call("slot_admission", execution.runtime_fingerprint)
+                        _observe_worker_call(
+                            "slot_admission", lambda: execution.runtime_fingerprint()
+                        )
                         if stop_event.is_set():
                             break
                         result = self.runner.run_next_job(

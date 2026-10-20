@@ -39,6 +39,11 @@ def run_case(tmp_path, monkeypatch):
                 raise StoreUnavailable(PRIVATE)
             raise primary
 
+        def serialize_job(slot):
+            if case == "job_serialization" and slot == 0:
+                fail("job_serialization")
+            return "{}"
+
         class Store(SQLiteJobStore):
             def __init__(self):
                 pass
@@ -60,7 +65,7 @@ def run_case(tmp_path, monkeypatch):
                     cancel_requested=False,
                     lease_owner=owner,
                     lease_expires_at=datetime.now(UTC) + timedelta(seconds=60),
-                    model_dump_json=lambda: "{}",
+                    model_dump_json=lambda: serialize_job(slot),
                 )
                 return records[slot]
 
@@ -150,6 +155,25 @@ def run_case(tmp_path, monkeypatch):
         monkeypatch.setattr(job_runner, "_contained", lambda *a: None)
         monkeypatch.setattr(job_runner, "_validated_child_result", result)
         monkeypatch.setattr(job_runner, "publish_result", lambda *a: object())
+        if case == "claim_clock":
+
+            class ClaimClock:
+                @staticmethod
+                def now(zone):
+                    if current_thread().name.endswith("0"):
+                        fail("claim_clock")
+                    return datetime.now(zone)
+
+            monkeypatch.setattr(job_runner, "datetime", ClaimClock)
+        if case == "runtime_serialization":
+            canonical = job_runner._canonical
+
+            def serialize_runtime(value):
+                if current_thread().name.endswith("0"):
+                    fail("runtime_serialization")
+                return canonical(value)
+
+            monkeypatch.setattr(job_runner, "_canonical", serialize_runtime)
         if case == "sibling_cleanup" or inspect_capture is not None:
             escaping = worker_execution._WorkerSlotDiagnostics.escaping
 
@@ -189,6 +213,29 @@ def observation(result):
     value = getattr(result.error, "observation", None)
     assert value is not None, "escaping Worker failure lost stage/category/monotonic evidence"
     return dataclasses.asdict(value)
+
+
+@pytest.mark.parametrize(
+    ("case", "stage", "job_id", "cleanups"),
+    [
+        ("job_serialization", "bundle_write", "0" * 32, [1]),
+        ("claim_clock", "claim", None, [1]),
+        ("runtime_serialization", "bundle_write", "0" * 32, [1]),
+    ],
+)
+def test_argument_evaluation_is_attributed_to_intended_operation(
+    run_case, case, stage, job_id, cleanups
+):
+    result = run_case(case)
+    captured = observation(result)
+    first = captured["first_failure"]
+    assert first["stage"] == stage
+    assert first["category"] == "containment_failed"
+    assert first["job_id"] == job_id
+    assert sorted(result.cleanups) == cleanups
+    assert result.states == {0: "running", 1: "running"}
+    assert result.handoffs == [] and result.stop.is_set() and not result.stop.controlled
+    assert PRIVATE not in json.dumps(captured)
 
 
 def test_second_exit_validation_preserves_first_escaping_failure(run_case):

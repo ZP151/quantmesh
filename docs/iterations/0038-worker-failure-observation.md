@@ -89,3 +89,35 @@ human implementation review remains a merge gate. No unit change, production
 action, provider call or new pair/job occurred. The production null sink,
 historical cause and90-second acceptance remain unresolved. The dedicated
 observation issue202 separates this leaf from the still-open recovery issue198.
+
+## PR204 review correction — argument evaluation
+
+The user supplied an independent AI-assisted static review of exact156ad3a,
+explicitly stating human review is incomplete and merge must remain held. P2:
+argument evaluation before the observation wrapper may retain an earlier stage.
+Real daemon/runner RED confirms job.model_dump_json failure was labelled deadline,
+and claim-clock evaluation failure was labelled slot_admission. Actual result:
+2failed/1passing canonical-serialization control, before source changes, retained
+in argument-evaluation-red.txt.
+
+The correction defers each existing observed operation's callable resolution and
+arguments inside an immediately invoked zero-argument callable. The helper enters
+the fixed stage before invoking that callable, then retains its original bare
+raise and exact result. A mechanical AST comparison strips observation from
+before/after and proves every underlying operation and control predicate equal:
+55runner calls plus1daemon admission call. No new operation, stage, store/Engine
+read, retry, lease/cleanup change or renderer change is introduced.
+
+Final affected evidence is85passed/1existing warning/15.59s:36new observation cases
+and49existing daemon/stop/service-bootstrap cases. New cases assert intended stage,
+safe category/identity, cleanup, no handoff/publication, stopped state and redaction.
+An initial affected launcher omitted tests/ from inherited PYTHONPATH and failed
+conftest collection; that log is retained separately and is not a source-test
+failure or pass. Corrected command supplies src/tests/root/service paths.
+Full Ruff, changed format and whitespace pass; submodule pins remain unchanged.
+argument-evaluation-byte-pins.json pins all five relevant source/test files and
+the AST proof. Independent review round2 is READY with no remaining blocker;
+the reviewer independently checked all56 deferred expressions, matching five
+file hashes and actual RED/GREEN/static evidence without rerunning tests.
+Normal new-head CI and genuine human review remain merge gates; old-head CI cannot
+certify the corrected head. No local full-suite replay, merge or deployment.
