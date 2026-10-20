@@ -355,3 +355,48 @@ untouched PNG and checks are PR189-key-level-*. Deliver one normal final commit/
 push to the unified release owner; no manual CI rerun, CI success or merge claimed.
 This bounded fix batch is complete and writer released after delivery. PR193 stays
 frozen at044febd until the actual189 merge receipt, with no further polishing.
+
+## Legacy live-E2E contract drift — Planner handoff,2026-10-20
+
+Main explicitly assigned continued diagnosis of the next required-gate failure,
+with no speculative business changes or weakened assertions. Linux run39316604766
+at1d4c28d passed the390px workspace boundary but failed the legacy live cockpit's
+exact Real wait. The isolated existing case reproduces locally:1failed,37.32s,
+same30000ms wait. Safe DOM/feed evidence shows en/en-US, BTC/hyperliquid and
+Market open · Current coverage, with zero Real labels. Quote provenance/label
+are real, session open/fresh, provider delay0, recent source and current evaluation.
+This proves the failed stage is the old display-label contract, not absent data,
+locale leakage or Linux-only layout. The source collector initially misread the
+instruments mapping; its internal-error log is retained before the corrected run.
+The loopback8645 listener was absent after fixture teardown. No account/secret read.
+
+Quant review rejected a tempting timestamp workaround: although the fixture's
+candle payload uses an old date, LiveFeed explicitly treats Hyperliquid mutable
+bars as receipt-timed observations. The actual session is fresh. Do not change
+production clocks, freshness fences, provider policy or delay assumptions to make
+this legacy assertion pass. LiveDataBadge intentionally renders session-aware
+coverage, including explicit missing/delayed/unknown states, instead of always Real.
+
+Concentrated source audit finds further contracts in the same old module:
+its detail test expects points/Bids/Asks/mid/Back to watchlist from CockpitDetail,
+but App routes both legacy cockpit links and instrument links to InstrumentWorkspace;
+CockpitDetail is no longer mounted. Its quiet test also expects the old Stale
+label rather than the current session presentation. These are source-contract
+contradictions, not yet additional executed failures. Together with the earlier
+wrapper-signature and attention-count drift, this warrants the requested Planner
+scope reduction rather than another one-string push to discover the next mismatch.
+
+Proposed one bounded test-only migration: keep this module responsible for the
+scripted venue wire, real provenance, exact bid/ask/trade/spread facts, connector/
+stream health, session-aware fresh-to-quiet evidence, honest no-lake behavior and
+responsive containment. Reuse already-current test_live_chart_e2e for active
+instrument route/chart/replay semantics. Map old book/tape facts to supported
+UI/API assertions explicitly; do not silently delete them or restore retired UI
+merely to satisfy its old copy. Keep one deterministic fixture/lifecycle boundary,
+then verify the whole reduced live module locally before one final candidate.
+
+This is a proposed acceptance/ownership reduction for Planner, not an implemented
+test rewrite. Runtime, tests, assets and PR193 remain untouched. A local docs-only
+checkpoint preserves findings without pushing or triggering another CI. Remote
+PR189 stays1d4c28d and cannot merge while its exact required gate is red. No new
+environment, broad suite, manual CI rerun, UI structural review, Goal or automation.
