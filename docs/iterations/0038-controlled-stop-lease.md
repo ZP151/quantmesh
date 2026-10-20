@@ -49,3 +49,15 @@ claim native Engine or PostgreSQL acceptance. No second or third review loop.
 Required full CI is owned by the existing release owner, not duplicated locally.
 New exact-diff ClassB human review and CI green remain merge gates. Source
 implementation is reviewable; production pair recovery is still not accepted.
+
+Integration2026-10-20: PR199 merged normally asb2df38cb51e83fe58c2f1c8679e475a24535a938.
+Root fetched and independently matched reviewed head85a45687a373a0557c1c22f43ff2e850773f945f
+and merge complete tree9480d7c2500bc1e5a430fce420e9c939e130b7c9.
+Release-owner exact-head CI39400939565 passed classify/research_service/fast/
+release/python; browser/domain were policy-skipped. Inventory runtime/test bytes
+match original008ac0f. PR200 normally merged the new main without conflicts;
+its ten runtime/test files remain byte-identical to tested/reviewed a50ebc6.
+No repeated local suite or third structural review was run for this clean
+integration. PR200's new exact head still requires normal CI/review gates.
+Deploy/admit only a merged release containing both fixes before one new pair;
+do not deploy inventory-only first and repeat the same acceptance afterward.
