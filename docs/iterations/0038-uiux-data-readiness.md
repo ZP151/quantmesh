@@ -377,26 +377,63 @@ production clocks, freshness fences, provider policy or delay assumptions to mak
 this legacy assertion pass. LiveDataBadge intentionally renders session-aware
 coverage, including explicit missing/delayed/unknown states, instead of always Real.
 
-Concentrated source audit finds further contracts in the same old module:
-its detail test expects points/Bids/Asks/mid/Back to watchlist from CockpitDetail,
-but App routes both legacy cockpit links and instrument links to InstrumentWorkspace;
-CockpitDetail is no longer mounted. Its quiet test also expects the old Stale
-label rather than the current session presentation. These are source-contract
-contradictions, not yet additional executed failures. Together with the earlier
-wrapper-signature and attention-count drift, this warrants the requested Planner
-scope reduction rather than another one-string push to discover the next mismatch.
+The initial route audit incorrectly inferred that CockpitDetail was unmounted
+because App routes legacy links through InstrumentWorkspace. The complete call
+graph corrects that inference: InstrumentWorkspace still renders CockpitDetail on
+a live404. Its points/Bids/Asks/mid/back checks remain valid and must be retained.
+The proposed structural scope reduction was therefore withdrawn. The remaining
+Real waits and quiet Stale wait instead share the proven badge-presentation drift.
 
-Proposed one bounded test-only migration: keep this module responsible for the
-scripted venue wire, real provenance, exact bid/ask/trade/spread facts, connector/
-stream health, session-aware fresh-to-quiet evidence, honest no-lake behavior and
-responsive containment. Reuse already-current test_live_chart_e2e for active
-instrument route/chart/replay semantics. Map old book/tape facts to supported
-UI/API assertions explicitly; do not silently delete them or restore retired UI
-merely to satisfy its old copy. Keep one deterministic fixture/lifecycle boundary,
-then verify the whole reduced live module locally before one final candidate.
+Main/release owner explicitly assigned a bounded test-only contract correction:
+assert current session-aware coverage while preserving separate real provenance,
+bid/ask/trade/spread, connector/WebSocket, chart/book/tape and return-path facts.
+Quiet coverage must require both the original raw stale quote and a delayed session,
+using the same60s bound; neither an earlier delayed quote nor unknown coverage is
+accepted. No production route, time, fixture stream or freshness policy changes.
 
-This is a proposed acceptance/ownership reduction for Planner, not an implemented
-test rewrite. Runtime, tests, assets and PR193 remain untouched. A local docs-only
-checkpoint preserves findings without pushing or triggering another CI. Remote
-PR189 stays1d4c28d and cannot merge while its exact required gate is red. No new
-environment, broad suite, manual CI rerun, UI structural review, Goal or automation.
+The local docs-only checkpoint preserved the intermediate handoff without pushing
+or triggering CI. Its incorrect route inference is superseded here; it is not
+evidence for deleting assertions or restoring UI. Remote PR189 remains1d4c28d until
+the complete bounded badge correction passes local targeted checks and is delivered
+once. No new environment, broad suite, UI structural review, Goal or automation.
+
+## Concentrated live-badge contract correction —2026-10-20
+
+Planner narrowed the batch to the proved session-presentation migration, retaining
+the existing legacy-detail fallback and every supported wire/UI fact. No structural
+fixture rewrite or production change is needed. The corrected call graph and
+explicit release-owner instruction supersede the intermediate local750bd6a scope
+proposal; that checkpoint was never independently pushed or sent to CI.
+
+The first existing case now requires Market open · Current coverage plus an actual
+BTC/hyperliquid feed snapshot: quote provenance/label real, session policyv1,
+open/fresh and declared provider delay0. All original exact prices, trade/spread,
+connector and WebSocket assertions remain. Detail entry/header use the same current
+badge contract while preserving points, bid/ask book, mid/trade and back-link checks.
+Both old Real waits were independently observed with current coverage present.
+
+The unchanged quiet case also reproduced its old Stale text timeout: actual quote
+was stale/real, session open/delayed and UI Expected data delayed. Its replacement
+uses the original60s bound for one combined read-only predicate requiring that exact
+UI label, raw stale quote, real provenance and policyv1/open/delayed/delay0 session.
+It does not accept merely delayed raw quotes, unknown coverage or disconnected
+streams. The original connected-WebSocket and no-gap assertions remain unchanged.
+Polling only reads the same loopback fixture API; source frames and clocks are not
+modified. Production freshness/presentation and all fixture lifetime controls stay.
+
+Verifier: original first case RED1failed37.32s -> GREEN1passed6.27s; remaining two
+badge cases RED2failed116.69s -> the three affected cases together GREEN3passed27.62s.
+After adding the explicit raw quote real-label check, the first case again passed
+in6.64s. Five existing dependency warnings retained. Focused badge tests9passed,
+including fresh-session-over-stale-age and delayed-session semantics. Original
+numeric/connector/stream/detail safety assertions are preserved in order, and the
+quiet deadline is still60000ms. Ruff/format, focused lint and whitespace pass.
+
+Only test_live_e2e.py, live-data-badge.test.tsx and this record change. Runtime,
+generated assets, workspaces/390px fix, workflows and PR193 are byte-identical to
+1d4c28d; prior exact Linux boundary success remains applicable. Preserve run39316604766,
+local native RED/structured state, collector error and all GREEN logs under
+authoritativeoutput/0038-uiux-continuous/PR189-live-*. No account/secret read, new
+environment, whole old suite, manual CI rerun or further diagnostic candidate.
+Deliver this one tested contract batch normally; unified release owner still
+requires fresh exact-head CI before conditional merge. PR193 remains frozen.
