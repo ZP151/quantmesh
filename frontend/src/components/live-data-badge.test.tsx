@@ -32,6 +32,18 @@ describe('shared calendar presentation', () => {
     expect(liveDataPresentation({ ...closed, data_state: 'unknown' }, 'stale', sunday).key)
       .toBe('live.session.closedUnknown')
   })
+  it('prefers current session coverage to a stale age label', () => {
+    const now = Date.parse('2026-10-12T13:37:20Z')
+    const open = { ...closed, market_state: 'open' as const, data_state: 'fresh' as const,
+      last_source_at: '2026-10-12T13:37:18Z', expected_last_bar_end: '2026-10-12T13:37:15Z',
+      next_open_at: null, provider_delay_seconds: 0, evaluated_at: '2026-10-12T13:37:20Z' }
+    expect(liveDataPresentation(open, 'stale', now).key).toBe('live.session.open')
+    expect(liveDataPresentation(undefined, 'real', now).key).toBe('live.label.real')
+  })
+  it('keeps delayed session coverage distinct from current coverage', () => {
+    expect(liveDataPresentation({ ...closed, market_state: 'open', data_state: 'delayed' },
+      'stale', sunday).key).toBe('live.session.delayed')
+  })
   it('does not keep cached open coverage green after its next due interval', () => {
     const open = { ...closed, market_state: 'open' as const, data_state: 'fresh' as const,
       last_source_at: '2026-10-12T13:37:00Z', expected_last_bar_end: '2026-10-12T13:37:00Z',

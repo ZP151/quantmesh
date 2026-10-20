@@ -224,7 +224,9 @@ def venue_url() -> tuple[str, Callable[[], None]]:
             quiet = asyncio.Event()
             holder["quiet"] = quiet
             async with ScriptedVenue(
-                plan=_venue_plan(), quiet=quiet, transform_frame=_current_source_times,
+                plan=_venue_plan(),
+                quiet=quiet,
+                transform_frame=_current_source_times,
             ) as venue:
                 holder["url"] = venue.url
                 held: asyncio.Future[None] = asyncio.get_running_loop().create_future()
@@ -356,11 +358,25 @@ def _main_text(page) -> str:
 
 
 def test_watchlist_populates_and_streams(page, base_url) -> None:
-    """The cockpit board over the real feed: Real badge, quote numbers,
+    """The cockpit board over the real feed: session coverage, quote numbers,
     the connector-health panel and the live-stream banner."""
     page.goto(f"{base_url}/app/cockpit")
     page.get_by_role("heading", name="Live cockpit", exact=True).first.wait_for()
-    page.get_by_text("Real", exact=True).first.wait_for()
+    page.get_by_text("Market open · Current coverage", exact=True).first.wait_for()
+    response = page.request.get(f"{base_url}/api/live/state")
+    assert response.ok
+    instrument = next(
+        row
+        for row in response.json()["instruments"].values()
+        if row["venue"] == "hyperliquid" and row["instrument"] == "BTC"
+    )
+    assert instrument["kinds"]["quote"]["provenance"] == "real"
+    assert instrument["kinds"]["quote"]["label"] == "real"
+    session = instrument["session_freshness"]
+    assert session["policy_version"] == "quantmesh:session-freshness:1"
+    assert session["market_state"] == "open"
+    assert session["data_state"] == "fresh"
+    assert session["provider_delay_seconds"] == 0
     text = _main_text(page)
     for expected in ("$100.00", "$100.50", "$100.25", "49.9", "$100.30"):
         assert expected in text
@@ -376,10 +392,10 @@ def test_instrument_detail_chart_book_and_tape(page, base_url) -> None:
     and the trade tape fill from the keep-alive cycles, and the back
     link returns to the watchlist."""
     page.goto(f"{base_url}/app/cockpit")
-    page.get_by_text("Real", exact=True).first.wait_for()
+    page.get_by_text("Market open · Current coverage", exact=True).first.wait_for()
     page.get_by_role("link", name="BTC", exact=True).click()
     page.get_by_role("heading", name="BTC", exact=True).first.wait_for()
-    page.get_by_text("Real", exact=True).first.wait_for()  # the header badge
+    page.get_by_text("Market open · Current coverage", exact=True).first.wait_for()
     # the chart card counts the closes it drew
     page.get_by_text(re.compile(r"\d+ points")).first.wait_for()
     # the per-side book from the latest l2 snapshots
@@ -396,8 +412,8 @@ def test_stale_transition_when_the_venue_goes_quiet(
     page, base_url, venue_url: tuple[str, Callable[[], None]]
 ) -> None:
     """The venue's ``quiet`` event stops the frames (socket stays open),
-    so no frame is newer than the feed's 5 s lag; a snapshot refetch
-    then flips the badge to Stale — while the transport (and its
+    so the quote becomes stale and session coverage becomes delayed;
+    the badge reports Expected data delayed — while the transport (and its
     banner) stays live and the trade sequence shows no gap. The
     transition is deterministic: the trigger, not the wall clock,
     starts the quiet tail."""
@@ -405,7 +421,27 @@ def test_stale_transition_when_the_venue_goes_quiet(
     quiet_trigger()
     page.goto(f"{base_url}/app/cockpit")
     main = page.locator("main")
-    main.get_by_text("Stale", exact=True).first.wait_for(timeout=60_000)
+    # Keep the original 60 s bound and stale-quote requirement: session coverage
+    # is a separate presentation contract, not permission to accept fresher data.
+    page.wait_for_function(
+        """async () => {
+            const response = await fetch('/api/live/state');
+            const state = await response.json();
+            const instrument = Object.values(state.instruments).find(
+                row => row.venue === 'hyperliquid' && row.instrument === 'BTC');
+            const quote = instrument?.kinds.quote;
+            const session = instrument?.session_freshness;
+            const row = [...document.querySelectorAll('main tbody tr')].find(
+                el => el.querySelector('a')?.textContent === 'BTC');
+            return quote?.label === 'stale' && quote.provenance === 'real'
+                && session?.policy_version === 'quantmesh:session-freshness:1'
+                && session.market_state === 'open' && session.data_state === 'delayed'
+                && session.provider_delay_seconds === 0
+                && row?.cells[2]?.textContent === 'Expected data delayed';
+        }""",
+        polling=250,
+        timeout=60_000,
+    )
     text = main.inner_text()
     assert "Local stream connected over WebSocket" in text
     assert "gap" not in text.lower()
