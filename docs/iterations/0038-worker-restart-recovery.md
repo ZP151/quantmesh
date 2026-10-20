@@ -37,6 +37,24 @@ Windows probe failed in unchanged `_read` inode checks; it is a platform limitat
 not substituted for the Linux result. The broader native suite is separately
 recorded under `output/0038-worker-inventory/`; completion is not yet claimed.
 
+Reproduction record (WSL, Python3.12, external venv; rerun against the synchronized
+PR source tree from its repository root):
+
+```text
+Command: cd /mnt/c/Users/15492/.codex-clean/worktrees/pr199-final-sync/QuantMesh && PYTHONPATH="$PWD/src:$PWD:$PWD/src/quantmesh/research" /var/tmp/quantmesh-backup-final-xvcv1u9k/venv/bin/python -m pytest tests/test_worker_build.py
+Result: 58 passed, 1 warning in 5.26s (existing NumPy timedelta deprecation).
+
+Broad-run record: the exact shell command and absolute PYTHONPATH values were not
+retained in the session artifacts, so they cannot be reproduced verbatim from this
+checkpoint. The first broad invocation exited 2 after 614.83s with 11 failed,
+557 passed, 6 skipped; child interpreters reported `No module named quantmesh`.
+The corrected invocation supplied explicit absolute source/root/service PYTHONPATH
+entries and exited 2 after a deliberate KeyboardInterrupt at 665.96s with 568
+passed, 6 skipped, 6 warnings. This was bounded/incomplete and is not a full-suite
+pass. Output files in `output/0038-worker-inventory/` are local ignored artifacts,
+not committed evidence; the counts above are transcribed from those saved outputs.
+```
+
 The first broad WSL invocation was interrupted after614.83seconds with11failed,
 557passed and6skipped; subprocess traces include `No module named quantmesh`.
 The existing external venv does not install this checkout as an editable package;
