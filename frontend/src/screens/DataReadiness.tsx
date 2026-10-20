@@ -4,11 +4,36 @@ import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePreferences } from '@/lib/preferences'
-import { realdataApi, MAX_SNAPSHOT_BYTES, type SnapshotErrorCode, type SnapshotReport } from '@/lib/realdata-api'
+import { realdataApi, MAX_SNAPSHOT_BYTES, type SnapshotCheck, type SnapshotErrorCode, type SnapshotReport } from '@/lib/realdata-api'
 
 // Operate within the incumbent workstation: import and qualification first,
-// source assertions beside allowed use, then located checks and immutable bytes.
-// The approved P1 brief fixes this composition; missing evidence stays neutral.
+// original downloads beside allowed use, then non-passing checks before optional
+// passing detail. The approved hierarchy never changes evidence or qualification.
+const detailCopy = {
+  en: { passed: 'Passed technical checks', allPassed: 'All reported technical checks passed. Research qualification above still applies.' },
+  'zh-CN': { passed: '已通过的技术检查', allPassed: '报告中的技术检查均已通过，研究用途仍受上方资格结论限制。' },
+}
+// Page-local explanations preserve server codes in visible use labels or title
+// metadata. Unknown codes remain verbatim; this is not a qualification adapter.
+const evidenceTerms: Record<string, { en: string; 'zh-CN': string }> = {
+  inspect_evidence_only: { en: 'Inspect evidence only', 'zh-CN': '仅可检查证据' },
+  local_research_unverified: { en: 'Local research rights unverified', 'zh-CN': '本地研究使用权限未经核实' },
+  historical_available_at_and_revision_history_unverified: { en: 'Historical availability and revisions unverified', 'zh-CN': '历史可获得时间与修订记录未经核实' },
+  bar_values: { en: 'Price and volume bounds', 'zh-CN': '价格与成交量范围' },
+  bar_time: { en: 'Session timestamps', 'zh-CN': '交易时段时间戳' },
+  bar_order: { en: 'Unique chronological rows', 'zh-CN': '数据行去重与时间顺序' },
+  session_coverage: { en: 'Daily session coverage', 'zh-CN': '日线交易时段覆盖' },
+  unfinished_session: { en: 'Completed sessions only', 'zh-CN': '仅包含已结束的交易时段' },
+  calendar_alignment: { en: 'Pinned calendar alignment', 'zh-CN': '固定交易日历对齐' },
+  yahoo_alignment: { en: 'Retained Yahoo price alignment', 'zh-CN': '留存 Yahoo 价格对齐' },
+  issuer_alignment: { en: 'Issuer-derived dividend alignment', 'zh-CN': '发行方派生分红数据对齐' },
+  units: { en: 'Price and volume units', 'zh-CN': '价格与成交量单位' },
+  corporate_actions: { en: 'Dividend source comparison', 'zh-CN': '分红来源比较' },
+  source_rights: { en: 'Source usage rights', 'zh-CN': '数据来源使用权限' },
+  point_in_time: { en: 'Historical availability and revisions', 'zh-CN': '历史可获得时间与修订记录' },
+  source_session: { en: 'Vendor daily-session semantics', 'zh-CN': '供应商日线时段定义' },
+  issuer_lineage: { en: 'Raw issuer lineage', 'zh-CN': '发行方原始文件来源链' },
+}
 type Busy = 'loading' | 'importing' | 'opening' | 'downloading' | null
 const safeCodes: SnapshotErrorCode[] = ['unavailable', 'too_large', 'invalid_archive', 'not_found', 'request_failed', 'invalid_response', 'integrity']
 function errorCode(error: unknown): SnapshotErrorCode {
@@ -133,6 +158,10 @@ function SnapshotDetail({ report, busy, download }: {
   const text = (value: string | null | undefined) => value == null || value === '' ? unknown : value
   const number = (value: number | null | undefined) => value == null ? unknown : value.toLocaleString(locale)
   const source = report.source
+  const copy = detailCopy[locale]
+  const explain = (value: string) => evidenceTerms[value]?.[locale] ?? value
+  const nonPassing = report.checks.filter(check => check.status !== 'PASS')
+  const passing = report.checks.filter(check => check.status === 'PASS')
   return <div className="min-w-0 space-y-6">
     <div className="grid min-w-0 gap-6 xl:grid-cols-2">
       <section aria-labelledby="snapshot-qualification" className="min-w-0 space-y-3">
@@ -145,8 +174,19 @@ function SnapshotDetail({ report, busy, download }: {
         </div>
         <div className="space-y-1">
           <h4 className="text-xs font-medium text-muted-foreground">{t('readiness.allowed')}</h4>
-          <p className="break-words text-sm">{report.qualification.allowed_use.length
-            ? report.qualification.allowed_use.join(' · ') : t('readiness.noAllowed')}</p>
+          {report.qualification.allowed_use.length ? <ul className="space-y-1 text-sm">
+            {report.qualification.allowed_use.map((use, index) => <li key={index} className="break-words">
+              <span title={use}>{explain(use)}</span>
+              {explain(use) !== use && <code className="block text-xs text-muted-foreground">{use}</code>}
+            </li>)}
+          </ul> : <p className="text-sm">{t('readiness.noAllowed')}</p>}
+        </div>
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => download('archive')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.original')}</Button>
+            <Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => download('report')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.report')}</Button>
+          </div>
+          <p className="max-w-3xl text-xs text-muted-foreground">{t('readiness.pinned')}</p>
         </div>
         <div className="space-y-1">
           <h4 className="text-xs font-medium text-muted-foreground">{t('readiness.reasons')}</h4>
@@ -166,7 +206,7 @@ function SnapshotDetail({ report, busy, download }: {
         <dl className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.7fr)] gap-x-4 gap-y-2 text-xs">
           <Fact label={t('readiness.provider')}>{text(source.provider)} / {text(source.feed)}</Fact>
           <Fact label={t('readiness.received')}>{text(source.received_at)}</Fact>
-          <Fact label={t('readiness.pit')}>{text(source.pit_status)}</Fact>
+          <Fact label={t('readiness.pit')}><span title={source.pit_status ?? undefined}>{explain(text(source.pit_status))}</span></Fact>
           <Fact label={t('readiness.sessions')}>{text(source.session_semantics)}</Fact>
           <Fact label={t('readiness.units')}>{text(source.price_unit)} / {text(source.volume_unit)}</Fact>
           <Fact label="URL">{text(source.url)}</Fact>
@@ -198,30 +238,15 @@ function SnapshotDetail({ report, busy, download }: {
     </section>
     <section aria-labelledby="snapshot-checks" className="min-w-0 space-y-3 border-t border-border pt-4">
       <h3 id="snapshot-checks" className="text-sm font-semibold">{t('readiness.checks')}</h3>
-      {report.checks.length ? <div className="max-w-full overflow-x-auto" tabIndex={0} role="region" aria-label={t('readiness.checks')}>
-        <table aria-label={t('readiness.checks')} className="w-full min-w-[640px] table-fixed text-left text-xs">
-          <thead className="border-b border-border text-muted-foreground"><tr>
-            <th className="w-[38%] py-2 pr-3 font-medium">{t('readiness.check')}</th>
-            <th className="w-[9%] py-2 pr-3 font-medium">{t('readiness.count')}</th>
-            <th className="w-[23%] py-2 pr-3 font-medium">{t('readiness.location')}</th>
-            <th className="w-[30%] py-2 font-medium">{t('readiness.comparison')}</th>
-          </tr></thead>
-          <tbody className="divide-y divide-border">{report.checks.map((check, index) => <tr key={`${check.code}-${index}`} className="align-top">
-            <td className="space-y-1 break-words py-3 pr-3">
-              <div><Badge variant={check.status === 'REJECT' ? 'destructive' : 'outline'}>{t(`readiness.${check.status}`)}</Badge></div>
-              <p className="font-mono">{check.code}</p><p title={check.message}>{check.message}</p>
-            </td>
-            <td className="py-3 pr-3 font-mono tabular-nums">{number(check.count)}</td>
-            <td colSpan={2} className="py-3">{check.locations.length ? <ul className="space-y-3">
-              {check.locations.map((location, i) => <li key={i} className="grid grid-cols-[minmax(0,23fr)_minmax(0,30fr)] gap-3">
-                <div className="min-w-0 break-words font-mono">{text(location.date)}<br />{t('readiness.row')} {number(location.row)} · {location.field}</div>
-                <div className="min-w-0 break-words"><p>{t('readiness.expectedValue')}: <span className="font-mono">{text(location.expected)}</span></p>
-                  <p>{t('readiness.actualValue')}: <span className="font-mono">{text(location.actual)}</span></p></div>
-              </li>)}
-            </ul> : <span className="text-muted-foreground">{unknown}</span>}</td>
-          </tr>)}</tbody>
-        </table>
-      </div> : <p className="text-xs text-muted-foreground">{t('readiness.noChecks')}</p>}
+      {nonPassing.length > 0 && <CheckTable checks={nonPassing} label={t('readiness.checks')} />}
+      {report.checks.length === 0 && <p className="text-xs text-muted-foreground">{t('readiness.noChecks')}</p>}
+      {passing.length > 0 && <details key={report.snapshot_id} className="min-w-0">
+        <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:min-h-11 max-sm:py-3">
+          {locale === 'zh-CN' ? `${copy.passed}（${passing.length}）` : `${copy.passed} (${passing.length})`}
+        </summary>
+        <div className="mt-3"><CheckTable checks={passing} label={copy.passed} /></div>
+      </details>}
+      {passing.length > 0 && nonPassing.length === 0 && <p className="text-xs text-muted-foreground">{copy.allPassed}</p>}
     </section>
     <section aria-labelledby="snapshot-actions" className="space-y-3 border-t border-border pt-4">
       <h3 id="snapshot-actions" className="text-sm font-semibold">{t('readiness.actions')}</h3>
@@ -234,11 +259,6 @@ function SnapshotDetail({ report, busy, download }: {
       </ul> : <p className="text-xs text-muted-foreground">{t('readiness.noConflicts')}</p>}
     </section>
     <section className="min-w-0 space-y-3 border-t border-border pt-4">
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => download('archive')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.original')}</Button>
-        <Button variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => download('report')} disabled={busy}><Download className="size-3.5" aria-hidden="true" />{t('readiness.report')}</Button>
-      </div>
-      <p className="max-w-3xl text-xs text-muted-foreground">{t('readiness.pinned')}</p>
       <details className="min-w-0">
         <summary className="cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:min-h-11 max-sm:py-3">{t('readiness.lineage')}</summary>
         <dl className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-x-4 gap-y-2 text-xs">
@@ -255,6 +275,36 @@ function SnapshotDetail({ report, busy, download }: {
         </li>)}</ul>
       </details>
     </section>
+  </div>
+}
+function CheckTable({ checks, label }: { checks: SnapshotCheck[]; label: string }) {
+  const { t, locale } = usePreferences()
+  const unknown = t('readiness.unknown')
+  const text = (value: string | null | undefined) => value == null || value === '' ? unknown : value
+  const number = (value: number | null | undefined) => value == null ? unknown : value.toLocaleString(locale)
+  return <div className="max-w-full overflow-x-auto" tabIndex={0} role="region" aria-label={label}>
+    <table aria-label={label} className="w-full min-w-[640px] table-fixed text-left text-xs">
+      <thead className="border-b border-border text-muted-foreground"><tr>
+        <th className="w-[38%] py-2 pr-3 font-medium">{t('readiness.check')}</th>
+        <th className="w-[9%] py-2 pr-3 font-medium">{t('readiness.count')}</th>
+        <th className="w-[23%] py-2 pr-3 font-medium">{t('readiness.location')}</th>
+        <th className="w-[30%] py-2 font-medium">{t('readiness.comparison')}</th>
+      </tr></thead>
+      <tbody className="divide-y divide-border">{checks.map((check, index) => <tr key={`${check.code}-${index}`} className="align-top">
+        <td className="space-y-1 break-words py-3 pr-3">
+          <div><Badge variant={check.status === 'REJECT' ? 'destructive' : 'outline'}>{t(`readiness.${check.status}`)}</Badge></div>
+          <p className="font-medium" title={check.code}>{evidenceTerms[check.code]?.[locale] ?? check.code}</p><p title={check.message}>{check.message}</p>
+        </td>
+        <td className="py-3 pr-3 font-mono tabular-nums">{number(check.count)}</td>
+        <td colSpan={2} className="py-3">{check.locations.length ? <ul className="space-y-3">
+          {check.locations.map((location, index) => <li key={index} className="grid grid-cols-[minmax(0,23fr)_minmax(0,30fr)] gap-3">
+            <div className="min-w-0 break-words font-mono">{text(location.date)}<br />{t('readiness.row')} {number(location.row)} · {location.field}</div>
+            <div className="min-w-0 break-words"><p>{t('readiness.expectedValue')}: <span className="font-mono">{text(location.expected)}</span></p>
+              <p>{t('readiness.actualValue')}: <span className="font-mono">{text(location.actual)}</span></p></div>
+          </li>)}
+        </ul> : <span className="text-muted-foreground">{unknown}</span>}</td>
+      </tr>)}</tbody>
+    </table>
   </div>
 }
 function Fact({ label, children }: { label: string; children: ReactNode }) {

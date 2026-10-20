@@ -155,3 +155,89 @@ it('exposes import progress and prevents overlapping actions', async () => {
   finish(historical)
   await screen.findByRole('region', { name: 'Qualification and allowed use' })
 })
+
+it('puts both original download actions in qualification before technical checks', async () => {
+  mocks.list.mockResolvedValue([historical])
+  mount(); await userEvent.click(await screen.findByRole('button', { name: /Reopen SPY/ }))
+  const qualification = await screen.findByRole('region', { name: 'Qualification and allowed use' })
+  const archive = within(qualification).getByRole('button', { name: 'Download original ZIP' })
+  const report = within(qualification).getByRole('button', { name: 'Download pinned report JSON' })
+  expect(archive).toBeEnabled(); expect(report).toBeEnabled()
+  expect(qualification).toHaveTextContent('Downloads preserve original bytes and the initial report')
+  const checks = screen.getByRole('heading', { name: 'Located quality checks' })
+  expect(archive.compareDocumentPosition(checks) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(report.compareDocumentPosition(checks) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(qualification).toHaveTextContent('Source rights are unverified')
+})
+
+it('collapses only exact PASS checks while preserving all non-passing locations and reasons', async () => {
+  const mixed = { ...historical, checks: [
+    { ...historical.checks[0], code: 'bar_values', status: 'PASS', message: 'Passing value checks retained', count: 0, locations: [] },
+    historical.checks[0],
+    { ...historical.checks[0], code: 'rejected-check', status: 'REJECT', message: 'Rejected rows remain visible' },
+  ] }
+  mocks.list.mockResolvedValue([mixed]); mocks.get.mockResolvedValue(mixed)
+  const user = userEvent.setup(); mount()
+  await user.click(await screen.findByRole('button', { name: /Reopen SPY/ }))
+  const summary = await screen.findByText('Passed technical checks (1)')
+  const disclosure = summary.closest('details')!
+  expect(disclosure).not.toHaveAttribute('open')
+  expect(within(disclosure).getByText('Passing value checks retained')).not.toBeVisible()
+  const primary = screen.getByRole('table', { name: 'Located quality checks' })
+  expect(primary).toHaveTextContent('Issuer and Yahoo disagree')
+  expect(primary).toHaveTextContent('Rejected rows remain visible')
+  expect(primary).toHaveTextContent('2021-12-17')
+  expect(primary).toHaveTextContent('issuer value')
+  expect(primary).not.toHaveTextContent('Passing value checks retained')
+  expect(screen.getByText('Point-in-time evidence is missing')).toBeVisible()
+  await user.click(summary)
+  expect(disclosure).toHaveAttribute('open')
+  expect(within(disclosure).getByText('Passing value checks retained')).toBeVisible()
+})
+
+it('explains known use and PIT codes while preserving original and unknown evidence', async () => {
+  const explained = { ...historical,
+    qualification: { ...historical.qualification, allowed_use: ['inspect_evidence_only', 'future_scope_unverified'] },
+    source: { ...historical.source, pit_status: 'historical_available_at_and_revision_history_unverified' },
+  }
+  mocks.list.mockResolvedValue([explained]); mocks.get.mockResolvedValue(explained)
+  mount(); await userEvent.click(await screen.findByRole('button', { name: /Reopen SPY/ }))
+  expect(await screen.findByText('Inspect evidence only')).toBeVisible()
+  expect(screen.getByText('inspect_evidence_only')).toBeVisible()
+  expect(screen.getByText('future_scope_unverified')).toBeVisible()
+  expect(screen.getByText('Historical availability and revisions unverified')).toHaveAttribute('title', explained.source.pit_status)
+  expect(screen.getByText('distribution-conflict')).toBeVisible()
+  expect(screen.getByText('Issuer and Yahoo disagree')).toHaveAttribute('title', 'Issuer and Yahoo disagree')
+})
+
+it('keeps insufficient qualification explicit even when every technical check passes', async () => {
+  const passing = { ...historical, checks: [{ ...historical.checks[0], status: 'PASS', code: 'bar_values', locations: [] }] }
+  mocks.list.mockResolvedValue([passing]); mocks.get.mockResolvedValue(passing)
+  mount(); await userEvent.click(await screen.findByRole('button', { name: /Reopen SPY/ }))
+  expect(await screen.findByText('Passed technical checks (1)')).toBeVisible()
+  expect(screen.getByText('All reported technical checks passed. Research qualification above still applies.')).toBeVisible()
+  expect(screen.getByRole('region', { name: 'Qualification and allowed use' })).toHaveTextContent('Insufficient evidence')
+  expect(screen.getByText('Source rights are unverified')).toBeVisible()
+})
+
+it('keeps missing technical checks unavailable rather than implying they passed', async () => {
+  const missing = { ...historical, checks: [] }
+  mocks.list.mockResolvedValue([missing]); mocks.get.mockResolvedValue(missing)
+  mount(); await userEvent.click(await screen.findByRole('button', { name: /Reopen SPY/ }))
+  await screen.findByRole('region', { name: 'Qualification and allowed use' })
+  expect(screen.queryByText(/Passed technical checks/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/All reported technical checks passed/)).not.toBeInTheDocument()
+  expect(screen.getByText('No checks reported')).toBeVisible()
+})
+
+it('localizes new explanations and disclosure without translating original evidence', async () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  const localized = { ...historical, qualification: { ...historical.qualification, allowed_use: ['inspect_evidence_only'] },
+    checks: [{ ...historical.checks[0], code: 'bar_values', status: 'PASS', message: 'Passing price checks retained', locations: [] }, historical.checks[0]] }
+  mocks.list.mockResolvedValue([localized]); mocks.get.mockResolvedValue(localized)
+  mount(); await userEvent.click(await screen.findByRole('button', { name: /重新打开 SPY/ }))
+  expect(await screen.findByText('仅可检查证据')).toBeVisible()
+  expect(screen.getByText('inspect_evidence_only')).toBeVisible()
+  expect(screen.getByText('已通过的技术检查（1）')).toBeVisible()
+  expect(screen.getByText('Issuer and Yahoo disagree')).toBeVisible()
+})

@@ -31,7 +31,7 @@ import json
 import socket
 import threading
 import urllib.request
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import cast
 
 import pytest
@@ -77,8 +77,8 @@ FEED_STALE = timedelta(seconds=10)
 KEEPALIVE_CYCLES = 10
 KEEPALIVE_DELAY = 4.0
 
-# A fixed frame epoch; the plans are static, so every reconnect (there
-# are none in this fixture) would replay the same wire.
+# Static plan timestamps preserve protocol shapes; outgoing browser frames
+# bind source time at transmission through _current_source_times below.
 T0_US = 1_753_000_000_000_000
 
 # The demo board's pairs, with the prices the plans must keep quoting.
@@ -214,6 +214,18 @@ def kalshi_plan() -> list[tuple[float, object]]:
 # -- one scripted venue per protocol, each on its own loop --------------------
 
 
+def _current_source_times(frame: object) -> object:
+    """Keep source-time freshness tied to the real browser fixture's transmission."""
+    if not isinstance(frame, dict):
+        return frame
+    now_us = int(datetime.now(UTC).timestamp() * 1_000_000)
+    if frame.get("event_type") in ("book", "price_change"):
+        return {**frame, "timestamp": str(now_us)}
+    if frame.get("type") in ("market", "orderbook_delta"):
+        return {**frame, "ts": now_us}
+    return frame
+
+
 def _venue_fixture(name: str, plan: list[tuple[float, object]]):
     """The proven single-venue pattern (test_live_e2e) for one
     protocol; the sync Playwright thread cannot run the venue's loop."""
@@ -228,7 +240,7 @@ def _venue_fixture(name: str, plan: list[tuple[float, object]]):
             asyncio.set_event_loop(loop)
 
             async def serve() -> None:
-                async with ScriptedVenue(plan=plan) as venue:
+                async with ScriptedVenue(plan=plan, transform_frame=_current_source_times) as venue:
                     holder["url"] = venue.url
                     held = asyncio.Event()
                     holder["held"] = held
@@ -276,9 +288,7 @@ def _wait_for_feed(base_url: str) -> None:
     both venues' probabilities for the btc-100k pair."""
     for _ in range(150):
         try:
-            with urllib.request.urlopen(
-                f"{base_url}/api/live/prediction", timeout=1
-            ) as response:
+            with urllib.request.urlopen(f"{base_url}/api/live/prediction", timeout=1) as response:
                 rows = json.loads(response.read())
         except OSError:
             rows = []
