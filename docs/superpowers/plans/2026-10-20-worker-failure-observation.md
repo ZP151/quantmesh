@@ -116,3 +116,42 @@ predicates and exception identity; no new operation, stage or public API.
 - [x] Prepare ordinary follow-up commit/push; normal new-head CI remains a merge
       gate. Record its new head and superseded old-head CI in the root handoff.
 - [x] Record explicit user fact: AI-assisted review only; human review incomplete.
+
+## CI integration correction — root-checkout service import
+
+Main workbench's bounded2026-10-21 instruction authorizes only this test-local
+integration repair, not a third structural/source change. Actual fab35ac release
+CI39444763986 failed7observation bootstrap/renderer cases on missing
+qm_research_agent after5446passes. Existing root pytest config provides src and
+repo root, while the independent service gate explicitly supplies its own src.
+Earlier local affected commands inherited service src and masked this boundary.
+
+Exclusive files: tests/test_worker_failure_observation.py and this plan/own
+iteration. Four product source files must remain byte-identical to fab35ac;
+no dependency install, assertion weakening, product import path, workflow,
+pyproject, broad local suite, service/remote action or merge is in scope.
+
+- [x] Preserve actual failed CI log and reproduce the7import failures from
+      checkout root with PYTHONPATH unset, using the existing local Linux runtime.
+- [x] Add one function-scoped monkeypatch.syspath_prepend service-source fixture,
+      requested only by the five test functions/seven parameterized cases.
+      Assert the imported Worker bootstrap file is the checkout's actual service
+      source. Existing test bodies/assertions remain unchanged.
+- [x] Run the affected root tests with the same import environment, no inherited
+      service path, and record loaded module/source pins. Run relevant targeted
+      daemon/stop tests and static/whitespace checks; no full-suite replay.
+- [ ] Verify original assertions and all four source bytes unchanged, update
+      tracked evidence, commit/push one follow-up head to the existing PR, and
+      hand the sole normal new-head CI run to the unique release owner.
+
+Commit checkpoint: all original test function bodies/assertions and the complete
+bootstrap helper AST match fab35ac; four product file bytes match exactly.
+Final root targeted GREEN is54passed/1existing warning/17.13s with PYTHONPATH
+unset; full Ruff, changed-file format and whitespace pass. First format refusal
+was only the new fixture comparison layout and is retained separately; final
+exact-file GREEN follows formatting. Independent limited CI integration review
+READY checks the final hashes and evidence without rerunning tests. Commit/push
+and new-head normal CI/human hold remain the root/release handoff boundary.
+
+This test import correction does not satisfy the independent human review or
+remove the named203/204 no-merge hold. Runtime sink/90s/live gates remain open.

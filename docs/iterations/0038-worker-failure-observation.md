@@ -121,3 +121,56 @@ the reviewer independently checked all56 deferred expressions, matching five
 file hashes and actual RED/GREEN/static evidence without rerunning tests.
 Normal new-head CI and genuine human review remain merge gates; old-head CI cannot
 certify the corrected head. No local full-suite replay, merge or deployment.
+
+## CI root-checkout import boundary — 2026-10-21
+
+Planner: main workbench authorizes one bounded test/fixture import correction.
+The exactfab35ac release CI39444763986 is FAILED:5446passed/7failed/143skipped,
+all seven failures ModuleNotFoundError for qm_research_agent in this new root
+test file. Full log is retained in output/0038-worker-failure-observation/
+ci-import-integration/fab35ac-release-failed.log. It is real failure evidence,
+not a green source checkpoint. Root pytest's src/root path does not include
+the independently packaged service. Earlier local85pass command supplied the
+service path explicitly and therefore did not verify root CI import behavior.
+
+Implementer scope: only a test-local scoped source fixture for the affected
+bootstrap/renderer functions, loading the actual checkout Worker service file.
+No original test assertion, four product source byte, product runtime path,
+CI workflow, dependency/environment, merge or remote host changes. This is a
+separate finite CI integration repair, not another structural Worker patch.
+Quant researcher: synthetic integration coverage only; no data/math/strategy,
+cost/leakage or trading-authority changes. Named203/204 no-merge holds remain.
+
+Verifier: actual root-CI-style RED is7failed/29passed/1existing warning/6.16s,
+using checkout cwd and env -u PYTHONPATH with the existing WSL Python3.12.3/
+pytest9.1.1. No dependency install or fresh environment. CI's normal Python3.13
+gate remains responsible for that interpreter; local evidence does not claim
+the complete CI gate. Root pyproject src/root paths are unchanged.
+
+Implementer: one function-scoped worker_service_source fixture temporarily
+prepends services/research_agent/src with monkeypatch and asserts the loaded
+Worker runtime's __file__ resolves to that checkout's actual source. Only the
+five bootstrap/renderer functions (seven parameterized cases) request it via
+usefixtures. No autouse/global PYTHONPATH, package installation or runtime import
+change. All original test function bodies/assertions and the bootstrap helper's
+complete AST remain identical to fab35ac; the added assertion is source-origin
+validation only. All four product source files remain byte-for-byte identical.
+
+Final affected root command runs this36case file plus the existing18daemon/
+controlled-stop cases with PYTHONPATH **unset**:54passed/1existing warning/17.13s.
+Unlike the historical85affected run, this does not add the independently rooted
+service test directory or inherit its src path. Real module path assertions run
+in the seven corrected cases. Evidence and four-file/test SHA are in
+ci-import-integration/affected-final-receipt.json and affected-final.txt.
+Full Ruff(src/tests/tools plus the unchanged service runtime), changed-file
+format and whitespace pass. An initial format refusal on the new fixture's
+Path comparison layout is retained; the final exact test bytes were rerun after
+formatting. No local full suite or old CI rerun.
+
+Reviewer: independent limited CI import-integration verification READY. It
+checked actual old CI/local RED/final54GREEN, final file/log hashes, fixture
+scope, actual source-origin check, unchanged original bodies/helper AST and
+four frozen product source bytes. Reviewer did not rerun tests and does not
+re-certify observation behavior or supply human review. Root prepares one
+follow-up commit/push; only its normal new-head CI is to be consumed by the
+unique release owner. No merge, deploy, host action, new pair or R sink work.

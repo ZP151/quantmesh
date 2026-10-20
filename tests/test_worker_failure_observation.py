@@ -3,6 +3,7 @@
 import dataclasses
 import json
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from threading import Event, current_thread
 from types import SimpleNamespace
 
@@ -310,6 +311,18 @@ def test_handled_failure_and_fence_refusals_do_not_fail_daemon(run_case, case, s
     assert result.handoffs == []
 
 
+@pytest.fixture
+def worker_service_source(monkeypatch):
+    service_source = Path(__file__).resolve().parents[1] / "services/research_agent/src"
+    monkeypatch.syspath_prepend(str(service_source))
+    from qm_research_agent import worker_runtime
+
+    assert (
+        Path(worker_runtime.__file__).resolve()
+        == (service_source / "qm_research_agent/worker_runtime.py").resolve()
+    )
+
+
 def bootstrap(monkeypatch, error):
     from qm_research_agent import worker_runtime
 
@@ -325,6 +338,7 @@ def bootstrap(monkeypatch, error):
     return worker_runtime.main(["--config", "unused", "--run"])
 
 
+@pytest.mark.usefixtures("worker_service_source")
 def test_bootstrap_emits_bounded_fixed_failure_fields(run_case, monkeypatch, capsys):
     result = run_case("primary_cleanup")
     assert bootstrap(monkeypatch, result.error) == 3
@@ -341,12 +355,14 @@ def test_bootstrap_emits_bounded_fixed_failure_fields(run_case, monkeypatch, cap
     assert PRIVATE not in captured.err
 
 
+@pytest.mark.usefixtures("worker_service_source")
 def test_bootstrap_without_observation_preserves_original_single_line(monkeypatch, capsys):
     assert bootstrap(monkeypatch, WorkerDaemonError()) == 3
     assert capsys.readouterr().err == "worker_daemon_failed\n"
 
 
 @pytest.mark.parametrize("invalid", ["metadata", "large", "arbitrary"])
+@pytest.mark.usefixtures("worker_service_source")
 def test_renderer_rejects_unsafe_or_oversized_observation(run_case, monkeypatch, capsys, invalid):
     error = run_case("validate_exit_second").error
     safe = error.observation
@@ -362,6 +378,7 @@ def test_renderer_rejects_unsafe_or_oversized_observation(run_case, monkeypatch,
     assert capsys.readouterr().err == "worker_daemon_failed\n"
 
 
+@pytest.mark.usefixtures("worker_service_source")
 def test_renderer_ignores_unlisted_attributes(run_case, monkeypatch, capsys):
     error = run_case("validate_exit_second").error
     object.__setattr__(error.observation, "raw_payload", PRIVATE)
@@ -371,6 +388,7 @@ def test_renderer_ignores_unlisted_attributes(run_case, monkeypatch, capsys):
     assert PRIVATE not in lines[1]
 
 
+@pytest.mark.usefixtures("worker_service_source")
 def test_renderer_failure_does_not_replace_original_exit(run_case, monkeypatch, capsys):
     from qm_research_agent import worker_runtime
 
