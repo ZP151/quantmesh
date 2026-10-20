@@ -399,7 +399,12 @@ def _inventory(
     if measured != set(files) | set(links) or set(files) & set(links):
         raise ValueError
     for name, digest in files.items():
-        item = _path(name)
+        # _read checks the complete ancestor chain and held file identity. Keep
+        # the raw-name canonicality check before Path normalization, without
+        # repeating that chain walk for every file in this same inventory pass.
+        item = Path(name)
+        if str(item) != name:
+            raise ValueError
         if not _sha(digest) or item.suffix in {".pyc", ".pyo"}:
             raise ValueError
         if hashlib.sha256(_read(item, _FILE_LIMIT, allow_empty=True)).hexdigest() != digest:

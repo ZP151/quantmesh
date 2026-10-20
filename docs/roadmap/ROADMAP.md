@@ -633,3 +633,10 @@ Sequence for operator review:
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
 9. Guarded broker/testnet execution only after a separate authorization.
+# Worker recovery evidence checkpoint —2026-10-20
+
+Issue198 keeps actual two-job restart recovery open. Its first bounded repair
+removes redundant ancestor traversal within each complete Worker inventory scan,
+preserving every hash and identity check. Local source verification is separate
+from merged-image admission and the future90-second production recovery witness.
+See [the iteration checkpoint](../iterations/0038-worker-restart-recovery.md).
