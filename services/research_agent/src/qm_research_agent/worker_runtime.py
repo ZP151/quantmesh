@@ -21,7 +21,16 @@ from quantmesh.research.linux_owned import LinuxContainmentError, LinuxExecution
 from quantmesh.research.worker_admission import WorkerAdmissionPins, WorkerImageAdmission
 from quantmesh.research.worker_build import registered_fixture_profile
 from quantmesh.research.worker_daemon import WorkerDaemon, WorkerDaemonError
-from quantmesh.research.worker_execution import LinuxWorkerExecution, WorkerRunner
+from quantmesh.research.worker_execution import (
+    _WORKER_CATEGORIES,
+    _WORKER_STAGES,
+    LinuxWorkerExecution,
+    WorkerRunner,
+    _WorkerFailure,
+    _WorkerObservation,
+    _WorkerSlotSnapshot,
+    _WorkerStage,
+)
 from quantmesh.research.worker_stop import _WorkerStop
 
 _MAX_CONFIG_BYTES = 64 * 1024
@@ -360,6 +369,109 @@ def _run_worker(config: WorkerRuntimeConfig, runtime, stop_event: Event | _Worke
     return 0
 
 
+def _emit_worker_observation(observation: _WorkerObservation | None) -> None:
+    """Rebuild a bounded allowlisted record; telemetry never changes exit status."""
+    try:
+        if type(observation) is not _WorkerObservation:
+            return
+
+        def integer(value, maximum=2**63):
+            return type(value) is int and 0 <= value < maximum
+
+        def identity(job_id, attempt):
+            return (
+                job_id is None or (type(job_id) is str and re.fullmatch(r"[0-9a-f]{32}", job_id))
+            ) and (attempt is None or (integer(attempt, 2**31) and attempt > 0))
+
+        def failure(value):
+            if (
+                type(value) is not _WorkerFailure
+                or not integer(value.slot, 2)
+                or type(value.stage) is not str
+                or value.stage not in _WORKER_STAGES
+                or type(value.category) is not str
+                or value.category not in _WORKER_CATEGORIES
+                or not integer(value.monotonic_ns)
+                or not identity(value.job_id, value.attempt)
+            ):
+                raise ValueError
+            return dict(
+                slot=value.slot,
+                stage=value.stage,
+                category=value.category,
+                monotonic_ns=value.monotonic_ns,
+                job_id=value.job_id,
+                attempt=value.attempt,
+            )
+
+        if (
+            type(observation.secondary_cleanup) is not tuple
+            or len(observation.secondary_cleanup) > 2
+            or type(observation.slots) is not tuple
+            or len(observation.slots) > 2
+        ):
+            return
+        first = failure(observation.first_failure)
+        secondary = [failure(value) for value in observation.secondary_cleanup]
+        if any(value["stage"] != "cleanup" for value in secondary):
+            return
+        slots, seen_slots = [], set()
+        for slot in observation.slots:
+            if (
+                type(slot) is not _WorkerSlotSnapshot
+                or not integer(slot.slot, 2)
+                or slot.slot in seen_slots
+                or not identity(slot.job_id, slot.attempt)
+                or type(slot.stages) is not tuple
+                or len(slot.stages) > len(_WORKER_STAGES)
+            ):
+                return
+            seen_slots.add(slot.slot)
+            stages, seen_stages = [], set()
+            for stage in slot.stages:
+                if (
+                    type(stage) is not _WorkerStage
+                    or type(stage.stage) is not str
+                    or stage.stage not in _WORKER_STAGES
+                    or stage.stage in seen_stages
+                    or not integer(stage.started_ns)
+                    or (
+                        stage.finished_ns is not None
+                        and (not integer(stage.finished_ns) or stage.finished_ns < stage.started_ns)
+                    )
+                    or type(stage.outcome) is not str
+                    or stage.outcome not in {"entered", "returned", "false", "failed"}
+                ):
+                    return
+                seen_stages.add(stage.stage)
+                stages.append(
+                    dict(
+                        stage=stage.stage,
+                        started_ns=stage.started_ns,
+                        finished_ns=stage.finished_ns,
+                        outcome=stage.outcome,
+                    )
+                )
+            slots.append(
+                dict(slot=slot.slot, job_id=slot.job_id, attempt=slot.attempt, stages=stages)
+            )
+        raw = json.dumps(
+            dict(
+                schema_version=1,
+                event="worker_failure_observation",
+                first_failure=first,
+                secondary_cleanup=secondary,
+                slots=slots,
+            ),
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        if len(raw.encode("utf-8")) <= 16 * 1024:
+            print(raw, file=sys.stderr)
+    except BaseException:
+        pass
+
+
 def main(argv=None) -> int:
     stop_event = _event()
     try:
@@ -387,8 +499,9 @@ def main(argv=None) -> int:
             except service_runtime.RuntimeRejected as error:
                 print(str(error), file=sys.stderr)
                 return 2
-            except WorkerDaemonError:
+            except WorkerDaemonError as error:
                 print("worker_daemon_failed", file=sys.stderr)
+                _emit_worker_observation(error.observation)
                 return 3
             except LinuxContainmentError:
                 print("worker_admission_failed", file=sys.stderr)

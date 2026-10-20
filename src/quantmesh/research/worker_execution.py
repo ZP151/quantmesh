@@ -8,6 +8,9 @@ There is deliberately no saved-record/qualified-boolean provider here.
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -16,8 +19,8 @@ from pathlib import Path
 from threading import Event
 from typing import TYPE_CHECKING, Protocol
 
-from quantmesh.research._launch_deadline import _check_launch_deadline
-from quantmesh.research.jobs import JobRecord
+from quantmesh.research._launch_deadline import LaunchDeadlineExceeded, _check_launch_deadline
+from quantmesh.research.jobs import DatasetRejected, JobRecord, StoreUnavailable
 from quantmesh.research.linux_bootstrap import verify_limits
 from quantmesh.research.linux_owned import (
     LinuxContainmentError,
@@ -37,6 +40,243 @@ _execution: ContextVar[LinuxWorkerExecution | None] = ContextVar(
 _stop_event: ContextVar[Event | _WorkerStop | None] = ContextVar(
     "quantmesh_worker_stop_event", default=None
 )
+
+# Fixed per-stage cells bound memory independently of poll count or job duration.
+_WORKER_STAGES = frozenset(
+    {
+        "slot_admission",
+        "thread_start",
+        "thread_join",
+        "worker_call",
+        "claim",
+        "snapshot_lock",
+        "snapshot",
+        "attempt_runtime",
+        "deadline",
+        "bundle_write",
+        "heartbeat_before_start",
+        "constructor",
+        "poll",
+        "current_record",
+        "heartbeat_running",
+        "pulse",
+        "validate_exit_first",
+        "receipt_validation",
+        "heartbeat_before_publish",
+        "validate_exit_second",
+        "publish",
+        "finish_succeeded",
+        "finish_failed",
+        "cleanup",
+        "lease_handoff",
+        "final_get",
+    }
+)
+_WORKER_CATEGORIES = frozenset(
+    {
+        "store_unavailable",
+        "containment_failed",
+        "launch_deadline",
+        "dataset_rejected",
+        "validation_failed",
+        "os_failed",
+        "subprocess_failed",
+        "unexpected_failure",
+    }
+)
+
+
+@dataclass(frozen=True)
+class _WorkerFailure:
+    slot: int
+    stage: str
+    category: str
+    monotonic_ns: int
+    job_id: str | None = None
+    attempt: int | None = None
+
+
+@dataclass(frozen=True)
+class _WorkerStage:
+    stage: str
+    started_ns: int
+    finished_ns: int | None
+    outcome: str
+
+
+@dataclass(frozen=True)
+class _WorkerSlotSnapshot:
+    slot: int
+    job_id: str | None
+    attempt: int | None
+    stages: tuple[_WorkerStage, ...]
+
+
+@dataclass(frozen=True)
+class _WorkerObservation:
+    first_failure: _WorkerFailure
+    secondary_cleanup: tuple[_WorkerFailure, ...]
+    slots: tuple[_WorkerSlotSnapshot, ...]
+
+
+def _worker_error_category(error_type: type[BaseException]) -> str:
+    for kind, category in (
+        (StoreUnavailable, "store_unavailable"),
+        (LinuxContainmentError, "containment_failed"),
+        (LaunchDeadlineExceeded, "launch_deadline"),
+        (DatasetRejected, "dataset_rejected"),
+        (ValueError, "validation_failed"),
+        (OSError, "os_failed"),
+        (subprocess.SubprocessError, "subprocess_failed"),
+    ):
+        if issubclass(error_type, kind):
+            return category
+    return "unexpected_failure"
+
+
+class _WorkerSlotDiagnostics:
+    """Only bounded scalars; never owns an exception, traceback or job object."""
+
+    def __init__(self, slot: int, origin_ns: int) -> None:
+        self.slot, self.origin_ns = slot, origin_ns
+        self.reset()
+
+    def reset(self) -> None:
+        self.job_id = self.attempt = None
+        self.stage = "worker_call"
+        self.stages: dict[str, _WorkerStage] = {}
+        self.last_failure: _WorkerFailure | None = None
+        self.primary: _WorkerFailure | None = None
+        self.secondary_cleanup: _WorkerFailure | None = None
+
+    def now(self) -> int:
+        return max(0, time.monotonic_ns() - self.origin_ns)
+
+    def bind(self, job: JobRecord) -> None:
+        job_id, attempt = job.job_id, job.attempt
+        self.job_id = (
+            job_id if type(job_id) is str and re.fullmatch(r"[0-9a-f]{32}", job_id) else None
+        )
+        self.attempt = attempt if type(attempt) is int and 0 < attempt < 2**31 else None
+
+    def enter(self, stage: str) -> None:
+        if stage not in _WORKER_STAGES:
+            return
+        self.stage = stage
+        self.stages[stage] = _WorkerStage(stage, self.now(), None, "entered")
+
+    def returned(self, stage: str, refused: bool) -> None:
+        previous = self.stages.get(stage)
+        if previous is not None:
+            self.stages[stage] = _WorkerStage(
+                stage, previous.started_ns, self.now(), "false" if refused else "returned"
+            )
+
+    def failure(self, error_type: type[BaseException]) -> None:
+        value = _WorkerFailure(
+            self.slot,
+            self.stage,
+            _worker_error_category(error_type),
+            self.now(),
+            self.job_id,
+            self.attempt,
+        )
+        self.last_failure = value
+        previous = self.stages.get(self.stage)
+        if previous is not None:
+            self.stages[self.stage] = _WorkerStage(
+                self.stage, previous.started_ns, value.monotonic_ns, "failed"
+            )
+        if self.stage == "cleanup" and self.primary is not None:
+            self.secondary_cleanup = value
+
+    def unwinding(self) -> None:
+        error_type = sys.exc_info()[0]
+        if error_type is None:
+            self.primary = None
+        else:
+            # A directly raised error need not have passed an observed call.
+            self.primary = self.last_failure or _WorkerFailure(
+                self.slot,
+                self.stage,
+                _worker_error_category(error_type),
+                self.now(),
+                self.job_id,
+                self.attempt,
+            )
+
+    def escaping(self) -> _WorkerFailure:
+        return (
+            self.primary
+            or self.last_failure
+            or _WorkerFailure(
+                self.slot,
+                self.stage,
+                _worker_error_category(sys.exc_info()[0] or RuntimeError),
+                self.now(),
+                self.job_id,
+                self.attempt,
+            )
+        )
+
+    def snapshot(self) -> _WorkerSlotSnapshot:
+        return _WorkerSlotSnapshot(
+            self.slot,
+            self.job_id,
+            self.attempt,
+            tuple(self.stages[stage] for stage in sorted(self.stages)),
+        )
+
+
+_worker_diagnostics: ContextVar[_WorkerSlotDiagnostics | None] = ContextVar(
+    "quantmesh_worker_diagnostics", default=None
+)
+
+
+@contextmanager
+def _worker_diagnostic_scope(state: _WorkerSlotDiagnostics | None) -> Iterator[None]:
+    token = None
+    try:
+        token = _worker_diagnostics.set(state)
+    except BaseException:
+        pass
+    try:
+        yield
+    finally:
+        if token is not None:
+            try:
+                _worker_diagnostics.reset(token)
+            except BaseException:
+                pass
+
+
+def _worker_diagnostic_update(method: str, *args) -> None:
+    # Best effort: diagnostics must not replace results, exceptions or cleanup.
+    try:
+        state = _worker_diagnostics.get()
+        if state is not None:
+            getattr(state, method)(*args)
+    except BaseException:
+        pass
+
+
+def _observe_worker_call(stage: str, call, *args, **kwargs):
+    _worker_diagnostic_update("enter", stage)
+    try:
+        result = call(*args, **kwargs)
+    except BaseException as error:
+        _worker_diagnostic_update("failure", type(error))
+        raise
+    _worker_diagnostic_update("returned", stage, result is False)
+    return result
+
+
+def _bind_worker_job(job: JobRecord) -> None:
+    _worker_diagnostic_update("bind", job)
+
+
+def _worker_unwinding() -> None:
+    _worker_diagnostic_update("unwinding")
 
 
 @contextmanager

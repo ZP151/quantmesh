@@ -54,7 +54,13 @@ from quantmesh.research.jobs import (
 from quantmesh.research.linux_owned import LinuxContainmentError, LinuxOwnedProcess
 from quantmesh.research.reports import ReportRegistry, StrategyReport
 from quantmesh.research.strategy_registry import get_strategy, validate_dataset
-from quantmesh.research.worker_execution import _execution, _stop_event
+from quantmesh.research.worker_execution import (
+    _bind_worker_job,
+    _execution,
+    _observe_worker_call,
+    _stop_event,
+    _worker_unwinding,
+)
 from quantmesh.research.worker_stop import _WorkerStop
 
 _POLL_SECONDS = 0.1
@@ -495,11 +501,12 @@ def run_next_job(
     stop_event = _stop_event.get()
     if stop_event is not None and stop_event.is_set():
         return None
-    job = store.claim(owner, datetime.now(UTC))
+    job = _observe_worker_call("claim", store.claim, owner, datetime.now(UTC))
     if job is None:
         return None
+    _bind_worker_job(job)
     if stop_event is not None and stop_event.is_set():
-        return store.get(job.operator_id, job.job_id)
+        return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
     attempt = (
         Path(artifacts_root).absolute()
         / job.job_id
@@ -514,73 +521,102 @@ def run_next_job(
     attempt_failed = False
     try:
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         bundle = attempt / "bundle" if execution is not None else attempt
         output = attempt / "output" if execution is not None else attempt
         while True:
             if stop_event is not None and stop_event.is_set():
-                return store.get(job.operator_id, job.job_id)
+                return _observe_worker_call(
+                    "current_record", store.get, job.operator_id, job.job_id
+                )
             remaining = job.request.budget.timeout_seconds - (time.monotonic() - started)
             if remaining <= 0:
                 error = "timeout"
                 raise TimeoutError("snapshot preparation deadline exceeded")
-            if _SNAPSHOT_LOCK.acquire(timeout=min(_POLL_SECONDS, remaining)):
+            if _observe_worker_call(
+                "snapshot_lock", _SNAPSHOT_LOCK.acquire, timeout=min(_POLL_SECONDS, remaining)
+            ):
                 break
         try:
             if stop_event is not None and stop_event.is_set():
-                return store.get(job.operator_id, job.job_id)
+                return _observe_worker_call(
+                    "current_record", store.get, job.operator_id, job.job_id
+                )
             if time.monotonic() - started >= job.request.budget.timeout_seconds:
                 error = "timeout"
                 raise TimeoutError("snapshot preparation deadline exceeded")
-            _contained(Path(artifacts_root), attempt)
-            attempt.mkdir(parents=True, exist_ok=False)
+            _observe_worker_call("snapshot", _contained, Path(artifacts_root), attempt)
+            _observe_worker_call("snapshot", attempt.mkdir, parents=True, exist_ok=False)
             if execution is not None and sys.platform != "linux":
                 raise UnsupportedLimits("Linux execution requires Linux owner")
             if execution is not None:
-                bundle.mkdir(mode=0o700)
-            _snapshot(job, Path(inputs_root).absolute(), bundle / "inputs")
+                _observe_worker_call("snapshot", bundle.mkdir, mode=0o700)
+            _observe_worker_call(
+                "snapshot", _snapshot, job, Path(inputs_root).absolute(), bundle / "inputs"
+            )
         finally:
             _SNAPSHOT_LOCK.release()
         if time.monotonic() - started >= job.request.budget.timeout_seconds:
             error = "timeout"
             raise TimeoutError("snapshot preparation deadline exceeded")
-        runtime = (
-            execution.runtime_fingerprint() if execution is not None else runtime_fingerprint()
+        runtime = _observe_worker_call(
+            "attempt_runtime",
+            execution.runtime_fingerprint if execution is not None else runtime_fingerprint,
         )
-        _check_launch_deadline()
-        (bundle / "job.json").write_text(job.model_dump_json(), encoding="utf-8")
-        (bundle / "runtime.json").write_bytes(_canonical(runtime))
-        _check_launch_deadline()
+        _observe_worker_call("deadline", _check_launch_deadline)
+        _observe_worker_call(
+            "bundle_write",
+            (bundle / "job.json").write_text,
+            job.model_dump_json(),
+            encoding="utf-8",
+        )
+        _observe_worker_call(
+            "bundle_write", (bundle / "runtime.json").write_bytes, _canonical(runtime)
+        )
+        _observe_worker_call("deadline", _check_launch_deadline)
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         # This check is the cooperative-stop boundary for the following call:
         # an already-entered store operation may finish, but no later operation starts.
-        if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
-            return store.get(job.operator_id, job.job_id)
+        if not _observe_worker_call(
+            "heartbeat_before_start",
+            store.heartbeat,
+            job.job_id,
+            owner,
+            job.attempt,
+            datetime.now(UTC),
+        ):
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        _check_launch_deadline()
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call("deadline", _check_launch_deadline)
         child = (
-            execution.start(job, runtime, bundle, output)
+            _observe_worker_call("constructor", execution.start, job, runtime, bundle, output)
             if execution is not None
-            else _OwnedChild(_child_command(attempt), job.request.budget, attempt)
+            else _observe_worker_call(
+                "constructor", _OwnedChild, _child_command(attempt), job.request.budget, attempt
+            )
         )
         heartbeat = time.monotonic()
         last_pulse = heartbeat
         while True:
             if stop_event is not None and stop_event.is_set():
-                return store.get(job.operator_id, job.job_id)
-            code = child.poll()
+                return _observe_worker_call(
+                    "current_record", store.get, job.operator_id, job.job_id
+                )
+            code = _observe_worker_call("poll", child.poll)
             if code is not None and code != 0:
                 attempt_failed = True
             if code is not None:
                 break
             if stop_event is not None and stop_event.is_set():
-                return store.get(job.operator_id, job.job_id)
+                return _observe_worker_call(
+                    "current_record", store.get, job.operator_id, job.job_id
+                )
             if time.monotonic() - started >= job.request.budget.timeout_seconds:
                 error = "timeout"
                 raise TimeoutError("owned worker deadline exceeded")
-            current = store.get(job.operator_id, job.job_id)
+            current = _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
             if (
                 current.state != "running"
                 or current.cancel_requested
@@ -594,20 +630,29 @@ def run_next_job(
             if time.monotonic() - heartbeat >= HEARTBEAT_SECONDS:
                 if stop_event is not None and stop_event.is_set():
                     return current
-                if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
-                    return store.get(job.operator_id, job.job_id)
+                if not _observe_worker_call(
+                    "heartbeat_running",
+                    store.heartbeat,
+                    job.job_id,
+                    owner,
+                    job.attempt,
+                    datetime.now(UTC),
+                ):
+                    return _observe_worker_call(
+                        "current_record", store.get, job.operator_id, job.job_id
+                    )
                 heartbeat = time.monotonic()
             if time.monotonic() - last_pulse >= 1:
                 if stop_event is not None and stop_event.is_set():
                     return current
-                child.pulse()
+                _observe_worker_call("pulse", child.pulse)
                 last_pulse = time.monotonic()
             if stop_event is None:
                 time.sleep(_POLL_SECONDS)
             else:
                 stop_event.wait(_POLL_SECONDS)
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         if time.monotonic() - started >= job.request.budget.timeout_seconds:
             error = "timeout"
             raise TimeoutError("owned worker deadline exceeded")
@@ -624,33 +669,64 @@ def run_next_job(
             raise ValueError("owned worker failed")
         # Parent validates the actual child receipt and numerical schema before publication.
         if execution is not None:
-            execution.validate_exit(child, job, runtime)
+            _observe_worker_call(
+                "validate_exit_first", execution.validate_exit, child, job, runtime
+            )
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        raw = _validated_child_result(job, owner, runtime, output)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        raw = _observe_worker_call(
+            "receipt_validation", _validated_child_result, job, owner, runtime, output
+        )
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        if not store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)):
-            return store.get(job.operator_id, job.job_id)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        if not _observe_worker_call(
+            "heartbeat_before_publish",
+            store.heartbeat,
+            job.job_id,
+            owner,
+            job.attempt,
+            datetime.now(UTC),
+        ):
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         if execution is not None:
             # Re-read the exact parent binding immediately before publication.
-            execution.validate_exit(child, job, runtime)
+            _observe_worker_call(
+                "validate_exit_second", execution.validate_exit, child, job, runtime
+            )
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         # Treat this check as the stop linearization point for publication.
-        ref = publish_result(job, raw, Path(artifacts_root))
+        ref = _observe_worker_call("publish", publish_result, job, raw, Path(artifacts_root))
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        store.finish(job.job_id, owner, job.attempt, "succeeded", [ref], None)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call(
+            "finish_succeeded",
+            store.finish,
+            job.job_id,
+            owner,
+            job.attempt,
+            "succeeded",
+            [ref],
+            None,
+        )
     except DatasetRejected:
         attempt_failed = True
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        store.finish(job.job_id, owner, job.attempt, "failed", [], "dataset_rejected")
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call(
+            "finish_failed",
+            store.finish,
+            job.job_id,
+            owner,
+            job.attempt,
+            "failed",
+            [],
+            "dataset_rejected",
+        )
     except (UnsupportedLimits, UnsupportedSnapshotProfile) as unsupported:
         attempt_failed = True
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
         (attempt / "failure.json").write_bytes(
             _canonical(
                 dict(
@@ -664,31 +740,47 @@ def run_next_job(
             )
         )
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        store.finish(job.job_id, owner, job.attempt, "failed", [], "worker_failed")
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call(
+            "finish_failed",
+            store.finish,
+            job.job_id,
+            owner,
+            job.attempt,
+            "failed",
+            [],
+            "worker_failed",
+        )
     except LinuxContainmentError:
         attempt_failed = True
         if stop_event is not None and not stop_event.is_set():
             raise
         if stop_event is not None:
-            return store.get(job.operator_id, job.job_id)
-        store.finish(job.job_id, owner, job.attempt, "failed", [], error)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call(
+            "finish_failed", store.finish, job.job_id, owner, job.attempt, "failed", [], error
+        )
     except LaunchDeadlineExceeded as expired:
         attempt_failed = True
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        store.finish(job.job_id, owner, job.attempt, "failed", [], "timeout")
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call(
+            "finish_failed", store.finish, job.job_id, owner, job.attempt, "failed", [], "timeout"
+        )
         if expired.__cause__ is not None:
             raise LinuxContainmentError("deadline_cleanup_unproven") from expired
     except (ValueError, OSError, subprocess.SubprocessError):
         attempt_failed = True
         if stop_event is not None and stop_event.is_set():
-            return store.get(job.operator_id, job.job_id)
-        store.finish(job.job_id, owner, job.attempt, "failed", [], error)
+            return _observe_worker_call("current_record", store.get, job.operator_id, job.job_id)
+        _observe_worker_call(
+            "finish_failed", store.finish, job.job_id, owner, job.attempt, "failed", [], error
+        )
     finally:
+        _worker_unwinding()
         try:
             if child is not None:
-                child.close()
+                _observe_worker_call("cleanup", child.close)
                 # The sole post-stop write: no constructor/attempt/cleanup
                 # uncertainty, no generic Event or failure-first upgrade.
                 if (
@@ -700,7 +792,14 @@ def run_next_job(
                     and child.closed
                     and isinstance(store, SQLiteJobStore)
                 ):
-                    store._expire_owned_lease(job.job_id, owner, job.attempt, datetime.now(UTC))
+                    _observe_worker_call(
+                        "lease_handoff",
+                        store._expire_owned_lease,
+                        job.job_id,
+                        owner,
+                        job.attempt,
+                        datetime.now(UTC),
+                    )
         finally:
             _launch_deadline.reset(deadline_token)
-    return store.get(job.operator_id, job.job_id)
+    return _observe_worker_call("final_get", store.get, job.operator_id, job.job_id)
