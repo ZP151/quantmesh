@@ -43,7 +43,7 @@ from quantmesh.research.job_artifacts import (
     canonical_result,
     publish_result,
 )
-from quantmesh.research.job_store import JobStore
+from quantmesh.research.job_store import JobStore, SQLiteJobStore
 from quantmesh.research.jobs import (
     HEARTBEAT_SECONDS,
     DatasetRejected,
@@ -51,10 +51,11 @@ from quantmesh.research.jobs import (
     RunBudget,
     canonical_request_digest,
 )
-from quantmesh.research.linux_owned import LinuxContainmentError
+from quantmesh.research.linux_owned import LinuxContainmentError, LinuxOwnedProcess
 from quantmesh.research.reports import ReportRegistry, StrategyReport
 from quantmesh.research.strategy_registry import get_strategy, validate_dataset
 from quantmesh.research.worker_execution import _execution, _stop_event
+from quantmesh.research.worker_stop import _WorkerStop
 
 _POLL_SECONDS = 0.1
 _MAX_OUTPUT_BYTES = 16 * 1024 * 1024
@@ -510,6 +511,7 @@ def run_next_job(
     started = time.monotonic()
     deadline_token = _launch_deadline.set(started + job.request.budget.timeout_seconds)
     error = "worker_failed"
+    attempt_failed = False
     try:
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
@@ -569,6 +571,8 @@ def run_next_job(
             if stop_event is not None and stop_event.is_set():
                 return store.get(job.operator_id, job.job_id)
             code = child.poll()
+            if code is not None and code != 0:
+                attempt_failed = True
             if code is not None:
                 break
             if stop_event is not None and stop_event.is_set():
@@ -639,10 +643,12 @@ def run_next_job(
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "succeeded", [ref], None)
     except DatasetRejected:
+        attempt_failed = True
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], "dataset_rejected")
     except (UnsupportedLimits, UnsupportedSnapshotProfile) as unsupported:
+        attempt_failed = True
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         (attempt / "failure.json").write_bytes(
@@ -661,18 +667,21 @@ def run_next_job(
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], "worker_failed")
     except LinuxContainmentError:
+        attempt_failed = True
         if stop_event is not None and not stop_event.is_set():
             raise
         if stop_event is not None:
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
     except LaunchDeadlineExceeded as expired:
+        attempt_failed = True
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], "timeout")
         if expired.__cause__ is not None:
             raise LinuxContainmentError("deadline_cleanup_unproven") from expired
     except (ValueError, OSError, subprocess.SubprocessError):
+        attempt_failed = True
         if stop_event is not None and stop_event.is_set():
             return store.get(job.operator_id, job.job_id)
         store.finish(job.job_id, owner, job.attempt, "failed", [], error)
@@ -680,6 +689,18 @@ def run_next_job(
         try:
             if child is not None:
                 child.close()
+                # The sole post-stop write: no constructor/attempt/cleanup
+                # uncertainty, no generic Event or failure-first upgrade.
+                if (
+                    type(stop_event) is _WorkerStop
+                    and stop_event.controlled
+                    and not attempt_failed
+                    and sys.exc_info()[0] is None
+                    and isinstance(child, LinuxOwnedProcess)
+                    and child.closed
+                    and isinstance(store, SQLiteJobStore)
+                ):
+                    store._expire_owned_lease(job.job_id, owner, job.attempt, datetime.now(UTC))
         finally:
             _launch_deadline.reset(deadline_token)
     return store.get(job.operator_id, job.job_id)

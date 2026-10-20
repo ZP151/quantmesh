@@ -1,5 +1,13 @@
 # QuantMesh Product Roadmap
 
+## Controlled Worker restart lease handoff — issue198, 2026-10-20
+
+The operator approved first-cause SIGTERM/SIGINT plus proven owned-child cleanup
+as a lease-only handoff exception. Implementation and verification are recorded
+in [the bounded checkpoint](../iterations/0038-controlled-stop-lease.md).
+Original failed production jobs remain failed, the recovery target stays90s,
+and no unmerged runtime is deployed. Inventory-only PR199 remains independent.
+
 ## Approved local paper controls P3 — 2026-10-20
 
 The operator approved [issue196](https://github.com/ZP151/quantmesh/issues/196):

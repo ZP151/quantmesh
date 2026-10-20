@@ -1,5 +1,25 @@
 # ADR-0026 — Research job publication and advisory boundary
 
+## Controlled-stop lease-only exception — 2026-10-20
+
+Issue198 design was explicitly approved by the operator. The standalone Worker
+records the first stop cause; only SIGTERM/SIGINT first qualifies, and later
+signals cannot upgrade a failure-first or generic Event stop. After a complete
+returned owned Linux child closes successfully, the runner may perform one
+internal expiry-only store transaction, fenced by running state, the original
+owner/attempt, no cancellation and an unexpired lease. It changes no other
+JobRecord field, job state, attempt, report, outbox or accounting. Both PostgreSQL
+adapters inherit the same transaction implementation; the frozen nine-method
+JobStore protocol and schema digest remain unchanged.
+
+Constructor interruptions, attempt exceptions or observed child failures,
+unknown/failed cleanup, stale ownership and terminal jobs retain the existing
+lease. Ordinary Events keep their historical behavior; hard crashes still wait
+for the60-second expiry. No post-stop compute, heartbeat or publication is
+authorized. The original90-second recovery target and failed production evidence
+remain unchanged. This source decision is not production recovery acceptance;
+normal review/CI/merge and exact-source admission precede a new bounded witness.
+
 Status: accepted for Batch-B implementation; operator approved Option A
 architecture. Two bounded independent review rounds and audited contract tests
 freeze the local schema/protocol. This does not approve deployment or certify

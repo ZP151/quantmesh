@@ -124,6 +124,50 @@ def test_expired_attempt_cannot_publish(setup):
     assert store.finish(job.job_id, "worker-b", 2, "succeeded", [artifact], None) is False
 
 
+def test_controlled_stop_expires_only_lease_and_reclaims_same_job(setup):
+    store, lake, _, now = setup
+    job = store.submit("local", "controlled-stop", request_for(lake))
+    first = store.claim("worker-a", now[0])
+    now[0] += timedelta(seconds=1)
+    assert store._expire_owned_lease(job.job_id, "worker-a", first.attempt, now[0])
+    expired = store.get("local", job.job_id)
+    assert expired.model_dump() == {**first.model_dump(), "lease_expires_at": now[0]}
+    assert not store.heartbeat(job.job_id, "worker-a", 1, now[0])
+    assert not store.finish(job.job_id, "worker-a", 1, "failed", [], "worker_failed")
+    second = store.claim("worker-b", now[0])
+    assert second.job_id == first.job_id and second.attempt == 2
+    assert not store._expire_owned_lease(job.job_id, "worker-a", 1, now[0])
+    assert store.get("local", job.job_id) == second
+
+
+@pytest.mark.parametrize(
+    "guard", ["owner", "attempt", "expired", "cancelled", "cancel_flag", "terminal", "missing"]
+)
+def test_controlled_stop_expiry_keeps_unfenced_payload_unchanged(setup, guard):
+    store, lake, _, now = setup
+    job = store.submit("local", "stop-fence", request_for(lake))
+    first = store.claim("worker-a", now[0])
+    owner, attempt, job_id = "worker-a", first.attempt, first.job_id
+    if guard == "owner":
+        owner = "other"
+    elif guard == "attempt":
+        attempt += 1
+    elif guard == "expired":
+        now[0] = first.lease_expires_at
+    elif guard == "cancelled":
+        store.request_cancel("local", job_id)
+    elif guard == "cancel_flag":
+        with store._transaction() as con:
+            store._write(con, first.model_copy(update={"cancel_requested": True}))
+    elif guard == "terminal":
+        store.finish(job_id, owner, attempt, "failed", [], "worker_failed")
+    elif guard == "missing":
+        job_id = "0" * 32
+    before = store.get("local", job.job_id)
+    assert not store._expire_owned_lease(job_id, owner, attempt, now[0])
+    assert store.get("local", job.job_id) == before
+
+
 def test_cancel_revokes_publication(setup):
     store, lake, _, now = setup
     job = store.submit("local", "key", request_for(lake, analysis_requested=True))
