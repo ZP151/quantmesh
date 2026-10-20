@@ -95,7 +95,10 @@ const history: HistoricalSeries = {
 }
 
 describe('MarketCanvas', () => {
-  it('renders server-owned trend and key levels without deriving them in the browser', () => {
+  it.each([
+    { support: 180, resistance: 195, invalidation: 176 },
+    { support: 115.1306082799497, resistance: 118.71206273980971, invalidation: 115.1306082799497 },
+  ])('renders server-owned trend and full-precision key levels %j', ({ support, resistance, invalidation }) => {
     render(
       <PreferencesProvider>
         <MarketCanvas
@@ -103,15 +106,15 @@ describe('MarketCanvas', () => {
           forecast={null}
           history={history}
           marketState={{
-            invalidation: 176,
+            invalidation,
             key_level_bar_times: ['2026-08-07T20:00:00Z'],
             latest_close: 184,
             observed_drawdown: -0.08,
             observed_volatility: 0.24,
-            resistance: 195,
+            resistance,
             sma20: 185,
             sma50: 180,
-            support: 180,
+            support,
             trend: 'bullish',
           }}
           mode="candles"
@@ -129,9 +132,9 @@ describe('MarketCanvas', () => {
     )
 
     expect(screen.getByText('Bullish structure')).toBeInTheDocument()
-    expect(screen.getByText('Support').closest('div')).toHaveTextContent('180')
-    expect(screen.getByText('Resistance').closest('div')).toHaveTextContent('195')
-    expect(screen.getByText('Invalidation').closest('div')).toHaveTextContent('176')
+    expect(screen.getByText('Support').closest('div')).toHaveTextContent(String(support))
+    expect(screen.getByText('Resistance').closest('div')).toHaveTextContent(String(resistance))
+    expect(screen.getByText('Invalidation').closest('div')).toHaveTextContent(String(invalidation))
     expect(screen.getByText('Key-level source bars').closest('div')).toHaveTextContent(
       dateTime('2026-08-07T20:00:00Z', 'en'),
     )
