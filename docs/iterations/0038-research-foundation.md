@@ -3564,3 +3564,11 @@ OpenD194 and product195 remain separate merged slices. The unified release owner
 alone observes the new exact-head CI and merges186; server deployment still
 requires the actual merged full-tree receipt and then real two-job recovery.
 No old stage/backup/restore proof is rerun, and no new human approval is requested.
+# Worker recovery diagnostic follow-up — issue198,2026-10-20
+
+The original production pair recovery failed and remains failed. A narrow
+inventory traversal optimization and deterministic red/green regression are
+tracked in [the recovery checkpoint](0038-worker-restart-recovery.md). It changes
+no lease lifecycle, source admission result,90-second budget or original job.
+Controlled-stop lease handoff is a separately pending design; no new production
+pair is authorized by a local test or benchmark alone.

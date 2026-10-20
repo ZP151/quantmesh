@@ -427,6 +427,44 @@ def _reseal_inventory(sealed, *, links=None):
     sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
 
 
+def test_inventory_walks_each_regular_file_ancestors_once_per_pass(sealed, monkeypatch):
+    """Bound repeated filesystem work without a wall-clock performance assertion."""
+    from collections import Counter
+
+    api = _api()
+    for index in range(64):
+        (sealed.source / "quantmesh" / f"module_{index}.py").write_bytes(b"VALUE = 1\n")
+    _reseal_inventory(sealed)
+    expected = json.loads(sealed.inventory.read_bytes())["files"]
+    calls = Counter()
+    original = api._path
+
+    def counted(value):
+        calls[value] += 1
+        return original(value)
+
+    monkeypatch.setattr(api, "_path", counted)
+    assert (
+        api._inventory(
+            sealed.inventory,
+            sealed.data["inventory_sha256"],
+            manifest_path=sealed.manifest,
+            manifest_expected=_bind(sealed),
+        )
+        == expected
+    )
+    assert {calls[name] for name in expected} == {1}
+
+
+def test_inventory_rehashes_file_bytes_on_every_pass(sealed):
+    api = _api()
+    kwargs = dict(manifest_path=sealed.manifest, manifest_expected=_bind(sealed))
+    api._inventory(sealed.inventory, sealed.data["inventory_sha256"], **kwargs)
+    sealed.code.write_bytes(b"VALUE = 2\n")
+    with pytest.raises(ValueError):
+        api._inventory(sealed.inventory, sealed.data["inventory_sha256"], **kwargs)
+
+
 def test_empty_installer_inventory_file_is_valid(sealed, monkeypatch):
     api = _api()
     _runtime(api, sealed, monkeypatch)
