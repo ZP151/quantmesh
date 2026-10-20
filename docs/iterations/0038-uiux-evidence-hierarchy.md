@@ -138,3 +138,52 @@ by the UI writer. Final packet carries exact head/tree/base, reviewer source/cod
 identities, retained acceptance and targeted checks. Remaining release work belongs
 to the unique release owner: new exact-head CI and the normal PR193 release gate.
 No repeated UI approval, old acceptance, whole-site review or server runtime action.
+
+## Exact-head browser gate fixture repair —2026-10-20
+
+Planner consumed the release owner's new prediction browser failure on a2e4bac
+and root's explicit narrow writer authorization. The original source freeze is
+lifted only for tests/test_live_prediction_e2e.py and this checkpoint. One user
+loop remains the unchanged prediction board: five configured venue rows are Real
+while current source frames stream, then Stale after the quiet tail. No product
+feed, frontend, assets, prices, thresholds, server R204 or extra UI work belongs
+to this repair. The release owner retains exact-head CI and merge authority.
+
+Quant diagnosis: the old fixture's Polymarket source epoch is2025-07-20 despite
+receipt on2026-10-20. All three PM quotes and their real provenance/prices exist,
+but source-time freshness correctly labels them Stale; the two current Kalshi
+REST seeds account for the two Real rows. The test/feed/page/venue sources equal
+the integrated main baseline. This is fixture timestamp drift, not a reason to
+renew old quote authority or weaken the original strict five-Real assertion.
+
+Implementer used the existing ScriptedVenue.transform_frame seam, already used
+by test_live_e2e, to bind PM book/price_change string timestamp and Kalshi market/
+orderbook_delta integer ts to actual transmission-time UTC microseconds. Frame
+prices and nested payloads, static plans, cadence, quiet tail and freshness limits
+remain unchanged. Ruff normalized two statements inside the same test file.
+All existing test-function ASTs are identical; only the venue fixture changes and
+one clock helper is added. Product source and generated asset delta is empty.
+
+Verifier retained the exact original RED: two Real versus five,1failed in8.55s;
+wire capture repeated the same failure and preserves the source/receipt mismatch.
+The formal final formatted source, without the diagnostic clock probe, passes
+the comparison and quiet-tail Stale tests:2passed,5existing warnings in66.15s on
+the existing supported Edge channel. Ruff check/format and whitespace pass.
+An earlier actual-source run passed2 in71.12s; final rerun followed formatting.
+No build of unchanged assets, broad suite, old UI acceptance, dependency install,
+CI rerun or merge by this writer. Local Edge evidence does not claim Chromium CI.
+
+Independent incremental reviewer READY, no actionable findings on fixed code
+tree6393ed22f256a07a1be95d25ea4225bb1c827633/test blob
+ba4c346732e1c843845c5561f54cdcf150125910 against a2e4bac. Reviewer confirms the
+correct timestamp types/units, post-delay send-time seam, all original assertions
+and unchanged product/feed/parser source. Runtime, CI and merge readiness are
+declined to the verifier/release owner; no reviewer execution or writes occurred.
+Only this iteration checkpoint extends the reviewed code tree in the final commit.
+
+Evidence: output/0038-uiux-continuous/PR193-PREDICTION-BASELINE-DIAGNOSIS.json,
+PR193-PREDICTION-REPAIR-SCOPE-PROOF.json, PR193-prediction-final-source-green.log
+and the final repair delivery/review receipts. Commit and normally push only this
+bounded test/record delta, then freeze source and release the UI writer. The unique
+release owner applies fresh exact-head required browser CI and normal merge under
+the standing human authorization; no repeat approval or gate bypass.
