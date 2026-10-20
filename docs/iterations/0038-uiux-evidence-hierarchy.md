@@ -86,3 +86,55 @@ source/test diff: exactPASS partition, original handlers/digests, native disclos
 empty/allPASS truth, bilingual/raw/unknown preservation and44px targets confirmed.
 No suite/CI rerun by reviewer. NewPR needs its own exact-head release/merge gate;
 PR189 conditional approval is not transferred. No force/reset or old fullsuite/CI.
+
+## Main integration after actual PR189 merge —2026-10-20
+
+Planner consumed the release owner's actual PR189 merge fact and successful
+required CI39374377315, without re-observing GitHub or rerunning its acceptance.
+Local Git independently verifies mergea2d95980fb214ddb4715225fe347680f0e29d4cf,
+tree87b655381bca4b5f8f0ea479f39ebf4d9d3c8b72, matching reviewed514f4756 exactly.
+The expired dependency hold is removed. Pin actual main at
+28221e1bb87ccf0a13ddbccb7e156f9bc4945eab/treeac2d229a7fc4ae22e73b7680747b6011d459901e,
+which also contains merged186/197/199/200; no unmerged server writer changes used.
+
+Implementer normally merged that fixed main into the existing193 branch. Source
+merged cleanly; only generated JS/index conflicted. DataReadiness.tsx and its test
+retain their exact accepted044febd blobs87f681b5f6c249bd8019775c914723ff92249276 and
+03e31fd91c8b160ed24df924e519211adaf0f4c4. All other frontend source equals main.
+P2 route, P3 Ops/paper controls/CommandPalette, full-precision key-level wrap, live
+real/delayed assertions and Worker sources therefore remain intact. Server runtime
+is not operated or edited. No new UI requirement, permission question or visual
+decision. Quant boundaries remain INSUFFICIENT/inspect_evidence_only with all
+original rights/PIT, issuer conflict and qualification semantics.
+
+Generated conflicts were resolved by one TypeScript/Vite build from those combined
+sources, never by selecting a branch-only bundle. Package/dist9files match by
+SHA256. Explicit existing Python313/worktree-source API currency check passes.
+Existing chunk/plugin and dependency warnings are retained; no dependencies added.
+
+Verifier ran only the main-added composition boundary not previously checked on193:
+tests/test_spa_e2e.py::test_data_readiness_mobile_geometry_375,1passed in84.61s with
+5existing warnings on the already installed supported Edge channel. This checks
+stacking, all page-local44px targets and overflow against the combined package.
+Original16page tests, download byte hashes and desktop/phone acceptance are reused
+because their source/handlers are byte-identical; no repeat imports/downloads,
+old E2E modules, broad suites or whole-site audit.
+
+Independent integration review:READY, no actionable standards/spec findings on
+frozen code treec9746ec364fbb7fb38aac3ece38cb429dd1cb46e against main28221e1.
+Reviewer independently confirms the two accepted source blobs, download handlers/
+digests/busy guards, exactPASS partition, all expanded blockers and raw bilingual
+metadata. Other frontend/backend source equals main, generated references resolve,
+and InstrumentWorkspace bundle equals main after normalizing its entry reference.
+Reviewer did not rerun runtime/CI/download/geometry checks; the verifier evidence
+above owns those facts. Only this iteration checkpoint differs in the final commit.
+Evidence is under authoritative
+output/0038-uiux-continuous/PR193-INTEGRATION-SOURCE-PROOF.json,
+PR193-COMBINED-PACKAGE-PROOF.json and PR193-combined-375-boundary.log.
+
+Integration is complete. Retarget the existing PR193 to main before one normal
+push so the normal synchronize event selects its own CI. No force/reset or merge
+by the UI writer. Final packet carries exact head/tree/base, reviewer source/code
+identities, retained acceptance and targeted checks. Remaining release work belongs
+to the unique release owner: new exact-head CI and the normal PR193 release gate.
+No repeated UI approval, old acceptance, whole-site review or server runtime action.

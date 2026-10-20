@@ -552,6 +552,27 @@ def test_stop_after_source_or_store_stage_prevents_later_startup(
     assert runner_calls == []
 
 
+@pytest.mark.parametrize("failure_first", [False, True])
+def test_worker_signal_scope_preserves_first_stop_cause(monkeypatch, failure_first):
+    module = api()
+    stop = module._event()
+    handlers = {}
+
+    def install(signum, handler):
+        previous = handlers.get(signum, signal.SIG_DFL)
+        handlers[signum] = handler
+        return previous
+
+    monkeypatch.setattr(module.signal, "signal", install)
+    with module._signal_scope(stop):
+        if failure_first:
+            stop.set()
+        handlers[signal.SIGTERM](signal.SIGTERM, None)
+        assert stop.is_set()
+        assert getattr(stop, "controlled", False) == (not failure_first)
+    assert handlers[signal.SIGTERM] == signal.SIG_DFL
+
+
 def test_worker_runtime_errors_are_fixed_and_signal_handlers_are_restored(
     tmp_path, monkeypatch, capsys
 ):

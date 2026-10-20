@@ -69,6 +69,22 @@ def test_postgres_concurrency_fencing_reopen_recovery(pg):
     assert factory().get("operator", job.job_id).state == "failed"
 
 
+def test_postgres_controlled_stop_handoff_reopens_with_same_job(pg):
+    store, lake, clock, factory = pg
+    job = store.submit("operator", "controlled-stop", request_for(lake))
+    first = store.claim("one", clock[0])
+    clock[0] += timedelta(seconds=1)
+    assert not factory()._expire_owned_lease(job.job_id, "other", 1, clock[0])
+    assert factory().get("operator", job.job_id) == first
+    assert factory()._expire_owned_lease(job.job_id, "one", 1, clock[0])
+    expired = factory().get("operator", job.job_id)
+    assert expired.model_dump() == {**first.model_dump(), "lease_expires_at": clock[0]}
+    second = factory().claim("two", clock[0])
+    assert second.job_id == job.job_id and second.attempt == 2
+    assert not store._expire_owned_lease(job.job_id, "one", 1, clock[0])
+    assert factory().get("operator", job.job_id) == second
+
+
 def test_postgres_shared_slots_cancellation_and_analysis(pg):
     store, lake, clock, factory = pg
     one = store.submit("operator", "one", request_for(lake, analysis_requested=True))

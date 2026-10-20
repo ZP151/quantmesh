@@ -16,6 +16,7 @@ from pathlib import Path
 from threading import Event
 from typing import TYPE_CHECKING, Protocol
 
+from quantmesh.research._launch_deadline import _check_launch_deadline
 from quantmesh.research.jobs import JobRecord
 from quantmesh.research.linux_bootstrap import verify_limits
 from quantmesh.research.linux_owned import (
@@ -25,6 +26,7 @@ from quantmesh.research.linux_owned import (
     bootstrap_digest,
 )
 from quantmesh.research.worker_bundle import handoff_worker_bundle
+from quantmesh.research.worker_stop import _WorkerStop
 
 if TYPE_CHECKING:
     from quantmesh.research.job_store import JobStore
@@ -32,11 +34,13 @@ if TYPE_CHECKING:
 _execution: ContextVar[LinuxWorkerExecution | None] = ContextVar(
     "quantmesh_worker_execution", default=None
 )
-_stop_event: ContextVar[Event | None] = ContextVar("quantmesh_worker_stop_event", default=None)
+_stop_event: ContextVar[Event | _WorkerStop | None] = ContextVar(
+    "quantmesh_worker_stop_event", default=None
+)
 
 
 @contextmanager
-def _worker_stop_scope(stop_event: Event) -> Iterator[None]:
+def _worker_stop_scope(stop_event: Event | _WorkerStop) -> Iterator[None]:
     """Bind cooperative daemon stop to this execution context and restore nesting."""
     token = _stop_event.set(stop_event)
     try:
@@ -122,12 +126,14 @@ class LinuxWorkerExecution:
 
         if self.runtime_fingerprint() != runtime:
             raise LinuxContainmentError("worker_admission_changed")
+        _check_launch_deadline()
         if "execution_profile" in runtime:
             validate_registered_job(job, runtime["execution_profile"])
         prepare = getattr(self.admission, "prepare_parent_binding", None)
         if not callable(prepare):
             raise LinuxContainmentError("parent_binding_required")
         handoff_worker_bundle(bundle, self.profile.uid, self.profile.gid)
+        _check_launch_deadline()
         return LinuxOwnedProcess(
             self.profile,
             list(_COMMAND),

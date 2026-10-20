@@ -202,7 +202,7 @@ function LevelFact({ label, value }: { label: string; value: number }) {
   return (
     <div className="min-w-0">
       <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className="font-mono tabular-nums">{value}</dd>
+      <dd className="font-mono tabular-nums [overflow-wrap:anywhere]">{value}</dd>
     </div>
   )
 }

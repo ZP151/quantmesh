@@ -67,6 +67,8 @@ from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
+from quantmesh.api.frozen_experiments import create_frozen_experiments_router
+from quantmesh.api.paper_controls import paper_controls_router
 from quantmesh.api.realdata_snapshots import create_realdata_snapshots_router
 from quantmesh.api.research_jobs import create_research_jobs_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
@@ -80,7 +82,7 @@ from quantmesh.execution.account_store import (
     PaperAccountStore,
     recover_account_from_journal,
 )
-from quantmesh.execution.accounting import PaperAccount
+from quantmesh.execution.accounting import PaperAccount, RiskLimits
 from quantmesh.execution.journal import OrderJournal
 from quantmesh.hyperliquid.risk import RiskLimits as HyperliquidRiskLimits
 from quantmesh.instruments.api import instrument_router
@@ -112,8 +114,10 @@ from quantmesh.live.marks import (
 )
 from quantmesh.live.prediction import PredictionBoard
 from quantmesh.ops.enablement import GATE_TEXT, ApprovalLedger
+from quantmesh.ops.paper_controls import PaperControlError
 from quantmesh.research.drift import AlertLedger, PromotionLedger
 from quantmesh.research.experiments import ExperimentRegistry
+from quantmesh.research.frozen_experiments import FrozenExperimentCatalog
 from quantmesh.research.realdata_snapshots import SnapshotCatalog
 from quantmesh.research.reports import ReportRegistry
 from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
@@ -920,6 +924,21 @@ def spa_router() -> APIRouter:
     @router.post("/kill-switch")
     def kill_switch_json(request: Request, body: _KillSwitchBody) -> dict[str, object]:
         _json_guard_origin(request, "kill-switch")
+        controls = getattr(request.app.state, "paper_controls", None)
+        if controls is not None:
+            if body.action == "disarm":
+                raise HTTPException(
+                    status_code=409, detail="paper_control_verified_resume_required"
+                )
+            import uuid
+
+            controls.transition(
+                "pause",
+                key=f"legacy-{uuid.uuid4().hex}",
+                reason="legacy_control_pause",
+                target=body.venue,
+            )
+            return _kill_switch_provider(_json_context(request))
         venue_enum = None
         if body.venue is not None:
             try:
@@ -1094,6 +1113,7 @@ def create_workstation_app(
     packet_reviews: DecisionReviewStore | None = None,
     research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
     research_snapshots_root: Path | None = None,
+    frozen_experiments_root: Path | None = None,
     host: str | None = None,
 ) -> FastAPI:
     """The workstation app: the M1 read-only API plus HTML screens.
@@ -1132,6 +1152,8 @@ def create_workstation_app(
     renders the cross-venue comparison from the feed's latest state —
     no board without its feed, no fabricated probability.
     """
+    if frozen_experiments_root is not None and research_snapshots_root is None:
+        raise WorkstationConfigError("frozen experiments require a configured snapshot root")
     host = settings.workstation_host if host is None else host
     if not _is_loopback(host):
         raise WorkstationConfigError(
@@ -1179,6 +1201,13 @@ def create_workstation_app(
 
     account_store = PaperAccountStore(account, publish=publish_account)
     app.state.account_store = account_store
+    app.include_router(paper_controls_router(), prefix="/api")
+
+    @app.exception_handler(PaperControlError)
+    async def paper_control_refusal(request: Request, error: PaperControlError) -> Response:
+        from fastapi.responses import JSONResponse
+
+        return JSONResponse(status_code=409, content={"detail": str(error)})
 
     def mark_snapshot_provider(as_of: datetime | None = None) -> AccountValuationSnapshot:
         valuation_at = clock() if as_of is None else as_of
@@ -1320,6 +1349,12 @@ def create_workstation_app(
         SnapshotCatalog(research_snapshots_root) if research_snapshots_root is not None else None
     )
     app.include_router(create_realdata_snapshots_router(), prefix="/api")
+    app.state.frozen_experiments = (
+        FrozenExperimentCatalog(frozen_experiments_root, app.state.research_snapshots)
+        if frozen_experiments_root is not None
+        else None
+    )
+    app.include_router(create_frozen_experiments_router(), prefix="/api")
 
     # Venue-aware observed history is double-mounted like the live surface:
     # root for direct local clients and /api for the SPA. Both handlers read
@@ -1500,8 +1535,20 @@ def _register_watchlist_forms(app: FastAPI) -> None:
         return RedirectResponse("/watchlist", status_code=303)
 
 
-def _renderer(app: FastAPI, page: Page) -> Callable[[Request], HTMLResponse]:
-    def render(request: Request) -> HTMLResponse:
+def _renderer(app: FastAPI, page: Page) -> Callable[[Request], Response]:
+    def render(request: Request) -> Response:
+        if (
+            page.route == "/kill-switch/control"
+            and getattr(app.state, "paper_controls", None) is not None
+        ):
+            return HTMLResponse(
+                "<!doctype html><html lang='en'><title>Synthetic paper controls</title>"
+                "<h1>Synthetic paper controls enabled</h1>"
+                "<p>Resume requires current evidence and explicit confirmation. "
+                "Restart with the SPA enabled to use the guarded paper control panel.</p>"
+                "<a href='/api/paper-controls'>Inspect current paper control evidence</a></html>",
+                status_code=409,
+            )
         return _render_page(app, page, request, {})
 
     return render
@@ -1620,6 +1667,21 @@ def _register_kill_switch(app: FastAPI) -> None:
                 "kill-switch POST refused: expected a confirm form "
                 "(action=engage|disarm and confirm=confirm)",
             )
+        controls = getattr(app.state, "paper_controls", None)
+        if controls is not None:
+            if action == "disarm":
+                raise HTTPException(
+                    status_code=409, detail="paper_control_verified_resume_required"
+                )
+            import uuid
+
+            controls.transition(
+                "pause",
+                key=f"legacy-{uuid.uuid4().hex}",
+                reason="legacy_control_pause",
+                target=venue,
+            )
+            return RedirectResponse("/app/ops/kill-switch", status_code=303)
         venue_enum = None
         if venue is not None:
             try:
@@ -1753,6 +1815,11 @@ def main(argv: list[str] | None = None) -> None:
         help="opt in to local SPY snapshot import/storage outside a resettable demo root",
     )
     parser.add_argument(
+        "--frozen-experiments-root",
+        type=Path,
+        help="opt in to frozen experiment inspection; requires --research-snapshots-root",
+    )
+    parser.add_argument(
         "--vnpy-python",
         type=Path,
         help="opt in to synthetic vn.py research using this existing Windows Python runtime",
@@ -1767,7 +1834,59 @@ def main(argv: list[str] | None = None) -> None:
         type=Path,
         help="vn.py job/report output directory outside a resettable demo root",
     )
+    parser.add_argument(
+        "--paper-control-root",
+        type=Path,
+        help="explicit local synthetic paper pause/preflight/resume evidence root",
+    )
+    for flag in (
+        "--paper-max-order-quantity",
+        "--paper-max-notional",
+        "--paper-max-position-quantity",
+    ):
+        parser.add_argument(flag, type=float, help="positive synthetic rehearsal threshold")
     args = parser.parse_args(argv)
+
+    paper_limits = None
+    cap_values = (
+        args.paper_max_order_quantity,
+        args.paper_max_notional,
+        args.paper_max_position_quantity,
+    )
+    if args.paper_control_root is not None:
+        import math
+
+        if not args.demo or args.live or settings.environment != "local":
+            parser.error("--paper-control-root requires --demo in local mode without --live")
+        demo_root = (args.demo_root or settings.demo_root).resolve()
+        control_root = args.paper_control_root.resolve()
+        if (
+            control_root == demo_root
+            or demo_root in control_root.parents
+            or control_root in demo_root.parents
+        ):
+            parser.error("--paper-control-root must be separate from the resettable demo root")
+        if any(v is not None for v in cap_values):
+            if not all(v is not None and math.isfinite(v) and v > 0 for v in cap_values):
+                parser.error("all three paper rehearsal thresholds must be positive and finite")
+            paper_limits = RiskLimits(
+                max_order_quantity=cap_values[0],
+                max_notional=cap_values[1],
+                max_position_quantity=cap_values[2],
+            )
+    elif any(v is not None for v in cap_values):
+        parser.error("paper rehearsal thresholds require --paper-control-root")
+
+    if args.frozen_experiments_root is not None:
+        if args.research_snapshots_root is None:
+            parser.error("--frozen-experiments-root requires --research-snapshots-root")
+        if args.demo:
+            demo_root = (
+                args.demo_root if args.demo_root is not None else settings.demo_root
+            ).resolve()
+            experiment_root = args.frozen_experiments_root.resolve()
+            if experiment_root == demo_root or demo_root in experiment_root.parents:
+                parser.error("--frozen-experiments-root must be outside the resettable demo root")
 
     if args.research_snapshots_root is not None and args.demo:
         demo_root = (args.demo_root if args.demo_root is not None else settings.demo_root).resolve()
@@ -1811,6 +1930,8 @@ def main(argv: list[str] | None = None) -> None:
             root=args.demo_root,
             seed=args.seed,
             host=host,
+            paper_control_root=args.paper_control_root,
+            paper_limits=paper_limits,
         )
     else:
         account = PaperAccount(cash=100_000.0)
@@ -1997,6 +2118,10 @@ def main(argv: list[str] | None = None) -> None:
             )
     if args.research_snapshots_root is not None:
         app.state.research_snapshots = SnapshotCatalog(args.research_snapshots_root)
+    if args.frozen_experiments_root is not None:
+        app.state.frozen_experiments = FrozenExperimentCatalog(
+            args.frozen_experiments_root, app.state.research_snapshots
+        )
     if fixture_enabled:
         from quantmesh.api.vnpy_fixture import attach_fixture_runtime
         from quantmesh.research.vnpy_fixture import FixtureManager

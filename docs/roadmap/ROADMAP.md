@@ -1,5 +1,39 @@
 # QuantMesh Product Roadmap
 
+## Controlled Worker restart lease handoff — issue198, 2026-10-20
+
+The operator approved first-cause SIGTERM/SIGINT plus proven owned-child cleanup
+as a lease-only handoff exception. Implementation and verification are recorded
+in [the bounded checkpoint](../iterations/0038-controlled-stop-lease.md).
+Original failed production jobs remain failed, the recovery target stays90s,
+and no unmerged runtime is deployed. Inventory-only PR199 remains independent.
+
+## Approved local paper controls P3 — 2026-10-20
+
+The operator approved [issue196](https://github.com/ZP151/quantmesh/issues/196):
+extend the current synthetic paper kill-switch flow with pause reasons, current
+account/journal/cap/version preflight, explicit resume and durable audit/replay.
+The final local synthetic user loop is verified, including stale refusal,
+one real-kernel paper fill, replay/original downloads and cold paused reopen;
+round2 is READY and [Draft PR197](https://github.com/ZP151/quantmesh/pull/197)
+delivers runtime77f49ec. Default/live
+authority and the historical REJECT/consumed-OOS evidence remain unchanged.
+See the [P3 iteration](../iterations/0038-paper-controls-p3.md).
+
+## Local frozen-experiment inspection P2 — 2026-10-19
+
+The operator approved [issue191](https://github.com/ZP151/quantmesh/issues/191):
+import the retained SMA100/SPY experiment, inspect its consumed OOS and recorded
+verdict beside verified P1 data associations, and download/reopen the original
+evidence. The local user loop is verified from merged P1 main31b1c74 and delivered
+in [PR195](https://github.com/ZP151/quantmesh/pull/195), normally squash-merged
+to dddc678 after requiredCI39275587067 passed. This does not rerun the strategy, upgrade data
+qualification or grant trading authority. See the
+[P2 iteration](../iterations/0038-frozen-experiment-p2.md) and
+[approved specification](../superpowers/specs/2026-10-19-frozen-experiment-p2.md).
+The full product objective continues through a separately designed P3 local
+paper/shadow control loop; P2 approval does not approve unseen P3 behavior.
+
 ## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
 
 This checkpoint supersedes the historical owner-correction status below.
@@ -607,3 +641,10 @@ Sequence for operator review:
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
 9. Guarded broker/testnet execution only after a separate authorization.
+# Worker recovery evidence checkpoint —2026-10-20
+
+Issue198 keeps actual two-job restart recovery open. Its first bounded repair
+removes redundant ancestor traversal within each complete Worker inventory scan,
+preserving every hash and identity check. Local source verification is separate
+from merged-image admission and the future90-second production recovery witness.
+See [the iteration checkpoint](../iterations/0038-worker-restart-recovery.md).

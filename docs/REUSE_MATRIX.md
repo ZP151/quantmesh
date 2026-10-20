@@ -1,5 +1,24 @@
 # QuantMesh Reuse Matrix
 
+## Guarded local paper controls P3 — issue196, 2026-10-20
+
+P3 reuses PaperAccountStore/File, existing journal reconstruction, PaperAccount
+risk/matching and the current demo/order/kill-switch flow. The transaction callback
+is optional and bound only by explicit synthetic rehearsal configuration. Audit
+persistence and OS leases follow existing repository disciplines; no third-party
+source or dependency is introduced. Live ApprovalLedger is not reused as paper
+resume authority. See [ADR0033](adr/0033-local-paper-control-preflight.md).
+
+## Local frozen-experiment inspection P2 — issue191, 2026-10-19
+
+P2 reuses ObjectStore/ObjectRef and the public verified P1 SnapshotCatalog behind
+a narrow inspection adapter. It introduces no dependency or executable upstream
+source. Original historical Python source is preserved only as inert package
+evidence, never imported or executed. The forecast ExperimentRegistry is not
+reused because its forecast-error semantics differ. Raw source bytes stay local;
+rights/PIT gaps and existing vn.py external-runtime redistribution limits remain
+unchanged. See [ADR0031](adr/0031-frozen-experiment-inspection.md).
+
 ## Local SPY snapshot qualification P1 — issue184, 2026-10-19
 
 P1 reuses the repository's ObjectStore/ObjectRef and pinned CalendarService

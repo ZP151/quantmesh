@@ -9,8 +9,11 @@ keyboard operation, Simplified-Chinese rendering, reduced motion, and the
 
 from __future__ import annotations
 
+import json
+import os
 import re
 import socket
+import sys
 import threading
 import time
 from datetime import timedelta
@@ -30,6 +33,119 @@ playwright_expect = playwright.expect
 
 HOST = "127.0.0.1"
 WORKSPACE_PATH = "/app/instruments/moomoo/NVDA?range=6m"
+
+
+def _record_workspace_boundary_failure(page, failure: AssertionError) -> None:
+    """Observe a failed synthetic page without replacing its assertion result."""
+    try:
+        observation = page.evaluate("""() => {
+            const rect = el => {
+                const r = el.getBoundingClientRect();
+                return {left:r.left, right:r.right, top:r.top, bottom:r.bottom,
+                    width:r.width, height:r.height};
+            };
+            const selector = el => {
+                const path = [];
+                while (el && el !== document.body) {
+                    const index = [...el.parentElement.children].indexOf(el) + 1;
+                    path.unshift(`${el.localName}:nth-child(${index})`);
+                    el = el.parentElement;
+                }
+                return ['body', ...path].join(' > ');
+            };
+            const box = el => {
+                const style = getComputedStyle(el);
+                return {selector:selector(el), tag:el.tagName,
+                    classes:el.getAttribute('class'), rect:rect(el),
+                    clientWidth:el.clientWidth, scrollWidth:el.scrollWidth,
+                    display:style.display, position:style.position,
+                    overflowX:style.overflowX, minWidth:style.minWidth,
+                    maxWidth:style.maxWidth, whiteSpace:style.whiteSpace,
+                    fontFamily:style.fontFamily, fontSize:style.fontSize};
+            };
+            const offenders = [...document.querySelectorAll('body *')]
+                .filter(el => { const r=el.getBoundingClientRect();
+                    return r.width > 0 && r.right > innerWidth + 0.5; })
+                .sort((a,b) => b.getBoundingClientRect().right
+                    - a.getBoundingClientRect().right);
+            return {
+                document:{scrollWidth:document.documentElement.scrollWidth,
+                    clientWidth:document.documentElement.clientWidth,
+                    rect:rect(document.documentElement)},
+                body:{scrollWidth:document.body.scrollWidth,
+                    clientWidth:document.body.clientWidth, rect:rect(document.body)},
+                viewport:{width:innerWidth, height:innerHeight,
+                    visualWidth:visualViewport?.width, scale:visualViewport?.scale},
+                devicePixelRatio, scrollX, scrollY,
+                reducedMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,
+                fonts:document.fonts.status, language:document.documentElement.lang,
+                userAgent:navigator.userAgent, offenderCount:offenders.length,
+                offenders:offenders.slice(0,24).map(el => ({...box(el),
+                    parent:el.parentElement ? box(el.parentElement) : null}))
+            };
+        }""")
+        observation["platform"] = sys.platform
+        print("WORKSPACE_BOUNDARY_FAILURE=" + json.dumps(observation, ensure_ascii=False))
+        if log_root := os.environ.get("QUANTMESH_GATE_LOGS"):
+            root = Path(log_root)
+            root.mkdir(parents=True, exist_ok=True)
+            stem = root / f"workspace-mobile-boundary-{time.monotonic_ns()}"
+            stem.with_suffix(".json").write_text(
+                json.dumps(observation, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+            )
+            page.screenshot(path=str(stem.with_suffix(".png")))
+    except (playwright.Error, OSError) as diagnostic_error:
+        raise failure from diagnostic_error
+
+
+@pytest.mark.parametrize("probe_error", [False, True])
+def test_boundary_diagnostics_preserve_original_failure(probe_error, capsys, monkeypatch) -> None:
+    monkeypatch.delenv("QUANTMESH_GATE_LOGS", raising=False)
+    original = AssertionError("original boundary assertion")
+    diagnostic_error = playwright.Error("diagnostic page unavailable")
+
+    class FailedPage:
+        def evaluate(self, script):
+            if probe_error:
+                raise diagnostic_error
+            return {"document": {"scrollWidth": 412}, "viewport": {"width": 390}}
+
+    with pytest.raises(AssertionError) as observed:
+        try:
+            raise original
+        except AssertionError as failure:
+            _record_workspace_boundary_failure(FailedPage(), failure)
+            raise
+    assert observed.value is original
+    output = capsys.readouterr().out
+    if probe_error:
+        assert observed.value.__cause__ is diagnostic_error
+        assert output == ""
+    else:
+        payload = json.loads(output.removeprefix("WORKSPACE_BOUNDARY_FAILURE="))
+        assert payload["document"]["scrollWidth"] == 412
+        assert payload["viewport"]["width"] == 390
+
+
+def test_boundary_diagnostics_use_existing_gate_artifact_root(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    monkeypatch.setenv("QUANTMESH_GATE_LOGS", str(tmp_path))
+    screenshots = []
+
+    class FailedPage:
+        def evaluate(self, script):
+            return {"document": {"scrollWidth": 412}, "viewport": {"width": 390}}
+
+        def screenshot(self, *, path):
+            screenshots.append(Path(path))
+
+    _record_workspace_boundary_failure(FailedPage(), AssertionError("original boundary"))
+    retained = list(tmp_path.glob("workspace-mobile-boundary-*.json"))
+    assert len(retained) == 1
+    assert json.loads(retained[0].read_text())["document"]["scrollWidth"] == 412
+    assert screenshots == [retained[0].with_suffix(".png")]
+    assert "WORKSPACE_BOUNDARY_FAILURE=" in capsys.readouterr().out
 
 
 def _wait_for_server(server: uvicorn.Server) -> None:
@@ -62,8 +178,10 @@ class _ControlledWorkspace:
     def set_quote(self, symbol: str, *, at, sequence: int, price: float) -> None:
         self.quotes[symbol] = (at, sequence, price)
 
-    def render(self, venue, symbol, selected_range, *, peers=()):
-        workspace = self.delegate.render(venue, symbol, selected_range, peers=peers)
+    def render(self, venue, symbol, selected_range, *, peers=(), horizon=None, forecast_id=None):
+        workspace = self.delegate.render(
+            venue, symbol, selected_range, peers=peers, horizon=horizon, forecast_id=forecast_id
+        )
         quote = self.quotes.get(symbol)
         if quote is None:
             return workspace
@@ -175,10 +293,45 @@ class _OneSymbolFailureWorkspace:
         self.delegate = delegate
         self.symbol = symbol
 
-    def render(self, venue, symbol, selected_range, *, peers=()):
+    def render(self, venue, symbol, selected_range, *, peers=(), horizon=None, forecast_id=None):
         if symbol == self.symbol:
             raise OSError("bounded local acceptance failure")
-        return self.delegate.render(venue, symbol, selected_range, peers=peers)
+        return self.delegate.render(
+            venue, symbol, selected_range, peers=peers, horizon=horizon, forecast_id=forecast_id
+        )
+
+
+@pytest.mark.parametrize("wrapper_kind", ["controlled", "one-symbol-failure"])
+@pytest.mark.parametrize("horizon,forecast_id", [(None, None), (7, "forecast-" + "a" * 24)])
+def test_workspace_wrappers_forward_render_selection(wrapper_kind, horizon, forecast_id) -> None:
+    """Keep the browser substitutes compatible with the real API render call."""
+    calls = []
+    rendered = object()
+
+    class RecordingWorkspace:
+        def render(
+            self, venue, symbol, selected_range, *, peers=(), horizon=None, forecast_id=None
+        ):
+            calls.append((venue, symbol, selected_range, peers, horizon, forecast_id))
+            return rendered
+
+    service = _ControlledWorkspace(RecordingWorkspace())
+    if wrapper_kind == "one-symbol-failure":
+        service = _OneSymbolFailureWorkspace(service, "AAPL")
+    peers = (("hyperliquid", "BTC"),)
+    assert (
+        service.render(
+            "moomoo", "NVDA", "6m", peers=peers, horizon=horizon, forecast_id=forecast_id
+        )
+        is rendered
+    )
+    assert calls == [("moomoo", "NVDA", "6m", peers, horizon, forecast_id)]
+    if wrapper_kind == "one-symbol-failure":
+        with pytest.raises(OSError, match="bounded local acceptance failure"):
+            service.render(
+                "moomoo", "AAPL", "6m", peers=peers, horizon=horizon, forecast_id=forecast_id
+            )
+        assert len(calls) == 1  # the intentional AAPL refusal never reaches the delegate
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -361,8 +514,9 @@ def test_nvda_inspect_to_paper_loop_and_race_refusal(page, base_url) -> None:
     page.get_by_text("Immutable proposal preview", exact=True).wait_for()
     page.get_by_label("Confirmation token").fill(race_token)
     with page.expect_response(
-        lambda response: "/api/paper/proposals/" in response.url
-        and response.url.endswith("/confirm")
+        lambda response: (
+            "/api/paper/proposals/" in response.url and response.url.endswith("/confirm")
+        )
     ) as refused:
         page.get_by_role("button", name="Confirm paper proposal").click()
     assert refused.value.status == 409
@@ -412,7 +566,17 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     assert response.value.status == 200
     page.get_by_text("2 watches checked · 1 triggered", exact=True).wait_for()
     playwright_expect(refresh).to_be_focused()
-    assert page.get_by_role("button", name="No action 1", exact=True).is_visible()
+    # Not-started rows belong to No action even when saved evidence is unavailable.
+    no_action = page.get_by_role("button", name="No action 3", exact=True)
+    assert no_action.is_visible()
+    assert page.get_by_role("button", name="Blocked 0", exact=True).is_visible()
+    no_action.click()
+    for symbol in ("AAPL", "BTC-USD", "SOL-USD"):
+        playwright_expect(page.get_by_role("row").filter(has_text=symbol)).to_be_visible()
+    assert page.get_by_role("row").filter(has_text="NVDA").count() == 0
+    playwright_expect(
+        page.get_by_text("No saved DecisionPacket exists yet.", exact=True)
+    ).to_have_count(2)
 
     triggered = page.get_by_role("button", name="Triggered 1", exact=True)
     triggered.focus()
@@ -486,7 +650,8 @@ def test_mobile_daily_session_refreshes_and_reopens_exact_packet_after_restart(
     page.get_by_text("已检查 2 个观察 · 已触发 1 个", exact=True).wait_for()
     assert chinese_refresh.evaluate("element => element === document.activeElement")
     assert page.get_by_role("button", name="已触发 1", exact=True).is_visible()
-    assert page.get_by_role("button", name="受阻 2", exact=True).is_visible()
+    assert page.get_by_role("button", name="受阻 0", exact=True).is_visible()
+    assert page.get_by_role("button", name="无需操作 3", exact=True).is_visible()
     assert page.get_by_text(re.compile(r"上次本地检查")).first.is_visible()
     assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
     chinese_text = page.get_by_role("main").inner_text()
@@ -509,6 +674,13 @@ def test_keyboard_locale_reduced_motion_and_mobile_boundary(browser, base_url) -
         page.get_by_role("heading", name="NVDA", exact=True).wait_for()
 
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
+        levels = page.get_by_role("region", name="市场结构与关键价位", exact=True).locator("dl dd")
+        level_boxes = levels.evaluate_all("""elements => elements.map(element => ({
+            value:element.textContent, clientWidth:element.clientWidth,
+            scrollWidth:element.scrollWidth
+        }))""")
+        assert len(level_boxes) == 3
+        assert all(box["scrollWidth"] <= box["clientWidth"] for box in level_boxes), level_boxes
         assert page.get_by_role("main").count() == 1
         page.get_by_role("img", name=re.compile("NVDA 市场图表")).wait_for()
         page.get_by_role("table", name=re.compile("NVDA 图表数据")).wait_for()
@@ -539,5 +711,8 @@ def test_keyboard_locale_reduced_motion_and_mobile_boundary(browser, base_url) -
         volume.focus()
         page.keyboard.press("Enter")
         assert "volume=1" in page.url
+    except AssertionError as failure:
+        _record_workspace_boundary_failure(page, failure)
+        raise
     finally:
         context.close()

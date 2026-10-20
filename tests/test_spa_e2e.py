@@ -429,6 +429,104 @@ def test_data_catalog_populated_state_has_no_mobile_overflow(page, base_url) -> 
     assert overflow <= 1
 
 
+def test_data_readiness_mobile_geometry_375(page, base_url) -> None:
+    """Exercise rendered mobile geometry through the committed SPA, not jsdom."""
+    snapshot_id = "a" * 64
+    imported_at = "2026-10-19T04:46:21.878468+00:00"
+    report = {
+        "schema_version": 1,
+        "snapshot_id": snapshot_id,
+        "imported_at": imported_at,
+        "symbol": "SPY",
+        "evidence_kind": "fixture",
+        "report_digest": "b" * 64,
+        "source": {
+            "provider": "Synthetic geometry fixture",
+            "feed": None,
+            "url": "https://example.invalid/retained/SPY?source=" + "x" * 160,
+            "received_at": None,
+            "license_scope": None,
+            "license_evidence": None,
+            "price_unit": None,
+            "volume_unit": None,
+            "session_semantics": None,
+            "pit_status": None,
+        },
+        "coverage": {
+            "rows": None,
+            "first_date": None,
+            "last_date": None,
+            "expected_sessions": None,
+            "missing_sessions": None,
+            "unexpected_sessions": None,
+        },
+        "freshness": {
+            "as_of": imported_at,
+            "latest_complete_session": None,
+            "last_session": None,
+            "age_sessions": None,
+            "status": "INSUFFICIENT",
+        },
+        "qualification": {
+            "status": "INSUFFICIENT",
+            "structural_status": "PASS",
+            "allowed_use": ["inspect_evidence_only"],
+            "R1": "INSUFFICIENT",
+            "R2": "INSUFFICIENT",
+            "reasons": ["Synthetic geometry fixture; no research admission."],
+        },
+        "checks": [],
+        "corporate_actions": {"issuer_events": None, "yahoo_events": None, "conflicts": []},
+        "lineage": {
+            "archive_sha256": snapshot_id,
+            "normalized_sha256": "c" * 64,
+            "checker_sha256": "d" * 64,
+            "calendar_id": "XNYS",
+            "calendar_version": "synthetic-e2e",
+            "files": [],
+        },
+        "preview": {"head": [], "tail": []},
+    }
+    page.route(
+        "**/api/research/data-snapshots",
+        lambda route: route.fulfill(json={"schema_version": 1, "snapshots": [report]}),
+    )
+    page.route(
+        f"**/api/research/data-snapshots/{snapshot_id}",
+        lambda route: route.fulfill(json=report),
+    )
+    # Start at the compact viewport so responsive transitions are already settled.
+    page.set_viewport_size({"width": 375, "height": 812})
+    page.goto(f"{base_url}/app/research/data-readiness")
+    page.get_by_role(
+        "button", name=f"Reopen SPY · {imported_at} · {snapshot_id[:12]}", exact=True
+    ).click()
+    page.get_by_role("region", name="Qualification and allowed use", exact=True).wait_for()
+    page.get_by_text("Immutable lineage", exact=True).click()
+    page.evaluate("document.fonts.ready")
+
+    file_box = page.get_by_label("Local SPY snapshot ZIP", exact=True).bounding_box()
+    import_box = page.get_by_role("button", name="Import snapshot", exact=True).bounding_box()
+    assert file_box is not None and import_box is not None
+    violations = []
+    if file_box["y"] + file_box["height"] > import_box["y"] + 1:
+        violations.append(("file selector and import action share a row", file_box, import_box))
+    targets = page.locator("main button, main summary, main input[type='file']")
+    assert targets.count() == 7  # refresh, file, import, two downloads, lineage, history
+    for target in targets.all():
+        assert target.is_visible()
+        box = target.bounding_box()
+        assert box is not None
+        if box["height"] < 44:
+            violations.append(("touch target below44px", target.inner_text(), box))
+    overflow = page.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth"
+    )
+    if overflow > 1:
+        violations.append(("horizontal document overflow", overflow))
+    assert not violations, violations
+
+
 def test_csv_import_validation_and_commit(page, base_url) -> None:
     """Upload -> preview -> mapping -> commit: rejected rows carry their
     reason, the accepted bars land under an operator-import manifest."""

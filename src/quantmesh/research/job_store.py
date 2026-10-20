@@ -284,6 +284,16 @@ class SQLiteJobStore:
             )
             return True
 
+    def _expire_owned_lease(self, job_id: str, owner: str, attempt: int, now: datetime) -> bool:
+        """Internal controlled-stop extension; caller proves owned child cleanup."""
+        now = _time(now)
+        with self._transaction() as con:
+            record = self._read(con, job_id)
+            if not self._fenced(record, owner, attempt, now):
+                return False
+            self._write(con, _replace(record, lease_expires_at=now))
+            return True
+
     def request_cancel(self, operator_id: str, job_id: str) -> JobRecord:
         now = _time(self._clock())
         with self._transaction() as con:
