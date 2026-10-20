@@ -12,6 +12,7 @@ from quantmesh.research.worker_execution import (
     WorkerRunner,
     _worker_stop_scope,
 )
+from quantmesh.research.worker_stop import _WorkerStop
 
 if TYPE_CHECKING:
     from quantmesh.research.job_store import JobStore
@@ -40,7 +41,7 @@ class WorkerDaemon:
         self.inputs_root = Path(inputs_root)
         self.artifacts_root = Path(artifacts_root)
 
-    def run(self, stop_event: Event) -> None:
+    def run(self, stop_event: Event | _WorkerStop) -> None:
         if type(self.runner) is not WorkerRunner:
             raise WorkerDaemonError() from None
         execution = getattr(self.runner, "execution", None)

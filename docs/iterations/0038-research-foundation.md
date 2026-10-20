@@ -1,5 +1,12 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Approved controlled-stop lease handoff — issue198, 2026-10-20
+
+The actual human approved the precise first-cause signal/owned-cleanup/fenced
+expiry-only design. See [the bounded checkpoint](0038-controlled-stop-lease.md)
+and its tracked plan. This does not reopen completed OpenD gates, change the
+original failed jobs or claim new production recovery.
+
 ## Real-data qualification P1 — issue184, 2026-10-19
 
 The operator approved the concrete P1 snapshot-import design. Its isolated

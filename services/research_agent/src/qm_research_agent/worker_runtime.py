@@ -22,6 +22,7 @@ from quantmesh.research.worker_admission import WorkerAdmissionPins, WorkerImage
 from quantmesh.research.worker_build import registered_fixture_profile
 from quantmesh.research.worker_daemon import WorkerDaemon, WorkerDaemonError
 from quantmesh.research.worker_execution import LinuxWorkerExecution, WorkerRunner
+from quantmesh.research.worker_stop import _WorkerStop
 
 _MAX_CONFIG_BYTES = 64 * 1024
 _PIN_FIELDS = frozenset(WorkerAdmissionPins.__dataclass_fields__)
@@ -199,8 +200,8 @@ class _Parser(argparse.ArgumentParser):
         raise WorkerRuntimeRejected("configuration_invalid")
 
 
-def _event() -> Event:
-    return Event()
+def _event() -> _WorkerStop:
+    return _WorkerStop()
 
 
 def load_worker_config(path: Path) -> WorkerRuntimeConfig:
@@ -279,16 +280,19 @@ def build_execution(config: WorkerRuntimeConfig, runtime) -> LinuxWorkerExecutio
         raise WorkerRuntimeRejected("worker_admission_failed") from None
 
 
-def _stopped(event: Event) -> bool:
+def _stopped(event: Event | _WorkerStop) -> bool:
     return event.is_set()
 
 
 @contextmanager
-def _signal_scope(event: Event) -> Iterator[None]:
+def _signal_scope(event: Event | _WorkerStop) -> Iterator[None]:
     previous = {}
 
-    def request_stop(_signum, _frame):
-        event.set()
+    def request_stop(signum, _frame):
+        if type(event) is _WorkerStop:
+            event.request_signal(signum)
+        else:
+            event.set()
 
     try:
         for signum in (signal.SIGTERM, signal.SIGINT):
@@ -311,7 +315,7 @@ def _preflight(runtime) -> dict:
     }
 
 
-def _run_worker(config: WorkerRuntimeConfig, runtime, stop_event: Event) -> int:
+def _run_worker(config: WorkerRuntimeConfig, runtime, stop_event: Event | _WorkerStop) -> int:
     if _stopped(stop_event):
         return 0
     execution = build_execution(config, runtime)
