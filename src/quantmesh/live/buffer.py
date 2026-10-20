@@ -647,9 +647,7 @@ class LiveBuffer:
             ).fetchall()
         return [_row_to_update(row) for row in rows]
 
-    def recovery_checkpoints(
-        self, *, venue: str, instruments: list[str]
-    ) -> list[MarketUpdate]:
+    def recovery_checkpoints(self, *, venue: str, instruments: list[str]) -> list[MarketUpdate]:
         """Latest durable rows used to restore a venue supervisor's cursors."""
         if not instruments:
             return []
@@ -663,19 +661,34 @@ class LiveBuffer:
                 "AND continuity IN ('complete', 'recovered')))"
             )
         where = " AND ".join(clauses)
+        checkpoint_columns = ", ".join(
+            f"checkpoint.{column}" for column in _UPDATE_COLUMNS.split(", ")
+        )
         with self._connection_lock:
+            # local_seq is unique and non-null: one complete struct wins per
+            # stream, including nullable fields, without a wide historical window.
             rows = self._con.execute(
-                f"SELECT {_UPDATE_COLUMNS} FROM market_updates WHERE {where} "
-                "QUALIFY ROW_NUMBER() OVER ("
-                "  PARTITION BY venue, instrument, kind, "
+                "WITH checkpoint_rows AS ("
+                "  SELECT arg_max(struct_pack("
+                "    local_seq := local_seq, venue := venue, instrument := instrument, "
+                "    kind := kind, provenance := provenance, data_time := data_time, "
+                "    received_at := received_at, sequence := sequence, "
+                "    sequence_gap := sequence_gap, continuity := continuity, "
+                "    source_event_id := source_event_id, content_digest := content_digest, "
+                "    snapshot_epoch := snapshot_epoch, "
+                "    continuity_evidence_json := continuity_evidence_json, "
+                "    state := state, state_note := state_note, payload_json := payload_json"
+                "  ), local_seq) AS checkpoint "
+                f"  FROM market_updates WHERE {where} "
+                "  GROUP BY venue, instrument, kind, "
                 "  CASE WHEN kind = 'l2_snapshot' "
                 "    THEN json_extract_string(payload_json, '$.side') "
                 "  WHEN kind = 'metrics' "
                 "    THEN CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
                 "      THEN 'allMids' ELSE 'activeAssetCtx' END "
-                "  ELSE '' END "
-                "  ORDER BY local_seq DESC"
-                ") = 1 ORDER BY local_seq",
+                "  ELSE '' END"
+                f") SELECT {checkpoint_columns} FROM checkpoint_rows "
+                "ORDER BY checkpoint.local_seq",
                 params,
             ).fetchall()
         return [_row_to_update(row) for row in rows]
