@@ -10,6 +10,10 @@ from types import SimpleNamespace
 
 import pytest
 
+# Exact aa62 admission lock, inert test data only. Never install this fixture
+# or substitute the independently updated current security installation lock.
+LEGACY_LOCK = Path(__file__).parent / "fixtures/worker-admission/linux-cp312-legacy.lock"
+
 
 def _sha(raw):
     return hashlib.sha256(raw).hexdigest()
@@ -36,11 +40,7 @@ def sealed(tmp_path):
     notice = notices / "LICENSE"
     notice.write_bytes(b"unit-fixture notice")
     lock = prefix / "requirements.lock"
-    lock.write_bytes(
-        (
-            Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
-        ).read_bytes()
-    )
+    lock.write_bytes(LEGACY_LOCK.read_bytes())
     metadata = prefix / "METADATA"
     record = prefix / "RECORD"
     metadata.write_bytes(b"Metadata-Version: 2.4\n")
@@ -425,6 +425,27 @@ def _reseal_inventory(sealed, *, links=None):
     data["symlinks"] = links or {}
     sealed.inventory.write_text(json.dumps(data))
     sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
+
+
+def test_current_source_lock_requires_independent_runtime_admission(sealed, monkeypatch):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    # Establish the valid old-contract control before changing only the lock.
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+    current = (
+        Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
+    ).read_bytes()
+    assert _sha(current) != api.LINUX_LOCK_SHA256
+    sealed.lock.write_bytes(current)
+    _reseal_inventory(sealed)
+    _runtime(api, sealed, monkeypatch)  # Matching synthetic distribution versions.
+    inventory = json.loads(sealed.inventory.read_text())
+    assert inventory["files"][str(sealed.lock)] == _sha(current)
+    # Hash-consistent metadata cannot upgrade the independently fixed contract.
+    with pytest.raises(ValueError):
+        api._pins(sealed.lock)
+    with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
 
 
 def test_inventory_walks_each_regular_file_ancestors_once_per_pass(sealed, monkeypatch):
