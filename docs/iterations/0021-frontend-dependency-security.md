@@ -38,7 +38,7 @@ complete static member set including every bundled child. No generated provenanc
 fields were hand-filled; npm files only normalize repositoryLF text formatting.
 
 Verifier: retained original auditRED and41fail/7pass TDDRED. Final Python module is
-61passed in0.28s:60offline cases plus actual repository artifact qualification.
+63passed in0.27s:62offline cases plus actual repository artifact qualification.
 Additional meaningful edgeREDâ†’GREEN covers malformed parentURL/license JSON,
 actual-license mismatch, declaration order, trailing content, download deadline
 and boolean receipts. Final actual licenseCLI accepts278 with two explicit notice
@@ -56,8 +56,9 @@ Original project/format/generator failures stay in ignored evidence; none is
 relabeled a successful run or hidden by a new environment.
 
 Author self-review found conflicting actual declaration aliases and actual child
-nested-bundle declarations were not yet refused. Both meaningful cases first
-failed, then explicit guards made the final61tests pass. This is the one author
+nested-bundle declarations were not yet refused. The alias/nested-declaration pair first
+failed; unlisted/nested file content without package.json also first failed.
+Explicit guards made the final63tests pass. This is the one author
 fix pass, not an extra branch review.
 
 Author self-review: READY for the combined release review, no remaining actionable
