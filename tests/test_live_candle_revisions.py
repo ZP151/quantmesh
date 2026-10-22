@@ -110,14 +110,21 @@ async def test_recorded_closed_revision_keeps_real_pump_and_all_quotes_running(
             )
             for coin in ("BTC", "ETH", "SOL"):
                 await transport.frames.put((_quote(coin), REVISION_RECEIPT + timedelta(seconds=2)))
-            await _wait_until(lambda: len(buffer.replay(kinds=["quote"])) == 3, task)
+            delivered = []
+
+            def quotes_delivered():
+                while not subscriber.empty():
+                    delivered.append(subscriber.get_nowait())
+                return sum(row.kind is UpdateKind.QUOTE for row in delivered) == 3
+
+            await _wait_until(quotes_delivered, task)
+            assert len(buffer.replay(kinds=["quote"])) == 3
             assert not task.done()
             candles = buffer.replay(kinds=["candle"])
             assert [row.payload["volume"] for row in candles] == [26.45105, 26.45336]
             assert [row.received_at for row in candles] == [FIRST_RECEIPT, REVISION_RECEIPT]
             assert all(row.payload["final"] is True for row in candles)
             assert {row.sequence for row in candles} == {int(OPEN.timestamp() * 1000)}
-            delivered = [subscriber.get_nowait() for _ in range(subscriber.qsize())]
             assert [row.source_event_id for row in delivered if row.kind is UpdateKind.CANDLE] == [
                 row.source_event_id for row in candles
             ]
