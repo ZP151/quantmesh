@@ -44,12 +44,14 @@
     "openapi-typescript": "7.13.0",
     "oxlint": "^1.77.0",
     "typescript": "5.9.3",
-    "vite": "^8.2.0",
-    "vitest": "^3.2.7"
+    "vite": "8.2.4",
+    "vitest": "4.1.11"
   },
   "overrides": {
-    "vitest": {
-      "tinypool": "2.1.2"
-    }
+    "vite": {
+      ".": "8.2.4",
+      "rolldown": "1.2.4"
+    },
+    "vitest": "4.1.11"
   }
 }
