@@ -13,40 +13,79 @@ jobs:
     if: >-
       github.event_name == 'push' &&
       github.ref == 'refs/heads/codex/207-lightningcss-probe-39667744567' &&
-      github.event.before == '0000000000000000000000000000000000000000'
+      github.event.before == '3b2210f1a8dc1b1cd4b483288c5ea615203aa8bd'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Initialize safe terminal status
+        shell: bash
+        run: |
+          set -eu
+          report_dir="$RUNNER_TEMP/native-css-diagnostic"
+          mkdir -m 700 -p "$report_dir"
+          printf '{"schemaVersion":1,"status":"not-started","npmCiExit":null,"probeExit":null}\n' >"$report_dir/probe.json"
       - uses: actions/checkout@v4
+        id: checkout_source
         with:
           ref: 8c269bc1011b1bea4af43d24b49de52e8a6eb5e9
           fetch-depth: 1
           persist-credentials: false
+          path: source-under-test
+      - uses: actions/checkout@v4
+        id: checkout_harness
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          path: diagnostic-harness
       - uses: actions/setup-node@v4
+        id: setup_node
         with:
           node-version: 22.12.0
       - name: Install once and capture native loading evidence
-        working-directory: frontend
         shell: bash
         run: |
           set -u
           report_dir="$RUNNER_TEMP/native-css-diagnostic"
-          mkdir -m 700 "$report_dir"
-          npm_version="$(npm --version)"
+          mkdir -m 700 -p "$report_dir"
+          report="$report_dir/probe.json"
+          probe_tmp="$report_dir/probe.tmp"
+          source_frontend="$GITHUB_WORKSPACE/source-under-test/frontend"
+          probe_script="$GITHUB_WORKSPACE/diagnostic-harness/tools/probe_native_css.cjs"
+          npm_version="$(npm --version 2>/dev/null)" || npm_version="unavailable"
           set +e
-          npm ci >"$report_dir/npm-ci-private.log" 2>&1
+          (cd "$source_frontend" && npm ci) >"$report_dir/npm-ci-private.log" 2>&1
           npm_ci_exit=$?
           set -e
           export NATIVE_CSS_NPM_CI_EXIT="$npm_ci_exit"
           export NATIVE_CSS_NPM_VERSION="$npm_version"
           set +e
-          node ../tools/probe_native_css.cjs >"$report_dir/probe.json" 2>/dev/null
+          (cd "$source_frontend" && node "$probe_script") >"$probe_tmp" 2>/dev/null
           probe_exit=$?
           set -e
-          cat "$report_dir/probe.json"
+          if [ -s "$probe_tmp" ] && node -e 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' "$probe_tmp" >/dev/null 2>&1; then
+            cp "$probe_tmp" "$report"
+          else
+            printf '{"schemaVersion":1,"status":"probe-no-valid-json","npmCiExit":%s,"probeExit":%s}\n' "$npm_ci_exit" "$probe_exit" >"$report"
+          fi
+          cat "$report"
           printf 'npm_ci_exit=%s probe_exit=%s\n' "$npm_ci_exit" "$probe_exit"
           if [ "$npm_ci_exit" -ne 0 ] || [ "$probe_exit" -ne 0 ]; then
             exit 1
+          fi
+      - name: Finalize safe status if setup did not reach the probe
+        if: ${{ always() }}
+        env:
+          SOURCE_CHECKOUT_OUTCOME: ${{ steps.checkout_source.outcome }}
+          HARNESS_CHECKOUT_OUTCOME: ${{ steps.checkout_harness.outcome }}
+          NODE_SETUP_OUTCOME: ${{ steps.setup_node.outcome }}
+        shell: bash
+        run: |
+          set -eu
+          report="$RUNNER_TEMP/native-css-diagnostic/probe.json"
+          if grep -q '"status":"not-started"' "$report"; then
+            printf '{"schemaVersion":1,"status":"setup-did-not-reach-probe","sourceCheckout":"%s","harnessCheckout":"%s","nodeSetup":"%s","npmCiExit":null,"probeExit":null}\n' \
+              "$SOURCE_CHECKOUT_OUTCOME" "$HARNESS_CHECKOUT_OUTCOME" "$NODE_SETUP_OUTCOME" >"$report"
           fi
       - name: Retain safe probe result
         if: ${{ always() }}

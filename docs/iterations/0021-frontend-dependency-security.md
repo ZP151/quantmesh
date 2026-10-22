@@ -92,3 +92,7 @@ dump, npm configuration, credentials, stack, cache, or source lock changes are
 included. The run is diagnostic evidence only and does not certify a release or
 change any required gate. The single artifact is
 `native-css-diagnostic-8c269bc-39667744567`.
+
+The first isolated harness run (39701076626) installed the fixed source dependencies successfully (`npm ci` exit 0) but could not execute the probe: checking out source SHA `8c269bc1011b1bea4af43d24b49de52e8a6eb5e` also removed the diagnostic script, which was added only on the harness branch. Its retained artifact is empty and is not native-load evidence. A corrected single attempt uses separate `source-under-test` and immutable `diagnostic-harness` checkouts, invokes the script by an explicit workspace path from the target frontend directory, and initializes a safe status artifact before npm or Node execution so harness failures remain inspectable. The original failed run is preserved; no install is repeated in this workspace.
+
+The coordinator authorized one corrected attempt after identifying the missing-script harness defect. The workflow now admits exactly one further push on the diagnostic branch, and only when its `before` SHA is the preserved failed harness head `3b2210f1a8dc1b1cd4b483288c5ea615203aa8bd`; later pushes cannot match that guard. It checks out source SHA `8c269bc1011b1bea4af43d24b49de52e8a6eb5e9` into `source-under-test` and the triggering immutable `github.sha` into `diagnostic-harness`, so the target frontend and probe script remain available in separate directories.
