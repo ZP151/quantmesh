@@ -128,3 +128,11 @@ LOCAL-CHECKPOINT.json and handed to the sole release owner through the main
 coordinator. This closes the source leaf, not required release CI/normal merge,
 executable operations review, parent installation, child image, native22, R90
 or formalL acceptance. No push, SSH, installation or host mutation in this leaf.
+
+## Exact-main integration review follow-up — 2026-10-23
+
+The exact-main integration review found that `docs/runbooks/research-service.md`
+still named the superseded `07f4…` Linux lock although producer/consumer
+admission now requires `0de42…`. The runbook receipt identifier is corrected to
+the admitted lock SHA. This aligns operator documentation only; it does not
+qualify a host installation. Integration PR CI must certify the updated head.
