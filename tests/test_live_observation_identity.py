@@ -218,9 +218,16 @@ async def test_metric_burst_keeps_real_pump_subscribers_and_three_symbol_quotes_
                         quote_time,
                     )
                 )
-            await _wait_until(lambda: len(buffer.replay(kinds=["quote"])) == 3, task)
+            delivered = []
+
+            def quotes_delivered():
+                while not subscriber.empty():
+                    delivered.append(subscriber.get_nowait())
+                return sum(row.kind is UpdateKind.QUOTE for row in delivered) == 3
+
+            await _wait_until(quotes_delivered, task)
+            assert len(buffer.replay(kinds=["quote"])) == 3
             assert not task.done()
-            delivered = [subscriber.get_nowait() for _ in range(subscriber.qsize())]
             metrics = buffer.replay(kinds=["metrics"])
             assert [row.model_dump() for row in delivered if row.kind is UpdateKind.METRICS] == [
                 row.model_dump() for row in metrics
