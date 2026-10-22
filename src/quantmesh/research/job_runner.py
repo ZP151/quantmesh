@@ -528,6 +528,8 @@ def run_next_job(
             )
         bundle = attempt / "bundle" if execution is not None else attempt
         output = attempt / "output" if execution is not None else attempt
+        contended = False
+        waiting_heartbeat = started
         while True:
             if stop_event is not None and stop_event.is_set():
                 return _observe_worker_call(
@@ -537,11 +539,27 @@ def run_next_job(
             if remaining <= 0:
                 error = "timeout"
                 raise TimeoutError("snapshot preparation deadline exceeded")
+            if contended and time.monotonic() - waiting_heartbeat >= HEARTBEAT_SECONDS:
+                if stop_event is not None and stop_event.is_set():
+                    return _observe_worker_call(
+                        "current_record", lambda: store.get(job.operator_id, job.job_id)
+                    )
+                if not _observe_worker_call(
+                    "heartbeat_before_start",
+                    lambda: store.heartbeat(job.job_id, owner, job.attempt, datetime.now(UTC)),
+                ):
+                    return _observe_worker_call(
+                        "current_record", lambda: store.get(job.operator_id, job.job_id)
+                    )
+                waiting_heartbeat = time.monotonic()
+                # Recheck stop/deadline after an entered store operation completes.
+                continue
             if _observe_worker_call(
                 "snapshot_lock",
                 lambda: _SNAPSHOT_LOCK.acquire(timeout=min(_POLL_SECONDS, remaining)),
             ):
                 break
+            contended = True
         try:
             if stop_event is not None and stop_event.is_set():
                 return _observe_worker_call(
