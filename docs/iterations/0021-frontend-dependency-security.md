@@ -77,3 +77,18 @@ output/0021-dependency-audit-security/FRONTEND207-DELIVERY.json. The frontend wr
 then freezes and releases its seat. This checkpoint references207, does not close
 205 or claim the separate Python/host vulnerability is remediated, and performs
 no CI retry, release merge, SSH, provider call, OpenD or server operation.
+
+## One-shot Linux native CSS diagnostic — 2026-10-22
+
+The failed release check at PR head `8c269bc1011b1bea4af43d24b49de52e8a6eb5e9`
+did not retain its installed dependency tree or the first native-load error.
+The dedicated workflow `native-css-diagnostic.yml` is restricted to the initial
+push of branch `codex/207-lightningcss-probe-39667744567`; it checks out that
+fixed head, uses the existing Ubuntu and Node 22.12 setup, runs plain `npm ci`
+once, then loads the platform-selected Lightning CSS native package directly.
+It emits only platform/runtime metadata, lock and installed-package closure,
+safe relative paths, exit codes, and sanitized error code/message. No environment
+dump, npm configuration, credentials, stack, cache, or source lock changes are
+included. The run is diagnostic evidence only and does not certify a release or
+change any required gate. The single artifact is
+`native-css-diagnostic-8c269bc-39667744567`.

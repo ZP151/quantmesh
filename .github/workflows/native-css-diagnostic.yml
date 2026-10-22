@@ -1,0 +1,58 @@
+name: Native CSS one-shot diagnostic
+
+on:
+  push:
+    branches:
+      - codex/207-lightningcss-probe-39667744567
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/codex/207-lightningcss-probe-39667744567' &&
+      github.event.before == '0000000000000000000000000000000000000000'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 8c269bc1011b1bea4af43d24b49de52e8a6eb5e9
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+      - name: Install once and capture native loading evidence
+        working-directory: frontend
+        shell: bash
+        run: |
+          set -u
+          report_dir="$RUNNER_TEMP/native-css-diagnostic"
+          mkdir -m 700 "$report_dir"
+          npm_version="$(npm --version)"
+          set +e
+          npm ci >"$report_dir/npm-ci-private.log" 2>&1
+          npm_ci_exit=$?
+          set -e
+          export NATIVE_CSS_NPM_CI_EXIT="$npm_ci_exit"
+          export NATIVE_CSS_NPM_VERSION="$npm_version"
+          set +e
+          node ../tools/probe_native_css.cjs >"$report_dir/probe.json" 2>/dev/null
+          probe_exit=$?
+          set -e
+          cat "$report_dir/probe.json"
+          printf 'npm_ci_exit=%s probe_exit=%s\n' "$npm_ci_exit" "$probe_exit"
+          if [ "$npm_ci_exit" -ne 0 ] || [ "$probe_exit" -ne 0 ]; then
+            exit 1
+          fi
+      - name: Retain safe probe result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-css-diagnostic-8c269bc-39667744567
+          path: ${{ runner.temp }}/native-css-diagnostic/probe.json
+          if-no-files-found: ignore
+          retention-days: 7
