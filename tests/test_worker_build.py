@@ -10,9 +10,9 @@ from types import SimpleNamespace
 
 import pytest
 
-# Exact aa62 admission lock, inert test data only. Never install this fixture
-# or substitute the independently updated current security installation lock.
+# Inert historical refusal sample; never install this fixture.
 LEGACY_LOCK = Path(__file__).parent / "fixtures/worker-admission/linux-cp312-legacy.lock"
+SECURE_LOCK = Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
 
 
 def _sha(raw):
@@ -40,7 +40,7 @@ def sealed(tmp_path):
     notice = notices / "LICENSE"
     notice.write_bytes(b"unit-fixture notice")
     lock = prefix / "requirements.lock"
-    lock.write_bytes(LEGACY_LOCK.read_bytes())
+    lock.write_bytes(SECURE_LOCK.read_bytes())
     metadata = prefix / "METADATA"
     record = prefix / "RECORD"
     metadata.write_bytes(b"Metadata-Version: 2.4\n")
@@ -427,23 +427,65 @@ def _reseal_inventory(sealed, *, links=None):
     sealed.data["inventory_sha256"] = _sha(sealed.inventory.read_bytes())
 
 
-def test_current_source_lock_requires_independent_runtime_admission(sealed, monkeypatch):
+def test_historical_lock_refuses_even_with_matching_runtime(sealed, monkeypatch):
     api = _api()
     _runtime(api, sealed, monkeypatch)
-    # Establish the valid old-contract control before changing only the lock.
+    # Establish secure admission before substituting a coherent historical family.
     assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
-    current = (
-        Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
-    ).read_bytes()
-    assert _sha(current) != api.LINUX_LOCK_SHA256
-    sealed.lock.write_bytes(current)
+    historical = LEGACY_LOCK.read_bytes()
+    assert _sha(historical) != api.LINUX_LOCK_SHA256
+    sealed.lock.write_bytes(historical)
     _reseal_inventory(sealed)
     _runtime(api, sealed, monkeypatch)  # Matching synthetic distribution versions.
     inventory = json.loads(sealed.inventory.read_text())
-    assert inventory["files"][str(sealed.lock)] == _sha(current)
+    assert inventory["files"][str(sealed.lock)] == _sha(historical)
     # Hash-consistent metadata cannot upgrade the independently fixed contract.
     with pytest.raises(ValueError):
         api._pins(sealed.lock)
+    with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+
+@pytest.mark.parametrize("fault", ["missing", "extra", "old_certifi", "other_version"])
+def test_secure_runtime_requires_exact_installed81(sealed, monkeypatch, fault):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+    distributions = list(api._distributions())
+    if fault == "missing":
+        distributions.pop()
+    elif fault == "extra":
+        distributions.append(type(distributions[0])("extra-fixed", "1.0"))
+    else:
+        name = "certifi" if fault == "old_certifi" else "anyio"
+        dist = next(row for row in distributions if row.metadata["Name"] == name)
+        dist.version = "2026.7.22" if fault == "old_certifi" else "0.0.0"
+    monkeypatch.setattr(api, "_distributions", lambda: distributions)
+    with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
+        api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+
+
+@pytest.mark.parametrize("fault", ["missing", "extra", "duplicate", "syntax", "other_hash"])
+def test_secure_runtime_refuses_changed_or_abnormal_lock(sealed, monkeypatch, fault):
+    api = _api()
+    _runtime(api, sealed, monkeypatch)
+    assert api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
+    lines = [
+        line for line in sealed.lock.read_text().splitlines() if line and not line.startswith("#")
+    ]
+    if fault == "missing":
+        lines.pop()
+    elif fault == "extra":
+        lines.append("extra-fixed==1.0 --hash=sha256:" + "a" * 64)
+    elif fault == "duplicate":
+        lines.append(lines[0])
+    elif fault == "syntax":
+        lines[0] = "invalid requirement"
+    else:
+        index = next(index for index, line in enumerate(lines) if line.startswith("anyio=="))
+        lines[index] = lines[index].split("--hash=sha256:")[0] + "--hash=sha256:" + "0" * 64
+    sealed.lock.write_text("\n".join(lines) + "\n")
+    _reseal_inventory(sealed)
     with pytest.raises(api.WorkerBuildRejected, match="^worker build rejected$"):
         api.measure_worker_runtime(sealed.manifest, manifest_sha256=_bind(sealed))
 
