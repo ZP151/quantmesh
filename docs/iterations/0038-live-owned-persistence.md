@@ -196,3 +196,17 @@ No push, CI, merge, host changes, new recovery pair, old-history read, third
 latency calibration or dependency changes were performed in this functional
 leaf. The accepted observable result is ordered persisted-to-subscriber
 publication with owned cancellation/stop, not a production responsiveness claim.
+
+## Exact-main integration test-lifecycle correction — 2026-10-23
+
+The first exact-main integration release run (39812009096) reported five failures
+in `tests/test_live_history.py`: every failing ingest occurred after
+`_history_pair()` exited `TestClient` and shut down the attached feed. The
+implementation correctly refuses ingest after that shutdown. The deterministic
+history helper now sends its two requests without entering app lifespan, since
+these tests intentionally continue direct ingestion between request pairs.
+The stopped-feed guard and production lifespan behavior are unchanged.
+
+The affected parameterized cases pass locally: 7 passed, 6 existing warnings,
+4.69s using CPython 3.13. This is focused regression evidence only. The new
+exact-head CI is still required; the failed full-release receipt is preserved.
