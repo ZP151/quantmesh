@@ -54,6 +54,14 @@ class LinuxContainmentError(RuntimeError):
     """Fixed sanitized error code; never forwards Docker/vendor payloads."""
 
 
+class _ControlDeliveryError(LinuxContainmentError):
+    """Private fixed reason; external callers retain the control_lost code."""
+
+    def __init__(self, reason: str):
+        super().__init__("control_lost")
+        self.reason = reason
+
+
 def bootstrap_digest() -> str:
     return hashlib.sha256(Path(__file__).with_name("linux_bootstrap.py").read_bytes()).hexdigest()
 
@@ -380,14 +388,20 @@ class _Transport:
         self.lines: queue.Queue = queue.Queue(maxsize=16)
         self.line_mode = lines
         self.overflow = threading.Event()
+        self.read_failed = threading.Event()
         self.stdout = bytearray()
         self.threads = []
+        self.drained = []
         for stream, is_stdout in ((self.process.stdout, True), (self.process.stderr, False)):
-            thread = threading.Thread(target=self._drain, args=(stream, is_stdout), daemon=True)
+            completed = threading.Event()
+            self.drained.append(completed)
+            thread = threading.Thread(
+                target=self._drain, args=(stream, is_stdout, completed), daemon=True
+            )
             thread.start()
             self.threads.append(thread)
 
-    def _drain(self, stream, is_stdout):
+    def _drain(self, stream, is_stdout, completed):
         count = 0
         pending = b""
         try:
@@ -410,10 +424,15 @@ class _Transport:
                             self.overflow.set()
                             self.process.kill()
                             return
-        except OSError:
-            pass
+            else:
+                completed.set()
+        except (OSError, ValueError):
+            self.read_failed.set()
         finally:
-            stream.close()
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                self.read_failed.set()
 
     def receive(self, timeout: float) -> dict:
         try:
@@ -426,8 +445,10 @@ class _Transport:
             raise LinuxContainmentError("attach_failed") from exc
 
     def send(self, value: str):
-        if self.overflow.is_set() or self.process.poll() is not None:
-            raise LinuxContainmentError("control_lost")
+        if self.overflow.is_set():
+            raise _ControlDeliveryError("output_overflow")
+        if self.process.poll() is not None:
+            raise _ControlDeliveryError("attach_exited")
         finished = threading.Event()
         failed = threading.Event()
         # New threads do not inherit ContextVars. Capture the original value,
@@ -453,10 +474,32 @@ class _Transport:
         completed = finished.wait(CONTROL_WRITE_SECONDS)
         if expired:
             raise expired[0]
-        if not completed or failed.is_set():
-            self.overflow.set()
+        if not completed:
             self.process.kill()
-            raise LinuxContainmentError("control_lost")
+            raise _ControlDeliveryError("write_timeout")
+        if failed.is_set():
+            raise _ControlDeliveryError("pipe_closed")
+
+    def terminal_drained(self) -> bool:
+        """Prove clean CLI exit and complete bounded reads, never infer OCI exit."""
+        deadline = time.monotonic() + CONTROL_WRITE_SECONDS
+        original = _launch_deadline.get()
+        if original is not None:
+            deadline = min(deadline, original)
+        try:
+            if self.process.wait(timeout=max(0, deadline - time.monotonic())) != 0:
+                return False
+            for thread in self.threads:
+                thread.join(timeout=max(0, deadline - time.monotonic()))
+            return (
+                not any(thread.is_alive() for thread in self.threads)
+                and len(self.drained) == 2
+                and all(event.is_set() for event in self.drained)
+                and not self.overflow.is_set()
+                and not self.read_failed.is_set()
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return False
 
     def close(self):
         if self.process.poll() is None:
@@ -871,7 +914,49 @@ class LinuxOwnedProcess:
     def pulse(self) -> None:
         if self.closed or self.transport is None:
             raise LinuxContainmentError("control_lost")
-        self.transport.send("pulse")
+        try:
+            self.transport.send("pulse")
+        except _ControlDeliveryError as error:
+            if error.reason not in {"attach_exited", "pipe_closed"}:
+                raise
+            # Caller owns cancellation/store fencing; consult its cooperative
+            # stop token too, and never let this bounded check extend its budget.
+            from quantmesh.research.worker_execution import _stop_event
+
+            stop = _stop_event.get()
+            original = _launch_deadline.get()
+            if type(original) not in (int, float) or not 0 < original < float("inf"):
+                raise
+            _check_launch_deadline(original)
+            if (
+                (stop is not None and stop.is_set())
+                or self.evidence.get("parent_binding_sha256") is None
+                or self._binding_identity is None
+            ):
+                raise
+            drained = self.transport.terminal_drained()
+            _check_launch_deadline()
+            if not drained or (stop is not None and stop.is_set()):
+                raise
+            try:
+                state = self._inspect()["State"]
+                clean = (
+                    state["Running"] is False
+                    and state["OOMKilled"] is False
+                    and type(state["ExitCode"]) is int
+                    and state["ExitCode"] == 0
+                )
+            except (LinuxContainmentError, KeyError, TypeError):
+                raise error from None
+            _check_launch_deadline()
+            if (
+                not clean
+                or time.monotonic() - self.started >= self.budget.timeout_seconds
+                or (stop is not None and stop.is_set())
+            ):
+                raise
+            # No success is declared here. The next ordinary poll supplies exit
+            # evidence; both runtime/receipt validations and lease fences remain.
 
     def poll(self) -> int | None:
         state = self._inspect()["State"]
