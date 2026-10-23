@@ -445,9 +445,15 @@ def _history_pair(feed: LiveFeed, now: datetime, symbol: str = "BTC"):
         workspace_clock=lambda: now,
         host="127.0.0.1",
     )
-    with TestClient(app) as client:
+    # These deterministic drill tests ingest directly between request pairs.
+    # Entering TestClient's app lifespan would start and then stop the attached
+    # feed, correctly forbidding later ingest calls on that same instance.
+    client = TestClient(app)
+    try:
         history = client.get(f"/api/instruments/hyperliquid/{symbol}/history?range=1d")
         workspace = client.get(f"/api/instruments/hyperliquid/{symbol}/workspace?range=1d")
+    finally:
+        client.close()
     return history, workspace
 
 

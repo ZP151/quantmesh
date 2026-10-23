@@ -290,6 +290,12 @@ class LiveFeed:
         self._supervisors: list[VenueSupervisor] = []
         self._subscribers: set[asyncio.Queue[MarketUpdate]] = set()
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._io_gate: asyncio.Lock | None = None
+        self._io_task: asyncio.Task[Any] | None = None
+        self._requests: set[asyncio.Task[None]] = set()
+        self._generation = 0
+        self._accepting = False
+        self._stopped = False
         if self._lake is not None:
             for update in self._lake.latest():
                 self._ingest_cached(update.model_copy(deep=True))
@@ -328,21 +334,115 @@ class LiveFeed:
 
     def ingest(self, updates: list[MarketUpdate]) -> list[MarketUpdate]:
         """Cache + replay lake; the wall-clock-free path every drill drives."""
+        if self._stopped:
+            raise RuntimeError("live feed has stopped")
         cached_updates = [update.model_copy(deep=True) for update in updates]
-        admitted: list[MarketUpdate] = []
         with self._lock:
-            if self._lake is None:
-                receipts = [None] * len(cached_updates)
-            elif len(cached_updates) == 1:
-                receipts = [self._lake.append(cached_updates[0])]
-            else:
-                receipts = self._lake.append_many(cached_updates)
-            for cached, receipt in zip(cached_updates, receipts, strict=True):
-                if receipt is not None and not getattr(receipt, "inserted", True):
-                    continue
-                admitted.append(cached)
-                self._ingest_cached(cached)
+            return self._apply_persisted(cached_updates, self._persist(cached_updates))
+
+    def _persist(self, updates: list[MarketUpdate]) -> list[Any]:
+        """Only storage work; the connection owns its own same-thread lock."""
+        if self._lake is None:
+            return [None] * len(updates)
+        if len(updates) == 1:
+            return [self._lake.append(updates[0])]
+        return self._lake.append_many(updates)
+
+    def _apply_persisted(
+        self, updates: list[MarketUpdate], receipts: list[Any]
+    ) -> list[MarketUpdate]:
+        admitted = []
+        for cached, receipt in zip(updates, receipts, strict=True):
+            if receipt is not None and not getattr(receipt, "inserted", True):
+                continue
+            admitted.append(cached)
+            self._ingest_cached(cached)
         return admitted
+
+    @staticmethod
+    async def _join_owned(task: asyncio.Future[Any]) -> Any:
+        """Cancellation of the waiter cannot abandon its actual owned work."""
+        while not task.done():
+            try:
+                await asyncio.shield(task)
+            except asyncio.CancelledError:
+                continue
+        return task.result()
+
+    async def _owned_io(self, operation: Callable[..., Any], *args: Any) -> Any:
+        task = asyncio.create_task(asyncio.to_thread(operation, *args))
+        self._io_task = task
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            await self._join_owned(task)
+            raise
+        finally:
+            self._io_task = None
+
+    async def _publish_in_order(
+        self,
+        cached: list[MarketUpdate],
+        supervisor: VenueSupervisor | None,
+        generation: int,
+        entered: asyncio.Event,
+    ) -> None:
+        assert self._io_gate is not None
+        async with self._io_gate:
+            if not self._accepting or generation != self._generation:
+                raise asyncio.CancelledError
+            entered.set()
+            receipts = await self._owned_io(self._persist, cached)
+            if not self._accepting or generation != self._generation:
+                return
+            with self._lock:
+                admitted = self._apply_persisted(cached, receipts)
+            if self._lake is not None and supervisor is not None:
+                supervisor.on_persisted(admitted)
+            for update in admitted:
+                await self._deliver(update)
+
+    async def _publish_owned(
+        self, updates: list[MarketUpdate], supervisor: VenueSupervisor | None = None
+    ) -> None:
+        if not updates:
+            return
+        if self._stopped:
+            raise RuntimeError("live feed has stopped")
+        if self._loop is None:
+            admitted = self.ingest(updates)
+            if self._lake is not None and supervisor is not None:
+                supervisor.on_persisted(admitted)
+            for update in admitted:
+                await self._deliver(update)
+            return
+        if not self._accepting:
+            raise asyncio.CancelledError
+        cached = [update.model_copy(deep=True) for update in updates]
+        entered = asyncio.Event()
+        task = asyncio.create_task(
+            self._publish_in_order(cached, supervisor, self._generation, entered)
+        )
+        self._requests.add(task)
+        try:
+            await asyncio.shield(task)
+        except asyncio.CancelledError:
+            # A cancelled queue waiter has no write obligation. Once I/O starts,
+            # the feed owns commit/application independently of that waiter.
+            if not entered.is_set():
+                task.cancel()
+            await self._join_owned(task)
+            raise
+        finally:
+            self._requests.discard(task)
+
+    async def _prune_owned(self, now: datetime) -> None:
+        if self._io_gate is None:  # deterministic offline tick drills
+            await asyncio.to_thread(self.prune_if_due, now)
+            return
+        async with self._io_gate:
+            if self._accepting:
+                await self._owned_io(self.prune_if_due, now)
 
     def _ingest_cached(self, cached: MarketUpdate) -> None:
         """Fold one already-persisted update while holding ``_lock``."""
@@ -405,25 +505,28 @@ class LiveFeed:
 
     async def publish(self, update: MarketUpdate) -> None:
         """Ingest and fan out to every subscriber (server-loop path)."""
-        admitted = self.ingest([update])
-        if admitted:
-            await self._deliver(admitted[0])
+        await self._publish_owned([update])
 
     async def publish_many(self, updates: list[MarketUpdate]) -> None:
         """Atomically ingest a supervisor batch, then fan out admitted rows."""
-        for update in self.ingest(updates):
-            await self._deliver(update)
+        await self._publish_owned(updates)
 
     def publish_threadsafe(self, update: MarketUpdate) -> None:
         """Publish from another thread (TestClient drills): ingested
         synchronously, delivered on the server loop once the pump runs."""
-        admitted = self.ingest([update])
-        if admitted and self._loop is not None:
-            self._loop.call_soon_threadsafe(self._schedule_deliver, update)
-
-    def _schedule_deliver(self, update: MarketUpdate) -> None:
-        if self._loop is not None:
-            self._loop.create_task(self._deliver(update))
+        if self._stopped:
+            raise RuntimeError("live feed has stopped")
+        loop = self._loop
+        if loop is None:
+            self.ingest([update])
+            return
+        try:
+            owner_loop = asyncio.get_running_loop() is loop
+        except RuntimeError:
+            owner_loop = False
+        if owner_loop:
+            raise RuntimeError("publish_threadsafe requires another thread; await publish instead")
+        asyncio.run_coroutine_threadsafe(self._publish_owned([update]), loop).result()
 
     # -- queries ------------------------------------------------------------
 
@@ -762,28 +865,37 @@ class LiveFeed:
         supervisor pump, whose reconnect loops never exit on their own).
         """
         self._loop = asyncio.get_running_loop()
+        self._io_gate = asyncio.Lock()
+        self._generation += 1
+        self._accepting = True
+        self._stopped = False
         tasks = [asyncio.create_task(supervisor.run()) for supervisor in self._supervisors]
         tasks.append(asyncio.create_task(self._drain_loop()))
         tasks.append(asyncio.create_task(self._tick_loop()))
+        group = asyncio.gather(*tasks)
         try:
-            await asyncio.gather(*tasks)
+            await asyncio.shield(group)
         finally:
-            for task in tasks:
+            self._accepting = False
+            self._stopped = True
+            self._generation += 1
+            owned = [*tasks, *self._requests]
+            for task in owned:
                 task.cancel()
-            # inside a cancelled task every await raises CancelledError;
-            # swallow it so the cleanup gather still runs to completion
+            results = await self._join_owned(asyncio.gather(*owned, return_exceptions=True))
             with contextlib.suppress(asyncio.CancelledError):
-                await asyncio.gather(*tasks, return_exceptions=True)
+                group.exception()
+            for result in results:
+                if isinstance(result, BaseException) and not isinstance(
+                    result, asyncio.CancelledError
+                ):
+                    raise result
 
     async def _drain_loop(self) -> None:
         while True:
             for supervisor in self._supervisors:
                 updates = supervisor.drain()
-                admitted = self.ingest(updates)
-                if self._lake is not None:
-                    supervisor.on_persisted(admitted)
-                for update in admitted:
-                    await self._deliver(update)
+                await self._publish_owned(updates, supervisor)
             await asyncio.sleep(_POLL_SECONDS)
 
     async def _tick_loop(self) -> None:
@@ -794,12 +906,8 @@ class LiveFeed:
             # persisted lake.  Keep that work off the asyncio loop so a
             # supervisor's reconnect, freshness and subscriber pumps remain
             # responsive while the five-minute sweep runs.
-            await asyncio.to_thread(self.prune_if_due, now)
+            await self._prune_owned(now)
             for supervisor in self._supervisors:
                 supervisor.on_tick(now)
                 updates = supervisor.drain()
-                admitted = self.ingest(updates)
-                if self._lake is not None:
-                    supervisor.on_persisted(admitted)
-                for update in admitted:
-                    await self._deliver(update)
+                await self._publish_owned(updates, supervisor)
