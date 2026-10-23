@@ -1,5 +1,87 @@
 # Minimal SPY replay implementation plan
 
+## Approved P1 pre/post correction —2026-10-24
+
+Root approved diagnosis ea34bbd9406a84c552aecfa70e5c8b2351cf6d7c509e5c52f49a0c4834d777d9.
+One writer owns only this plan/iteration and the original tool/test. Reused
+ordinary worktree was clean; old b3 branch retained. New branch
+codex/205-prepost-evidence starts at fetched mergedmain9348b2f664b4595dbdcf77523931880fb2dbe661.
+90min window00:20:40–01:50:40SGT. No real SDK/data/host/financial calls.
+
+- [x] First add offline behavioral REDs: authorized first bounded request with
+  data facts unknown, genuine post-review later than as-of, unknown coverage
+  refusal, timestamp/binding tamper, repeat-intent no-fetch and v1 immutable
+  reopen. Capture a genuine synthetic v1 bag before editing for compatibility.
+- [x] Implement explicit v2 preauthorization and post-review within this tool.
+  Pre: scoped use/account/once/endpoint/asof/window and actual metadata freshness.
+  Post: bind actual raw/auth hashes, history access/coverage, field semantics
+  and explicit externally reviewed action coverage. UNKNOWN is not approval.
+  Capture produces unreviewed raw only; offline freeze requires valid review.
+- [x] Preserve v1 strict read-only reopening and original bytes; no new v1
+  capture/freeze or mixed-format fallback. Reuse original bounded public client,
+  one intent/journal,2pages/200rows/6calls/8MiB. No new framework or dependencies.
+- [x] GREEN new and necessary same-file compatibility cases, Ruff/format/diff.
+  Independent review at most2rounds, one aggregate correction; remaining round2
+  structural failure returns to Planner. Commit exact source/evidence and STOP;
+  unique release owner handles future CI/publication. No old48/root/native/UI runs
+  as progress substitutes, no newGoal or Phase2 implementation.
+
+Prechecked<=asof<=requested<=received<=reviewed<=frozen; metadata observation
+fresh at actual request. Post time is not falsely required to precede asof.
+Use PRECISE_UNKNOWN still blocks network; software repair grants no capture.
+The prior plan and evidence below are retained history, not new acceptance.
+
+### Current v2 operator contract
+
+1. Before any capture, external review supplies `CaptureAuthorization` v2:
+   explicit ALLOW_WITH_SCOPE for US.SPY/1d/private_research; source-use,
+   account-metadata and one-capture authorization receipt hashes; login/program/
+   quota facts; observed/prechecked/as-of UTC times; exact calendar-window digest;
+   localhost endpoint/port and actual SDK/OpenD versions. No history availability,
+   feed/units or action coverage is asserted before observing the responses.
+   Metadata is at most30min old, as-of at most5min old at data dispatch.
+2. Only the designated data owner may use `capture --authorization-json ...
+   --as-of ... --port ... --root ... --execute-once` after actual use approval.
+   The consumed fsynced intent binds the authorization and locked window.
+   Checks run before setup and immediately before every tool transport call;
+   session delay cannot reuse the earlier timestamp. Raw `requested_at_utc`
+   records the first actual tool dispatch after session setup. Capture returns
+   CAPTURED_UNREVIEWED/NOT_REVIEWED only; no automatic freeze or retry.
+3. Review actual responses externally. `PostReview` v2 binds canonical raw and
+   authorization SHA256s, actual history access, feed/currency/raw-price/session/
+   volume/dividend/date semantics, and a nonzero receipt proving explicitly
+   reviewed full locked-window/necessary-pay-date action coverage. Empty tables,
+   RET_OK and terminal cursors are insufficient. Unknown coverage refuses freeze.
+4. Offline `freeze --capture-json ... --authorization-json ... --review-json ...
+   --as-of ... --root ...` validates requested<=received<=reviewed<=frozen and
+   post-review age<=30min. Preauthorization freshness is evaluated at the recorded
+   request, so a genuine later review is allowed. Separate authorization/review
+   objects, raw/normalized members and v2 protocol are content-addressed.
+   `verify --root ... --digest ...` reopens original bytes, with no financial run.
+   Legacy v1 bags reopen strictly under original rules; no new v1 write/downgrade.
+
+### Current correction evidence
+
+Original behavioral RED:3failed/19passed, then22passed; necessary same-file
+compatibility86passed. Genuine original v1 bag was generated from the unmodified
+merged tool before editing, embedded as compressed JSON bytes in the existing
+test file; five immutable-reopen/tamper cases do not manufacture v1 via v2 code.
+Independent R1:38passed/48deselected; one Important setup-to-dispatch freshness
+gap. Single aggregate batch added four advancing-clock REDs, then4passed:
+metadata/as-of expiry stops history with retained CLI intent and no retry;
+successful setup records actual first dispatch; expiry after history blocks
+actions while retaining its plain response. Final necessary same-file check:
+90passed/5upstream warnings. Independent R2: READY,42passed/48deselected,
+no remaining Important/Critical findings; one aggregate correction only.
+Changed-file Ruff/format and whitespace checks exit0. Tool SHA256
+`22a76fc4d16d0877e16584ecd3af497d1091444fa5161d7ce43037580c8ba735`;
+tests `2c8ebbed8ce164e70390c1bc8e2024374d32a96292a47d5c54671a9dea9f58bc`.
+All logs are in the owned `output/205-prepost-evidence/` directory; synthetic
+wire only. The historical Phase1 review rounds below are separate old evidence.
+Commit/base/tree/diff and artifact hashes are recorded in the final handoff
+manifest in that directory. Source STOP after checkpoint; sole release owner
+performs any later exact-head CI. No publication or actual-data acceptance here.
+
 > **For agentic workers:** use superpowers:executing-plans inline, with one
 > independent bounded verifier at the Phase1 boundary. No additional implementer.
 
