@@ -2,6 +2,7 @@
 
 import importlib
 import importlib.util
+import io
 import json
 import os
 import sys
@@ -130,6 +131,7 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
     class Attachment:
         on_pulse = None
         closed = False
+        pulse_transport = None
 
         def receive(self, timeout):
             return dict(
@@ -138,6 +140,8 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
 
         def send(self, value):
             if value == "pulse":
+                if self.pulse_transport is not None:
+                    self.pulse_transport.send(value)
                 pulses.append(
                     store.get(
                         "local", json.loads((mounts["/inputs"] / "job.json").read_bytes())["job_id"]
@@ -169,8 +173,14 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
 
         def close(self):
             self.closed = True
+            if self.pulse_transport is not None:
+                self.pulse_transport.close()
+
+        def terminal_drained(self):
+            return self.pulse_transport.terminal_drained()
 
     attachment = Attachment()
+    attachment.state = state
     monkeypatch.setattr(linux_owned.LinuxExecutionProfile, "invoke", invoke)
     monkeypatch.setattr(linux_owned, "_attach", lambda *args: attachment)
 
@@ -205,6 +215,154 @@ def configured(monkeypatch, small_fixture, *, running=False, oom=False, code=0):
 
     execution = module.LinuxWorkerExecution(profile=profile, admission=TestAdmission())
     return module.WorkerRunner(execution=execution), store, lake, calls, mounts, pulses, attachment
+
+
+def _terminal_pulse_transport(monkeypatch, attachment):
+    """Keep production transport methods; replace only the external CLI process."""
+
+    class Process:
+        stdin = io.BytesIO()
+        stdout = io.BytesIO()
+        stderr = io.BytesIO()
+
+        def poll(self):
+            return None if attachment.state["Running"] else 0
+
+        def wait(self, timeout):
+            return self.poll()
+
+        def kill(self):
+            pass
+
+    with monkeypatch.context() as patch:
+        patch.setattr(linux_owned.subprocess, "Popen", lambda *args, **kwargs: Process())
+        transport = linux_owned._Transport(["fixture"], {}, lines=True)
+    for thread in transport.threads:
+        thread.join(1)
+        assert not thread.is_alive()
+    attachment.pulse_transport = transport
+    return transport
+
+
+@linux_owner
+def test_normal_exit_during_current_record_read_keeps_full_publication_path(
+    small_fixture, monkeypatch
+):
+    # Removing pulse's exact-owned terminal reconciliation must fail this loop.
+    runner, store, lake, calls, _, _, attachment = configured(
+        monkeypatch, small_fixture, running=True
+    )
+    _terminal_pulse_transport(monkeypatch, attachment)
+    job = store.submit("local", "terminal-pulse", request_for(lake))
+    ticks, stages = [0.0], []
+    monkeypatch.setattr(job_runner.time, "monotonic", lambda: ticks[0])
+    get = store.get
+
+    def exit_in_record_read(*args):
+        current = get(*args)
+        if ticks[0] == 1 and any(call[0] == "create" for call in calls):
+            attachment.state["Running"] = False
+        return current
+
+    monkeypatch.setattr(store, "get", exit_in_record_read)
+    observe = job_runner._observe_worker_call
+
+    def observed(stage, callback):
+        result = observe(stage, callback)
+        stages.append(stage)
+        return result
+
+    monkeypatch.setattr(job_runner, "_observe_worker_call", observed)
+    stop = Event()
+    monkeypatch.setattr(stop, "wait", lambda seconds: ticks.__setitem__(0, ticks[0] + 1))
+    with api()._worker_stop_scope(stop):
+        result = runner.run_next_job(store, "worker", lake, store.artifact_root)
+    assert result.job_id == job.job_id and result.state == "succeeded"
+    assert len(result.artifacts) == 1 and result.attempt == 1
+    assert stages[stages.index("pulse") :] == [
+        "pulse",
+        "poll",
+        "validate_exit_first",
+        "receipt_validation",
+        "heartbeat_before_publish",
+        "validate_exit_second",
+        "publish",
+        "finish_succeeded",
+        "cleanup",
+        "final_get",
+    ]
+    assert attachment.closed and ["rm", "--force", "f" * 64] in calls
+
+
+@linux_owner
+@pytest.mark.parametrize(
+    "refusal", ["cancel", "receipt", "runtime", "binding", "stale", "deadline"]
+)
+def test_terminal_pulse_preserves_receipt_runtime_and_store_fences(
+    small_fixture, monkeypatch, refusal
+):
+    runner, store, lake, calls, mounts, _, attachment = configured(
+        monkeypatch, small_fixture, running=True
+    )
+    transport = _terminal_pulse_transport(monkeypatch, attachment)
+    job = store.submit("local", "terminal-fence-" + refusal, request_for(lake))
+    ticks, entered, published = [0.0], [], []
+    monkeypatch.setattr(job_runner.time, "monotonic", lambda: ticks[0])
+    get, drained = store.get, transport.terminal_drained
+
+    def exit_in_record_read(*args):
+        current = get(*args)
+        if ticks[0] == 1 and any(call[0] == "create" for call in calls):
+            attachment.state["Running"] = False
+        return current
+
+    def guarded_drain():
+        result = drained()
+        entered.append("reconcile")
+        if refusal == "cancel":
+            store.request_cancel("local", job.job_id)
+        if refusal in {"receipt", "runtime"}:
+            path = mounts["/output"] / "receipt.json"
+            if refusal == "receipt":
+                path.write_bytes(b"{}")
+            else:
+                receipt = json.loads(path.read_bytes())
+                receipt["runtime"]["build_digest"] = "9" * 64
+                path.write_bytes(_canonical(receipt))
+        if refusal == "binding":
+            path = mounts["/inputs"] / "parent-binding.json"
+            path.chmod(0o600)
+            path.write_bytes(path.read_bytes() + b" ")
+            path.chmod(0o400)
+        if refusal == "stale":
+            future = datetime.now(UTC) + timedelta(seconds=61)
+            assert store.claim("replacement", future).attempt == 2
+        if refusal == "deadline":
+            ticks[0] = job.request.budget.timeout_seconds
+        return result
+
+    monkeypatch.setattr(store, "get", exit_in_record_read)
+    monkeypatch.setattr(transport, "terminal_drained", guarded_drain)
+    publish = job_runner.publish_result
+
+    def observed_publish(*args):
+        published.append(True)
+        return publish(*args)
+
+    monkeypatch.setattr(job_runner, "publish_result", observed_publish)
+    monkeypatch.setattr(
+        job_runner.time, "sleep", lambda seconds: ticks.__setitem__(0, ticks[0] + 1)
+    )
+    result = runner.run_next_job(store, "worker", lake, store.artifact_root)
+    assert entered == ["reconcile"]
+    assert result.job_id == job.job_id and result.artifacts == [] and published == []
+    if refusal == "cancel":
+        assert result.state == "cancelled"
+    elif refusal == "stale":
+        assert result.attempt == 2 and result.lease_owner == "replacement"
+    else:
+        assert result.state == "failed"
+    assert attachment.closed and ["rm", "--force", "f" * 64] in calls
 
 
 def test_context_resets_on_exception_nested_default_and_independent_thread(monkeypatch):

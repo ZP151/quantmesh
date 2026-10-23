@@ -1,10 +1,12 @@
 """Command tests are not native OCI qualification."""
 
 import importlib.util
+import io
 import json
 import os
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -801,12 +803,15 @@ def test_standalone_child_has_fixed_ephemeral_home(tmp_path, monkeypatch):
         "assert Path.home()==Path('/tmp');"
         "assert set(os.environ)=={'PATH','LANG','HOME','PYTHONDONTWRITEBYTECODE'}"
     )
-    assert bootstrap.supervise(
-        [sys.executable, "-B", "-I", "-S", "-c", workload],
-        tmp_path,
-        3,
-        control=Pulse(),
-    ) == 0
+    assert (
+        bootstrap.supervise(
+            [sys.executable, "-B", "-I", "-S", "-c", workload],
+            tmp_path,
+            3,
+            control=Pulse(),
+        )
+        == 0
+    )
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="real standalone child env check")
@@ -975,6 +980,344 @@ def test_hung_pulse_write_has_deadline(monkeypatch):
     with pytest.raises(owned.LinuxContainmentError):
         transport.send("pulse")
     assert time.monotonic() - start < 0.2
+
+
+def _pulse_transport(
+    monkeypatch, *, code=0, stdout=b"", stderr=b"", write=None, stdout_stream=None
+):
+    """Exercise real transport code with only the external process substituted."""
+
+    class Stdin(io.BytesIO):
+        def write(self, value):
+            if write is not None:
+                write()
+            return super().write(value)
+
+    class Process:
+        killed = False
+
+        def __init__(self):
+            self.stdin = Stdin()
+            self.stdout = io.BytesIO(stdout) if stdout_stream is None else stdout_stream
+            self.stderr = io.BytesIO(stderr)
+
+        def poll(self):
+            return code() if callable(code) else code
+
+        def wait(self, timeout):
+            result = self.poll()
+            if result is None:
+                raise subprocess.TimeoutExpired("fixture", timeout)
+            return result
+
+        def kill(self):
+            self.killed = True
+
+    with monkeypatch.context() as patch:
+        patch.setattr(owned.subprocess, "Popen", lambda *args, **kwargs: Process())
+        transport = owned._Transport(["fixture"], {}, lines=True)
+    for thread in transport.threads:
+        thread.join(1)
+        assert not thread.is_alive()
+    return transport
+
+
+def test_attachment_read_refusal_cannot_prove_completed_drain(monkeypatch):
+    # An ended drainer thread is insufficient when its read never reached EOF.
+    class Refused(io.BytesIO):
+        def read(self, size):
+            raise ValueError("closed external pipe")
+
+    transport = _pulse_transport(monkeypatch, stdout_stream=Refused())
+    assert transport.terminal_drained() is False
+
+
+def test_terminal_pulse_requires_parent_binding(
+    profile, paths, engine, monkeypatch, pulse_deadline
+):
+    process = owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    engine[1]["Running"] = False
+    process.transport = _pulse_transport(monkeypatch)
+    with pytest.raises(owned.LinuxContainmentError, match="control_lost"):
+        process.pulse()
+
+
+@pytest.fixture
+def pulse_deadline():
+    from quantmesh.research._launch_deadline import _launch_deadline
+
+    token = _launch_deadline.set(time.monotonic() + 300)
+    try:
+        yield
+    finally:
+        _launch_deadline.reset(token)
+
+
+def _bound_pulse_process(profile, paths):
+    from quantmesh.research.worker_build import ParentBindingContract, encode_parent_binding
+
+    def prepare(process, ready):
+        return encode_parent_binding(
+            ParentBindingContract(
+                schema=1,
+                engine_id="fixture",
+                image_id=profile.image_id,
+                image_config_sha256="a" * 64,
+                container_id=process.container_id,
+                owner_nonce=process.nonce,
+                manifest_sha256="b" * 64,
+                inventory_sha256="c" * 64,
+                dependency_lock_sha256="d" * 64,
+                python_executable_sha256="e" * 64,
+                entry_sha256="f" * 64,
+                observer_sha256="0" * 64,
+                expected_prefix="/usr/local",
+                python_version="3.12.15",
+                kernel_profile_sha256="1" * 64,
+            )
+        )
+
+    return owned.LinuxOwnedProcess(
+        profile, ["/bin/true"], RunBudget(), *paths, prepare_parent_binding=prepare
+    )
+
+
+@pytest.mark.parametrize("when", ["already_exited", "pipe_closes", "successful_pulse"])
+def test_terminal_pulse_returns_to_ordinary_poll(
+    profile, paths, engine, monkeypatch, when, pulse_deadline
+):
+    _, state, _, _ = engine
+    process = _bound_pulse_process(profile, paths)
+    attached = [None if when != "already_exited" else 0]
+
+    def write():
+        state["Running"] = False
+        attached[0] = 0
+        if when == "pipe_closes":
+            raise BrokenPipeError("never exposed")
+
+    process.transport = _pulse_transport(monkeypatch, code=lambda: attached[0], write=write)
+    assert process.poll() is None
+    if when == "already_exited":
+        state["Running"] = False
+    process.pulse()
+    # Reconciliation does not set terminal evidence or declare success itself.
+    assert process.evidence["running"] is True
+    assert process.poll() == 0
+    process.close()
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "running",
+        "nonzero",
+        "oom",
+        "missing_state",
+        "wrong_id",
+        "wrong_image",
+        "wrong_nonce",
+        "config_drift",
+        "inspect_failure",
+        "missing_container",
+        "stdout_overflow",
+        "stderr_overflow",
+        "queue_overflow",
+        "read_failure",
+        "late_overflow",
+        "undrained",
+        "attach_nonzero",
+        "attach_wait_timeout",
+        "deadline",
+        "stopped",
+        "unknown_reason",
+        "binding_drift",
+        "binding_missing",
+        "stopped_during_inspect",
+    ],
+)
+def test_terminal_pulse_ambiguity_never_launders_failure(
+    profile, paths, engine, monkeypatch, failure, pulse_deadline
+):
+    calls, state, _, _ = engine
+    process = _bound_pulse_process(profile, paths)
+    state["Running"] = failure == "running"
+    if failure == "nonzero":
+        state["ExitCode"] = 7
+    if failure == "oom":
+        state["OOMKilled"] = True
+    transport = _pulse_transport(
+        monkeypatch,
+        code=9 if failure == "attach_nonzero" else 0,
+        stdout=b"x" * (owned.CLI_BYTES + 1)
+        if failure == "stdout_overflow"
+        else b"{}\n" * 17
+        if failure == "queue_overflow"
+        else b"",
+        stderr=b"x" * (owned.CLI_BYTES + 1) if failure == "stderr_overflow" else b"",
+    )
+    process.transport = transport
+    binding = paths[0] / "parent-binding.json"
+    if failure == "binding_drift":
+        binding.chmod(0o600)
+        binding.write_bytes(binding.read_bytes() + b" ")
+        binding.chmod(0o400)
+    if failure == "binding_missing":
+        binding.chmod(0o600)
+        binding.unlink()
+    if failure == "read_failure":
+        transport.read_failed.set()
+    if failure in {"late_overflow", "undrained"}:
+
+        class Drainer:
+            def join(self, timeout):
+                if failure == "late_overflow":
+                    transport.overflow.set()
+
+            def is_alive(self):
+                return failure == "undrained"
+
+        transport.threads = [Drainer()]
+    if failure == "attach_wait_timeout":
+
+        def wait(timeout):
+            raise subprocess.TimeoutExpired("fixture", timeout)
+
+        transport.process.wait = wait
+    if failure == "unknown_reason":
+
+        def send(value):
+            raise owned.LinuxContainmentError("control_lost")
+
+        transport.send = send
+    invoke = profile.invoke
+
+    def inspected(self, args):
+        if args[0] != "inspect":
+            return invoke(args)
+        if failure == "inspect_failure":
+            raise owned.LinuxContainmentError("engine_unavailable")
+        if failure == "missing_container":
+            return "[]"
+        if failure == "stopped_during_inspect":
+            stop.set()
+        doc = json.loads(invoke(args))
+        if failure == "wrong_id":
+            doc[0]["Id"] = "c" * 64
+        if failure == "wrong_image":
+            doc[0]["Image"] = "sha256:" + "c" * 64
+        if failure == "wrong_nonce":
+            doc[0]["Config"]["Labels"][owned.OWNER_LABEL] = "different-owner"
+        if failure == "config_drift":
+            doc[0]["HostConfig"]["Privileged"] = True
+        if failure == "missing_state":
+            doc[0]["State"] = {}
+        return json.dumps(doc)
+
+    monkeypatch.setattr(owned.LinuxExecutionProfile, "invoke", inspected)
+    from quantmesh.research.worker_execution import _worker_stop_scope
+
+    stop = threading.Event()
+    if failure == "stopped":
+        stop.set()
+    if failure == "deadline":
+        monkeypatch.setattr(owned.time, "monotonic", lambda: process.started + 1000)
+    expected = (
+        owned.LaunchDeadlineExceeded if failure == "deadline" else owned.LinuxContainmentError
+    )
+    with (
+        _worker_stop_scope(stop),
+        pytest.raises(expected, match=None if failure == "deadline" else "^control_lost$"),
+    ):
+        process.pulse()
+    assert "running" not in process.evidence
+    if failure == "attach_wait_timeout":
+        transport.process.wait = lambda timeout: 0
+    if failure in {
+        "wrong_id",
+        "wrong_image",
+        "wrong_nonce",
+        "inspect_failure",
+        "missing_container",
+    }:
+        with pytest.raises(owned.LinuxContainmentError):
+            process.close()
+        assert ["rm", "--force", "b" * 64] not in calls
+    else:
+        process.close()
+        assert ["rm", "--force", "b" * 64] in calls
+
+
+def test_pulse_write_timeout_is_distinct_from_output_overflow(monkeypatch):
+    release = threading.Event()
+
+    def blocked_write():
+        release.wait()
+
+    transport = _pulse_transport(monkeypatch, code=None, write=blocked_write)
+    monkeypatch.setattr(owned, "CONTROL_WRITE_SECONDS", 0)
+    try:
+        with pytest.raises(owned.LinuxContainmentError, match="^control_lost$") as caught:
+            transport.send("pulse")
+        assert caught.value.reason == "write_timeout"
+        assert not transport.overflow.is_set() and transport.process.killed
+    finally:
+        release.set()
+
+
+def test_original_deadline_expiring_during_drain_keeps_timeout(profile, paths, engine, monkeypatch):
+    from quantmesh.research._launch_deadline import LaunchDeadlineExceeded, _launch_deadline
+
+    process = _bound_pulse_process(profile, paths)
+    engine[1]["Running"] = False
+    transport = _pulse_transport(monkeypatch)
+    process.transport = transport
+    ticks = [0.0]
+    monkeypatch.setattr(owned.time, "monotonic", lambda: ticks[0])
+
+    class IncompleteDrain:
+        def join(self, timeout):
+            assert timeout == 1
+            ticks[0] = 1.0
+
+        def is_alive(self):
+            return True
+
+    transport.threads = [IncompleteDrain()]
+    token = _launch_deadline.set(1.0)
+    try:
+        with pytest.raises(LaunchDeadlineExceeded):
+            process.pulse()
+    finally:
+        _launch_deadline.reset(token)
+
+
+@pytest.mark.parametrize("deadline", [None, float("inf"), float("nan"), "unknown", True])
+def test_terminal_pulse_requires_usable_original_deadline(
+    profile, paths, engine, monkeypatch, deadline
+):
+    from quantmesh.research._launch_deadline import _launch_deadline
+
+    process = _bound_pulse_process(profile, paths)
+    engine[1]["Running"] = False
+    process.transport = _pulse_transport(monkeypatch)
+    token = _launch_deadline.set(deadline)
+    try:
+        with pytest.raises(owned.LinuxContainmentError):
+            process.pulse()
+    finally:
+        _launch_deadline.reset(token)
+
+
+def test_terminal_reconciliation_never_applies_to_launch_go(profile, paths, engine, monkeypatch):
+    calls, state, _, _ = engine
+    state["Running"] = False
+    transport = _pulse_transport(monkeypatch)
+    monkeypatch.setattr(transport, "receive", lambda timeout: engine[3].ready)
+    monkeypatch.setattr(owned, "_attach", lambda *args: transport)
+    with pytest.raises(owned.LinuxContainmentError, match="admission_failed"):
+        owned.LinuxOwnedProcess(profile, ["/bin/true"], RunBudget(), *paths)
+    assert ["rm", "--force", "b" * 64] in calls
 
 
 def _qualification_module():
