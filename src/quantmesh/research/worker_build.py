@@ -19,7 +19,7 @@ import types
 from dataclasses import dataclass
 from pathlib import Path
 
-LINUX_LOCK_SHA256 = "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
+LINUX_LOCK_SHA256 = "0de42c60394ad96a6a052b1e24a8cb88f14c87f0690b3b1e2467bf857afb7ea6"
 _JSON_LIMIT = 4 * 1024 * 1024
 _FILE_LIMIT = 512 * 1024 * 1024
 _ENTRY_LIMIT = 20000

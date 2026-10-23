@@ -12,6 +12,7 @@ import pytest
 
 # Same historical admission sample as the consumer tests; never install it.
 LEGACY_LOCK = Path(__file__).parent / "fixtures/worker-admission/linux-cp312-legacy.lock"
+SECURE_LOCK = Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
 
 MODULE = Path(__file__).parents[1] / "deploy/research_worker/seal_image.py"
 SPEC = importlib.util.spec_from_file_location("seal_image_under_test", MODULE)
@@ -48,7 +49,7 @@ def image(tmp_path, monkeypatch):
     monkeypatch.setattr(seal_image, "MANIFEST_PATH", source / "manifest.json")
     for directory in (source / "quantmesh/research", prefix / "bin", lib, docs):
         directory.mkdir(parents=True)
-    lock_bytes = LEGACY_LOCK.read_bytes()
+    lock_bytes = SECURE_LOCK.read_bytes()
     contents = {
         "deploy/research_worker/worker_entry.py": (
             source / "worker_entry.py",
@@ -153,18 +154,16 @@ def test_produces_existing_canonical_metadata_schemas(image):
     assert result["inventory_bytes"] == seal_image._canonical(result["inventory"])
 
 
-def test_current_source_lock_refuses_even_with_matching_catalog(image):
-    current = (
-        Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
-    ).read_bytes()
-    assert _sha(current) != seal_image.LINUX_LOCK_SHA256
-    seal_image.LOCK_IMAGE_PATH.write_bytes(current)
+def test_historical_lock_refuses_even_with_matching_catalog(image):
+    historical = LEGACY_LOCK.read_bytes()
+    assert _sha(historical) != seal_image.LINUX_LOCK_SHA256
+    seal_image.LOCK_IMAGE_PATH.write_bytes(historical)
     row = next(
         item
         for item in image["spec"]["input_records"]
         if item["repository_path"] == "services/research_agent/requirements.linux-cp312.lock"
     )
-    row.update(bytes=len(current), sha256=_sha(current))
+    row.update(bytes=len(historical), sha256=_sha(historical))
     assert row["sha256"] == _sha(seal_image.LOCK_IMAGE_PATH.read_bytes())
     with pytest.raises(seal_image.ImageSealRejected, match="^image metadata refused$"):
         _produce(image)

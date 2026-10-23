@@ -27,7 +27,7 @@ INVENTORY_ROOTS = (
 )
 PYTHON_EXECUTABLE = Path("/usr/local/bin/python3")
 LOCK_IMAGE_PATH = SOURCE_ROOT / "requirements.linux-cp312.lock"
-LINUX_LOCK_SHA256 = "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
+LINUX_LOCK_SHA256 = "0de42c60394ad96a6a052b1e24a8cb88f14c87f0690b3b1e2467bf857afb7ea6"
 ENTRY_IMAGE_PATH = SOURCE_ROOT / "worker_entry.py"
 OBSERVER_IMAGE_PATH = SOURCE_ROOT / "quantmesh/research/worker_provenance.py"
 BOOTSTRAP_IMAGE_PATH = SOURCE_ROOT / "linux_bootstrap.py"

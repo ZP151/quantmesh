@@ -381,7 +381,7 @@ def _admit_runtime(expected: str) -> tuple[str, str]:
         lock = root / "services/research_agent/requirements.linux-cp312.lock"
         if (
             hashlib.sha256(lock.read_bytes()).hexdigest()
-            != "07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
+            != "0de42c60394ad96a6a052b1e24a8cb88f14c87f0690b3b1e2467bf857afb7ea6"
         ):
             raise ValueError
         pins = read_lock(lock)

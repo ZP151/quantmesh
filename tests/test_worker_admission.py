@@ -55,7 +55,7 @@ def _pins(**changes):
     return WorkerAdmissionPins(**values)
 
 
-def _snapshot():
+def _snapshot(lock_raw=None):
     source = b"pinned source"
     rows = []
     files = {
@@ -66,16 +66,24 @@ def _snapshot():
     }
     lock_lines = []
     raw_hashes = {}
-    for index in range(81):
-        name = "fixture" if index == 0 else f"dep{index:02d}"
-        dist_info = f"{name}-1.0.dist-info"
+    selection = (
+        [
+            line.split(" --hash")[0].split("==")
+            for line in lock_raw.decode().splitlines()
+            if line and not line.startswith("#")
+        ]
+        if lock_raw is not None
+        else [("fixture" if index == 0 else f"dep{index:02d}", "1.0") for index in range(81)]
+    )
+    for index, (name, version) in enumerate(selection):
+        dist_info = f"{name}-{version}.dist-info"
         directory = f"/usr/local/lib/python3.12/site-packages/{dist_info}"
-        metadata = f"Name: {name}\r\nVersion: 1.0\r\n\r\n".encode()
+        metadata = f"Name: {name}\r\nVersion: {version}\r\n\r\n".encode()
         record = f"{name} RECORD\r\n".encode()
         files[f"{directory}/METADATA"] = _sha(metadata)
         files[f"{directory}/RECORD"] = _sha(record)
         text_hashes = {
-            "METADATA": _sha(f"Name: {name}\nVersion: 1.0\n\n".encode()),
+            "METADATA": _sha(f"Name: {name}\nVersion: {version}\n\n".encode()),
             "RECORD": _sha(f"{name} RECORD\n".encode()),
             "direct_url.json": _sha(b""),
         }
@@ -87,14 +95,15 @@ def _snapshot():
         rows.append(
             {
                 "name": name,
-                "version": "1.0",
+                "version": version,
                 "metadata_directory": directory,
                 "text_sha256": text_hashes,
                 "raw_sha256": raw_hashes,
             }
         )
-        lock_lines.append(f"{name}==1.0 --hash=sha256:{index + 1:064x}")
-    lock_raw = ("\n".join(lock_lines) + "\n").encode()
+        lock_lines.append(f"{name}=={version} --hash=sha256:{index + 1:064x}")
+    if lock_raw is None:
+        lock_raw = ("\n".join(lock_lines) + "\n").encode()
     files["/usr/local/requirements.lock"] = _sha(lock_raw)
     manifest = {
         "schema_version": 1,
@@ -255,6 +264,105 @@ def test_fingerprint_requires_lock_versions_to_match_installed_rows():
 
     with pytest.raises(ValueError):
         _runtime_fingerprint(manifest, inventory, metadata, lock_raw, pins)
+
+
+@pytest.mark.parametrize(
+    "fault", [None, "parent_lock", "old_certifi", "other_version", "stale_record", "80", "82"]
+)
+def test_secure_child_metadata_requires_matching_parent_and_installed81(fault):
+    secure = Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
+    raw = secure.read_bytes()
+    assert _sha(raw) == "0de42c60394ad96a6a052b1e24a8cb88f14c87f0690b3b1e2467bf857afb7ea6"
+    manifest, inventory, metadata, lock_raw = _snapshot(raw)
+    pins = _pins(dependency_lock_sha256=_sha(raw))
+    assert _runtime_fingerprint(manifest, inventory, metadata, lock_raw, pins)
+    if fault is None:
+        assert len(metadata["rows"]) == 81
+        assert (
+            next(row for row in metadata["rows"] if row["name"] == "certifi")["version"]
+            == "2026.10.19"
+        )
+        return
+    if fault == "parent_lock":
+        pins = _pins(
+            dependency_lock_sha256="07f4e7ec64805a375e0bdc707d0158fbdb08bd07d02aa569e2d119496b32592a"
+        )
+    elif fault in {"old_certifi", "other_version"}:
+        name = "certifi" if fault == "old_certifi" else "anyio"
+        row = next(row for row in metadata["rows"] if row["name"] == name)
+        row["version"] = "2026.7.22" if fault == "old_certifi" else "0.0.0"
+    elif fault == "stale_record":
+        row = next(row for row in metadata["rows"] if row["name"] == "certifi")
+        inventory["files"][row["metadata_directory"] + "/RECORD"] = "0" * 64
+    elif fault == "80":
+        metadata["rows"].pop()
+    else:
+        import copy
+
+        extra = copy.deepcopy(metadata["rows"][0])
+        extra["name"] = "extra-fixed"
+        metadata["rows"].append(extra)
+    with pytest.raises(ValueError):
+        _runtime_fingerprint(manifest, inventory, metadata, lock_raw, pins)
+
+
+@pytest.mark.skipif(
+    os.name != "posix" or os.getuid() == 0,
+    reason="private metadata uses real nonroot POSIX ownership",
+)
+@pytest.mark.parametrize("fault", [None, "80", "82", "record_bytes"])
+def test_secure81_physical_metadata_tree_refuses_missing_extra_or_stale_members(tmp_path, fault):
+    secure = Path(__file__).parents[1] / "services/research_agent/requirements.linux-cp312.lock"
+    raw = secure.read_bytes()
+    assert _sha(raw) == "0de42c60394ad96a6a052b1e24a8cb88f14c87f0690b3b1e2467bf857afb7ea6"
+    manifest, inventory, metadata, lock_raw = _snapshot(raw)
+    pins = _pins(dependency_lock_sha256=_sha(raw))
+    assert _runtime_fingerprint(manifest, inventory, metadata, lock_raw, pins)
+    root = tmp_path / "secure-snapshot"
+    root.mkdir(mode=0o700)
+    directory = root / "metadata"
+    directory.mkdir(mode=0o700)
+    for row in metadata["rows"]:
+        package = directory / Path(row["metadata_directory"]).name
+        package.mkdir(mode=0o700)
+        members = {
+            "METADATA": f"Name: {row['name']}\r\nVersion: {row['version']}\r\n\r\n".encode(),
+            "RECORD": f"{row['name']} RECORD\r\n".encode(),
+        }
+        for name, body in members.items():
+            assert _sha(body) == row["raw_sha256"][name]
+            path = package / name
+            path.write_bytes(body)
+            path.chmod(0o400)
+    assert len(list(directory.iterdir())) == 81
+    # The real metadata reader verifies actual bytes, names, versions and ownership.
+    _verify_distribution_metadata(root, metadata, inventory["files"])
+    if fault is None:
+        return
+    if fault == "80":
+        package = directory / Path(metadata["rows"][0]["metadata_directory"]).name
+        package.rename(root / "retained-missing.dist-info")
+        assert len(list(directory.iterdir())) == 80
+    elif fault == "82":
+        package = directory / "extra-fixed-1.0.dist-info"
+        package.mkdir(mode=0o700)
+        for name, body in {
+            "METADATA": b"Name: extra-fixed\r\nVersion: 1.0\r\n",
+            "RECORD": b"extra-fixed RECORD\r\n",
+        }.items():
+            path = package / name
+            path.write_bytes(body)
+            path.chmod(0o400)
+        assert len(list(directory.iterdir())) == 82
+    else:
+        row = next(row for row in metadata["rows"] if row["name"] == "certifi")
+        record = directory / Path(row["metadata_directory"]).name / "RECORD"
+        record.chmod(0o600)
+        record.write_bytes(b"changed physical RECORD\r\n")
+        record.chmod(0o400)
+        assert len(list(directory.iterdir())) == 81
+    with pytest.raises(WorkerAdmissionRejected, match="^worker_admission_failed$"):
+        _verify_distribution_metadata(root, metadata, inventory["files"])
 
 
 def test_text_hash_uses_utf8_universal_newline_semantics():
