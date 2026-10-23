@@ -1,5 +1,66 @@
 # Iteration0038 — approved minimal SPY daily replay
 
+## P1 pre/post correction —2026-10-24
+
+Planner: root approved the bounded correction to first-request evidence and
+review-time coupling; no repeat design approval. Same four owned files, clean
+ordinary worktree reused; branch codex/205-prepost-evidence from merged9348b2f.
+Old b3 branch/ref preserved. Window00:20:40–01:50:40SGT, software only.
+
+Quant: preauthorization must cover actual scoped use/account/once/endpoint and
+fresh metadata before transport; first-response history/field/action facts can
+remain unknown until post-review. Unknown action coverage is a mandatory refusal.
+No callback receipt is independent source-use/PIT proof; no economic/Phase2 gate
+is relaxed. Actual use remains PRECISE_UNKNOWN; capture/financial counts stay0.
+
+Implementer: test-first behavior correction and explicit v2 objects; v1 sealed
+bags stay strictly read-only. Existing public provider/client/ObjectStore and
+bounded intent/journal are reused. No SDK/adapter/lock/UI/Worker/host change.
+Reviewer/verifier: new RED/GREEN, necessary same-file compatibility and at most
+two independent review rounds; results will be recorded here before checkpoint.
+The original engineering/Goal evidence below remains historical and unchanged.
+
+### Current correction checkpoint
+
+Planner/Quant: approved evidence contract SHA256
+`ea34bbd9406a84c552aecfa70e5c8b2351cf6d7c509e5c52f49a0c4834d777d9`
+is the external diagnosis reference.
+This correction only removes the impossible pre-response facts and pre-asof
+review coupling; it does not grant actual source-use or economic qualification.
+Recent quote-login/quota metadata supersedes the historical login blocker below,
+but actual use remains PRECISE_UNKNOWN and fresh capture prerequisites still apply.
+Product Goal stays blocked; no new Goal, actual capture0, financial0, Phase2 NOT_STARTED.
+
+Implementer: explicit strict v2 preauthorization/capture/post-review/protocol;
+capture emits CAPTURED_UNREVIEWED only. Offline freeze requires bound actual
+responses and explicit external full action-coverage review. UNKNOWN/empty
+response/cursor cannot supply coverage. V1 reopening uses an original sealed
+seven-object golden bag; legacy rules/original bytes remain and new v1 writes
+or mixed-schema fallback refuse. Operator sequence is in the updated own plan.
+
+Verifier: original3behavioral REDs/19passed then22passed; necessary same-file
+compatibility86passed/5upstream deprecation warnings. Ruff/format/diff passed.
+Independent reviewer R1:38passed/48deselected, one Important freshness gap between
+setup and first dispatch. Single aggregate correction adds per-dispatch checks,
+records the actual first request time after setup and retains the initial gate.
+Four advancing-clock REDs failed, then4passed: separate metadata/as-of expiry,
+CLI consumed-intent/no-retry with zero history calls, actual request time, and
+expiry after history blocking actions while retaining the returned journal.
+Final necessary same-file checkpoint:90passed/5upstream warnings in20.00s;
+changed-file Ruff/format and diff checks exit0. Independent final R2: READY,
+42passed/48deselected/5warnings in11.35s, R1 closed, no remaining Important/
+Critical findings. No third review or additional source writer.
+Tool SHA256 `22a76fc4d16d0877e16584ecd3af497d1091444fa5161d7ce43037580c8ba735`;
+tests `2c8ebbed8ce164e70390c1bc8e2024374d32a96292a47d5c54671a9dea9f58bc`.
+R2 report SHA256 `d8bd7cbf624052f9bcebca442ec6c7afa99be86eee56589e8976e9d4c3160229`;
+parent90-case log `29068bcdb05f65a41925860c309ed0e367e78ae1e28ffcdc77e8d21bb8e00dd0`;
+independent42-case log `6bfde85f0c87cb52800ab2fc2246bcdbf3c43a61c30e9512fd60ee9140f04f46`.
+Logs/reports and final immutable commit/base/tree/diff/member-hash manifest are
+under `output/205-prepost-evidence/` in the owned issue205 worktree. Source STOP
+after this local checkpoint; report to main/release for sole-owner exact-head
+CI, without push/PR/host/data/financial calls. This software READY does not resume
+the blocked product Goal or establish the actual submit/report/decision loop.
+
 Date:2026-10-22 Asia/Singapore. Phase1 tool engineering READY; no actual data or
 numerical report yet. Tracking: [issue205](https://github.com/ZP151/quantmesh/issues/205),
 OPEN/ready-for-agent, assigned once by the main/release owner. Existing product

@@ -71,7 +71,7 @@ class FreezeError(ValueError):
 
 
 class SourceEvidence(BaseModel):
-    """External review receipt. Matching metadata is not independent legal proof."""
+    """Historical v1 receipt; accepted only for strict read-only normalization/reopen."""
 
     model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
     schema_version: Literal[1]
@@ -93,6 +93,54 @@ class SourceEvidence(BaseModel):
     event_date_format: Literal["%Y/%m/%d", "%m/%d/%Y", "%Y-%m-%d"]
     sdk_version: str = Field(min_length=1, max_length=100)
     opend_version: str = Field(min_length=1, max_length=100)
+
+
+class CaptureAuthorization(BaseModel):
+    """Trusted external authorization for one request, never data qualification."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
+    schema_version: Literal[2]
+    status: Literal["authorized_for_bounded_capture"]
+    scope: Literal["US.SPY/1d/private_research"]
+    use_status: Literal["ALLOW_WITH_SCOPE"]
+    use_document_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    account_metadata_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    capture_authorization_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    metadata_observed_at_utc: str
+    prechecked_at_utc: str
+    as_of_utc: str
+    window_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    quote_logged_in: Literal[True]
+    program_ready: Literal[True]
+    spy_quota_available: Literal[True]
+    endpoint_host: Literal["127.0.0.1"]
+    endpoint_port: int = Field(ge=1, le=65535)
+    sdk_version: str = Field(min_length=1, max_length=100)
+    opend_version: str = Field(min_length=1, max_length=100)
+
+
+class PostReview(BaseModel):
+    """External scoped review of actual bound responses; not independent legal proof."""
+
+    model_config = ConfigDict(extra="forbid", strict=True, frozen=True)
+    schema_version: Literal[2]
+    status: Literal["reviewed_for_freeze"]
+    scope: Literal["US.SPY/1d/private_research"]
+    authorization_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    capture_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reviewed_at_utc: str
+    history_available: Literal[True]
+    full_action_history_reviewed: Literal[True]
+    action_coverage_status: Literal["complete_for_locked_window"]
+    action_coverage_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    field_semantics_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    feed: str = Field(min_length=1, max_length=200)
+    currency: Literal["USD"]
+    price_adjustment: Literal["raw"]
+    daily_session_semantics: Literal["regular_session_daily_proxy"]
+    volume_unit: Literal["shares"]
+    dividend_unit: Literal["USD/share"]
+    event_date_format: Literal["%Y/%m/%d", "%m/%d/%Y", "%Y-%m-%d"]
 
 
 def _canonical(value) -> bytes:
@@ -136,6 +184,102 @@ def _evidence(record, at):
         return valid
     except (ValueError, TypeError, ValidationError):
         raise FreezeError("evidence_unqualified_or_stale") from None
+
+
+def _digest(value):
+    return hashlib.sha256(_canonical(value)).hexdigest()
+
+
+def _typed_record(model, record, true_fields, code):
+    try:
+        if not isinstance(record, dict) or type(record.get("schema_version")) is not int:
+            raise ValueError
+        if any(record.get(key) is not True for key in true_fields):
+            raise ValueError
+        valid = model.model_validate(record).model_dump()
+        if any(value == "0" * 64 for key, value in valid.items() if key.endswith("_sha256")):
+            raise ValueError
+        return valid
+    except (ValueError, TypeError, ValidationError):
+        raise FreezeError(code) from None
+
+
+def _authorization_time(valid, as_of, requested_at):
+    """Cheap dispatch guard over an already validated, window-bound authorization."""
+    observed = _stamp(valid["metadata_observed_at_utc"], "authorization_unqualified_or_stale")
+    checked = _stamp(valid["prechecked_at_utc"], "authorization_unqualified_or_stale")
+    if (
+        not observed <= checked <= as_of <= requested_at
+        or requested_at - observed > timedelta(minutes=30)
+        or requested_at - as_of > timedelta(minutes=5)
+        or _stamp(valid["as_of_utc"], "authorization_unqualified_or_stale") != as_of
+    ):
+        raise FreezeError("authorization_unqualified_or_stale")
+
+
+def _authorization(record, as_of, requested_at, *, port=None):
+    valid = _typed_record(
+        CaptureAuthorization,
+        record,
+        ("quote_logged_in", "program_ready", "spy_quota_available"),
+        "authorization_unqualified_or_stale",
+    )
+    _authorization_time(valid, as_of, requested_at)
+    if valid["window_sha256"] != _digest(plan_window(as_of)) or (
+        port is not None and valid["endpoint_port"] != port
+    ):
+        raise FreezeError("authorization_unqualified_or_stale")
+    return valid
+
+
+_PAYLOAD_KEYS = {
+    "received_at_utc",
+    "history_pages",
+    "adjustment_factors",
+    "dividends",
+    "stock_split_pages",
+}
+
+
+def _reviewed_inputs(raw, window, envelope, frozen_at):
+    if (
+        not isinstance(envelope, dict)
+        or set(envelope) != {"schema_version", "authorization", "review"}
+        or type(envelope["schema_version"]) is not int
+        or envelope["schema_version"] != 2
+    ):
+        raise FreezeError("v2_evidence_envelope_invalid")
+    if (
+        not isinstance(raw, dict)
+        or set(raw)
+        != _PAYLOAD_KEYS | {"schema_version", "authorization_sha256", "requested_at_utc"}
+        or type(raw["schema_version"]) is not int
+        or raw["schema_version"] != 2
+    ):
+        raise FreezeError("v2_capture_schema_invalid")
+    _canonical(raw)
+    as_of = _stamp(window["as_of_utc"])
+    requested, received = _stamp(raw["requested_at_utc"]), _stamp(raw["received_at_utc"])
+    auth = _authorization(envelope["authorization"], as_of, requested)
+    review = _typed_record(
+        PostReview,
+        envelope["review"],
+        ("history_available", "full_action_history_reviewed"),
+        "post_review_unqualified",
+    )
+    reviewed = _stamp(review["reviewed_at_utc"])
+    if (
+        not requested <= received <= reviewed <= frozen_at
+        or frozen_at - reviewed > timedelta(minutes=30)
+        or raw["authorization_sha256"] != _digest(auth)
+        or review["authorization_sha256"] != _digest(auth)
+        or review["capture_sha256"] != _digest(raw)
+        or review["feed"].strip().upper().startswith(("UNKNOWN", "UNVERIFIED", "NOT_"))
+        or not review["feed"].strip()
+    ):
+        raise FreezeError("post_review_binding_or_time_invalid")
+    normalized = _normalize_payload({key: raw[key] for key in _PAYLOAD_KEYS}, window, review)
+    return auth, review, normalized
 
 
 def plan_window(as_of):
@@ -270,7 +414,12 @@ def _actions(raw, window, evidence):
 
 
 def normalize_capture(raw, window, evidence):
+    """Read-only v1 normalization; v2 freeze validates its explicit post-review."""
     evidence = _evidence(evidence, _stamp(window["as_of_utc"]))
+    return _normalize_payload(raw, window, evidence)
+
+
+def _normalize_payload(raw, window, evidence):
     if window != plan_window(_stamp(window["as_of_utc"])):
         raise FreezeError("window_modified")
     _canonical(raw)
@@ -395,14 +544,25 @@ class _RecordingTransport:
     cannot be retained at this boundary. Never claim those are recorded responses.
     """
 
-    def __init__(self, transport, root, clock):
+    def __init__(self, transport, root, clock, authorization, as_of):
         self.transport, self.root, self.clock = transport, Path(root), clock
+        self.authorization, self.as_of = authorization, as_of
+        self.requested_at = None
         self.count, self.total = 0, 0
+
+    def _dispatch_time(self):
+        requested_at = _stamp(self.clock())
+        _authorization_time(self.authorization, self.as_of, requested_at)
+        return requested_at
 
     def _call(self, target, method, code, **kwargs):
         if self.count >= 6:
             raise FreezeError("wire_call_cap")
-        response = getattr(target, method)(code, **kwargs)
+        call = getattr(target, method)
+        requested_at = self._dispatch_time()
+        if self.requested_at is None:
+            self.requested_at = requested_at
+        response = call(code, **kwargs)
         tags = []
         observation = {
             "schema_id": "qm.spy-daily.wire-response.v1",
@@ -427,6 +587,7 @@ class _RecordingTransport:
     @contextmanager
     def history_session(self):
         factory = getattr(self.transport, "history_session", None)
+        self._dispatch_time()  # Before context setup; recheck after setup in each _call.
         with factory() if callable(factory) else nullcontext(self.transport) as session:
             self.history_transport = session
             try:
@@ -450,11 +611,13 @@ class _RecordingTransport:
 def collect(transport, as_of, evidence, *, raw_root, clock=lambda: datetime.now(UTC)):
     """Caller owns transport lifetime; every plain return is journaled first."""
     as_of = _stamp(as_of, "as_of_utc")
-    _evidence(evidence, as_of)  # Must precede every SDK/data operation.
+    requested = _stamp(clock())
+    evidence = _authorization(evidence, as_of, requested)  # Before data methods.
     window = plan_window(as_of)
     start = datetime.combine(date.fromisoformat(window["sessions"][0]), time.min, tzinfo=_NY)
     end = datetime.combine(date.fromisoformat(window["score_end"]), time.max, tzinfo=_NY)
-    client = MoomooOpenDClient(_RecordingTransport(transport, raw_root, clock))
+    recorder = _RecordingTransport(transport, raw_root, clock, evidence, as_of)
+    client = MoomooOpenDClient(recorder)
     try:
         bundle = MoomooOpenDProvider(_BoundedClient(client)).fetch_raw_bundle(
             Instrument(
@@ -471,6 +634,9 @@ def collect(transport, as_of, evidence, *, raw_root, clock=lambda: datetime.now(
     except Exception:
         raise FreezeError("capture_failed") from None
     raw = {
+        "schema_version": 2,
+        "authorization_sha256": _digest(evidence),
+        "requested_at_utc": recorder.requested_at.isoformat(),
         "received_at_utc": _stamp(clock()).isoformat(),
         "history_pages": list(bundle.history_pages),
         "adjustment_factors": bundle.adjustment_factors,
@@ -539,26 +705,33 @@ def _protocol(window):
     }
 
 
+def _protocol_v2(window):
+    protocol = _protocol(window)
+    protocol["schema_id"] = "qm.spy-daily.replay.protocol.v2"
+    protocol["evidence_contract"] = "preauthorization_before_request_post_review_before_freeze"
+    return protocol
+
+
 def freeze_capture(raw, as_of, evidence, output, *, frozen_at):
+    if isinstance(evidence, dict) and evidence.get("schema_version") == 1:
+        raise FreezeError("v1_freeze_read_only")
     window = plan_window(as_of)
     frozen_at = _stamp(frozen_at)
-    evidence = _evidence(evidence, frozen_at)
-    normalized = normalize_capture(raw, window, evidence)
-    if frozen_at < _stamp(raw["received_at_utc"]):
-        raise FreezeError("freeze_predates_capture")
+    authorization, review, normalized = _reviewed_inputs(raw, window, evidence, frozen_at)
     if hashlib.sha256(Path(__file__).read_bytes()).hexdigest() != _LOADED_SOURCE:
         raise FreezeError("normalizer_source_changed")
     if _source_identity() != _LOADED_SOURCES:
         raise FreezeError("reused_source_changed")
     members = {
         "raw-capture.json": _canonical(raw),
-        "source-evidence.json": _canonical(evidence),
+        "capture-authorization.json": _canonical(authorization),
+        "post-review.json": _canonical(review),
         "normalized-bars.csv": _csv_bytes(normalized["bars"]),
         "normalized-distributions.json": _canonical(normalized["distributions"]),
         "warmup-distributions.json": _canonical(normalized["warmup_distributions"]),
     }
     # Validate all inputs before creating/publishing any object.
-    protocol = _protocol(window)
+    protocol = _protocol_v2(window)
     store = ObjectStore(Path(output))
     refs = {
         name: store.put_bytes(
@@ -569,7 +742,7 @@ def freeze_capture(raw, as_of, evidence, output, *, frozen_at):
     protocol["members"] = refs
     protocol_ref = store.put_bytes(media_type="application/json", payload=_canonical(protocol))
     freeze = {
-        "schema_id": "qm.spy-daily.freeze.v1",
+        "schema_id": "qm.spy-daily.freeze.v2",
         "frozen_at_utc": frozen_at.isoformat(),
         "protocol_ref": protocol_ref.model_dump(mode="json"),
         "members": refs,
@@ -626,15 +799,17 @@ def reopen_freeze(root, freeze_digest):
     ):
         raise FreezeError("freeze_envelope_invalid")
     frozen_at = _stamp(freeze["frozen_at_utc"])
+    v2 = freeze["schema_id"] == "qm.spy-daily.freeze.v2"
     protocol = _loads(store.get_bytes(ObjectRef.model_validate(freeze["protocol_ref"])))
     if (
-        freeze.get("schema_id") != "qm.spy-daily.freeze.v1"
-        or protocol.get("schema_id") != "qm.spy-daily.replay.protocol.v1"
+        freeze.get("schema_id") != ("qm.spy-daily.freeze.v2" if v2 else "qm.spy-daily.freeze.v1")
+        or protocol.get("schema_id")
+        != ("qm.spy-daily.replay.protocol.v2" if v2 else "qm.spy-daily.replay.protocol.v1")
         or protocol.get("members") != freeze.get("members")
         or freeze.get("financial_evaluation_executed") is not False
     ):
         raise FreezeError("freeze_integrity_invalid")
-    expected = _protocol(protocol["window"])
+    expected = (_protocol_v2 if v2 else _protocol)(protocol["window"])
     for name in ("runtime", "normalizer_sha256", "source_code_sha256"):
         expected[name] = protocol[name]  # Reopen original runtime identity, never rewrite it.
     expected["members"] = freeze["members"]
@@ -656,12 +831,29 @@ def reopen_freeze(root, freeze_digest):
         name: store.get_bytes(ObjectRef.model_validate(ref))
         for name, ref in freeze["members"].items()
     }
-    evidence = _loads(members["source-evidence.json"])
     raw = _loads(members["raw-capture.json"])
     if not _stamp(protocol["window"]["as_of_utc"]) <= _stamp(raw["received_at_utc"]) <= frozen_at:
         raise FreezeError("freeze_time_order_invalid")
-    _evidence(evidence, frozen_at)
-    normalized = normalize_capture(raw, protocol["window"], evidence)
+    if v2:
+        if set(members) != {
+            "raw-capture.json",
+            "capture-authorization.json",
+            "post-review.json",
+            "normalized-bars.csv",
+            "normalized-distributions.json",
+            "warmup-distributions.json",
+        }:
+            raise FreezeError("v2_members_invalid")
+        envelope = {
+            "schema_version": 2,
+            "authorization": _loads(members["capture-authorization.json"]),
+            "review": _loads(members["post-review.json"]),
+        }
+        _, _, normalized = _reviewed_inputs(raw, protocol["window"], envelope, frozen_at)
+    else:
+        evidence = _loads(members["source-evidence.json"])
+        _evidence(evidence, frozen_at)
+        normalized = normalize_capture(raw, protocol["window"], evidence)
     if (
         members["normalized-bars.csv"] != _csv_bytes(normalized["bars"])
         or members["normalized-distributions.json"] != _canonical(normalized["distributions"])
@@ -699,10 +891,8 @@ def _capture_once(args, clock):
     if not 1 <= args.port <= 65535:
         raise FreezeError("invalid_port")
     as_of = _stamp(args.as_of)
-    evidence = _read_json(args.evidence_json)
-    _evidence(evidence, _stamp(clock()))
-    if not timedelta(0) <= _stamp(clock()) - as_of <= timedelta(minutes=5):
-        raise FreezeError("capture_asof_not_current")
+    requested = _stamp(clock())
+    evidence = _authorization(_read_json(args.authorization_json), as_of, requested, port=args.port)
     if version("moomoo-api") != evidence["sdk_version"]:
         raise FreezeError("sdk_version_evidence_mismatch")
     window = plan_window(as_of)
@@ -715,8 +905,10 @@ def _capture_once(args, clock):
             handle.write(
                 _canonical(
                     {
+                        "schema_version": 2,
                         "window": window,
-                        "evidence_sha256": hashlib.sha256(_canonical(evidence)).hexdigest(),
+                        "authorization_sha256": _digest(evidence),
+                        "capture_started_at_utc": requested.isoformat(),
                     }
                 )
             )
@@ -735,10 +927,18 @@ def _capture_once(args, clock):
         )
         with (root / "capture-ref.json").open("xb") as handle:
             handle.write(_canonical(reference.model_dump(mode="json")))
-        receipt = freeze_capture(raw, as_of, evidence, root, frozen_at=clock())
-        with (root / "freeze-receipt.json").open("xb") as handle:
-            handle.write(_canonical(receipt))
-        return receipt
+        authorization_ref = ObjectStore(root).put_bytes(
+            media_type="application/json", payload=_canonical(evidence)
+        )
+        return {
+            "schema_version": 2,
+            "status": "CAPTURED_UNREVIEWED",
+            "capture_digest": reference.digest,
+            "capture_ref": reference.model_dump(mode="json"),
+            "authorization_ref": authorization_ref.model_dump(mode="json"),
+            "financial_evaluation_executed": False,
+            "actual_data_acceptance": "NOT_REVIEWED",
+        }
     finally:
         transport.close()
 
@@ -751,11 +951,12 @@ def main(argv=None, *, clock=lambda: datetime.now(UTC)):
     freeze = sub.add_parser("freeze", help="validate/freeze an already captured JSON; no network")
     freeze.add_argument("--as-of", required=True)
     freeze.add_argument("--capture-json", required=True, type=Path)
-    freeze.add_argument("--evidence-json", required=True, type=Path)
+    freeze.add_argument("--authorization-json", required=True, type=Path)
+    freeze.add_argument("--review-json", required=True, type=Path)
     freeze.add_argument("--root", required=True, type=Path)
     capture = sub.add_parser("capture", help="designated OpenD owner only; one guarded attempt")
     capture.add_argument("--as-of", required=True)
-    capture.add_argument("--evidence-json", required=True, type=Path)
+    capture.add_argument("--authorization-json", required=True, type=Path)
     capture.add_argument("--root", required=True, type=Path)
     capture.add_argument("--port", required=True, type=int, metavar="1..65535")
     capture.add_argument("--execute-once", action="store_true", required=True)
@@ -774,7 +975,11 @@ def main(argv=None, *, clock=lambda: datetime.now(UTC)):
             result = freeze_capture(
                 _read_json(args.capture_json),
                 _stamp(args.as_of),
-                _read_json(args.evidence_json),
+                {
+                    "schema_version": 2,
+                    "authorization": _read_json(args.authorization_json),
+                    "review": _read_json(args.review_json),
+                },
                 args.root,
                 frozen_at=clock(),
             )
