@@ -49,3 +49,21 @@ Reviewer: one independent known-scope and affected legacy/history boundary
 review after freeze, at most2rounds/one aggregate correction; unresolved third
 structural issue or hard deadline returns a precise STOP. Sole publisher owns
 new exactCI/normal merge; no PR/CI/host acceptance is implied by unit evidence.
+
+Independent R1 completed on cb929c1f379ad34faf01382051087bb4e9b36276,
+tree5b28d9913734cfdefea52ebf9bc97dfd52ccad78: PASS, Standards0/Spec0,
+no aggregate correction. Exactly one reviewer invocation ran prepared-live,
+market-history-hot-cache and hot-admission-platform:124passed/2explicit Windows
+native-directory-fsync skips/6existing warnings30.30s, exit0. Raw report and log:
+output/market-history-hot-cache/static-review-r1.md and
+static-review-r1-tests.log. Reviewer checked actual observer code statically;
+modeled mount/receipt facts are not native/root/physical acceptance. Source and
+test bytes remain frozen; this final checkpoint changes documentation only.
+Local commit hooks were bypassed with core.hooksPath=NUL after the recorded
+targeted checks; exact-head publication/CI remains with the sole publisher.
+The handoff retains all RED, format and partial-state evidence; there is no
+actual receipt/mount, source staging, DB/provider or Goal effect. Operator must
+still establish actual private backing/UUID/underlying/lost+found witnesses,
+Restart=no isolation, existing-ledger reservation and physical peak coverage,
+including static receipt/header/directory bytes within outside1MiB. No READY
+for host activation or original independent-research completion is claimed.

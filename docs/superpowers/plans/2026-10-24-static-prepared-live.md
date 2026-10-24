@@ -75,7 +75,7 @@ removed. Static receipt is neither peak proof nor write authority without facts.
   fake/mismatched mount/device/sysfs/boot/unit, partial header/intent/session,
   failure/crash and mount loss; preserve source/history boundaries.
 - [x] Targeted checks/changed Ruff/format/diff, coherent freeze commit.
-- [ ] One independent known-scope/affected boundary review, <=2rounds/one
+- [x] One independent known-scope/affected boundary review, <=2rounds/one
   aggregate correction. Third structural issue/time expiry => precise STOP.
 - [ ] Exact reviewed handoff to sole publisher for new exactCI/normal merge.
 
@@ -88,3 +88,11 @@ Actual checkpoints:60RED1/61GREEN24;62RED2/63GREEN45;65RED1 root-group gate;
 foreign FS69RED1 then final70GREEN59/2warnings5.17s. Changed checks71 pass.
 All initial failures/format issues retained. Freeze for independent review;
 no whole/native suite or actual static credential/mount qualification occurred.
+
+Independent R1 PASS on source/test freeze cb929c1/tree5b28d991: no actionable
+Standards/Spec findings and no aggregate source correction. One authorized
+reviewer invocation124passed/2Windows native-fsync skips/6existing warnings,
+30.30s exit0. Report/log are retained under output/market-history-hot-cache/.
+Final tracked checkpoint is documentation only; publisher receives the exact
+candidate, frozen runtime/test identities and evidence hashes. No original
+CI/RED/STOP is superseded and no operator action is authorized by these tests.
