@@ -1,0 +1,15 @@
+export const localReport = {
+  schema_version: 1, snapshot_id: 'a'.repeat(64), imported_at: '2026-10-24T12:00:00Z', label: 'My saved prices',
+  symbol: 'SPY', venue: 'moomoo', calendar_id: 'XNYS', interval: '1d', evidence_kind: 'user_snapshot',
+  source: { provider: 'My provider', received_at: null, license_scope: 'unknown', license_evidence: 'unknown',
+    pit_status: 'unknown', adjustment: 'unknown', volume_unit: 'unknown', session_semantics: 'unknown' },
+  coverage: { rows: 3, valid_rows: 3, first_date: '2026-10-19', last_date: '2026-10-21', expected_sessions: 3,
+    missing_sessions: [], unexpected_sessions: [] },
+  freshness: { as_of: '2026-10-24T12:00:00Z', latest_complete_session: '2026-10-23', last_session: '2026-10-21', age_sessions: 2, status: 'STALE' },
+  qualification: { status: 'INSUFFICIENT', structural_status: 'PASS', allowed_use: ['inspect_evidence_only', 'local_protocol_planning_only'],
+    R1: 'INSUFFICIENT', R2: 'INSUFFICIENT', R3: 'NOT_AUTHORIZED', reasons: ['Historical availability is unverified', 'Corporate actions are unknown'] },
+  checks: [{ code: 'point_in_time', status: 'INSUFFICIENT', count: 1, message: 'Historical availability is unverified', locations: [] }],
+  dataset_ref: { dataset_id: 'local-spy', revision: 1, manifest_digest: 'b'.repeat(64), export_digest: 'c'.repeat(64), permission_class: 'local_research' },
+  report_digest: 'd'.repeat(64), lineage: { original_sha256: 'e'.repeat(64), normalized_sha256: 'c'.repeat(64), manifest_sha256: 'b'.repeat(64) },
+  next_action: { kind: 'plan_experiment', href: '/app/research/jobs', submission_allowed: false, reason: 'Planning only; the current runner does not accept this data.' },
+}
