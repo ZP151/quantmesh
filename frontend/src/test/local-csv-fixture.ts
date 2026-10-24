@@ -190,3 +190,18 @@ export const localReport = {
     "reason": "Imported input is unqualified; existing fixture jobs cannot use this reference."
   }
 }
+
+// Actual planning-reference eligibility returned by the frozen backend.
+export const actualReferenceEligibility = {
+  "status": "BLOCKED",
+  "reasons": [
+    "Scope/license are caller claims; usage rights are not independently verified.",
+    "Bar time and receipt are not historical available_at or revision/PIT evidence.",
+    "Elapsed sessions by import time do not prove this held file was final when captured; source finality/revisions remain unverified.",
+    "Corporate actions, adjustments and dividend ex/pay-date coverage are not independently verified.",
+    "Calendar alignment does not verify the source's daily-session semantics.",
+    "Declared adjustment=unknown; price/currency units and adjustment lineage remain unverified.",
+    "Declared volume unit=unknown; units do not establish executable liquidity or fills.",
+    "Phase1 preauthorization/post-review/source-evidence digests are claims, not independently verified receipts."
+  ]
+}

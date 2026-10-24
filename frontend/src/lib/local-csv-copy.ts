@@ -59,12 +59,16 @@ export const localCsvCopy = {
 export function explainCsvReason(reason: string, locale: 'en' | 'zh-CN'): string {
   const c = localCsvCopy[locale]
   const known: [string, string, string][] = [
+    ['Scope/license are caller claims', 'Usage rights are supplied by you and remain unverified.', '使用权限由您提供，尚未独立验证。'],
     ['Source scope/license', 'Usage rights are supplied by you and remain unverified.', '使用权限由您提供，尚未独立验证。'],
+    ['Bar time and receipt', 'Historical availability and revision history have not been verified.', '历史可获得时间和修订记录尚未验证。'],
+    ['Elapsed sessions by import time', 'Elapsed time since a session does not verify that the captured file was final or unrevised.', '经过若干交易时段，并不代表采集时的文件已最终确定或未经修订。'],
     ['Bar/session time and receipt', 'Historical availability and revision history have not been verified.', '历史可获得时间和修订记录尚未验证。'],
     ['Corporate actions, adjustments', 'Dividend and split history, including payment dates, remains unverified.', '分红、拆股历史及支付日期尚未验证。'],
     ['Calendar alignment does not', 'Matching the calendar does not verify the provider’s daily-session definition.', '日历对齐不代表供应商的日线时段定义已验证。'],
     ['Declared adjustment=', 'Price units, currency and adjustment history remain unverified.', '价格单位、币种和复权历史尚未验证。'],
     ['Declared volume unit=', 'Volume units and executable liquidity remain unverified.', '成交量单位和可成交流动性尚未验证。'],
+    ['Phase1 preauthorization/post-review/source-evidence', c.suppliedRefs, c.suppliedRefs],
     ['Optional Phase1 preauthorization/', c.suppliedRefs, c.suppliedRefs],
   ]
   const match = known.find(([prefix]) => reason.startsWith(prefix))

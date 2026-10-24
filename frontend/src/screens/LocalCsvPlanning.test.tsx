@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { PreferencesProvider } from '@/lib/preferences'
 import { LocalCsvPlanning } from './LocalCsvPlanning'
-import { localReport } from '@/test/local-csv-fixture'
+import { actualReferenceEligibility, localReport } from '@/test/local-csv-fixture'
 const mocks = vi.hoisted(() => ({ reference: vi.fn(), get: vi.fn() }))
 const { reference } = mocks
 vi.mock('@/lib/local-csv-api', async original => ({ ...await original<typeof import('@/lib/local-csv-api')>(), localCsvApi: mocks }))
@@ -44,4 +44,13 @@ it('refuses to plan when the report and reference disagree on the chosen data', 
   render(<PreferencesProvider><LocalCsvPlanning snapshotId={id} /></PreferencesProvider>)
   expect(await screen.findByRole('alert')).toHaveTextContent('The data reference could not be verified')
   expect(screen.queryByRole('button', { name: 'Download protocol draft' })).not.toBeInTheDocument()
+})
+
+it('explains the actual reference vocabulary without putting internal preauthorization text in the primary flow', async () => {
+  reference.mockResolvedValue({ ...data, eligibility: actualReferenceEligibility })
+  render(<PreferencesProvider><LocalCsvPlanning snapshotId={id} /></PreferencesProvider>)
+  await screen.findByRole('heading', { name: localReport.label })
+  const primary = screen.getByRole('region', { name: 'Selected data and qualification' })
+  expect(within(primary).queryByText(/Phase1 preauthorization/)).not.toBeInTheDocument()
+  expect(within(primary).getByText('Supplied evidence references have not been independently verified.')).toBeVisible()
 })
