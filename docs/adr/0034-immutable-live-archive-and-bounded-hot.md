@@ -304,3 +304,19 @@ guarantee. Native DuckDB/resource/decoding errors propagate; no partial or empty
 success substitutes for refusal. A generated wide model with stricter32MiB
 memory/0B spill returns exact10000 rows when the frozen old SQL refuses, but
 production128MiB/threads1/0B/RO and separate merged-source native acceptance remain.
+
+### Sparse-key payload predicate after RR1
+
+RR1's merged-source native refusal occurs at a complete-row batch execute;
+key selection is a different source line. The exact batch/C++ operator remains
+unobserved. A LOCAL stored-model plan shows sparse IN rewritten to HASH_JOIN
+with a17-column scan and no key-range filter. Dense contiguous keys can instead
+rewrite directly to a range, so the earlier dense discriminator was insufficient.
+The selected correction keeps128-key batches and all existing transaction/lock/
+selection behavior, but expresses their exact membership using bound scalar
+equalities plus the batch's inclusive min/max range. LOCAL plans avoid the join
+and push down that range. A tighter20MiB/0B sparse-view discriminator refuses the
+old predicate and returns exact10000 full17-column rows with the new one.
+This does not identify RR1's native operator or guarantee archive latency/RSS.
+Range width can still be large; native acceptance and resource forecasts remain
+separate. See [the bounded RR1 leaf](../iterations/0038-rr1-payload-gather.md).
