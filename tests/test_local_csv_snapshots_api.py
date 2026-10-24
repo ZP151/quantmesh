@@ -8,12 +8,22 @@ from fastapi.testclient import TestClient
 
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.execution.accounting import PaperAccount
-from quantmesh.research.local_csv_snapshots import MAX_CSV_BYTES, MAX_REQUEST_BYTES
+from quantmesh.research.jobs import DatasetRejected
+from quantmesh.research.local_csv_snapshots import (
+    MAX_CSV_BYTES,
+    MAX_REQUEST_BYTES,
+    LocalCsvCatalog,
+)
 from quantmesh.research.realdata_snapshots import SnapshotCatalog
-from tests.test_local_csv_snapshots import CSV, NOW, request
+from tests.test_local_csv_snapshots import CSV, NOW
+from tests.test_local_csv_snapshots import request as engineering_request
 from tests.test_realdata_snapshots import package
 
 PREFIX = "/api/research/data-snapshots/local-csv"
+
+
+def request(**overrides):
+    return engineering_request(**{"evidence_kind": "user_snapshot", **overrides})
 
 
 def client(root, configured=True):
@@ -34,6 +44,31 @@ def test_configured_and_unconfigured_are_explicit(tmp_path):
     assert response.status_code == 200
     assert response.json() == {"schema_version": 1, "snapshots": []}
     assert response.headers["cache-control"] == "private, no-store"
+
+
+def test_http_import_cannot_claim_engineering_fixture_provenance(tmp_path):
+    http = client(tmp_path)
+    response = http.post(PREFIX, json=request(evidence_kind="fixture"))
+    assert response.status_code == 422
+    assert response.json() == {"detail": "local_csv_invalid"}
+    assert http.get(PREFIX).json()["snapshots"] == []
+
+
+def test_http_user_import_remains_nonfixture_after_cold_reopen(tmp_path):
+    imported = client(tmp_path).post(PREFIX, json=request())
+    assert imported.status_code == 201
+    report = imported.json()
+    reopened = client(tmp_path)
+    assert (
+        reopened.get(f"{PREFIX}/{report['snapshot_id']}").json()["evidence_kind"] == "user_snapshot"
+    )
+    catalog = LocalCsvCatalog(tmp_path / "local-csv", clock=lambda: NOW)
+    with pytest.raises(DatasetRejected, match="local_csv_unqualified_or_pin_mismatch"):
+        catalog.read_bars(
+            report["snapshot_id"],
+            catalog.reference(report["snapshot_id"]).dataset_ref,
+            engineering_only=True,
+        )
 
 
 def test_actual_import_get_reference_download_reopen_and_old_zip_compatibility(tmp_path):
@@ -190,7 +225,13 @@ def test_openapi_has_actual_typed_request_and_report_reference_responses(tmp_pat
     schema = client(tmp_path).app.openapi()
     post = schema["paths"][PREFIX]["post"]
     assert post["requestBody"]["content"]["application/json"]["schema"]["$ref"].endswith(
-        "/LocalCsvRequest"
+        "/LocalCsvImportRequest"
+    )
+    assert (
+        schema["components"]["schemas"]["LocalCsvImportRequest"]["properties"]["evidence_kind"][
+            "const"
+        ]
+        == "user_snapshot"
     )
     assert post["responses"]["201"]["content"]["application/json"]["schema"]["$ref"].endswith(
         "/LocalCsvReport"

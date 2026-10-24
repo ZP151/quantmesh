@@ -3452,6 +3452,52 @@ export interface components {
              */
             status: "CURRENT" | "STALE" | "INSUFFICIENT";
         };
+        /**
+         * LocalCsvImportRequest
+         * @description Ordinary workstation imports cannot assert engineering-fixture provenance.
+         */
+        LocalCsvImportRequest: {
+            /**
+             * Calendar Id
+             * @enum {string}
+             */
+            calendar_id: "XNYS" | "24/7";
+            /** Csv Text */
+            csv_text: string;
+            evidence?: components["schemas"]["LocalCsvEvidence"];
+            /**
+             * Evidence Kind
+             * @default user_snapshot
+             * @constant
+             */
+            evidence_kind: "user_snapshot";
+            /**
+             * Interval
+             * @default 1d
+             * @constant
+             */
+            interval: "1d";
+            /** Label */
+            label: string;
+            /** Required End */
+            required_end: string;
+            /** Required Start */
+            required_start: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            source?: components["schemas"]["LocalCsvSource"];
+            /** Symbol */
+            symbol: string;
+            /**
+             * Venue
+             * @enum {string}
+             */
+            venue: "moomoo" | "hyperliquid";
+        };
         /** LocalCsvLineage */
         LocalCsvLineage: {
             /** Manifest Sha256 */
@@ -3610,49 +3656,6 @@ export interface components {
             /** Snapshot Id */
             snapshot_id: string;
             source: components["schemas"]["LocalCsvSource"];
-            /** Symbol */
-            symbol: string;
-            /**
-             * Venue
-             * @enum {string}
-             */
-            venue: "moomoo" | "hyperliquid";
-        };
-        /** LocalCsvRequest */
-        LocalCsvRequest: {
-            /**
-             * Calendar Id
-             * @enum {string}
-             */
-            calendar_id: "XNYS" | "24/7";
-            /** Csv Text */
-            csv_text: string;
-            evidence?: components["schemas"]["LocalCsvEvidence"];
-            /**
-             * Evidence Kind
-             * @default user_snapshot
-             * @enum {string}
-             */
-            evidence_kind: "user_snapshot" | "fixture";
-            /**
-             * Interval
-             * @default 1d
-             * @constant
-             */
-            interval: "1d";
-            /** Label */
-            label: string;
-            /** Required End */
-            required_end: string;
-            /** Required Start */
-            required_start: string;
-            /**
-             * Schema Version
-             * @default 1
-             * @constant
-             */
-            schema_version: 1;
-            source?: components["schemas"]["LocalCsvSource"];
             /** Symbol */
             symbol: string;
             /**
@@ -5978,7 +5981,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LocalCsvRequest"];
+                "application/json": components["schemas"]["LocalCsvImportRequest"];
             };
         };
         responses: {

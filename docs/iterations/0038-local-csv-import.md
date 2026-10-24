@@ -108,3 +108,15 @@ cap/Goal/automation/dependency or old-CI work. Unknown real-data qualification
 and original consumed OOS/results remain unchanged. Paper/live authority is
 unchanged. This completes the local backend user loop, not financial research
 qualification, OpenD readiness or a source-use decision.
+
+Combined release review on PR223 found that the ordinary POST could accept a
+caller-supplied `fixture` label. Existing job admission still rejected the
+`local_research` reference, but direct engineering `read_bars` relied on that
+unverified label. The integration correction gives the public POST a typed
+`user_snapshot`-only request while retaining explicit internal generated-fixture
+tests. A real POST `fixture` claim first returned201 (RED), then returned422
+without a catalog entry; an ordinary import stays nonfixture after cold reopen
+and remains refused by engineering `read_bars`. The corrected combined-head
+targeted backend run is57pass/6existing warnings, frontend42pass; generated
+OpenAPI client and packaged SPA currency checks pass. Exact corrected-head CI
+and normal merge remain the publisher's release gate.

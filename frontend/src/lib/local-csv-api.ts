@@ -3,7 +3,7 @@ import type { components, paths } from '@/api/client'
 
 export const MAX_LOCAL_CSV_BYTES = 2 * 1024 * 1024
 export type LocalCsvReport = components['schemas']['LocalCsvReport']
-export type LocalCsvRequest = components['schemas']['LocalCsvRequest']
+export type LocalCsvRequest = components['schemas']['LocalCsvImportRequest']
 export type LocalCsvReference = components['schemas']['LocalCsvReference']
 export class LocalCsvError extends Error {
   status: number

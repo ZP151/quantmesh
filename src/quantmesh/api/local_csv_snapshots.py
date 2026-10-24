@@ -1,6 +1,7 @@
 """Typed local daily CSV facade under the existing snapshot opt-in."""
 
 import hashlib
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -17,6 +18,12 @@ from quantmesh.research.local_csv_snapshots import (
     LocalCsvRequest,
 )
 from quantmesh.research.realdata_snapshots import SnapshotInputError, SnapshotTooLarge, _json
+
+
+class LocalCsvImportRequest(LocalCsvRequest):
+    """Ordinary workstation imports cannot assert engineering-fixture provenance."""
+
+    evidence_kind: Literal["user_snapshot"] = "user_snapshot"
 
 
 class _LocalCsvRoute(APIRoute):
@@ -92,7 +99,7 @@ def create_local_csv_snapshots_router() -> APIRouter:
         return LocalCsvList(snapshots=catalog(request).list())
 
     @router.post("", response_model=LocalCsvReport, status_code=201)
-    def import_local_csv(payload: LocalCsvRequest, request: Request):
+    def import_local_csv(payload: LocalCsvImportRequest, request: Request):
         return catalog(request).import_csv(payload)
 
     @router.get("/{snapshot_id}", response_model=LocalCsvReport)
