@@ -84,7 +84,10 @@ def test_tail_complete_rows_are_fetched_in_fixed_batches(lake):
         if sql.startswith(f"SELECT {_UPDATE_COLUMNS}")
     ]
     assert len(wide) == 3
-    assert all(0 < len(parameters) <= 128 for _, parameters in wide)
+    assert all(0 < len(parameters[2:]) <= 128 for _, parameters in wide)
+    assert all(
+        parameters[:2] == [min(parameters[2:]), max(parameters[2:])] for _, parameters in wide
+    )
     assert len(recorded.calls) == 8  # Two tx probes, BEGIN, keys, three batches, COMMIT.
 
 
