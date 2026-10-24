@@ -22,8 +22,10 @@ Frontend: DataReadiness.tsx, new LocalCsvImport.tsx, lib/local-csv-api.ts and co
 - [x] Receive minimal backend DTO and exact allowed next action; record frozen contract paths.
 - [x] Write interaction/API tests for empty/loading/upload/checking/accepted/quality problems/unknown/failed/reopen and identity-bound planning. Run targeted RED.
 - [x] Implement smallest page loop with generated typed API, bounded upload, explicit errors and retention semantics. Run targeted GREEN and old DataReadiness/FrozenExperiments tests.
-- [ ] Build actual bundle; first build failure gets a specific cause, no lock workaround. Verify API generation and static currency, lint/typecheck/whitespace.
-- [ ] Run real local backend + page; desktop/375px screenshots and keyboard/long-text/error checks in one batch. One aggregate correction and one confirmation maximum.
-- [ ] Independent UX/safety diff review once, fix material findings, record evidence in docs/iterations/0038-local-data-import-ui.md, normal commit/push and handoff to publisher/root.
+- [x] Build actual bundle; first build failure gets a specific cause, no lock workaround. Verify API generation and static currency, lint/typecheck/whitespace.
+- [x] Run real local backend + page; desktop/375px screenshots and keyboard/long-text/error checks in one batch. One aggregate correction and one confirmation maximum.
+- [x] Independent UX/safety diff review once, fix material findings, record evidence in docs/iterations/0038-local-data-import-ui.md, normal commit/push and handoff to publisher/root.
 
 Root explicitly authorized short design followed by implementation without another approval. Existing runtime/deps only; no old failed artifact/CI prerequisite, no environment re-creation, no full545 frontend rerun.
+
+Final sourcea45208c;69targeted tests; actual1440/375browser/API/reference/draft/error/keyboard evidence and oneR1+known-correction closure are recorded in the iteration. Publisher owns the combined exact-headCI and normal integration.
