@@ -1949,7 +1949,7 @@ def main(argv: list[str] | None = None) -> None:
             from quantmesh.instruments.history import HistoryService
             from quantmesh.instruments.live_history import discover_history_bindings
             from quantmesh.instruments.proposals import ProposalLedger
-            from quantmesh.live.buffer import HotCacheBudget, LiveBuffer
+            from quantmesh.live.buffer import LiveBuffer
             from quantmesh.live.feed import LiveFeed
             from quantmesh.live.hyperliquid import (
                 HyperliquidVenueSupervisor,
@@ -1965,11 +1965,10 @@ def main(argv: list[str] | None = None) -> None:
                     "(e.g. BTC,ETH,SOL,HYPE)"
                 )
             if settings.live_cache_root is not None:
-                budget = HotCacheBudget.from_file(
+                replay = LiveBuffer.from_bounded_config(
                     settings.live_cache_root,
                     settings.live_cache_budget_file,
                 )
-                replay = LiveBuffer.open_bounded_hot(settings.live_cache_root, budget)
             else:
                 replay = LiveBuffer(
                     root=settings.lake_root,

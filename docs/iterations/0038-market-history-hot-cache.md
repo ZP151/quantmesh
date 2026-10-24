@@ -59,3 +59,24 @@ One source writer; five runtime files and one new test file only. First code/TDD
 checkpoint is inside the first60min; software is not final until independent
 review and its necessary correction/reverification are complete. No real host,
 archive, provider, capacity allocation or financial computation was used.
+
+## Independent R1 and one aggregate correction
+
+R1 on immutableb3dc479: CHANGES REQUIRED, two Important findings reproduced in
+one independent run:26passed/1Windows skip plus2output-only repro failures.
+Cold first-start capacity refusal attempted to open a nonexistent hot DB and
+took history startup down; post-COMMIT stop-file I/O failure discarded successful
+receipts. Review/raw repro file and log remain under output/market-history-hot-cache.
+
+One aggregate batch promoted genuine4REDs (22), then4GREEN (23), plus zero-budget
+RED/GREEN (24/25), and explicit first-start warning RED4/GREEN4 (27/28).
+First-start expired/insufficient/zero/free-floor now uses an empty stopped
+read-only in-memory reader, creates no hot disk DB and starts no provider, while
+the original valid archive serves the same URL. This is zero synthetic history.
+COMMIT receipts survive later stop-write/fsync failure: apply/ack/deliver final
+row, retain separate failure receipt when possible, emit fixed error and actual
+recorded flag, then stop/join. Both receipt writes failing is tested too; failure
+is surfaced and no within-process rearm/refund occurs. Initial affected checks,
+tests and old failures remain preserved. After aggregate correction, affected
+check29 passes287/1explicit Windows skip/6warnings in42.90s; changed-file Ruff,
+format and whitespace checks pass. Final independent R2 remains pending.

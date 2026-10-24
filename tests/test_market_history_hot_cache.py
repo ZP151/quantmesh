@@ -531,3 +531,94 @@ def test_budget_intent_types_cannot_reset_or_mask_reserved_attempts(tmp_path):
     intent.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
     with pytest.raises(ValueError, match="budget"):
         buffer_module.HotCacheBudget(root, spec)
+
+
+@pytest.mark.parametrize("cause", ["expired", "insufficient", "free_floor", "zero"])
+def test_first_start_without_admitted_hot_keeps_archive_http_and_no_providers(
+    tmp_path, monkeypatch, caplog, cause
+):
+    import json
+    from collections import namedtuple
+
+    from tests.test_live_feed_owned_persistence import ScriptedSupervisor
+
+    archive = tmp_path / "archive"
+    seed(archive, candles()[:2])
+    original = (archive / "live/updates.duckdb").read_bytes()
+    root = tmp_path / "hot"
+    spec = budget_spec(root)
+    if cause == "expired":
+        spec["expires_at_utc"] = (datetime.now(UTC) - timedelta(seconds=1)).isoformat()
+    elif cause == "insufficient":
+        spec["global_reserved_bytes"] = 1_000_000
+    elif cause == "zero":
+        spec["global_reserved_bytes"] = 0
+    else:
+        usage = namedtuple("Usage", "total used free")(
+            100_000_000_000, 51_000_000_000, 49_000_000_000
+        )
+        monkeypatch.setattr(buffer_module.shutil, "disk_usage", lambda path: usage)
+    path = tmp_path / "budget.json"
+    path.write_text(json.dumps(spec), encoding="utf-8")
+    with LiveBuffer.from_bounded_config(root, path) as hot:
+        assert hot.read_only
+        assert not (root / "live/updates.duckdb").exists()
+        feed = LiveFeed(lake=hot)
+
+        class NeverStarts(ScriptedSupervisor):
+            async def run(self):
+                raise AssertionError("capacity-refused startup started a provider")
+
+        feed.attach(NeverStarts([]))
+        with history_client(feed, archive) as client:
+            response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+        assert response.status_code == 200, response.text
+        assert [bar["close"] for bar in response.json()["primary"]["bars"]] == [100, 101]
+        assert feed.capacity_exhausted
+    assert (archive / "live/updates.duckdb").read_bytes() == original
+    assert "hot capacity exhausted" in caplog.text
+
+
+@pytest.mark.parametrize("failure", ["write", "sync_after_create", "both_receipts"])
+def test_postcommit_stop_record_failure_still_delivers_then_stops_and_records_failure(
+    tmp_path, monkeypatch, caplog, failure
+):
+    from tests.test_live_feed_owned_persistence import ScriptedSupervisor
+
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=2)
+    budget = buffer_module.HotCacheBudget(root, spec)
+    with LiveBuffer(root, retention_days=0, write_budget=budget) as hot:
+        feed = LiveFeed(lake=hot)
+        feed.attach(ScriptedSupervisor([]))
+        subscriber = feed.subscribe()
+        original_write = budget._write_once
+
+        def fail_stop(path, raw):
+            if path.name == "budget-stop.json":
+                if failure == "sync_after_create":
+                    original_write(path, raw)
+                raise OSError("synthetic stop record write failure")
+            if path.name == "budget-stop-failure.json" and failure == "both_receipts":
+                raise OSError("synthetic terminal receipt failure")
+            return original_write(path, raw)
+
+        monkeypatch.setattr(budget, "_write_once", fail_stop)
+
+        async def scenario():
+            pump = asyncio.create_task(feed.run())
+            await asyncio.sleep(0)
+            await feed.publish(candles()[0])
+            await asyncio.wait_for(pump, 2)
+            assert len(hot.replay()) == len(feed._latest) == 1
+            assert subscriber.get_nowait().source_event_id == candles()[0].source_event_id
+            assert feed.capacity_exhausted and feed._stopped
+            assert feed.capacity_stop_error == "budget_stop_persistence_failed"
+
+        asyncio.run(scenario())
+        assert (root / "budget-stop-failure.json").exists() is (failure != "both_receipts")
+        assert "budget_stop_persistence_failed" in caplog.text
+        assert f"failure_receipt_recorded={failure != 'both_receipts'}" in caplog.text
+    # The failure evidence is a permanent stop, even if a future retry could write the stop file.
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as hot:
+        assert hot.read_only and len(hot.replay()) == 1

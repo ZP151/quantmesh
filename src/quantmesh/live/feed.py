@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -297,6 +298,7 @@ class LiveFeed:
         self._accepting = False
         self._stopped = False
         self.capacity_exhausted = bool(lake is not None and lake.read_only)
+        self.capacity_stop_error: str | None = None
         self._capacity_stop: asyncio.Event | None = None
         if self._lake is not None:
             for update in self._lake.latest():
@@ -357,8 +359,27 @@ class LiveFeed:
                 receipts = [self._lake.append(updates[0])]
             else:
                 receipts = self._lake.append_many(updates)
-            if self._lake.write_budget is not None and not self._lake.write_budget.can_reserve():
-                self.capacity_exhausted = True
+            budget = self._lake.write_budget
+            if budget is not None:
+                try:
+                    self.capacity_exhausted = not budget.can_reserve()
+                except Exception:
+                    # COMMIT receipts remain authoritative even when subsequent
+                    # stop accounting fails. Close acquisition after delivering
+                    # these receipts, and surface a separate terminal failure.
+                    self.capacity_exhausted = True
+                    self.capacity_stop_error = "budget_stop_persistence_failed"
+                    recorded = False
+                    try:
+                        budget.record_stop_failure()
+                        recorded = True
+                    except Exception:
+                        pass  # Surface persistence failure below, never claim a receipt exists.
+                    logging.getLogger(__name__).error(
+                        "Live acquisition stopped: budget_stop_persistence_failed; "
+                        "failure_receipt_recorded=%s",
+                        recorded,
+                    )
             return receipts
         except LiveCapacityExceeded:
             self.capacity_exhausted = True

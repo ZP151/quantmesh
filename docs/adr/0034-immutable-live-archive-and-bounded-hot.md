@@ -60,6 +60,19 @@ The feed stops acquisition, closes admission, joins existing owned I/O and does
 not apply failed rows/cursors/delivery. The last successful admitted commit is
 applied/delivered before its capacity stop. Stored snapshots age normally. A
 stopped hot reopens read-only and the HTTP history service remains attached.
+If first-start allowance is zero/insufficient/expired or free headroom refuses,
+there may be no hot DB at all. A stopped empty in-memory reader supplies zero
+observations, with read-only guards/no spill and no provider start; the actual
+canonical archive is still required and read by the original history service.
+This does not create disk storage or substitute fake history. A safe capacity
+warning is emitted; if no failure-storage allowance exists, no accounting files
+are materialized. Malformed/unqualified configuration still refuses activation.
+After a successful COMMIT, failure writing/fsyncing the proactive stop record
+cannot revoke its receipts. Deliver that committed result, close acquisition,
+retain a separate budget-stop-failure receipt if writable and surface a fixed
+error code plus whether that receipt was actually recorded. If both writes fail,
+the existing consumed intent stays and the service error log is the failure
+surface; no second write attempt or refund is granted within the stopped feed.
 Current source_status is not an archive of all failures; original STATUS,
 quarantine, jobs/reports and existing output evidence are retained.
 

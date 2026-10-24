@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import os
 import shutil
 import threading
@@ -49,8 +50,8 @@ class _HotBudgetSpec(BaseModel):
     root: str = Field(min_length=1, max_length=4096)
     ledger_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     peak_bound_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    leaf_remaining_bytes: int = Field(gt=0, le=64 * 1024 * 1024)
-    global_reserved_bytes: int = Field(gt=0)
+    leaf_remaining_bytes: int = Field(ge=0, le=64 * 1024 * 1024)
+    global_reserved_bytes: int = Field(ge=0)
     peak_operation_bytes: int = Field(ge=4096)
     close_failure_reserve_bytes: int = Field(ge=4096)
     max_batch_bytes: int = Field(gt=0, le=65536)
@@ -83,6 +84,8 @@ class HotCacheBudget:
             if self.expires.utcoffset() != timedelta(0):
                 raise ValueError
             self.limit = min(self.spec.leaf_remaining_bytes, self.spec.global_reserved_bytes)
+            if self.limit < self.spec.close_failure_reserve_bytes:
+                raise LiveCapacityExceeded("hot capacity exhausted")
             self._lock = threading.RLock()
             self.header = json.dumps(self.spec.model_dump(), sort_keys=True).encode()
             header_path = self.root / "budget-spec.json"
@@ -98,6 +101,8 @@ class HotCacheBudget:
                 self.root.mkdir(parents=True, exist_ok=True)
                 self._write_once(header_path, self.header)
             self._spent()
+        except LiveCapacityExceeded:
+            raise
         except Exception:
             raise ValueError("hot budget unavailable or incompatible") from None
 
@@ -172,9 +177,26 @@ class HotCacheBudget:
             except LiveCapacityExceeded:
                 return False
 
+    def record_stop_failure(self) -> None:
+        """Keep a separate terminal failure receipt; never erase the failed stop file."""
+        with self._lock:
+            path = self.root / "budget-stop-failure.json"
+            if not path.exists():
+                self._write_once(
+                    path,
+                    json.dumps(
+                        {
+                            "reason": "budget_stop_persistence_failed",
+                            "reserved_bytes": self._spent(),
+                            "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                        },
+                        sort_keys=True,
+                    ).encode(),
+                )
+
     def _check_available(self, batch_bytes: int) -> int:
         stop = self.root / "budget-stop.json"
-        if stop.exists():
+        if stop.exists() or (self.root / "budget-stop-failure.json").exists():
             raise LiveCapacityExceeded("hot capacity exhausted")
         spent = self._spent()
         peak = self.spec.peak_operation_bytes
@@ -310,12 +332,45 @@ class LiveBuffer:
     """Append-only DuckDB lake for replayable live updates."""
 
     @classmethod
+    def from_bounded_config(cls, root: Path, budget_file: Path) -> LiveBuffer:
+        try:
+            return cls.open_bounded_hot(root, HotCacheBudget.from_file(root, budget_file))
+        except LiveCapacityExceeded:
+            logging.getLogger(__name__).warning("Live acquisition disabled: hot capacity exhausted")
+            return cls._stopped_reader(root)
+
+    @classmethod
     def open_bounded_hot(cls, root: Path, budget: HotCacheBudget) -> LiveBuffer:
         try:
             return cls(root, retention_days=0, write_budget=budget)
         except LiveCapacityExceeded:
             # Exhausting admission must not remove previously persisted reads.
+            logging.getLogger(__name__).warning("Live acquisition disabled: hot capacity exhausted")
+            return cls._stopped_reader(root)
+
+    @classmethod
+    def _stopped_reader(cls, root: Path) -> LiveBuffer:
+        if (Path(root) / "live/updates.duckdb").exists():
             return cls(root, read_only=True)
+        # No hot was ever admitted: an empty, read-only in-memory reader carries
+        # zero observations. It never creates a disk DB or stands in for archive.
+        reader = cls.__new__(cls)
+        reader.root = Path(root)
+        reader.path = reader.root / "live/updates.duckdb"
+        reader.read_only, reader.write_budget = True, None
+        reader.retention = timedelta(0)
+        reader._connection_lock = threading.RLock()
+        reader._con = duckdb.connect(
+            ":memory:",
+            config={
+                "max_temp_directory_size": "0B",
+                "memory_limit": "128MiB",
+                "threads": 1,
+            },
+        )
+        reader._con.execute("SET TimeZone = 'UTC'")
+        reader._con.execute(_SCHEMA)
+        return reader
 
     def __init__(
         self,
