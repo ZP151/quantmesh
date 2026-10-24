@@ -64,3 +64,15 @@ session/duplicate/order issues. DTO description/operator guide now say so;
 UI owner received the same precise label request. Count/type/qualification
 unchanged. UI owns CSV page/blocked planning context and generated client/SPA;
 its actual browser/build acceptance is independently reported to root.
+
+Independent R1 on de8befc/treefead62d: Standards0, one SpecP2. Its single
+invocation109pass/one output-only counterexampleFAIL/7warnings27.42s exit1
+proved ASCII CSV2MiB+1 inside3MiB JSON mapped422 before the byte guard, contrary
+to promised413. Report/log review-r1.md/review-r1-tests.log remain unchanged.
+One aggregate correction moves the encoded-CSV size check before typed request
+validation, preserving the original3MiB stream cap,2MiB limit and fixed errors.
+Tracked ASCII/multibyte cases23RED1/1pass then24API15pass8.11s exit0. Initial22
+test helper used the huge strings as pytest parameter IDs, causing fixture path
+errors; its full log is retained, then explicit short IDs corrected only tests.
+No data-quality/qualification/reference logic or DTO shape changes in this fix.
+Corrected API/test Ruff/format and diff pass; source freezes for final R2 only.

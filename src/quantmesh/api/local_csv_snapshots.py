@@ -8,6 +8,7 @@ from fastapi.routing import APIRoute
 
 from quantmesh.data.objects import ObjectIntegrityError
 from quantmesh.research.local_csv_snapshots import (
+    MAX_CSV_BYTES,
     MAX_REQUEST_BYTES,
     LocalCsvCatalog,
     LocalCsvList,
@@ -43,7 +44,12 @@ class _LocalCsvRoute(APIRoute):
                         if len(raw) + len(chunk) > MAX_REQUEST_BYTES:
                             raise SnapshotTooLarge("local_csv_too_large")
                         raw.extend(chunk)
-                    _json(bytes(raw))  # Strict duplicate/nonfinite JSON check before typed parse.
+                    decoded = _json(
+                        bytes(raw)
+                    )  # Strict duplicate/nonfinite JSON before typed parse.
+                    csv_text = decoded.get("csv_text") if isinstance(decoded, dict) else None
+                    if isinstance(csv_text, str) and len(csv_text.encode("utf-8")) > MAX_CSV_BYTES:
+                        raise SnapshotTooLarge("local_csv_too_large")
 
                     async def receive():
                         return {"type": "http.request", "body": bytes(raw), "more_body": False}

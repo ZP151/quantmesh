@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.execution.accounting import PaperAccount
-from quantmesh.research.local_csv_snapshots import MAX_REQUEST_BYTES
+from quantmesh.research.local_csv_snapshots import MAX_CSV_BYTES, MAX_REQUEST_BYTES
 from quantmesh.research.realdata_snapshots import SnapshotCatalog
 from tests.test_local_csv_snapshots import CSV, NOW, request
 from tests.test_realdata_snapshots import package
@@ -154,6 +154,20 @@ def test_declared_and_streamed_limits_are_not_validation_details(tmp_path):
         headers={"content-type": "application/json", "content-length": "not-a-number"},
     )
     assert invalid_length.status_code == 422
+
+
+@pytest.mark.parametrize(
+    "csv_text",
+    ["x" * (MAX_CSV_BYTES + 1), "é" * (MAX_CSV_BYTES // 2 + 1)],
+    ids=["ascii", "multibyte"],
+)
+def test_ascii_and_multibyte_csv_size_errors_are_both_413(tmp_path, csv_text):
+    payload = request(csv_text=csv_text)
+    assert len(json.dumps(payload, ensure_ascii=False).encode()) < MAX_REQUEST_BYTES
+    response = client(tmp_path).post(PREFIX, json=payload)
+    assert response.status_code == 413
+    assert response.json() == {"detail": "local_csv_too_large"}
+    assert not (tmp_path / "local-csv" / "snapshots").exists()
 
 
 def test_invalid_unknown_and_corrupted_are_distinct_without_sensitive_values(tmp_path):
