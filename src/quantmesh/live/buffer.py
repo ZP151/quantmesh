@@ -34,6 +34,10 @@ from quantmesh.live.contract import (
     SourceState,
     UpdateKind,
 )
+from quantmesh.live.prepared_mount import PreparedLiveMount
+
+_PREPARED_STARTS: set[tuple[str, str]] = set()
+_PREPARED_START_LOCK = threading.Lock()
 
 
 class LiveIdentityConflictError(RuntimeError):
@@ -56,6 +60,7 @@ class _HotBudgetSpec(BaseModel):
     close_failure_reserve_bytes: int = Field(ge=4096)
     max_batch_bytes: int = Field(gt=0, le=65536)
     expires_at_utc: str = Field(min_length=1, max_length=64)
+    prepared_live_receipt_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class HotCacheBudget:
@@ -90,19 +95,33 @@ class HotCacheBudget:
             self._session: int | None = None
             self._failed = False
             self._owners = 0
-            self.header = json.dumps(self.spec.model_dump(), sort_keys=True).encode()
+            serialized = self.spec.model_dump(exclude_none=True)
+            self.header = json.dumps(serialized, sort_keys=True).encode()
+            self._prepared = None
+            self._first_prepared = False
+            if self.spec.prepared_live_receipt_sha256 is not None:
+                core = {k: v for k, v in serialized.items() if k != "prepared_live_receipt_sha256"}
+                self._prepared = PreparedLiveMount(
+                    self.root,
+                    hashlib.sha256(json.dumps(core, sort_keys=True).encode()).hexdigest(),
+                    self.spec.prepared_live_receipt_sha256,
+                )
             header_path = self.root / "budget-spec.json"
             if header_path.exists():
                 if is_reparse_point(header_path) or header_path.read_bytes() != self.header:
                     raise ValueError
             else:
-                if self.root.exists() and any(self.root.iterdir()):
+                if self._prepared is not None:
+                    self._prepared.verify(fresh=True)
+                    self._first_prepared = True
+                elif self.root.exists() and any(self.root.iterdir()):
                     raise ValueError  # No adopting an unaccounted database or resetting a ledger.
                 self._headroom(
                     self.spec.peak_operation_bytes + self.spec.close_failure_reserve_bytes
                 )
-                self.root.mkdir(parents=True, exist_ok=True)
-                self._write_once(header_path, self.header)
+                if not self._first_prepared:
+                    self.root.mkdir(parents=True, exist_ok=True)
+                    self._write_once(header_path, self.header)
             self._spent()
         except LiveCapacityExceeded:
             raise
@@ -204,12 +223,19 @@ class HotCacheBudget:
                 if self._session is not None:
                     raise ValueError("session already used")
                 attempts = self._spent() // self.spec.peak_operation_bytes
+                if self._first_prepared:
+                    self._prepared.verify(fresh=True)
+                    key = (str(self.root), self.spec.prepared_live_receipt_sha256)
+                    with _PREPARED_START_LOCK:
+                        if key in _PREPARED_STARTS:
+                            raise ValueError("prepared first attempt already consumed")
+                        _PREPARED_STARTS.add(key)
                 sessions = sorted(self.root.glob("budget-session-*.json"))
                 if (
                     len(sessions) > 16384
                     or (attempts and not sessions)
                     or (attempts and not (self.root / "live/updates.duckdb").is_file())
-                    or (not attempts and (self.root / "live").exists())
+                    or (not attempts and (self.root / "live").exists() and not self._first_prepared)
                 ):
                     raise ValueError("session evidence missing")
                 starts = [int(path.stem.removeprefix("budget-session-")) for path in sessions]
@@ -236,11 +262,15 @@ class HotCacheBudget:
                 if closed or ready:
                     raise ValueError("foreign close evidence")
                 self.reserve()  # Failed startup keeps its full intent, even if marker fails.
+                if self._first_prepared:
+                    self._write_once(self.root / "budget-spec.json", self.header)
                 start = attempts + 1
                 self._write_once(
                     self.root / f"budget-session-{start:06d}.json", self._session_record(start)
                 )
                 self._session = start
+                self._first_prepared = False
+                self._verify_prepared()
             except Exception:
                 self.fail_session()
                 raise LiveCapacityExceeded("hot admission session unavailable") from None
@@ -248,6 +278,14 @@ class HotCacheBudget:
     def _require_directory_sync(self) -> None:
         if not hasattr(os, "O_DIRECTORY"):
             raise LiveCapacityExceeded("durable directory sync unavailable")
+
+    def _verify_prepared(self) -> None:
+        if self._prepared is not None:
+            try:
+                self._prepared.verify()
+            except Exception:
+                self.fail_session()
+                raise LiveCapacityExceeded("prepared live storage unavailable") from None
 
     def claim_owner(self) -> None:
         with self._lock:
@@ -267,6 +305,7 @@ class HotCacheBudget:
             if self._failed or self._owners or self._session is None:
                 self.fail_session()
                 return
+            self._verify_prepared()
             start = self._session
             raw = self._session_record(start, self._spent() // self.spec.peak_operation_bytes)
             try:
@@ -315,6 +354,7 @@ class HotCacheBudget:
         if self._failed or stop.exists() or (self.root / "budget-stop-failure.json").exists():
             self.fail_session()
             raise LiveCapacityExceeded("hot capacity exhausted")
+        self._verify_prepared()
         spent = self._spent()
         peak = self.spec.peak_operation_bytes
         if (

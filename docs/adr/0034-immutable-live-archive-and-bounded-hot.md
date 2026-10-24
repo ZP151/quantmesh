@@ -150,6 +150,76 @@ This does not accept that accounting as a write approval or refund any attempt.
 
 ## Consequences, deployment and rollback
 
+### Static preparation compatibility for a fixed nested filesystem
+
+PR219/6612f50 and its actual CI remain accepted. Operator B1 stopped before any
+storage effect: a premounted root/live conflicts with both original nonempty
+root and zero-intent-existing-live guards. The new separately scoped leaf adds
+only optional budget prepared_live_receipt_sha256 and a read-only dedicated
+prepared_mount verifier; old absent/None serialization excludes that field and
+retains exact legacy header bytes and old guards. No setting/API is added.
+
+Root's sole operator may supply one static protected JSON at
+/run/quantmesh-live-prepared/<SHA256(canonical_root_utf8)>.json: root:root0444,
+regular/single-link/1..16384B, root-owned non-writable parent chain, no-follow
+nonblocking FD open and stable pre/post fstat. The new budget pins raw bytes;
+the JSON binds the original core budget SHA excluding that pin, avoiding cycles.
+Exact schema/duplicate keys/boolean-or-float numeric substitutions reject.
+It carries actual deployment receipt digest, source buffer/verifier file hashes,
+Python path/dev/ino/version and DuckDB version, app UID/GID, boot and controlled
+unit cgroup; root must use existing real release/runtime/physical/earmark receipts.
+Identity hashes are not physical approval hashes or bool passed assertions.
+
+This does not introduce a privileged startup protocol: no per-PID credential,
+exec barrier, inherited FD4/FD5, Worker admission clone or application mount call.
+The existing sole-operator deployment/unit owns isolation, no raw-loop/resize or
+mount capability and no concurrent remount. The bounded acceptance profile is
+single-start Restart=no, as attested from its real unit properties and bound to
+the app's actual cgroup. Original Demo properties are unchanged. This existing
+operator restriction closes pre-intent total-I/O-failure automatic process retry;
+the app also consumes fresh attempts once per root/receipt in-process and has no
+internal retry loop. It is not permission for root to automatically reissue a
+receipt/restart after failure. Actual process caps/NoNewPrivs are checked by the
+read-only observer. Old durable sessions still independently prohibit restart.
+
+The verifier opens actual root/live directory FDs and compares fstat identities,
+fdinfo mount IDs and mountinfo device/root/path/options, fstatvfs geometry/fsid,
+actual namespace snapshot, sysfs loop backing path/offset/sizelimit/16MiB capacity
+and current deployment facts. Root-attested real UUID/backing inode and original
+empty lost+found observation bind this actual kernel mapping; app receives no
+raw-device privilege. Every subsequent check reopens actual FDs and compares
+the captured namespace/mount IDs, rereads the protected receipt and rejects any
+change. The fixed mount must be ext4 root '/', rw/nodev/nosuid/noexec, distinct
+from host-FS budgetroot. Root's real preparation facts and deployment trust are
+not relabeled as independently accessible root-private backing inode inspection.
+
+Only new prepared directories may be root:existing app GID01770 for budgetroot
+and mounted root; underlying live remains root:root0555. Sticky/root-owned parent
+protects the root-owned underlying mountpoint against app rename/replacement;
+native path fallback after loss cannot write the0555 directory. Standard
+lost+found stays root:root0700/dir/nlink2, exact device/inode, with root's actual
+empty-list witness and no other live-root entries at first admission. The app
+does not read that protected directory's children or delete it to make an empty
+test pass. Root-owned sticky mount root and0700 preserve the witness against
+unprivileged edits. No existing directory ownership/mode/ACL or legacy guard is
+weakened. Root remains the trusted issuer and must not concurrently mutate it.
+
+With that explicit mode and no header, constructor verifies root entries exactly
+{live}, all initial empty facts and host50GB headroom, then defers header write.
+The real start_session rechecks facts, calls real reserve to write/fsync intent1,
+writes/fsyncs its header, writes/fsyncs open-session1, then rechecks mapping before
+the existing DuckDB constructor. No operator record preseeding is accepted.
+Header-present/zero-intent or any foreign/partial file cannot use that branch.
+Partial attempts are retained and never repaired/refunded. Each availability/
+reserve and post-DB-close clean-publication boundary rechecks the fixed mapping;
+failure poisons and the earlier history/unavailable behavior remains intact.
+
+The proof covers software decisions only. Tests model OS mount/credential facts
+explicitly, while tiny files/actual reservations/DuckDB and child crash execute.
+No real mount/native root receipt, physical peak or earmark was created here.
+Static receipt/directory/header growth must fit the operator's original actual
+outside1MiB coverage; no allocation or peak hash follows from unit GREEN.
+
 No original-row copy/move/delete/checkpoint, new service, engine, dependency,
 provider authority or paid resource. Existing staging~9.5GB is protected baseline;
 new cumulative5GB/free50GB accounting remains separate. No SPY capture/financial/
