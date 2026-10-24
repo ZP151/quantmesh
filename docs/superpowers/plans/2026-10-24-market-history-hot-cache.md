@@ -66,3 +66,17 @@ peak before every attempt, reserve close/failure costs, disable spill, stop if
 unknown/insufficient, and make no production-growth claim. This avoids a new
 storage format/platform and does not allocate the proposed64MiB. Server owner
 must provide actual evidence under existing technical authority before activation.
+
+## Final disposition — blocked at R2, return to Planner
+
+Source e47c889870fdc7f809fd1c358c5090f90f889ee4 is DO_NOT_RELEASE. The one
+aggregate correction closed both R1 failures. Final R2 (35passed/1Windows skip)
+found terminal stop can be lost across restart if both stop receipts fail and
+temporary free-floor refusal later clears with allowance remaining. See the
+active iteration for exact counterexample and immutable report/log hashes.
+
+The final acceptance checkbox remains incomplete. Two rounds are exhausted:
+no third source correction or review, no publisher READY. Release the sole
+writer slot to Planner/Product for a bounded restart recovery contract. A
+pre-I/O durable admission-session marker with read-only recovery of unfinished
+sessions is a proposed scope reduction only; it is not implemented here.

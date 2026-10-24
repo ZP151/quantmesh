@@ -80,3 +80,47 @@ is surfaced and no within-process rearm/refund occurs. Initial affected checks,
 tests and old failures remain preserved. After aggregate correction, affected
 check29 passes287/1explicit Windows skip/6warnings in42.90s; changed-file Ruff,
 format and whitespace checks pass. Final independent R2 remains pending.
+
+## FINAL R2 — STOP to Planner; DO NOT RELEASE
+
+Reviewed source HEAD e47c889870fdc7f809fd1c358c5090f90f889ee4, tree
+abd53cf6884b5e77eb471bba919c565430bd952c. Independent R2 closes both original
+R1 reproductions, but returns CHANGES REQUIRED with one Important restart gap.
+Its single permitted invocation passed35, skipped1 Windows POSIX fsync proof,
+with6upstream warnings in10.41s. Passing checks do not close the uncovered path.
+
+Counterexample from reviewed control flow (not an additional executed repro):
+with operations=4, startup and one committed append consume16MB of a33MB budget,
+including a1MB reserved failure allowance. A temporary free-floor refusal stops
+acquisition; both terminal receipt writes fail before file creation. If free
+space recovers, restart finds no durable stop file and can consume startup24MB,
+then append32MB under the unchanged specification. The operations=2 restart test
+exhausts normal allowance and therefore masks this automatic rearm path.
+
+The two-round review limit is reached. Source/tests are frozen; no third patch,
+READY, push, PR, CI, deployment, actual archive/provider access or allocation.
+The source-writer slot returns to Planner/Product. Root receives a STOP handoff.
+The original independent research objective remains incomplete and blocked by
+actual source-use/data qualification; capture0/financial0/Phase2NOT_STARTED and
+PRECISE_UNKNOWN are unchanged. This operational slice does not unblock it.
+
+Planner option only, not implemented: persist and fsync an admission-session
+marker before hot I/O; allow a clean-close record only after a normal unstopped
+session. An unfinished session reopens read-only even when free space recovers.
+Planner must bound and review this recovery contract in a new reduced slice;
+it is not a third correction under the current slice or a new retention choice.
+
+Retained evidence under output/market-history-hot-cache/:
+
+- review-round2.md SHA256
+  cd3f4ae328584346967725d5ae2399c9b333b6c201110a8a62bc3d578523c091.
+- review-round2-tests.log SHA256
+  3293c95668b7090a311c13cde8b3b3469618a61ccede7538d72c61d4f660b3e3.
+- 29-final-compatible.log SHA256
+  c02a237aa238a5cb006862b13c3d22aa0d42c1b9ba197e25077fd1b988d08b0f.
+
+This final checkpoint edits documentation only. Commit hooks were bypassed for
+the two scoped source commits after their explicit targeted checks; exact-head
+broad/native CI and publication were never claimed and are not authorized by
+this STOP handoff. All failed evidence, original DB/WAL and consumed intents
+remain retained.
