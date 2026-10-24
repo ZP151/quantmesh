@@ -760,6 +760,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research/data-snapshots/local-csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Local Csv */
+        get: operations["list_local_csv_api_research_data_snapshots_local_csv_get"];
+        put?: never;
+        /** Import Local Csv */
+        post: operations["import_local_csv_api_research_data_snapshots_local_csv_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/data-snapshots/local-csv/{snapshot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Local Csv */
+        get: operations["get_local_csv_api_research_data_snapshots_local_csv__snapshot_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/data-snapshots/local-csv/{snapshot_id}/original.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Local Csv Original */
+        get: operations["download_local_csv_original_api_research_data_snapshots_local_csv__snapshot_id__original_csv_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/data-snapshots/local-csv/{snapshot_id}/reference": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Local Csv Reference */
+        get: operations["get_local_csv_reference_api_research_data_snapshots_local_csv__snapshot_id__reference_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/data-snapshots/local-csv/{snapshot_id}/reference.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Local Csv Reference */
+        get: operations["download_local_csv_reference_api_research_data_snapshots_local_csv__snapshot_id__reference_json_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/data-snapshots/local-csv/{snapshot_id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Local Csv Report */
+        get: operations["download_local_csv_report_api_research_data_snapshots_local_csv__snapshot_id__report_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/research/data-snapshots/{snapshot_id}": {
         parameters: {
             query?: never;
@@ -1989,6 +2092,12 @@ export interface components {
          * @enum {string}
          */
         DataKind: "bars" | "quotes" | "books" | "trades" | "adjustment-factors" | "splits" | "dividends";
+        /**
+         * DatasetClass
+         * @description Trust-relevant classification of the bytes declared by a manifest.
+         * @enum {string}
+         */
+        DatasetClass: "observed" | "synthetic";
         /** DatasetJobOption */
         DatasetJobOption: {
             dataset: components["schemas"]["DatasetRef"];
@@ -1998,6 +2107,38 @@ export interface components {
             minimum_available_bars: number;
             /** Universe */
             universe: components["schemas"]["UniverseMember"][];
+        };
+        /**
+         * DatasetManifest
+         * @description Versioned manifest beside one dataset (``<dataset>/manifest.json``).
+         */
+        DatasetManifest: {
+            /** Coverage */
+            coverage?: components["schemas"]["SeriesCoverage"][];
+            data_class?: components["schemas"]["DatasetClass"] | null;
+            /** Dataset */
+            dataset: string;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+            /** License */
+            license: string;
+            /** Revision */
+            revision: number;
+            /**
+             * Schema Version
+             * @default 1
+             */
+            schema_version: number;
+            /** Source */
+            source: string;
+            /**
+             * Timezone
+             * @default UTC
+             */
+            timezone: string;
         };
         /** DatasetRef */
         DatasetRef: {
@@ -3234,6 +3375,337 @@ export interface components {
             source: string;
             venue: components["schemas"]["Venue"];
         };
+        /** LocalCsvCheck */
+        LocalCsvCheck: {
+            /** Code */
+            code: string;
+            /** Count */
+            count: number;
+            /** Locations */
+            locations?: components["schemas"]["LocalCsvLocation"][];
+            /**
+             * Locations Truncated
+             * @default false
+             */
+            locations_truncated: boolean;
+            /** Message */
+            message: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "PASS" | "REJECT" | "INSUFFICIENT";
+        };
+        /** LocalCsvCoverage */
+        LocalCsvCoverage: {
+            /** Expected Sessions */
+            expected_sessions: number;
+            /** First Date */
+            first_date: string | null;
+            /** Last Date */
+            last_date: string | null;
+            /** Missing Sessions */
+            missing_sessions: string[];
+            /** Rows */
+            rows: number;
+            /** Unexpected Sessions */
+            unexpected_sessions: string[];
+            /**
+             * Valid Rows
+             * @description Rows with parseable UTC and valid OHLCV shapes; session, duplicate and order issues are not deducted. Not a qualification/coverage ratio.
+             */
+            valid_rows: number;
+        };
+        /** LocalCsvEligibility */
+        LocalCsvEligibility: {
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Status
+             * @default BLOCKED
+             * @constant
+             */
+            status: "BLOCKED";
+        };
+        /** LocalCsvEvidence */
+        LocalCsvEvidence: {
+            /** Post Review Sha256 */
+            post_review_sha256?: string | null;
+            /** Preauthorization Sha256 */
+            preauthorization_sha256?: string | null;
+            /** Source Evidence Sha256 */
+            source_evidence_sha256?: string | null;
+        };
+        /** LocalCsvFreshness */
+        LocalCsvFreshness: {
+            /** Age Sessions */
+            age_sessions: number | null;
+            /** As Of */
+            as_of: string;
+            /** Last Session */
+            last_session: string | null;
+            /** Latest Complete Session */
+            latest_complete_session: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "CURRENT" | "STALE" | "INSUFFICIENT";
+        };
+        /**
+         * LocalCsvImportRequest
+         * @description Ordinary workstation imports cannot assert engineering-fixture provenance.
+         */
+        LocalCsvImportRequest: {
+            /**
+             * Calendar Id
+             * @enum {string}
+             */
+            calendar_id: "XNYS" | "24/7";
+            /** Csv Text */
+            csv_text: string;
+            evidence?: components["schemas"]["LocalCsvEvidence"];
+            /**
+             * Evidence Kind
+             * @default user_snapshot
+             * @constant
+             */
+            evidence_kind: "user_snapshot";
+            /**
+             * Interval
+             * @default 1d
+             * @constant
+             */
+            interval: "1d";
+            /** Label */
+            label: string;
+            /** Required End */
+            required_end: string;
+            /** Required Start */
+            required_start: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            source?: components["schemas"]["LocalCsvSource"];
+            /** Symbol */
+            symbol: string;
+            /**
+             * Venue
+             * @enum {string}
+             */
+            venue: "moomoo" | "hyperliquid";
+        };
+        /** LocalCsvLineage */
+        LocalCsvLineage: {
+            /** Manifest Sha256 */
+            manifest_sha256?: string | null;
+            /** Normalized Sha256 */
+            normalized_sha256?: string | null;
+            /** Original Sha256 */
+            original_sha256: string;
+        };
+        /** LocalCsvList */
+        LocalCsvList: {
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Snapshots */
+            snapshots: components["schemas"]["LocalCsvReport"][];
+        };
+        /** LocalCsvLocation */
+        LocalCsvLocation: {
+            /** Actual */
+            actual?: string | null;
+            /** Date */
+            date?: string | null;
+            /** Expected */
+            expected?: string | null;
+            /** Field */
+            field: string;
+            /** Row */
+            row?: number | null;
+        };
+        /** LocalCsvNextAction */
+        LocalCsvNextAction: {
+            /**
+             * Href
+             * @default /app/research/jobs
+             * @constant
+             */
+            href: "/app/research/jobs";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "inspect_issues" | "plan_experiment";
+            /** Reason */
+            reason: string;
+            /**
+             * Submission Allowed
+             * @default false
+             * @constant
+             */
+            submission_allowed: false;
+        };
+        /** LocalCsvQualification */
+        LocalCsvQualification: {
+            /**
+             * R1
+             * @default INSUFFICIENT
+             * @constant
+             */
+            R1: "INSUFFICIENT";
+            /**
+             * R2
+             * @default INSUFFICIENT
+             * @constant
+             */
+            R2: "INSUFFICIENT";
+            /**
+             * R3
+             * @default NOT_AUTHORIZED
+             * @constant
+             */
+            R3: "NOT_AUTHORIZED";
+            /** Allowed Use */
+            allowed_use: string[];
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "REJECT" | "INSUFFICIENT";
+            /**
+             * Structural Status
+             * @enum {string}
+             */
+            structural_status: "PASS" | "REJECT";
+        };
+        /** LocalCsvReference */
+        LocalCsvReference: {
+            dataset_ref: components["schemas"]["DatasetRef"] | null;
+            eligibility: components["schemas"]["LocalCsvEligibility"];
+            evidence: components["schemas"]["LocalCsvEvidence"];
+            /**
+             * Intended Use
+             * @default local_protocol_planning_only
+             * @constant
+             */
+            intended_use: "local_protocol_planning_only";
+            manifest: components["schemas"]["DatasetManifest"] | null;
+            normalized_csv: components["schemas"]["ObjectRef"] | null;
+            /**
+             * Runner Status
+             * @default blocked_unqualified_input
+             * @constant
+             */
+            runner_status: "blocked_unqualified_input";
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Snapshot Id */
+            snapshot_id: string;
+        };
+        /** LocalCsvReport */
+        LocalCsvReport: {
+            /**
+             * Calendar Id
+             * @enum {string}
+             */
+            calendar_id: "XNYS" | "24/7";
+            /** Checks */
+            checks: components["schemas"]["LocalCsvCheck"][];
+            coverage: components["schemas"]["LocalCsvCoverage"];
+            dataset_ref: components["schemas"]["DatasetRef"] | null;
+            /**
+             * Evidence Kind
+             * @enum {string}
+             */
+            evidence_kind: "user_snapshot" | "fixture";
+            freshness: components["schemas"]["LocalCsvFreshness"];
+            /** Imported At */
+            imported_at: string;
+            /**
+             * Interval
+             * @constant
+             */
+            interval: "1d";
+            /** Label */
+            label: string;
+            lineage: components["schemas"]["LocalCsvLineage"];
+            next_action: components["schemas"]["LocalCsvNextAction"];
+            qualification: components["schemas"]["LocalCsvQualification"];
+            /** Report Digest */
+            report_digest: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Snapshot Id */
+            snapshot_id: string;
+            source: components["schemas"]["LocalCsvSource"];
+            /** Symbol */
+            symbol: string;
+            /**
+             * Venue
+             * @enum {string}
+             */
+            venue: "moomoo" | "hyperliquid";
+        };
+        /** LocalCsvSource */
+        LocalCsvSource: {
+            /**
+             * Adjustment
+             * @default unknown
+             * @enum {string}
+             */
+            adjustment: "raw" | "adjusted" | "unknown";
+            /**
+             * License Evidence
+             * @default unknown
+             */
+            license_evidence: string;
+            /**
+             * License Scope
+             * @default unknown
+             */
+            license_scope: string;
+            /**
+             * Pit Status
+             * @default unknown
+             */
+            pit_status: string;
+            /**
+             * Provider
+             * @default unknown
+             */
+            provider: string;
+            /** Received At */
+            received_at?: string | null;
+            /**
+             * Session Semantics
+             * @default unknown
+             */
+            session_semantics: string;
+            /**
+             * Volume Unit
+             * @default unknown
+             * @enum {string}
+             */
+            volume_unit: "shares" | "base_units" | "contracts" | "unknown";
+        };
         /**
          * ModelMeta
          * @description The model that produced the recorded output (metadata only).
@@ -3264,6 +3736,23 @@ export interface components {
              * @enum {string}
              */
             status: "not_applicable" | "not_monitored" | "coverage_incomplete" | "no_trigger_recorded" | "triggered";
+        };
+        /**
+         * ObjectRef
+         * @description Immutable identity and representation metadata for one byte object.
+         */
+        ObjectRef: {
+            /**
+             * Algorithm
+             * @default sha256
+             */
+            algorithm: string;
+            /** Byte Length */
+            byte_length: number;
+            /** Digest */
+            digest: string;
+            /** Media Type */
+            media_type: string;
         };
         /**
          * Order
@@ -3806,6 +4295,29 @@ export interface components {
              * @enum {string}
              */
             threshold_state: "observed" | "not_observed" | "unavailable";
+        };
+        /**
+         * SeriesCoverage
+         * @description One (interval, venue, symbol) series observed in the dataset.
+         */
+        SeriesCoverage: {
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
+            /** Interval */
+            interval: string;
+            /** Rows */
+            rows: number;
+            /**
+             * Start
+             * Format: date-time
+             */
+            start: string;
+            /** Symbol */
+            symbol: string;
+            venue: components["schemas"]["Venue"];
         };
         /** SessionFreshness */
         SessionFreshness: {
@@ -5436,6 +5948,214 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    list_local_csv_api_research_data_snapshots_local_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalCsvList"];
+                };
+            };
+        };
+    };
+    import_local_csv_api_research_data_snapshots_local_csv_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocalCsvImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalCsvReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_local_csv_api_research_data_snapshots_local_csv__snapshot_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalCsvReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_local_csv_original_api_research_data_snapshots_local_csv__snapshot_id__original_csv_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_local_csv_reference_api_research_data_snapshots_local_csv__snapshot_id__reference_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalCsvReference"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_local_csv_reference_api_research_data_snapshots_local_csv__snapshot_id__reference_json_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    download_local_csv_report_api_research_data_snapshots_local_csv__snapshot_id__report_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -4,6 +4,7 @@ import { Page } from '@/components/page'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { api, type ResearchJobOptions, type ResearchJobRecord, type ResearchJobRequest } from '@/lib/api'
+import { LocalCsvPlanning } from './LocalCsvPlanning'
 import { VnpyFixturePanel } from './VnpyFixturePanel'
 
 // Operate: extend the incumbent black/green workstation. One configuration column,
@@ -75,7 +76,10 @@ const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3
 
 export function ResearchJobsScreen() {
   const [engine, setEngine] = useState('baseline')
+  const snapshotId = new URLSearchParams(globalThis.location?.search).get('snapshot')
+  if (snapshotId !== null) return <LocalCsvPlanning snapshotId={snapshotId} />
   return <>
+    <a href="/app/research/data-readiness?format=csv" className="mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">Import daily CSV for protocol planning</a>
     <div className="mb-4 flex flex-wrap items-center gap-3 px-1 text-sm">
       <label htmlFor="research-engine">Research engine</label>
       <select id="research-engine" className="h-9 rounded-md border border-input bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring"

@@ -41,7 +41,7 @@ function cell(value: string | number | boolean | null): string {
 export function ImportsScreen() {
   const queryClient = useQueryClient()
   const committed = useSurface(['imports'], api.imports)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   // Upload form state.
   const fileInput = useRef<HTMLInputElement>(null)
@@ -127,6 +127,11 @@ export function ImportsScreen() {
       }
     >
       <div className="space-y-5">
+        <div className="space-y-2 border-b border-border pb-4 text-sm">
+          <a href="/app/research/data-readiness?format=csv" className="inline-flex min-h-11 items-center underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">
+            {locale === 'en' ? 'Import daily CSV for research planning' : '导入日线 CSV，用于研究规划'}
+          </a>
+        </div>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">

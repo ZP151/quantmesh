@@ -43,3 +43,21 @@ are preserved; the page performs no strategy evaluation.
 
 P2 frozen-experiment display and P3 paper/shadow control are later slices with
 separate concrete designs. No live execution or provider credential scope changes.
+
+## Daily held-file CSV adapter — issue222,2026-10-25
+
+The authorized product continuation adds an explicit bounded CSV adapter under
+the existing snapshot opt-in. It reuses ObjectStore, CalendarService, Bar and
+DatasetManifest/DatasetRef; P1 ZIP/P2/P3 and fixed vn.py inputs stay separate.
+See [the slice record](../iterations/0038-local-csv-import.md).
+
+It preserves submitted UTF-8 text/metadata, computes located structural facts
+before normalization and creates normalized refs only for consistent input.
+Source/rights/PIT/finality/actions and price/unit claims remain unverified,
+including optional Phase1 pre/post/source-evidence digests. No capture or new
+approval occurs. Calendar elapsed/receipt are not historical availability.
+Restricted local_research references remain BLOCKED for fixture job submission.
+Explicit generated samples may hydrate existing Bar/backtester interfaces for
+engineering checks only. Cold reads verify object/report/reference bindings;
+identical imports retain the first receipt. No existing SPY evidence is changed.
+No new dependency, engine, service, trusted-catalog admission or live authority.
