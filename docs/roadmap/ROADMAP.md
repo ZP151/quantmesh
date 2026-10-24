@@ -1,5 +1,16 @@
 # QuantMesh Product Roadmap
 
+## Approved archive-preserving market-data lifecycle — issue218,2026-10-24
+
+The operator selected B: canonical history remains in place read-only, newly
+persisted hot observations share the original manifest-first history URL, and
+quota stops acquisition while reads/freshness remain honest. Implementation,
+test-first evidence and activation/rollback limits are in the
+[slice record](../iterations/0038-market-history-hot-cache.md) and
+[ADR0034](../adr/0034-immutable-live-archive-and-bounded-hot.md).
+Software delivery is separate from sole-operator real-host acceptance; no
+source qualification, SPY/financial/Phase2 or trading authority is added.
+
 ## Controlled Worker restart lease handoff — issue198, 2026-10-20
 
 The operator approved first-cause SIGTERM/SIGINT plus proven owned-child cleanup
