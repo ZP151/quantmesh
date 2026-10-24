@@ -266,3 +266,35 @@ warnings62.25s, exit0 (batch-affected-final.txt), across new batching, existing
 tail/buffer/lookup/history/archive+hot tests. Initial failed runs remain retained.
 Changed-file Ruff/format/whitespace pass. No full repository/old CI/native query.
 Source freezes for one independent delta review; no native recovery claim yet.
+
+### Independent delta R1 READY and immutable publisher handoff
+
+Frozen source6242d7c9381370660d37ac83912dd93735138667, tree
+dcf8f5fcff6ee99af3e44b5d67c286e7a6f5a91e. Independent R1 finds Standards0/Spec0
+blocking issues, no requested correction. Reviewer checks transaction detection/
+ownership, full17 columns and key cardinality, all original filters/STATUS/
+limits, snapshot across concurrent changes, lock scope, resource/unknown error
+propagation, forward path and model/native evidence distinction.
+
+Exactly one independent invocation12pass4.73s, exit0, actual source path and
+DuckDB1.5.5 confirmed, tracked worktree clean. No broad suite/model/host/oldCI or
+second review. Retained output/readonly-resource-diagnosis/:
+
+- batch-review-r1.md SHA256
+  ed533a9e07d19d0c32861f786b2a8d6d416fabc8ca26bb6300cc52d25c274f92.
+- batch-review-r1-tests.log SHA256
+  ff2d543790c89ef0436bc8ffe2b39eca6f661b7193cdf62df0317178338bbd9f.
+
+Final checkpoint changes only this iteration and plan; runtime/tests/ADR remain
+at the reviewed freeze. Local hooks bypassed after explicit scoped checks;
+sole publisher receives the exact candidate for normal new-head CI/merge, then
+sole operator may perform the separately authorized merged-source regression.
+No product-owner host/CI action,222/preview/Goal/automation change, dependency or
+resource setting relaxation. The original retained model-budget failure and
+root's frozen-total+2MiB metadata adjustment remain explicit. Software handoff
+fits the original17:03:04Z–18:18:04Z allowance without resetting it.
+
+The native result can still refuse on key selection, vector allocation, an
+individual wide batch or total process limits; latency can rise with79 payload
+queries. No partial result, empty fallback, source qualification or independent
+research completion is claimed. Root retains the unfinished research objective.

@@ -19,7 +19,7 @@ deadline18:18:04Z remain; no new clock. Existing branch is isolated from222.
 - [x] Focused RED/GREEN tests: full-field equivalence, bounded query cardinality,
   exact extra query count, absent/duplicate keys fail closed, empty relations,
   concurrent mutation between batches and caller transaction retention.
-- [ ] One independent delta review plus known correction, then frozen commit
+- [x] One independent delta review plus known correction, then frozen commit
   and exact publisher handoff for normal CI/merge. No host query/CI here.
 
 No resource/temp/RAM/RO change, new engine/platform, lost fields/observations,
@@ -48,3 +48,12 @@ First affected invocation inherited another worktree's PYTHONPATH in child
 processes and pytest's shared Windows temp cleanup denied access; rerun uses
 this source explicitly and a fresh task-owned pytest temporary base. No runtime
 environment or dependency installation; initial failures are retained.
+
+Freeze6242d7c9381370660d37ac83912dd93735138667/tree
+dcf8f5fcff6ee99af3e44b5d67c286e7a6f5a91e: corrected affected boundary232pass/
+2explicit Windows native-fsync skips/6existing warnings62.25s, exit0. Scoped
+Ruff/format/whitespace pass. Independent R1 READY Standards0/Spec0, exactly one
+12-test invocation4.73s/exit0 on confirmed frozen source/DuckDB1.5.5. No requested
+correction, second review or extra experiment. Report/raw hashes in iteration.
+Final documentation checkpoint preserves reviewed source/tests/ADR exactly;
+sole publisher owns exact CI/normal merge and sole operator future native gate.
