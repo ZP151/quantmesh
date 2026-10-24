@@ -28,7 +28,7 @@ const historical = {
 }
 function mount() { return render(<PreferencesProvider><DataReadinessScreen /></PreferencesProvider>) }
 beforeEach(() => {
-  localStorage.clear(); vi.clearAllMocks()
+  localStorage.clear(); vi.clearAllMocks(); window.history.replaceState(null, '', '/')
   mocks.list.mockResolvedValue([]); mocks.get.mockResolvedValue(historical); mocks.import.mockResolvedValue(historical)
 })
 
@@ -240,4 +240,14 @@ it('localizes new explanations and disclosure without translating original evide
   expect(screen.getByText('inspect_evidence_only')).toBeVisible()
   expect(screen.getByText('已通过的技术检查（1）')).toBeVisible()
   expect(screen.getByText('Issuer and Yahoo disagree')).toBeVisible()
+})
+
+
+it('offers a separate own-CSV workflow without relabeling the retained SPY archive', async () => {
+  mount()
+  const ownData = screen.getByRole('button', { name: 'My CSV data' })
+  expect(ownData).toHaveAttribute('aria-pressed', 'false')
+  await userEvent.click(ownData)
+  expect(await screen.findByRole('heading', { name: 'Import your daily data' })).toBeInTheDocument()
+  expect(screen.queryByLabelText('Local SPY snapshot ZIP')).not.toBeInTheDocument()
 })

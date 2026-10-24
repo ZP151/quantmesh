@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { LocalCsvImport } from './LocalCsvImport'
 import { Download, RefreshCw, Upload } from 'lucide-react'
 import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
@@ -42,6 +43,25 @@ function errorCode(error: unknown): SnapshotErrorCode {
 }
 
 export function DataReadinessScreen() {
+  const { locale } = usePreferences()
+  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).get('format') === 'csv' ? 'csv' : 'zip')
+  function choose(value: 'csv' | 'zip') {
+    setMode(value)
+    const url = new URL(window.location.href); url.searchParams.set('format', value)
+    window.history.replaceState(window.history.state, '', url)
+  }
+  return <div className="min-w-0 space-y-5">
+    <div role="group" aria-label={locale === 'zh-CN' ? '数据导入方式' : 'Data import format'} className="flex flex-wrap gap-2 border-b border-border pb-4">
+      <Button variant={mode === 'csv' ? 'default' : 'outline'} className="max-sm:min-h-11" aria-pressed={mode === 'csv'} onClick={() => choose('csv')}>
+        {locale === 'zh-CN' ? '我的 CSV 数据' : 'My CSV data'}</Button>
+      <Button variant={mode === 'zip' ? 'default' : 'outline'} className="max-sm:min-h-11" aria-pressed={mode === 'zip'} onClick={() => choose('zip')}>
+        {locale === 'zh-CN' ? 'SPY 证据 ZIP' : 'SPY evidence ZIP'}</Button>
+    </div>
+    {mode === 'csv' ? <LocalCsvImport /> : <SpySnapshotReadiness />}
+  </div>
+}
+
+function SpySnapshotReadiness() {
   const { t, locale } = usePreferences()
   const [history, setHistory] = useState<SnapshotReport[]>([])
   const [report, setReport] = useState<SnapshotReport | null>(null)
