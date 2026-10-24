@@ -1,6 +1,7 @@
 # ADR0034 — Immutable live archive and bounded hot observations
 
-Date2026-10-24. Status: approved design B, software implementation under review.
+Date2026-10-24. Status: approved design B, final independent software review PASS;
+exact-head broad/native publication and production operator gates remain pending.
 Issue218; extends ADR0014/0023/0024/0025, preserves manifest research authority.
 
 ## Decision and operator approval

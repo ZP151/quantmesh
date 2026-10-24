@@ -51,7 +51,7 @@ original cumulative/expiry/free constraints; no intent refunds.
 - [x] Focused tiny tests, changed Ruff/format/diff; preserve every RED/log.
 - [x] One final affected compatibility boundary using original29 command's
   file set, no whole-repository/native repetition. Commit coherent checkpoint.
-- [ ] Independent known-finding plus necessary whole-slice boundary inspection,
+- [x] Independent known-finding plus necessary whole-slice boundary inspection,
   at most2rounds; no narrow verdict misrepresented as whole READY. Exact
   head/tree/evidence once to root and sole publisher only if READY.
 
@@ -100,3 +100,20 @@ measurement using disjoint tiny hot storage, with original DB untouched; count
 all retained startup/WAL/scratch/close/metadata/failure peaks in the existing
 global ledger before signing exact-runtime/batch proof. No such run authorized
 or performed by this software leaf, and a tiny observation is not a hard bound.
+
+## FINAL R2 outcome
+
+Final sourcefc4744fbad11ca71c0e8fd3a1f085318748fcd96, tree
+feb38e01ec46b68e84587c666a4ae872953203e6. Independent FINAL R2 PASS closes both
+Important findings and the authorized HTTP boundary, with no blocker in the
+affected whole-slice software boundary. Single invocation66pass/2explicit native
+skips/6warnings19.09s. Report session-review-r2.md SHA256
+5151aafaeb0894864d04ab6799aa09fa1a07cfe9ca0b45b773db485e91d6c831;
+log SHA256fd7cb7569ab96b08c86e9156d9c7a9a38dd34be771f2a0d0ce460cc7af2f979c.
+
+Eligible for sole-publisher exact-head broad/native CI and normal merge under
+standing authority; not deployment or production admission. No further source
+patch/review cycle in this leaf. Source freezes; final evidence checkpoint is
+documentation-only. No push/PR/CI/host/provider/actual DB/Goal action performed.
+Operator evidence acquisition boundaries are retained at
+output/market-history-hot-cache/operator-admission-boundary.md for root relay.

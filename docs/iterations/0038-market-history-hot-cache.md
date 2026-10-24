@@ -227,3 +227,50 @@ pass for buffer/feed/live_history and the two test files. Run50 passed160 with
 2native skips/6warnings28.76s; final run54 follows the partial-accounting guard.
 Final corrected focused54 passes161/2explicit native skips/6warnings27.58s;
 no repeated310-test boundary or full/native suite. Source freezes for FINAL R2.
+
+### FINAL reduced-leaf R2 — software review PASS; publisher gates pending
+
+Final independent report verifies frozen sourcefc4744fbad11ca71c0e8fd3a1f085318748fcd96,
+treefeb38e01ec46b68e84587c666a4ae872953203e6. Both Important R1 findings are closed,
+as is Planner's explicit HTTP boundary. No new blocking finding in the reduced
+leaf or affected whole-slice software boundary. This is eligibility for the sole
+publisher's existing validation gates, not release/native/production approval.
+
+One independent invocation66pass/2explicit Windows native-sync skips/6upstream
+warnings19.09s. No new/repeated repro or second invocation. Original independent
+unconditional startup-crash test remains unchanged and passes. All earlier STOP,
+RED, correction and failed evidence is retained on its actual source version.
+
+Retained output/market-history-hot-cache/ evidence:
+
+- session-review-r2.md SHA256
+  5151aafaeb0894864d04ab6799aa09fa1a07cfe9ca0b45b773db485e91d6c831.
+- session-review-r2-tests.log SHA256
+  fd7cb7569ab96b08c86e9156d9c7a9a38dd34be771f2a0d0ce460cc7af2f979c.
+- 54-session-final-focused.log (161pass/2skip) SHA256
+  ed12c7cd5a03174396b847c964acbcfe13b549c4f69722cc69c5a6953442ad3a.
+- 53-session-final-checks.log SHA256
+  933ec67c47636af79868bfe6125cc089e40dbc4d676f73e03423b4bdd6f11801.
+- 41-session-final-compatible.log (310pass/2skip on earliera6a9015) SHA256
+  e07e9f8c111b662646f4652c763566706ee185e76f1dcbc7fd6b9ea101eefcb7.
+
+The final evidence checkpoint edits documentation only, with runtime/tests
+unchanged from the reviewed source. Sole publisher owns exact new-head required
+broad/native CI, PR and normal merge; none ran here and no old green is relabeled
+as a new-head broad gate. Source commit hooks were bypassed after explicit
+targeted checks, as disclosed for every checkpoint. Source writer releases at
+handoff; no third review/patch cycle or refreshed90min window.
+
+No real host/archive/provider/peak measurement/earmark allocation, new environment,
+dependency, paid resource, source qualification, SPY capture or financial work.
+Actual original archive/WAL/path/scale, POSIX durability and verified physical
+peak/global earmark remain independent prerequisites. The operator note states
+the minimal existing-evidence intake and how to obtain missing bound evidence
+without pretending an observed tiny peak proves a bound or copying the7GB DB.
+Root receives it for sole-host-operator coordination. Old-live rollback remains
+unsafe on canonical archive; accepted oldDemo or stopped mode only.
+
+The original independent research Goal remains blocked, with capture0/financial0/
+Phase2NOT_STARTED/PRECISE_UNKNOWN. This software handoff neither resumes nor
+completes that Goal. The reduced leaf reaches reviewed software handoff inside
+its original11:29:54–12:59:54SGT bounded window, without resetting the old STOP.
