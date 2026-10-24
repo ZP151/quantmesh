@@ -72,7 +72,7 @@ static or historical OOS. Paper/live and R1/R2/R3 authority unchanged.
 - [x] Run an owned loopback API, POST correct/incorrect synthetic files, inspect
   reports/reference, download originals and cold reopen; publish actual operation
   entry and limits to UI/main by90min, not only test counts/digests.
-- [ ] Freeze candidate; independent Standards/Spec+affected-boundary review,
+- [x] Freeze candidate; independent Standards/Spec+affected-boundary review,
   at most2rounds/one aggregate correction; final applicable focused checks only.
 - [ ] Durable commits and reviewed handoff to sole publisher/root for exactCI
   and normal merge under standing human authority. Preserve all failures/outputs.

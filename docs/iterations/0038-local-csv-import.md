@@ -76,3 +76,35 @@ test helper used the huge strings as pytest parameter IDs, causing fixture path
 errors; its full log is retained, then explicit short IDs corrected only tests.
 No data-quality/qualification/reference logic or DTO shape changes in this fix.
 Corrected API/test Ruff/format and diff pass; source freezes for final R2 only.
+
+Final R2 PASS on649ac67e0a45ccf356dfd62ae8888cba3570d3f3,
+tree81e4a84cda29f54dceed35b870f515d2aa715a08. P2 closed, no unresolved Standards/
+Spec findings; one R2 invocation112passed/7existing warnings25.22s exit0,
+including the unchanged R1 output counterexample. No skips, third review,
+extra repro or source/DTO/rule expansion. Report review-r2.md SHA256
+a185ddeb50e41cc6729d8522c5f3537195bb924b0b69eb017f0a2b591bc0a5fb;
+raw review-r2-tests.log SHA256
+1e8d6aef6ac43d35f97722998a5257aa1232c1110c18becfbb61acf629a0db2e.
+
+Final corrected-source normal CLI operation is bound to649ac67:
+25/26actual PID52772 correct201/PASS+INSUFFICIENT, bad201/REJECT+row2, both
+referenceBLOCKED and source_finalityINSUFFICIENT, exact downloads and duplicate
+first receipt preserved. Actual HTTP oversized ASCII request returns413 with
+local_csv_too_large; final-live-size-check.json records2097403JSON bytes.
+27/28actual cold PID50428 repeats the owned operation in the same
+final-head-snapshots root. IDs/first times/original-report-reference download
+digests remain equal, two history entries retained. FINAL-OPERATION-RECEIPT.json
+SHA2566da998d6b42c78580a3b3577ac67ed33c7bed4fcf8827911cc66aced1a70ad41.
+Earlier candidate runtime/stores/failures remain preserved and separate.
+
+The final checkpoint changes documentation only. Source/tests/ADR remain at the
+reviewed649ac67 freeze. Local commits explicitly bypassed hooks after targeted
+checks; sole publisher owns combined backend+UI/client/SPA exact CI and normal
+merge. Backend ownership is released at immutable handoff. UI owner receives
+the actual head/operation entry; no frontend/static was edited here. The UI's
+browser/build receipts remain its evidence, not this backend's claim.
+There was no actual provider/SDK/SSH/account/host/livebuffer/OpenD/credential/
+cap/Goal/automation/dependency or old-CI work. Unknown real-data qualification
+and original consumed OOS/results remain unchanged. Paper/live authority is
+unchanged. This completes the local backend user loop, not financial research
+qualification, OpenD readiness or a source-use decision.
