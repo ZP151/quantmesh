@@ -98,6 +98,8 @@ class Settings(BaseSettings):
     # Retention for the read-only live replay lake. Seven days is the
     # bounded default; zero is reserved for explicit local replay drills.
     live_retention_days: int = Field(default=7, ge=0)
+    live_cache_root: Path | None = None
+    live_cache_budget_file: Path | None = None
     # Prediction comparison watchlist (iteration 0015 Phase E):
     # comma-separated key[:title[:pm_token[:kalshi_ticker[:expiry_date]]]]
     # event pairs (the board's own parsing rules). Empty means no
@@ -148,6 +150,16 @@ class Settings(BaseSettings):
         ):
             raise ValueError("staging_origin must be one canonical Tailscale HTTPS origin")
         return origin
+
+    @model_validator(mode="after")
+    def require_scoped_hot_cache(self) -> Self:
+        if (self.live_cache_root is None) != (self.live_cache_budget_file is None):
+            raise ValueError("hot cache requires its explicit existing-ledger budget file")
+        if self.live_cache_root is not None:
+            hot = self.live_cache_root.resolve()
+            if self.lake_root.resolve().is_relative_to(hot):
+                raise ValueError("hot cache must not contain or alias the canonical archive root")
+        return self
 
     @model_validator(mode="after")
     def require_exact_staging_build_ref(self) -> Self:

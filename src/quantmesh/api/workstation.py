@@ -1104,6 +1104,7 @@ def create_workstation_app(
     demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
     workspace_clock: Callable[[], datetime] | None = None,
     live_feed: LiveFeed | None = None,
+    history_archive_root: Path | None = None,
     prediction: PredictionBoard | None = None,
     data_catalog: DataCatalogReader | None = None,
     decision_packets: DecisionPacketStore | None = None,
@@ -1181,7 +1182,11 @@ def create_workstation_app(
         hl_posture=hl_posture,
         enablement=enablement,
     )
-    effective_history = LiveHistoryService(history, live_feed) if live_feed is not None else history
+    effective_history = (
+        LiveHistoryService(history, live_feed, archive_root=history_archive_root)
+        if live_feed is not None
+        else history
+    )
     app.state.history = effective_history
     app.state.price_forecasts = price_forecasts
     app.state.data_catalog = data_catalog
@@ -1959,10 +1964,16 @@ def main(argv: list[str] | None = None) -> None:
                     "--live requires a watchlist: set QUANTMESH_LIVE_WATCHLIST "
                     "(e.g. BTC,ETH,SOL,HYPE)"
                 )
-            replay = LiveBuffer(
-                root=settings.lake_root,
-                retention_days=settings.live_retention_days,
-            )
+            if settings.live_cache_root is not None:
+                replay = LiveBuffer.from_bounded_config(
+                    settings.live_cache_root,
+                    settings.live_cache_budget_file,
+                )
+            else:
+                replay = LiveBuffer(
+                    root=settings.lake_root,
+                    retention_days=settings.live_retention_days,
+                )
             account_snapshot = PaperAccountFile(settings.orders_dir)
             account = account_snapshot.load_or_create(account)
             journal = OrderJournal(settings.orders_dir)
@@ -2101,6 +2112,9 @@ def main(argv: list[str] | None = None) -> None:
                 decisions=copilot_decisions,
                 account_sink=account_snapshot.save,
                 live_feed=feed,
+                history_archive_root=(
+                    settings.lake_root if settings.live_cache_root is not None else None
+                ),
                 prediction=prediction,
                 data_catalog=trusted_catalog,
                 decision_packets=decision_packets,

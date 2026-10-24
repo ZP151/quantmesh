@@ -13,14 +13,20 @@ is assigned here on append and preserved in replay order.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
+import os
+import shutil
 import threading
 from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import duckdb
+from pydantic import BaseModel, ConfigDict, Field
 
+from quantmesh.data.objects import is_reparse_point
 from quantmesh.live.contract import (
     ContinuityEvidence,
     ContinuityState,
@@ -32,6 +38,320 @@ from quantmesh.live.contract import (
 
 class LiveIdentityConflictError(RuntimeError):
     """A provider identity was redelivered with different normalized content."""
+
+
+class LiveCapacityExceeded(ValueError):
+    """No further acquisition may be admitted; existing history remains readable."""
+
+
+class _HotBudgetSpec(BaseModel):
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
+    schema_version: int = Field(ge=1, le=1)
+    root: str = Field(min_length=1, max_length=4096)
+    ledger_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    peak_bound_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    leaf_remaining_bytes: int = Field(ge=0, le=64 * 1024 * 1024)
+    global_reserved_bytes: int = Field(ge=0)
+    peak_operation_bytes: int = Field(ge=4096)
+    close_failure_reserve_bytes: int = Field(ge=4096)
+    max_batch_bytes: int = Field(gt=0, le=65536)
+    expires_at_utc: str = Field(min_length=1, max_length=64)
+
+
+class HotCacheBudget:
+    """Consume externally bounded operation reservations, never estimate WAL from JSON.
+
+    The operator's existing capacity ledger must earmark global_reserved_bytes
+    and establish peak_bound_sha256 for this exact runtime/batch limit, including
+    startup, index/WAL/scratch/ledger overhead. Unknown bounds grant no writes.
+    Failed attempts consume the full reservation; neither restart nor small
+    actual writes refund it. This is admission against a trusted external bound,
+    not a claim that DuckDB enforces a native maximum database file size.
+    """
+
+    def __init__(self, root: Path, record: dict) -> None:
+        try:
+            self.spec = _HotBudgetSpec.model_validate(record)
+            self.root = Path(root).absolute()
+            if (
+                self.spec.root != str(self.root.resolve())
+                or any(is_reparse_point(p) for p in (self.root, *self.root.parents))
+                or self.spec.ledger_sha256 == "0" * 64
+                or self.spec.peak_bound_sha256 == "0" * 64
+            ):
+                raise ValueError
+            self.expires = datetime.fromisoformat(self.spec.expires_at_utc)
+            if self.expires.utcoffset() != timedelta(0):
+                raise ValueError
+            self.limit = min(self.spec.leaf_remaining_bytes, self.spec.global_reserved_bytes)
+            if self.limit < self.spec.close_failure_reserve_bytes:
+                raise LiveCapacityExceeded("hot capacity exhausted")
+            self._lock = threading.RLock()
+            self._session: int | None = None
+            self._failed = False
+            self._owners = 0
+            self.header = json.dumps(self.spec.model_dump(), sort_keys=True).encode()
+            header_path = self.root / "budget-spec.json"
+            if header_path.exists():
+                if is_reparse_point(header_path) or header_path.read_bytes() != self.header:
+                    raise ValueError
+            else:
+                if self.root.exists() and any(self.root.iterdir()):
+                    raise ValueError  # No adopting an unaccounted database or resetting a ledger.
+                self._headroom(
+                    self.spec.peak_operation_bytes + self.spec.close_failure_reserve_bytes
+                )
+                self.root.mkdir(parents=True, exist_ok=True)
+                self._write_once(header_path, self.header)
+            self._spent()
+        except LiveCapacityExceeded:
+            raise
+        except Exception:
+            raise ValueError("hot budget unavailable or incompatible") from None
+
+    @classmethod
+    def from_file(cls, root: Path, path: Path) -> HotCacheBudget:
+        if Path(path).stat().st_size > 8192:
+            raise ValueError("hot budget invalid")
+        return cls(root, json.loads(Path(path).read_bytes()))
+
+    @staticmethod
+    def _write_once(path: Path, raw: bytes) -> None:
+        with path.open("xb") as handle:
+            handle.write(raw)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if hasattr(os, "O_DIRECTORY"):
+            for parent in path.parents:
+                descriptor = os.open(parent, os.O_RDONLY | os.O_DIRECTORY)
+                try:
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
+
+    def _headroom(self, needed: int) -> None:
+        probe = self.root
+        while not probe.exists():
+            probe = probe.parent
+        if shutil.disk_usage(probe).free - needed < 50_000_000_000:
+            raise LiveCapacityExceeded("hot capacity exhausted")
+
+    def _spent(self) -> int:
+        paths = sorted(self.root.glob("budget-intent-*.json"))
+        if len(paths) > 16384:
+            raise ValueError("hot budget invalid")
+        for number, path in enumerate(paths, 1):
+            expected = {
+                "attempt": number,
+                "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                "reserved_bytes": self.spec.peak_operation_bytes,
+            }
+            if (
+                path.name != f"budget-intent-{number:06d}.json"
+                or is_reparse_point(path)
+                or path.stat().st_size > 1024
+                or path.read_bytes() != json.dumps(expected, sort_keys=True).encode()
+            ):
+                raise ValueError("hot budget ledger invalid")
+        return len(paths) * self.spec.peak_operation_bytes
+
+    def reserve(self, batch_bytes: int = 0) -> None:
+        with self._lock:
+            try:
+                spent = self._check_available(batch_bytes)
+                peak = self.spec.peak_operation_bytes
+                number = spent // peak + 1
+                self._write_once(
+                    self.root / f"budget-intent-{number:06d}.json",
+                    json.dumps(
+                        {
+                            "attempt": number,
+                            "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                            "reserved_bytes": peak,
+                        },
+                        sort_keys=True,
+                    ).encode(),
+                )
+            except BaseException:
+                self.fail_session()
+                raise
+
+    def fail_session(self) -> None:
+        """Irreversible within this process; the preexisting open record survives a crash."""
+        with self._lock:
+            self._failed = True
+
+    def _session_record(self, start: int, end: int | None = None) -> bytes:
+        record = {"start_attempt": start, "spec_sha256": hashlib.sha256(self.header).hexdigest()}
+        if end is not None:
+            record["final_attempt"] = end
+        return json.dumps(record, sort_keys=True).encode()
+
+    @staticmethod
+    def _exact_record(path: Path, expected: bytes) -> bool:
+        return (
+            path.is_file()
+            and not is_reparse_point(path)
+            and path.stat().st_size <= 1024
+            and path.read_bytes() == expected
+        )
+
+    def start_session(self) -> None:
+        """Prove prior normal closes, charge startup, fsync open marker before DuckDB I/O."""
+        with self._lock:
+            try:
+                self._require_directory_sync()
+                if self._session is not None:
+                    raise ValueError("session already used")
+                attempts = self._spent() // self.spec.peak_operation_bytes
+                sessions = sorted(self.root.glob("budget-session-*.json"))
+                if (
+                    len(sessions) > 16384
+                    or (attempts and not sessions)
+                    or (attempts and not (self.root / "live/updates.duckdb").is_file())
+                    or (not attempts and (self.root / "live").exists())
+                ):
+                    raise ValueError("session evidence missing")
+                starts = [int(path.stem.removeprefix("budget-session-")) for path in sessions]
+                if starts and (starts[0] != 1 or len(set(starts)) != len(starts)):
+                    raise ValueError("session evidence invalid")
+                closed = set(self.root.glob("budget-closed-*.json"))
+                ready = set(self.root.glob("budget-close-ready-*.json"))
+                if len(closed) > 16384 or len(ready) > 16384:
+                    raise ValueError("session evidence invalid")
+                for index, (path, start) in enumerate(zip(sessions, starts, strict=True)):
+                    end = starts[index + 1] - 1 if index + 1 < len(starts) else attempts
+                    receipt = self.root / f"budget-closed-{start:06d}.json"
+                    prepared = self.root / f"budget-close-ready-{start:06d}.json"
+                    if (
+                        path.name != f"budget-session-{start:06d}.json"
+                        or not 1 <= start <= end <= attempts
+                        or not self._exact_record(path, self._session_record(start))
+                        or not self._exact_record(receipt, self._session_record(start, end))
+                        or not self._exact_record(prepared, self._session_record(start, end))
+                    ):
+                        raise ValueError("session not demonstrably closed")
+                    closed.discard(receipt)
+                    ready.discard(prepared)
+                if closed or ready:
+                    raise ValueError("foreign close evidence")
+                self.reserve()  # Failed startup keeps its full intent, even if marker fails.
+                start = attempts + 1
+                self._write_once(
+                    self.root / f"budget-session-{start:06d}.json", self._session_record(start)
+                )
+                self._session = start
+            except Exception:
+                self.fail_session()
+                raise LiveCapacityExceeded("hot admission session unavailable") from None
+
+    def _require_directory_sync(self) -> None:
+        if not hasattr(os, "O_DIRECTORY"):
+            raise LiveCapacityExceeded("durable directory sync unavailable")
+
+    def claim_owner(self) -> None:
+        with self._lock:
+            if self._session is None or self._failed:
+                raise LiveCapacityExceeded("hot admission session unavailable")
+            self._owners += 1
+
+    def release_owner(self, *, clean: bool) -> None:
+        with self._lock:
+            if not clean:
+                self.fail_session()
+            self._owners -= 1
+
+    def close_session(self) -> None:
+        """Called only after successful database close, after accepted work has joined."""
+        with self._lock:
+            if self._failed or self._owners or self._session is None:
+                self.fail_session()
+                return
+            start = self._session
+            raw = self._session_record(start, self._spent() // self.spec.peak_operation_bytes)
+            try:
+                # Prepare+fsync content and directories before atomic publication.
+                # No fallible storage step follows publication. Lost publication
+                # after a crash refuses restart; visible publication proves a true close.
+                ready = self.root / f"budget-close-ready-{start:06d}.json"
+                self._write_once(ready, raw)
+                os.link(ready, self.root / f"budget-closed-{start:06d}.json")
+            except BaseException:
+                self.fail_session()
+                raise
+
+    def can_reserve(self) -> bool:
+        with self._lock:
+            try:
+                self._check_available(0)
+                return True
+            except LiveCapacityExceeded:
+                self.fail_session()
+                return False
+            except BaseException:
+                self.fail_session()
+                raise
+
+    def record_stop_failure(self) -> None:
+        """Keep a separate terminal failure receipt; never erase the failed stop file."""
+        with self._lock:
+            self.fail_session()
+            path = self.root / "budget-stop-failure.json"
+            if not path.exists():
+                self._write_once(
+                    path,
+                    json.dumps(
+                        {
+                            "reason": "budget_stop_persistence_failed",
+                            "reserved_bytes": self._spent(),
+                            "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                        },
+                        sort_keys=True,
+                    ).encode(),
+                )
+
+    def _check_available(self, batch_bytes: int) -> int:
+        stop = self.root / "budget-stop.json"
+        if self._failed or stop.exists() or (self.root / "budget-stop-failure.json").exists():
+            self.fail_session()
+            raise LiveCapacityExceeded("hot capacity exhausted")
+        spent = self._spent()
+        peak = self.spec.peak_operation_bytes
+        if (
+            datetime.now(UTC) > self.expires
+            or batch_bytes > self.spec.max_batch_bytes
+            or spent + peak + self.spec.close_failure_reserve_bytes > self.limit
+        ):
+            self.fail_session()
+            self._write_once(
+                stop,
+                json.dumps(
+                    {
+                        "reason": "capacity_exhausted",
+                        "reserved_bytes": spent,
+                        "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                    },
+                    sort_keys=True,
+                ).encode(),
+            )
+            raise LiveCapacityExceeded("hot capacity exhausted")
+        try:
+            self._headroom(peak + self.spec.close_failure_reserve_bytes)
+        except LiveCapacityExceeded:
+            self.fail_session()
+            self._write_once(
+                stop,
+                json.dumps(
+                    {
+                        "reason": "capacity_exhausted",
+                        "reserved_bytes": spent,
+                        "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                    },
+                    sort_keys=True,
+                ).encode(),
+            )
+            raise
+        return spent
 
 
 class AppendSequence(int):
@@ -130,15 +450,136 @@ _UPDATE_COLUMNS = (
 class LiveBuffer:
     """Append-only DuckDB lake for replayable live updates."""
 
-    def __init__(self, root: Path, retention_days: int = 7) -> None:
+    @classmethod
+    def from_bounded_config(cls, root: Path, budget_file: Path) -> LiveBuffer:
+        try:
+            return cls.open_bounded_hot(root, HotCacheBudget.from_file(root, budget_file))
+        except LiveCapacityExceeded:
+            logging.getLogger(__name__).warning("Live acquisition disabled: hot capacity exhausted")
+            return cls._stopped_reader(root)
+        except (OSError, ValueError):
+            # Invalid/partial accounting never grants admission, but readable
+            # persisted observations and the HTTP service need not be discarded.
+            logging.getLogger(__name__).error("Live acquisition disabled: hot budget unavailable")
+            return cls._stopped_reader(root)
+
+    @classmethod
+    def open_bounded_hot(cls, root: Path, budget: HotCacheBudget) -> LiveBuffer:
+        try:
+            return cls(root, retention_days=0, write_budget=budget)
+        except LiveCapacityExceeded:
+            # Exhausting admission must not remove previously persisted reads.
+            logging.getLogger(__name__).warning("Live acquisition disabled: hot capacity exhausted")
+            return cls._stopped_reader(root)
+        except Exception:
+            # A failed constructor remains an unfinished charged session, never
+            # permission to discard formerly persisted hot observations.
+            budget.fail_session()
+            if budget._session is None:
+                raise  # Invalid configuration did not authorize a storage attempt.
+            logging.getLogger(__name__).error("Live acquisition disabled: hot storage unavailable")
+            return cls._stopped_reader(root)
+
+    @classmethod
+    def _stopped_reader(cls, root: Path) -> LiveBuffer:
+        path = Path(root) / "live/updates.duckdb"
+        unavailable = False
+        if path.exists():
+            try:
+                return cls(root, read_only=True)
+            except ValueError:
+                unavailable = True
+        elif (
+            any(Path(root).glob("budget-intent-*.json"))
+            or any(Path(root).glob("budget-session-*.json"))
+            or path.parent.exists()
+        ):
+            unavailable = True  # Former admission is not proof of an empty store.
+        reader = cls.__new__(cls)
+        reader.root = Path(root)
+        reader.path = path
+        reader.read_only, reader.write_budget = True, None
+        reader.read_unavailable = unavailable
+        reader.retention = timedelta(0)
+        reader._connection_lock = threading.RLock()
+        if unavailable:
+            # No fake empty DB: every persisted read refuses explicitly, while
+            # the stopped feed and manifest-backed HTTP service can still mount.
+            reader._con = None
+            logging.getLogger(__name__).error(
+                "Persisted hot replay unavailable; acquisition disabled"
+            )
+            return reader
+        # Only never-admitted hot can truthfully contribute zero observations.
+        reader._con = duckdb.connect(
+            ":memory:",
+            config={
+                "max_temp_directory_size": "0B",
+                "memory_limit": "128MiB",
+                "threads": 1,
+            },
+        )
+        reader._con.execute("SET TimeZone = 'UTC'")
+        reader._con.execute(_SCHEMA)
+        return reader
+
+    def __init__(
+        self,
+        root: Path,
+        retention_days: int = 7,
+        *,
+        read_only: bool = False,
+        write_budget: HotCacheBudget | None = None,
+    ) -> None:
         if retention_days < 0:
             raise ValueError("retention_days must be non-negative")
         self.root = Path(root)
+        self.read_only = read_only
+        self.read_unavailable = False
+        self.write_budget = write_budget
+        if write_budget is not None:
+            if retention_days != 0 or read_only or write_budget.root != self.root.absolute():
+                raise ValueError("bounded hot requires retention=0 and its exact budget root")
+            write_budget.start_session()  # Durable session precedes constructor DB/index/WAL I/O.
         self.retention = timedelta(days=retention_days)
         self.path = self.root / "live" / "updates.duckdb"
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         self._connection_lock = threading.RLock()
-        self._con = duckdb.connect(str(self.path))
+        if read_only:
+            try:
+                self._con = duckdb.connect(
+                    str(self.path),
+                    read_only=True,
+                    config={
+                        "max_temp_directory_size": "0B",
+                        "memory_limit": "128MiB",
+                        "threads": 1,
+                    },
+                )
+                self._con.execute("SET TimeZone = 'UTC'")
+                self._assert_supported_schema()
+                required = set(_UPDATE_COLUMNS.split(", "))
+                if not required.issubset(self._market_update_columns()):
+                    raise ValueError("incompatible archive schema")
+            except Exception:
+                if hasattr(self, "_con"):
+                    self._con.close()
+                raise ValueError("archive unavailable or incompatible") from None
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._con = duckdb.connect(
+            str(self.path),
+            **(
+                {
+                    "config": {
+                        "max_temp_directory_size": "0B",
+                        "memory_limit": "128MiB",
+                        "threads": 1,
+                    }
+                }
+                if write_budget is not None
+                else {}
+            ),
+        )
         # pin the session timezone so TIMESTAMPTZ rows read back as the
         # UTC instants they were written with — replay output (and its
         # ISO representations) must not depend on the host's TZ
@@ -171,8 +612,7 @@ class LiveBuffer:
 
     def _market_update_columns(self) -> set[str]:
         return {
-            row[1]
-            for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
+            row[1] for row in self._con.execute("PRAGMA table_info('market_updates')").fetchall()
         }
 
     def _prune_with_indexes_disabled(self) -> int:
@@ -191,8 +631,7 @@ class LiveBuffer:
         parameters = [cutoff, cutoff, cutoff]
         with self._connection_lock:
             eligible = self._con.execute(
-                "SELECT COUNT(*) FROM market_updates WHERE "
-                f"{_RETENTION_PREDICATE}",
+                f"SELECT COUNT(*) FROM market_updates WHERE {_RETENTION_PREDICATE}",
                 parameters,
             ).fetchone()[0]
             if eligible == 0:
@@ -200,8 +639,7 @@ class LiveBuffer:
             index_names = [
                 row[0]
                 for row in self._con.execute(
-                    "SELECT index_name FROM duckdb_indexes() "
-                    "WHERE table_name = 'market_updates'"
+                    "SELECT index_name FROM duckdb_indexes() WHERE table_name = 'market_updates'"
                 ).fetchall()
             ]
             try:
@@ -209,7 +647,7 @@ class LiveBuffer:
                     quoted_name = '"' + index_name.replace('"', '""') + '"'
                     self._con.execute(f"DROP INDEX IF EXISTS {quoted_name}")
                 self._con.execute(
-                    "DELETE FROM market_updates WHERE " f"{_RETENTION_PREDICATE}",
+                    f"DELETE FROM market_updates WHERE {_RETENTION_PREDICATE}",
                     parameters,
                 )
                 return eligible
@@ -230,15 +668,12 @@ class LiveBuffer:
         if not metadata_exists:
             return
         row = self._con.execute(
-            "SELECT version FROM live_schema_metadata "
-            "WHERE component = 'market_updates'"
+            "SELECT version FROM live_schema_metadata WHERE component = 'market_updates'"
         ).fetchone()
         if row is not None and row[0] > 2:
             version = row[0]
             self._con.close()
-            raise RuntimeError(
-                f"live lake schema {version} is newer than supported version 2"
-            )
+            raise RuntimeError(f"live lake schema {version} is newer than supported version 2")
 
     # -- writes -----------------------------------------------------------
 
@@ -253,15 +688,26 @@ class LiveBuffer:
         return self.append_many([update])[0]
 
     def append_many(self, updates: list[MarketUpdate]) -> list[AppendSequence]:
+        try:
+            return self._append_many(updates)
+        except BaseException:
+            if self.write_budget is not None:
+                self.write_budget.fail_session()
+            raise
+
+    def _append_many(self, updates: list[MarketUpdate]) -> list[AppendSequence]:
         """Atomically admit a normalized batch, including both book sides."""
+        if self.read_only:
+            raise ValueError("read-only archive")
         if not updates:
             return []
         validated = [
-            MarketUpdate.model_validate(update.model_dump(mode="python"))
-            for update in updates
+            MarketUpdate.model_validate(update.model_dump(mode="python")) for update in updates
         ]
         self._validate_snapshot_batches(validated)
         with self._connection_lock:
+            if self.write_budget is not None:
+                self.write_budget.reserve(sum(len(u.model_dump_json().encode()) for u in validated))
             existing_by_key: dict[tuple[str, str, str, str], tuple[int, str]] = {}
             for update in validated:
                 key = self._identity_key(update)
@@ -332,10 +778,7 @@ class LiveBuffer:
     def _validate_snapshot_batches(updates: list[MarketUpdate]) -> None:
         epochs: dict[tuple[str, str, str], set[str]] = {}
         for update in updates:
-            if (
-                update.kind is not UpdateKind.L2_SNAPSHOT
-                or update.venue.value != "hyperliquid"
-            ):
+            if update.kind is not UpdateKind.L2_SNAPSHOT or update.venue.value != "hyperliquid":
                 continue
             assert update.snapshot_epoch is not None
             key = (update.venue.value, update.instrument, update.snapshot_epoch)
@@ -432,9 +875,7 @@ class LiveBuffer:
         try:
             for name, data_type in additions.items():
                 if name not in columns:
-                    self._con.execute(
-                        f"ALTER TABLE market_updates ADD COLUMN {name} {data_type}"
-                    )
+                    self._con.execute(f"ALTER TABLE market_updates ADD COLUMN {name} {data_type}")
             legacy_rows = self._con.execute(
                 "SELECT local_seq, venue, instrument, kind, provenance, data_time, "
                 "received_at, sequence, sequence_gap, state, state_note, payload_json "
@@ -511,14 +952,21 @@ class LiveBuffer:
         indexes are detached and rebuilt around the DELETE for DuckDB builds
         that reject deleting rows from a persisted indexed table.
         """
+        if self.read_only:
+            raise ValueError("read-only archive")
         return self._prune_with_indexes_disabled()
 
     # -- reads ------------------------------------------------------------
+
+    def _require_readable(self) -> None:
+        if self.read_unavailable:
+            raise ValueError("persisted hot replay unavailable")
 
     def price_trail(
         self, identities: list[tuple[str, str]], limit: int = 20
     ) -> dict[str, list[float]]:
         """Return trailing candle closes for exact ``(venue, instrument)`` pairs."""
+        self._require_readable()
         result: dict[str, list[float]] = {
             f"{venue}:{instrument}": [] for venue, instrument in identities
         }
@@ -567,6 +1015,7 @@ class LiveBuffer:
         even when several updates share the same timestamp. Corrupt or
         invalid rows raise instead of being silently skipped.
         """
+        self._require_readable()
         clauses: list[str] = []
         params: list[object] = []
         if venue is not None:
@@ -615,6 +1064,7 @@ class LiveBuffer:
         self, *, venue: str | None = None, instrument: str | None = None
     ) -> list[MarketUpdate]:
         """The most recent update per stream, preserving both L2 sides."""
+        self._require_readable()
         clauses: list[str] = []
         params: list[object] = []
         if venue is not None:
@@ -649,6 +1099,7 @@ class LiveBuffer:
 
     def recovery_checkpoints(self, *, venue: str, instruments: list[str]) -> list[MarketUpdate]:
         """Latest durable rows used to restore a venue supervisor's cursors."""
+        self._require_readable()
         if not instruments:
             return []
         placeholders = ", ".join("?" for _ in instruments)
@@ -695,6 +1146,7 @@ class LiveBuffer:
 
     def statuses(self) -> list[dict[str, object]]:
         """Current per-source state rows (from status updates only)."""
+        self._require_readable()
         with self._connection_lock:
             rows = self._con.execute(
                 "SELECT venue, instrument, state, note, changed_at "
@@ -713,6 +1165,7 @@ class LiveBuffer:
 
     def quarantined(self) -> list[dict[str, object]]:
         """Persisted identity/content conflicts, in observation order."""
+        self._require_readable()
         with self._connection_lock:
             rows = self._con.execute(
                 "SELECT quarantine_id, venue, instrument, kind, source_event_id, "
@@ -735,6 +1188,7 @@ class LiveBuffer:
         """The recorded extent: earliest/latest ``received_at``, row
         count and distinct venues — the replay-window metadata (iteration
         0019 slice 4). All bounds are UTC instants."""
+        self._require_readable()
         with self._connection_lock:
             row = self._con.execute(
                 "SELECT COUNT(*), MIN(received_at), MAX(received_at) FROM market_updates"
@@ -752,12 +1206,25 @@ class LiveBuffer:
 
     def close(self) -> None:
         with self._connection_lock:
-            self._con.close()
+            if getattr(self, "_closed", False):
+                return
+            try:
+                if self._con is not None:
+                    self._con.close()
+                self._closed = True
+                if self.write_budget is not None:
+                    self.write_budget.close_session()
+            except BaseException:
+                if self.write_budget is not None:
+                    self.write_budget.fail_session()
+                raise
 
     def __enter__(self) -> LiveBuffer:
         return self
 
     def __exit__(self, *exc: object) -> None:
+        if exc and exc[0] is not None and self.write_budget is not None:
+            self.write_budget.fail_session()
         self.close()
 
 

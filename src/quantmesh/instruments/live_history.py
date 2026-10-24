@@ -21,6 +21,7 @@ from quantmesh.instruments.contracts import (
     LiveTailLineage,
 )
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
+from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import (
     MarketUpdate,
     Provenance,
@@ -322,12 +323,13 @@ def _replay_series(
     selected_range: HistoryRange,
     *,
     as_of: datetime,
+    archive_root: Path | None = None,
 ) -> HistoricalSeries:
     buffer = feed.replay_buffer
     if buffer is None:
         raise HistoryUnavailableError("no manifest history or live replay buffer is attached")
     window_start = as_of - _WINDOW[selected_range]
-    updates = buffer.replay(
+    filters = dict(
         venue=venue.value,
         instrument=symbol,
         kinds={UpdateKind.CANDLE.value, UpdateKind.STATUS.value},
@@ -338,6 +340,34 @@ def _replay_series(
         limit=10_000,
         tail=True,
     )
+    archived = []
+    if archive_root is not None:
+        try:
+            with LiveBuffer(archive_root, read_only=True) as archive:
+                archived = archive.replay(**filters)
+        except Exception:
+            raise HistoryUnavailableError("read-only archive unavailable or incompatible") from None
+    identities = {}
+    updates = []
+    try:
+        hot_updates = buffer.replay(**filters)
+    except Exception:
+        raise HistoryUnavailableError("persisted hot replay unavailable or incompatible") from None
+    for update in [*archived, *hot_updates]:
+        key = (update.venue, update.instrument, update.kind, update.source_event_id)
+        evidence = (
+            update.content_digest,
+            update.continuity,
+            update.sequence_gap,
+            update.continuity_evidence,
+        )
+        if key in identities:
+            if identities[key] != evidence:
+                raise HistoryUnavailableError("archive/hot source identity content conflict")
+            continue
+        identities[key] = evidence
+        updates.append(update)
+    updates = updates[-10_000:]
     by_interval: dict[str, list] = {}
     for update in updates:
         interval = update.payload.get("interval")
@@ -462,6 +492,11 @@ def _replay_series(
         limitations=(
             "Manifest history unavailable; showing continuity-checked local live replay only.",
             *(
+                ("Read-only archive and bounded hot observations; not qualified history.",)
+                if archive_root is not None
+                else ()
+            ),
+            *(
                 (
                     "Limited observed regular-session US equity minute coverage; "
                     "missing intervals and session gaps are not filled.",
@@ -483,9 +518,12 @@ def _replay_series(
 class LiveHistoryService:
     """One shared history authority for both history and workspace APIs."""
 
-    def __init__(self, historical: HistoryService | None, feed: LiveFeed) -> None:
+    def __init__(
+        self, historical: HistoryService | None, feed: LiveFeed, *, archive_root: Path | None = None
+    ) -> None:
         self._historical = historical
         self._feed = feed
+        self._archive_root = archive_root
 
     def history(
         self,
@@ -517,6 +555,7 @@ class LiveHistoryService:
                 symbol,
                 range,
                 as_of=selected_as_of,
+                archive_root=self._archive_root,
             )
         return join_live_tail(observed, self._feed, as_of=selected_as_of)
 

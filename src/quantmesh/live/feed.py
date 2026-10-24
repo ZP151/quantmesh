@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -37,7 +38,7 @@ from typing import Any
 from quantmesh.data.calendars import CalendarService, SessionPolicy
 from quantmesh.domain.market_data import interval_to_timedelta
 from quantmesh.domain.models import Venue
-from quantmesh.live.buffer import LiveBuffer
+from quantmesh.live.buffer import LiveBuffer, LiveCapacityExceeded
 from quantmesh.live.contract import (
     ContinuityState,
     MarketUpdate,
@@ -296,7 +297,10 @@ class LiveFeed:
         self._generation = 0
         self._accepting = False
         self._stopped = False
-        if self._lake is not None:
+        self.capacity_exhausted = bool(lake is not None and lake.read_only)
+        self.capacity_stop_error: str | None = None
+        self._capacity_stop: asyncio.Event | None = None
+        if self._lake is not None and not self._lake.read_unavailable:
             for update in self._lake.latest():
                 self._ingest_cached(update.model_copy(deep=True))
 
@@ -309,6 +313,10 @@ class LiveFeed:
         """Run the lake retention sweep at most once per configured interval."""
         if self._lake is None:
             return 0
+        budget = self._lake.write_budget
+        if budget is not None and not budget.can_reserve():
+            self.capacity_exhausted = True
+            raise LiveCapacityExceeded("hot capacity exhausted")
         current = now if now is not None else datetime.now(UTC)
         if current.tzinfo is None:
             raise ValueError("prune time must be timezone-aware")
@@ -324,7 +332,7 @@ class LiveFeed:
         """Register a supervisor; the pump runs it and drains its outbox."""
         with self._lock:
             self._supervisors.append(supervisor)
-            if self._lake is not None:
+            if self._lake is not None and not self._lake.read_unavailable:
                 supervisor.on_persisted(
                     self._lake.recovery_checkpoints(
                         venue=supervisor.venue.value,
@@ -344,9 +352,38 @@ class LiveFeed:
         """Only storage work; the connection owns its own same-thread lock."""
         if self._lake is None:
             return [None] * len(updates)
-        if len(updates) == 1:
-            return [self._lake.append(updates[0])]
-        return self._lake.append_many(updates)
+        if self.capacity_exhausted:
+            raise LiveCapacityExceeded("hot capacity exhausted")
+        try:
+            if len(updates) == 1:
+                receipts = [self._lake.append(updates[0])]
+            else:
+                receipts = self._lake.append_many(updates)
+            budget = self._lake.write_budget
+            if budget is not None:
+                try:
+                    self.capacity_exhausted = not budget.can_reserve()
+                except Exception:
+                    # COMMIT receipts remain authoritative even when subsequent
+                    # stop accounting fails. Close acquisition after delivering
+                    # these receipts, and surface a separate terminal failure.
+                    self.capacity_exhausted = True
+                    self.capacity_stop_error = "budget_stop_persistence_failed"
+                    recorded = False
+                    try:
+                        budget.record_stop_failure()
+                        recorded = True
+                    except Exception:
+                        pass  # Surface persistence failure below, never claim a receipt exists.
+                    logging.getLogger(__name__).error(
+                        "Live acquisition stopped: budget_stop_persistence_failed; "
+                        "failure_receipt_recorded=%s",
+                        recorded,
+                    )
+            return receipts
+        except LiveCapacityExceeded:
+            self.capacity_exhausted = True
+            raise
 
     def _apply_persisted(
         self, updates: list[MarketUpdate], receipts: list[Any]
@@ -392,7 +429,13 @@ class LiveFeed:
             if not self._accepting or generation != self._generation:
                 raise asyncio.CancelledError
             entered.set()
-            receipts = await self._owned_io(self._persist, cached)
+            try:
+                receipts = await self._owned_io(self._persist, cached)
+            except LiveCapacityExceeded:
+                self._accepting = False
+                if self._capacity_stop is not None:
+                    self._capacity_stop.set()
+                raise
             if not self._accepting or generation != self._generation:
                 return
             with self._lock:
@@ -401,6 +444,9 @@ class LiveFeed:
                 supervisor.on_persisted(admitted)
             for update in admitted:
                 await self._deliver(update)
+            if self.capacity_exhausted and self._capacity_stop is not None:
+                self._accepting = False
+                self._capacity_stop.set()
 
     async def _publish_owned(
         self, updates: list[MarketUpdate], supervisor: VenueSupervisor | None = None
@@ -864,7 +910,16 @@ class LiveFeed:
         lifespan starts this; shutdown cancels it (and with it every
         supervisor pump, whose reconnect loops never exit on their own).
         """
+        if self.capacity_exhausted:
+            self._stopped = True
+            return
+        budget = self._lake.write_budget if self._lake is not None else None
+        if budget is not None:
+            budget.claim_owner()
+        healthy = True
+        normal_shutdown = False
         self._loop = asyncio.get_running_loop()
+        self._capacity_stop = asyncio.Event()
         self._io_gate = asyncio.Lock()
         self._generation += 1
         self._accepting = True
@@ -872,9 +927,18 @@ class LiveFeed:
         tasks = [asyncio.create_task(supervisor.run()) for supervisor in self._supervisors]
         tasks.append(asyncio.create_task(self._drain_loop()))
         tasks.append(asyncio.create_task(self._tick_loop()))
+        tasks.append(asyncio.create_task(self._wait_capacity_stop()))
         group = asyncio.gather(*tasks)
         try:
             await asyncio.shield(group)
+        except LiveCapacityExceeded:
+            self.capacity_exhausted = True
+        except asyncio.CancelledError:
+            normal_shutdown = True
+            raise
+        except BaseException:
+            healthy = False
+            raise
         finally:
             self._accepting = False
             self._stopped = True
@@ -885,11 +949,27 @@ class LiveFeed:
             results = await self._join_owned(asyncio.gather(*owned, return_exceptions=True))
             with contextlib.suppress(asyncio.CancelledError):
                 group.exception()
-            for result in results:
-                if isinstance(result, BaseException) and not isinstance(
-                    result, asyncio.CancelledError
-                ):
-                    raise result
+            try:
+                for result in results:
+                    if isinstance(result, BaseException) and not isinstance(
+                        result, asyncio.CancelledError
+                    ):
+                        if self.capacity_exhausted and isinstance(result, LiveCapacityExceeded):
+                            continue
+                        healthy = False
+                        raise result
+            finally:
+                if budget is not None:
+                    budget.release_owner(clean=healthy and not self.capacity_exhausted)
+                    if normal_shutdown:
+                        # Application shutdown has joined all accepted I/O.
+                        # Capacity stop alone keeps the DB open for HTTP reads.
+                        self._lake.close()
+
+    async def _wait_capacity_stop(self) -> None:
+        assert self._capacity_stop is not None
+        await self._capacity_stop.wait()
+        raise LiveCapacityExceeded("hot capacity exhausted")
 
     async def _drain_loop(self) -> None:
         while True:
