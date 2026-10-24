@@ -141,3 +141,67 @@ checks. No old or broad suite/CI was repeated. Root receives immutable commit,
 artifact hashes and final accounting. Original research Goal is not completed
 or resumed by this checkpoint; root remains its owner. The75min allowance is a
 maximum, not a reason to spend it after evidence reaches this decision.
+
+## Later root direction and DX1 actual I/O observation
+
+After the d8a1c6f checkpoint, root explicitly authorized the sole server operator
+to run one different-evidence-target diagnostic. It keeps product SQL, read-only
+archive,128MiB/threads1/0B, OS256M and original time bounds/default10000 semantics.
+It adds safe exception metadata and pre-collection cgroup/exit observation only;
+no SDK/login/restart/cache. This supersedes the earlier no-additional-diagnostic
+decision for this one operator-owned run, not for a product-owner host retry.
+No streaming-reader architecture is selected or presumed necessary. This
+product task retains its original18:18:04Z deadline.
+
+Product owner independently reviewed four frozen DX1 function-level runtime
+pins, exact AST identity of run_child with sealed CB2, finite safe graph/error
+mapping, trusted frame allowlist, exact-unit stop witness, unchanged query
+properties, once claim, snapshots, allocation tracking and owned-child cleanup.
+READY_FUNCTION_DELTA_ONLY, Standards0/Spec0 blocking findings. No test/model/host
+action. Report in the operator's dx1/DX1-FUNCTION-REVIEW.json SHA256
+3eef45b226e148aea9e3e7657528fea150db9ce38d73196caf6b502d7227d4af.
+This is a function review, not native query acceptance.
+
+Sole operator's one actual run17:17:31.824Z–17:17:35.961Z completed; no retry.
+Product owner read its structured public DX1-START.stdout directly, local SHA256
+fb1107c809d2479b551a1dec1687fa8cc1cd43752b973e4efa40593ae9bc11f0.
+Its public record identifies root receipt SHA256
+0b9c80cf371cf576ebdf00334be312d876430a2d6cf8fe98622112ef8f1ee197;
+product owner did not independently access/hash that remote receipt.
+
+New observed service result remains STOP_SHIPPED_FORMAL_SERVICE_SEMANTICS,
+RESOURCE_TEMP, reader_closed=true,1.9596685911528766s. Complete two-node context
+chain: VALUE_WRAPPER at live_history.py349 then DUCKDB_IO, with trusted frames
+live_history.py347 and buffer.py1104. Finite public mapping:
+action OPEN, public_error READ_ONLY_FILESYSTEM, path_category ARCHIVE_DEFAULT_TEMP.
+The errno30/EROFS value is inferred from an exact known public error-text suffix,
+not a directly captured C-layer errno attribute. No arbitrary message, original
+temporary filename, SQL/data payload, source line or locals is exposed. This
+locates a temporary-file OPEN refusal, not a CREATE_DIRECTORY failure. Exact
+DuckDB C++ operator and preceding allocation trigger remain unobserved.
+
+Actual stop witness before collection: service_result success, exit_code exited,
+exit_status0; memory.events low/high/max/oom/oom_kill/oom_group_kill all0;
+memory.peak225701888B/current6447104B/max268435456B; read_failures empty.
+This peak covers the entire query cgroup including the stop helper. It is neither
+production RSS nor a measurement of one SQL operator. No cgroup OOM/max event
+is observed; DuckDB-internal pressure can still trigger attempted eviction.
+Exit0 means the diagnostic captured its result, not that history succeeded.
+Owned child terminal/runtime observation complete/canonical stat signatures and
+vendor/private attach unchanged/no hot/no image are reported true.
+
+The saved v1.5.5 source adds a compatible precise mechanism: in
+TemporaryFileHandle::TryGetBlockIndex, CreateFileIfNotExists precedes allocating
+the new block index; that allocation reaches IncreaseSizeOnDisk's0B capacity
+guard. Thus a read-only file-open failure can precede that guard. This explains
+why0B did not suppress the observed attempt, without proving which query
+operator requested it.
+
+Minimal-correction decision remains no product patch on this evidence alone.
+Changing temp configuration or moving a guard earlier would merely replace
+EROFS with a different refusal; it would not supply the requested history.
+No actual operator or matching failing owned model supports selecting another
+SQL or declaring a new reader necessary. Any later bounded implementation must
+demonstrate the exact existing event/snapshot semantics and resource/latency
+constraints, then separately earn actual-host acceptance. Current source stays
+9cdf; original CB2 evidence, model and d8a STOP receipt remain immutable.
