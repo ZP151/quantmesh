@@ -205,3 +205,64 @@ SQL or declaring a new reader necessary. Any later bounded implementation must
 demonstrate the exact existing event/snapshot semantics and resource/latency
 constraints, then separately earn actual-host acceptance. Current source stays
 9cdf; original CB2 evidence, model and d8a STOP receipt remain immutable.
+
+## Root-approved implementation after DX1/PM1
+
+Root subsequently selected the existing-buffer two-stage materialization design
+and explicitly authorized its implementation inside the original deadline.
+This supersedes the preceding no-patch decision; historical evidence is retained.
+PM1's sole metadata-only EXPLAIN reports SEMI HASH_JOIN, a17-column left probe
+SEQ_SCAN estimated33402996 rows and right HASH_GROUP_BY/MAX selection. One
+non-allowlisted operator remains UNKNOWN. These are estimates, not a profile
+or certificate of the exact failing C++ operator. No additional EXPLAIN requested.
+Plan: docs/superpowers/plans/2026-10-25-bounded-tail-materialization.md.
+
+Planner/Implementer: buffer.py tail now selects keys with the unchanged rank/
+max semantics, then fetches all17 columns in batches of128 keys under its existing
+lock and one transaction. Two txid_current() probes distinguish autocommit from
+an existing transaction, verified on real DuckDB1.5.5. Only owned transactions
+are ended; caller-owned uncommitted data remains visible and caller-owned.
+Each batch must match its selected keys exactly, including cardinality; missing
+or duplicate rows raise. Original receive/data/asof predicates, STATUS, ordering,
+forward SQL, zero/negative limits, unknown errors and decoding stay intact.
+Default full10000 now uses79 payload/84 total statements in autocommit; this is
+an explicit latency/index-scan tradeoff, not a claim of bounded overall RSS.
+ADR0034 records the durable single-snapshot change from the earlier one-statement
+implementation. Product settings128MiB/threads1/0B/RO remain unchanged.
+
+Quant/Verifier: the attempted on-disk wide model hit its real post-batch budget
+guard: total150323016B, new failed DB81014784B/5000 rows, old model69218304B.
+This is an author construction failure, not query RED. Root narrowly accepted
+that frozen raw retained total plus2MiB small metadata; no compression/deletion,
+no further DB fill/checkpoint or new large DB. Exact failed-DB SHA256
+2746b32461758e345fbe0ec486890f7152ad7ae32795e9f90597327c27f9511d.
+
+A generated16000-row view writes no wide data: all17 columns, varying dual time,
+valid candle JSON with8KiB padding or STATUS with8KiB note. Key-only selection
+returns10000. The frozen9cdf whole-width query and original replay genuinely
+refuse at declared test16MiB (wide-red.txt); the first batch implementation also
+refuses16MiB because one generated vector needs8MiB. At still-stricter-than-product
+32MiB/0B, the frozen old SQL still refuses while new replay returns exact10000,
+all fields/order equal the independent complete-row oracle. No POSIX/7GB failure
+reproduction is claimed. This discriminator is broader than the original narrow
+PASS model and isolates a bounded-materialization improvement in owned data.
+
+Initial semantic tests RED5/2pass preceded the helper. Final focused12pass5.71s
+checks batch size/query count, all fields, concurrent writer DELETE/UPDATE between
+batches, lock ownership, caller transactions, missing/duplicate rows, genuine
+SQL error behavior, resource refusal and unchanged forward behavior. One test
+incorrectly assumed DuckDB1.5.5 catalog errors abort caller transactions; actual
+1.5.5 state remains usable and test expectation was corrected. Early parser,
+16MiB candidate and test expectation failures remain retained.
+
+Read-only production128MiB partial-model differential matches4905 complete raw
+17-column rows with the frozen SQL, SHA256
+6778e6e9227f89af5422f6f66ec2f593e42138894c521d5dd41e69b8dc753667;
+all decode and the DB hash remains unchanged. First affected check had two child
+import failures from another worktree's inherited PYTHONPATH and shared Windows
+pytest cleanup denial. Corrected process-local source binding and fresh pytest
+temporary base produce232pass/2explicit Windows native-fsync skips/6existing
+warnings62.25s, exit0 (batch-affected-final.txt), across new batching, existing
+tail/buffer/lookup/history/archive+hot tests. Initial failed runs remain retained.
+Changed-file Ruff/format/whitespace pass. No full repository/old CI/native query.
+Source freezes for one independent delta review; no native recovery claim yet.

@@ -1087,24 +1087,66 @@ class LiveBuffer:
             params.append(through_local_seq)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         if tail:
-            # Select only scalar keys before loading payloads. Sorting the full
-            # selected rows in SQL can spill even with a small bounded tail.
-            # local_seq is a non-null primary key; membership preserves each
-            # complete event once, and the original predicates precede rank.
             query = (
-                f"SELECT {_UPDATE_COLUMNS} FROM market_updates WHERE local_seq IN ("
                 f"SELECT local_seq FROM market_updates {where} "
-                "QUALIFY ROW_NUMBER() OVER (ORDER BY local_seq DESC) <= ?)"
+                "QUALIFY ROW_NUMBER() OVER (ORDER BY local_seq DESC) <= ?"
             )
         else:
             query = (
                 f"SELECT {_UPDATE_COLUMNS} FROM market_updates {where} ORDER BY local_seq LIMIT ?"
             )
         with self._connection_lock:
-            rows = self._con.execute(query, [*params, limit]).fetchall()
             if tail:
-                rows.sort(key=lambda row: row[0])
+                rows = self._tail_rows(query, [*params, limit])
+            else:
+                rows = self._con.execute(query, [*params, limit]).fetchall()
         return [_row_to_update(row) for row in rows]
+
+    def _tail_rows(self, key_query: str, params: list[object]) -> list[tuple]:
+        """Fetch complete rows in small batches under the caller-held lock.
+
+        DuckDB assigns distinct IDs to autocommit statements. Two read-only
+        probes detect an existing transaction without a nested BEGIN error or
+        committing/rolling back caller state. Every batch shares that snapshot.
+        """
+        first = self._con.execute("SELECT txid_current()").fetchone()[0]
+        second = self._con.execute("SELECT txid_current()").fetchone()[0]
+        own_transaction = first != second
+        if own_transaction:
+            self._con.execute("BEGIN TRANSACTION")
+        try:
+            # The non-null PK excludes a real NULL key. DuckDB's empty rank1
+            # rewrite can synthesize one NULL aggregate row; membership used to
+            # exclude it, so retain that empty-relation behavior explicitly.
+            keys = sorted(
+                row[0]
+                for row in self._con.execute(key_query, params).fetchall()
+                if row[0] is not None
+            )
+            if len(keys) != len(set(keys)):
+                raise ValueError("tail rows do not match selected keys")
+            rows = []
+            for offset in range(0, len(keys), 128):
+                batch = keys[offset : offset + 128]
+                marks = ", ".join("?" for _ in batch)
+                complete = self._con.execute(
+                    f"SELECT {_UPDATE_COLUMNS} FROM market_updates WHERE local_seq IN ({marks})",
+                    batch,
+                ).fetchall()
+                if len(complete) != len(batch) or {row[0] for row in complete} != set(batch):
+                    raise ValueError("tail rows do not match selected keys")
+                rows.extend(complete)
+            rows.sort(key=lambda row: row[0])
+            if own_transaction:
+                self._con.execute("COMMIT")
+            return rows
+        except BaseException:
+            if own_transaction:
+                try:
+                    self._con.execute("ROLLBACK")
+                except Exception:
+                    pass
+            raise
 
     def latest(
         self, *, venue: str | None = None, instrument: str | None = None
