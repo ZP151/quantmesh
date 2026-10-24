@@ -1128,10 +1128,13 @@ class LiveBuffer:
             rows = []
             for offset in range(0, len(keys), 128):
                 batch = keys[offset : offset + 128]
-                marks = ", ".join("?" for _ in batch)
+                # Sparse IN lists can become a hash join in DuckDB1.5.5.
+                # Keep an exact scalar key filter and a range for scan pruning.
+                exact_keys = " OR ".join("local_seq = ?" for _ in batch)
                 complete = self._con.execute(
-                    f"SELECT {_UPDATE_COLUMNS} FROM market_updates WHERE local_seq IN ({marks})",
-                    batch,
+                    f"SELECT {_UPDATE_COLUMNS} FROM market_updates "
+                    f"WHERE local_seq BETWEEN ? AND ? AND ({exact_keys})",
+                    [batch[0], batch[-1], *batch],
                 ).fetchall()
                 if len(complete) != len(batch) or {row[0] for row in complete} != set(batch):
                     raise ValueError("tail rows do not match selected keys")
