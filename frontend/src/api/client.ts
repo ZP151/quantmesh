@@ -3410,7 +3410,10 @@ export interface components {
             rows: number;
             /** Unexpected Sessions */
             unexpected_sessions: string[];
-            /** Valid Rows */
+            /**
+             * Valid Rows
+             * @description Rows with parseable UTC and valid OHLCV shapes; session, duplicate and order issues are not deducted. Not a qualification/coverage ratio.
+             */
             valid_rows: number;
         };
         /** LocalCsvEligibility */

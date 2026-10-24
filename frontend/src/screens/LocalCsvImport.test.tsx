@@ -12,8 +12,8 @@ function mount() { return render(<PreferencesProvider><LocalCsvImport /></Prefer
 async function fill() {
   await userEvent.upload(screen.getByLabelText('Daily OHLCV CSV'), new File(['timestamp_utc,open,high,low,close,volume\n2026-10-19T13:30:00Z,1,2,1,2,100'], 'my-prices.csv', { type: 'text/csv' }))
   fireEvent.change(screen.getByLabelText('Symbol'), { target: { value: 'SPY' } })
-  fireEvent.change(screen.getByLabelText('Coverage starts'), { target: { value: '2026-10-19' } })
-  fireEvent.change(screen.getByLabelText('Coverage ends'), { target: { value: '2026-10-21' } })
+  fireEvent.change(screen.getByLabelText('Coverage starts'), { target: { value: '2026-10-15' } })
+  fireEvent.change(screen.getByLabelText('Coverage ends'), { target: { value: '2026-10-16' } })
 }
 beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); mocks.list.mockResolvedValue([]); mocks.import.mockResolvedValue(localReport); mocks.get.mockResolvedValue(localReport) })
 
@@ -28,9 +28,9 @@ it('imports actual selected bytes with unknown claims and separates structure fr
   const result = await screen.findByRole('region', { name: 'Import result' })
   expect(result).toHaveTextContent('Structure passed')
   expect(result).toHaveTextContent('Research qualification insufficient')
-  expect(result).toHaveTextContent('Corporate actions are unknown')
+  expect(result).toHaveTextContent('Dividend and split history, including payment dates, remains unverified.')
   expect(within(result).getByText('Source received at').nextElementSibling).toHaveTextContent('Unknown')
-  expect(mocks.import.mock.calls[0][0]).toMatchObject({ symbol: 'SPY', calendar_id: 'XNYS', required_start: '2026-10-19', source: { received_at: null, pit_status: 'unknown' } })
+  expect(mocks.import.mock.calls[0][0]).toMatchObject({ symbol: 'SPY', calendar_id: 'XNYS', required_start: '2026-10-15', source: { received_at: null, pit_status: 'unknown' } })
   expect(mocks.import.mock.calls[0][0].csv_text).toContain('2026-10-19T13:30:00Z')
   expect(screen.getByRole('link', { name: 'Plan an experiment with this reference' })).toHaveAttribute('href', `/app/research/jobs?snapshot=${localReport.snapshot_id}`)
   expect(screen.queryByText('Available for research')).not.toBeInTheDocument()
@@ -39,7 +39,7 @@ it('renders rejected rows and omits the planning action without a usable referen
   const rejected = { ...localReport, dataset_ref: null, qualification: { ...localReport.qualification, status: 'REJECT', structural_status: 'REJECT' },
     next_action: { ...localReport.next_action, kind: 'inspect_issues' },
     checks: [{ code: 'bar_values', status: 'REJECT', count: 17, message: 'Low exceeds high', locations_truncated: true,
-      locations: [{ row: 4, date: '2026-10-21', field: 'low', expected: 'low <= high', actual: '120 > 100' }] }] }
+      locations: [{ row: 4, date: '2026-10-16', field: 'low', expected: 'low <= high', actual: '120 > 100' }] }] }
   mocks.import.mockResolvedValue(rejected)
   mount(); await screen.findByText('No CSV imports yet'); await fill()
   await userEvent.click(screen.getByRole('button', { name: 'Import and check data' }))
@@ -50,7 +50,7 @@ it('renders rejected rows and omits the planning action without a usable referen
 })
 it('retains a labeled previous result after failure and allows retry without raw server details', async () => {
   mocks.list.mockResolvedValue([localReport]); mount()
-  await userEvent.click(await screen.findByRole('button', { name: /Open My saved prices/ }))
+  await userEvent.click(await screen.findByRole('button', { name: `Open ${localReport.label}` }))
   await fill(); mocks.import.mockRejectedValue(Object.assign(new Error('secret trace'), { status: 422 }))
   await userEvent.click(screen.getByRole('button', { name: 'Import and check data' }))
   const alert = await screen.findByRole('alert')
@@ -90,7 +90,7 @@ it('explains invalid symbols and inverted coverage before allowing import', asyn
   expect(screen.getByText(/Use letters, numbers/)).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Import and check data' })).toBeDisabled()
   fireEvent.change(screen.getByLabelText('Symbol'), { target: { value: 'SPY' } })
-  fireEvent.change(screen.getByLabelText('Coverage ends'), { target: { value: '2026-10-18' } })
+  fireEvent.change(screen.getByLabelText('Coverage ends'), { target: { value: '2026-10-14' } })
   expect(screen.getByText('Coverage end must be on or after its start.')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: 'Import and check data' })).toBeDisabled()
 })
@@ -106,4 +106,19 @@ it('uses the existing Chinese preference for the ordinary data action', async ()
   mount(); await screen.findByText('尚未导入 CSV')
   expect(screen.getByLabelText('日线 OHLCV CSV')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: '导入并检查数据' })).toBeDisabled()
+})
+
+it('does not present parseable-row counts as unique qualified rows when duplicates reject the file', async () => {
+  mocks.import.mockResolvedValue({ ...localReport, dataset_ref: null,
+    coverage: { ...localReport.coverage, rows: 3, valid_rows: 3 },
+    qualification: { ...localReport.qualification, status: 'REJECT', structural_status: 'REJECT' },
+    next_action: { ...localReport.next_action, kind: 'inspect_issues' },
+    checks: [{ code: 'duplicates', status: 'REJECT', count: 1, message: 'Duplicate session', locations: [] }] })
+  mount(); await screen.findByText('No CSV imports yet'); await fill()
+  await userEvent.click(screen.getByRole('button', { name: 'Import and check data' }))
+  const coverage = await screen.findByRole('region', { name: 'Coverage and freshness' })
+  expect(within(coverage).getByText('Parseable UTC/OHLCV rows').nextElementSibling).toHaveTextContent('3')
+  expect(coverage).toHaveTextContent('Session timing, duplicates and ordering may still fail')
+  expect(screen.getByText('Research qualification rejected')).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'Plan an experiment with this reference' })).not.toBeInTheDocument()
 })

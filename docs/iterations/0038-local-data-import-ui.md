@@ -21,5 +21,10 @@ Actual own loopback8878 served the UI bundle with the backend owner source and o
 
 Evidence under output/local-data-import-ui:01-mode-red.log,08-api-red.log,14-qualification-green.log,10-build.log,browser-acceptance.json and viewport PNGs. The plan action is intentionally restricted; no uploaded user data reaches the fixture runner.
 
-## Reviewer
-One independent UX/safety diff review pending at the completed slice boundary. No overall completion or research qualification claimed.
+## Reviewer — one independent UX/safety diff round
+
+Independent source review at eb6405d found three material issues: P1 report capabilityprotocol_planning was confused with reference intended_uselocal_protocol_planning_only, hiding the action; P2 planning showed digest-derived identity and internal evidence wording; P2valid_rows had an overly broad label. The final-browser attempt at that checkpoint independently failed waiting for the planning action. Original review and failed log remain unchanged.
+
+One aggregate correction now consumes the actual report capability, uses the actual captured POST payload as its fixture, and re-reads the matching saved report+reference before planning. Dataset identity is checked field-by-field; a mismatch refuses planning. Primary identity is the human label/symbol/coverage; known reasons are explained with original text in title/details. Parseable UTC/OHLCV rows has an adjacent bilingual explanation excluding session/duplicate/order checks and all qualification/coverage ratios. A rejected-duplicate semantic regression and mismatch/wording cases were added. Corrections:68targeted tests pass, actual tsc-b/Vite packaging passes; final actual-browser confirmation pending. This is author correction evidence, not a second independent structural review or blanket READY claim.
+
+Backend frozen candidate de8befced490a306448addfff77bb9ee2051e472/treefead62d04507c5fa40b85fc1ea61a743aec3af44 supplies the actual typed API. Client regenerated from that exact schema, including valid_rows description. The backend and frontend leaves must integrate together before exact-head CI. No independent leaf may claim missing API/codegen compatibility.

@@ -4,21 +4,29 @@ import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePreferences } from '@/lib/preferences'
-import { localCsvApi, type LocalCsvReference } from '@/lib/local-csv-api'
+import { explainCsvReason } from '@/lib/local-csv-copy'
+import { localCsvApi, type LocalCsvReference, type LocalCsvReport } from '@/lib/local-csv-api'
 
 // A selected uploaded reference gets its own planning context. It is never
 // assigned to a fixture job request or silently replaced with a seeded dataset.
 export function LocalCsvPlanning({ snapshotId }: { snapshotId: string }) {
   const { locale } = usePreferences(); const zh = locale === 'zh-CN'
   const [reference, setReference] = useState<LocalCsvReference | null>(null)
+  const [selected, setSelected] = useState<LocalCsvReport | null>(null)
   const [error, setError] = useState(false)
   const [question, setQuestion] = useState('')
   const [costs, setCosts] = useState('')
   const [evaluationWindow, setEvaluationWindow] = useState('')
   useEffect(() => {
     let active = true
-    setReference(null); setError(false)
-    localCsvApi.reference(snapshotId).then(value => { if (active) setReference(value) })
+    setReference(null); setSelected(null); setError(false)
+    setQuestion(''); setCosts(''); setEvaluationWindow('')
+    Promise.all([localCsvApi.reference(snapshotId), localCsvApi.get(snapshotId)]).then(([value, report]) => {
+      const left = value.dataset_ref; const right = report.dataset_ref
+      if (report.snapshot_id !== value.snapshot_id || (!!left !== !!right) || (left && right
+        && ['dataset_id', 'revision', 'manifest_digest', 'export_digest', 'permission_class'].some(key => left[key as keyof typeof left] !== right[key as keyof typeof right]))) throw new Error('reference_mismatch')
+      if (active) { setReference(value); setSelected(report) }
+    })
       .catch(() => { if (active) setError(true) })
     return () => { active = false }
   }, [snapshotId])
@@ -39,9 +47,10 @@ export function LocalCsvPlanning({ snapshotId }: { snapshotId: string }) {
       : !reference ? <p role="status" className="text-sm">{zh ? '正在核对已保存的数据引用…' : 'Checking the saved data reference…'}</p>
       : <div className="min-w-0 space-y-5">
         <section className="space-y-3 border-y border-border py-5" aria-label={zh ? '选定数据及资格' : 'Selected data and qualification'}>
-          <h3 className="break-words text-lg font-semibold">{reference.dataset_ref?.dataset_id ?? (zh ? '没有可用的数据引用' : 'No usable data reference')}</h3>
+          <h3 className="break-words text-lg font-semibold">{selected?.label ?? (zh ? '没有可用的数据引用' : 'No usable data reference')}</h3>
+          <p className="text-sm text-muted-foreground">{selected?.symbol} · {selected?.venue} · {selected?.interval} · {selected?.coverage.first_date ?? (zh ? '未知' : 'Unknown')} — {selected?.coverage.last_date ?? (zh ? '未知' : 'Unknown')}</p>
           <Badge variant="outline">{zh ? '仅供规划 · 尚不具备研究资格' : 'Planning only · research qualification insufficient'}</Badge>
-          <ul className="list-disc space-y-1 pl-5 text-sm">{reference.eligibility.reasons.map((reason, i) => <li key={i} className="break-words">{reason}</li>)}</ul>
+          <ul className="list-disc space-y-1 pl-5 text-sm">{reference.eligibility.reasons.map((reason, i) => <li key={i} className="break-words" title={reason}>{explainCsvReason(reason, locale)}</li>)}</ul>
           <p className="max-w-prose text-sm text-muted-foreground">{zh ? '当前执行入口仅支持已注册的示例数据。此引用不会替换示例数据，也不会自动启动真实数据回测。' : 'The current runner supports registered fixture inputs. This reference will not replace a fixture or automatically start a real-data backtest.'}</p>
           <a href={`/api/research/data-snapshots/local-csv/${reference.snapshot_id}/reference.json`} download className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{zh ? '下载已保存的规划引用' : 'Download saved planning reference'}</a>
         </section>
@@ -55,7 +64,7 @@ export function LocalCsvPlanning({ snapshotId }: { snapshotId: string }) {
           <Button className="max-sm:min-h-11" disabled={!question.trim()} onClick={download}><Download className="size-4" aria-hidden="true" />{zh ? '下载协议草案' : 'Download protocol draft'}</Button>
           <p className="text-xs text-muted-foreground">{zh ? '仅保留您输入的计划和原始数据引用。不含结果，未提交执行。未填写的假设保持未知。' : 'Contains your plan and the original data reference. No results and no submission. Unspecified assumptions remain unknown.'}</p>
         </section>}
-        <details className="min-w-0 border-t border-border"><summary className="min-h-11 cursor-pointer py-3 text-sm focus-visible:ring-2 focus-visible:ring-ring">{zh ? '数据引用详情' : 'Data reference details'}</summary><pre className="whitespace-pre-wrap break-all text-xs">{JSON.stringify(reference.dataset_ref, null, 2)}</pre></details>
+        <details className="min-w-0 border-t border-border"><summary className="min-h-11 cursor-pointer py-3 text-sm focus-visible:ring-2 focus-visible:ring-ring">{zh ? '数据引用详情' : 'Data reference details'}</summary><pre className="whitespace-pre-wrap break-all text-xs">{JSON.stringify(reference.dataset_ref, null, 2)}</pre><ul className="mt-3 space-y-2 text-xs">{reference.eligibility.reasons.map((reason, i) => <li key={i} className="break-words">{reason}</li>)}</ul></details>
       </div>}
   </Page>
 }

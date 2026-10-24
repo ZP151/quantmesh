@@ -19,9 +19,9 @@ Frontend: DataReadiness.tsx, new LocalCsvImport.tsx, lib/local-csv-api.ts and co
 
 ## Task and checks
 - [x] Read incumbent code, product/design, active P1/P2/P3 ledgers and actual main. Confirm API ownership and native runtime availability.
-- [ ] Receive minimal backend DTO and exact allowed next action; record frozen contract paths.
-- [ ] Write interaction/API tests for empty/loading/upload/checking/accepted/quality problems/unknown/failed/reopen and identity-bound planning. Run targeted RED.
-- [ ] Implement smallest page loop with generated typed API, bounded upload, explicit errors and retention semantics. Run targeted GREEN and old DataReadiness/FrozenExperiments tests.
+- [x] Receive minimal backend DTO and exact allowed next action; record frozen contract paths.
+- [x] Write interaction/API tests for empty/loading/upload/checking/accepted/quality problems/unknown/failed/reopen and identity-bound planning. Run targeted RED.
+- [x] Implement smallest page loop with generated typed API, bounded upload, explicit errors and retention semantics. Run targeted GREEN and old DataReadiness/FrozenExperiments tests.
 - [ ] Build actual bundle; first build failure gets a specific cause, no lock workaround. Verify API generation and static currency, lint/typecheck/whitespace.
 - [ ] Run real local backend + page; desktop/375px screenshots and keyboard/long-text/error checks in one batch. One aggregate correction and one confirmation maximum.
 - [ ] Independent UX/safety diff review once, fix material findings, record evidence in docs/iterations/0038-local-data-import-ui.md, normal commit/push and handoff to publisher/root.
