@@ -1087,10 +1087,14 @@ class LiveBuffer:
             params.append(through_local_seq)
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         if tail:
+            # Select only scalar keys before loading payloads. Sorting the full
+            # selected rows in SQL can spill even with a small bounded tail.
+            # local_seq is a non-null primary key; membership preserves each
+            # complete event once, and the original predicates precede rank.
             query = (
-                f"SELECT {_UPDATE_COLUMNS} FROM market_updates {where} "
-                "QUALIFY ROW_NUMBER() OVER (ORDER BY local_seq DESC) <= ? "
-                "ORDER BY local_seq"
+                f"SELECT {_UPDATE_COLUMNS} FROM market_updates WHERE local_seq IN ("
+                f"SELECT local_seq FROM market_updates {where} "
+                "QUALIFY ROW_NUMBER() OVER (ORDER BY local_seq DESC) <= ?)"
             )
         else:
             query = (
@@ -1098,6 +1102,8 @@ class LiveBuffer:
             )
         with self._connection_lock:
             rows = self._con.execute(query, [*params, limit]).fetchall()
+            if tail:
+                rows.sort(key=lambda row: row[0])
         return [_row_to_update(row) for row in rows]
 
     def latest(

@@ -238,3 +238,43 @@ default7day prune/migration. Do not clear budget-stop/intents, remove failed dat
 checkpoint the archive or rotate a fresh hot root to obtain more allowance.
 Any future capacity extension/rolling retention requires a separate concrete
 ledger/policy decision; this slice provides no infinite live-growth guarantee.
+
+## Equivalent tail-query follow-up after formal B2 failure
+
+Issue218,2026-10-24. Actual merged7a1fa218 B2 default BTC ONE_DAY service call
+at09:52:39.402692Z failed2.027s with HistoryUnavailableError/IOException when
+DuckDB1.5.5 attempted temporary storage on the read-only filesystem. Constructor
+PASS and unchanged DB/WAL are separate facts. Original128MiB/threads1/no spill
+settings remain; the tighter probe cgroup is not a demonstrated cause. Formal
+RED is retained, never overwritten by tiny software GREEN or prior219/220CI.
+
+The replay tail now ranks only local_seq under every original filter, fetches
+complete rows by membership in those keys in the same SQL statement, then
+sorts only the returned rows by local_seq in Python under the existing lock.
+The owned schema has a non-null primary key local_seq, including supported old
+schemas; source sequence/time ties and local_seq gaps are allowed. No second
+statement/snapshot, dropped STATUS, reordered receive/market/asof predicates,
+new LIMIT coercion/default, changed identity/continuity, or swallowed exception.
+Forward replay SQL is unchanged. Negative/zero tails retain the original rank
+predicate. Genuine empty matches yield zero rows; DuckDB1.5.5's old rank rewrite
+can synthesize an all-NULL row at limit1, which membership no longer emits.
+Tests verify the empty relation independently, rather than converting read
+failure into successful empty history. Selected corrupt content still raises.
+
+Actual small owned plans disprove a universal full-payload WINDOW explanation:
+DuckDB1.5.5 already rewrites the old rank to arg_max(rowid). Its final SQL sort
+still carries full selected records. A60000row/512B-payload/full17column model
+with the formal dual-time/kind/default10000 semantics shows old refusal at16MiB
+and new success with10000 full rows, equal to the old128MiB oracle. Both succeed
+at128MiB; measured plans/profiles are retained. This isolates a removable wide
+sort in the model, not the exact failed production operator. Original production
+settings, read-only/no spill and actual acceptance requirements are unchanged.
+Python ordering uses references to the already requested result list. It avoids
+SQL sort storage, but does not establish a total-process/RSS bound or guarantee
+that arbitrarily large output/archives fit128MiB. DuckDB itself documents that
+some allocations are outside its buffer-manager memory limit:
+[Out-of-memory guidance](https://duckdb.org/docs/current/guides/performance/oom).
+No new environment/package/index/migration, archive copy or real-host query.
+Sole publisher's exact CI/merge and sole operator's merged-source default-service
+reacceptance remain independent gates. Source and market-data rights/UNKNOWN,
+paper/live authority, and original blocked research Goal do not change.
