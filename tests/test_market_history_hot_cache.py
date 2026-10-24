@@ -432,7 +432,8 @@ os._exit(0)
     assert {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in (path, wal)} == original
 
 
-def test_manifest_history_stays_first_even_if_archive_is_unavailable(tmp_path):
+@pytest.mark.parametrize("hot_unreadable", [False, True])
+def test_manifest_history_stays_first_even_if_archive_is_unavailable(tmp_path, hot_unreadable):
     from quantmesh.data.lake import Lake
     from quantmesh.data.manifest import DatasetClass, ManifestWriter
     from quantmesh.domain.market_data import Bar
@@ -471,7 +472,12 @@ def test_manifest_history_stays_first_even_if_archive_is_unavailable(tmp_path):
         generated_at=AT - timedelta(hours=1),
     )
     history = HistoryService(discover_history_bindings(root), dataset_loader=lake.dataset)
-    with LiveBuffer(tmp_path / "hot", retention_days=0) as hot:
+    if hot_unreadable:
+        hot_root, spec_path = unreadable_hot(tmp_path)
+        hot = LiveBuffer.from_bounded_config(hot_root, spec_path)
+    else:
+        hot = LiveBuffer(tmp_path / "hot", retention_days=0)
+    with hot:
         app = create_workstation_app(
             account=PaperAccount(cash=100_000),
             live_feed=LiveFeed(lake=hot),
@@ -787,7 +793,10 @@ def test_normal_clean_close_allows_restart_without_refunding_intents(tmp_path):
     assert len(list(root.glob("budget-intent-*.json"))) == 4
 
 
-def test_crashed_process_leaves_session_read_only_and_archive_http_available(tmp_path):
+@pytest.mark.parametrize("after_commit", [False, True])
+def test_crashed_process_leaves_session_read_only_and_archive_http_available(
+    tmp_path, after_commit
+):
     import json
     import subprocess
     import sys
@@ -812,36 +821,41 @@ def test_crashed_process_leaves_session_read_only_and_archive_http_available(tmp
                     "root = Path(sys.argv[1])",
                     "budget = HotCacheBudget(root, json.loads(sys.argv[2]))",
                     "hot = LiveBuffer(root, retention_days=0, write_budget=budget)",
+                    "if sys.argv[3] != 'none':",
+                    "    from quantmesh.live.contract import MarketUpdate",
+                    "    hot.append(MarketUpdate.model_validate_json(sys.argv[3]))",
                     "os._exit(0)",
                 ]
             ),
             str(root),
             json.dumps(spec),
+            candles()[2].model_dump_json() if after_commit else "none",
         ],
         capture_output=True,
         timeout=10,
         check=False,
     )
     assert result.returncode == 0, result.stderr
-    assert len(list(root.glob("budget-intent-*.json"))) == 1
-    try:
-        hot = LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec))
-    except ValueError as exc:
-        assert "archive" in str(exc)  # Real uncheckpointed WAL may safely refuse read-only reopen.
-    else:
-        with hot:
-            assert hot.read_only
-            feed = LiveFeed(lake=hot)
-            with history_client(feed, archive) as client:
-                response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+    attempts = 2 if after_commit else 1
+    assert len(list(root.glob("budget-intent-*.json"))) == attempts
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as hot:
+        assert hot.read_only
+        feed = LiveFeed(lake=hot)
+        with history_client(feed, archive) as client:
+            assert client.get("/health").status_code == 200
+            response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+        if hot.read_unavailable:
+            assert response.status_code == 404
+            assert "hot" in response.json()["detail"].lower()
+        else:
             assert response.status_code == 200
-            with history_client(feed, tmp_path / "missing-archive") as client:
-                assert (
-                    client.get("/api/instruments/hyperliquid/BTC/history?range=1d").status_code
-                    == 404
-                )
+            assert len(response.json()["primary"]["bars"]) == (3 if after_commit else 2)
+        with history_client(feed, tmp_path / "missing-archive") as client:
+            assert (
+                client.get("/api/instruments/hyperliquid/BTC/history?range=1d").status_code == 404
+            )
     assert (archive / "live/updates.duckdb").read_bytes() == original
-    assert len(list(root.glob("budget-intent-*.json"))) == 1
+    assert len(list(root.glob("budget-intent-*.json"))) == attempts
 
 
 @pytest.mark.parametrize("damage", ["partial", "foreign", "missing", "extra", "closed", "ready"])
@@ -893,10 +907,14 @@ def test_normal_shutdown_joins_accepted_commit_before_clean_close(tmp_path):
         assert not pump.done()
         assert not list(root.glob("budget-closed-*.json"))
         gate.release.set()
-        await asyncio.gather(publishing, pump, return_exceptions=True)
+        results = await asyncio.gather(publishing, pump, return_exceptions=True)
+        assert all(
+            result is None or isinstance(result, asyncio.CancelledError) for result in results
+        )
         assert hot.write_budget._owners == 0
-        assert len(hot.replay()) == 1
-        assert not list(root.glob("budget-closed-*.json"))
+        assert len(list(root.glob("budget-closed-*.json"))) == 1
+        with LiveBuffer(root, read_only=True) as persisted:
+            assert len(persisted.replay()) == 1
 
     try:
         asyncio.run(scenario())
@@ -993,3 +1011,146 @@ def test_native_session_directory_fsync_failure_precedes_duckdb_io(tmp_path, mon
         assert hot.read_only
         assert not (root / "live").exists()
     assert len(list(root.glob("budget-intent-*.json"))) == 1
+
+
+def test_actual_app_normal_shutdown_closes_session_and_allows_fresh_restart(tmp_path):
+    from tests.test_live_feed_owned_persistence import ScriptedSupervisor
+
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    hot = LiveBuffer(root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec))
+    feed = LiveFeed(lake=hot)
+    feed.attach(ScriptedSupervisor([]))
+    app = create_workstation_app(account=PaperAccount(cash=100_000), live_feed=feed)
+    try:
+        with TestClient(app) as client:
+            assert client.get("/health").status_code == 200
+            assert not list(root.glob("budget-closed-*.json"))
+        # Production lifespan must close; no test/manual close before this assertion.
+        assert len(list(root.glob("budget-closed-*.json"))) == 1
+        with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as fresh:
+            assert not fresh.read_only
+        assert len(list(root.glob("budget-intent-*.json"))) == 2
+    finally:
+        hot.close()
+
+
+def test_recursive_creation_syncs_existing_ancestor_before_database_open(tmp_path, monkeypatch):
+    import os
+    from pathlib import Path
+
+    root = tmp_path / "new-parent" / "hot"
+    synced, descriptors = [], {}
+    original_open, original_close, original_sync = os.open, os.close, os.fsync
+    directory_flag = getattr(os, "O_DIRECTORY", 1 << 24)
+    monkeypatch.setattr(buffer_module.os, "O_DIRECTORY", directory_flag, raising=False)
+
+    def open_directory(path, flags, *args, **kwargs):
+        if flags & directory_flag:
+            descriptor = 100_000 + len(descriptors)
+            descriptors[descriptor] = Path(path)
+            return descriptor
+        return original_open(path, flags, *args, **kwargs)
+
+    def sync(descriptor):
+        if descriptor in descriptors:
+            synced.append(descriptors[descriptor])
+        else:
+            original_sync(descriptor)
+
+    def close(descriptor):
+        if descriptor not in descriptors:
+            original_close(descriptor)
+
+    # Only directory syscalls are modeled; files, intents and actual DuckDB remain real.
+    monkeypatch.setattr(buffer_module.os, "open", open_directory)
+    monkeypatch.setattr(buffer_module.os, "fsync", sync)
+    monkeypatch.setattr(buffer_module.os, "close", close)
+    budget = buffer_module.HotCacheBudget(root, budget_spec(root, operations=4))
+    real_connect = buffer_module.duckdb.connect
+
+    def connect(*args, **kwargs):
+        assert tmp_path in synced, "new-parent entry was not synced in its existing parent"
+        assert synced.index(root) < synced.index(root.parent) < synced.index(tmp_path)
+        return real_connect(*args, **kwargs)
+
+    monkeypatch.setattr(buffer_module.duckdb, "connect", connect)
+    with LiveBuffer(root, retention_days=0, write_budget=budget):
+        pass
+
+
+def unreadable_hot(tmp_path, *, normal_close=False):
+    import json
+
+    root = tmp_path / "unknown-hot"
+    spec = budget_spec(root, operations=4)
+    hot = LiveBuffer(root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec))
+    hot.append(candles()[2])
+    if normal_close:
+        hot.close()
+    else:
+        hot._con.close()  # Controlled input, not claimed as a real crash reproduction.
+    hot.path.rename(hot.path.with_suffix(".retained-duckdb"))
+    hot.path.write_bytes(b"controlled invalid formerly admitted hot database")
+    path = tmp_path / "unreadable-budget.json"
+    path.write_text(json.dumps(spec), encoding="utf-8")
+    return root, path
+
+
+@pytest.mark.parametrize("damage", ["unreadable", "missing"])
+@pytest.mark.parametrize("normal_close", [False, True])
+def test_unreadable_admitted_hot_keeps_http_but_never_silent_archive_only_success(
+    tmp_path, damage, normal_close
+):
+    from tests.test_live_feed_owned_persistence import ScriptedSupervisor
+
+    archive = tmp_path / "archive"
+    seed(archive, candles()[:2])
+    original = (archive / "live/updates.duckdb").read_bytes()
+    root, path = unreadable_hot(tmp_path, normal_close=normal_close)
+    if damage == "missing":
+        (root / "live/updates.duckdb").rename(root / "retained-invalid-db")
+    with LiveBuffer.from_bounded_config(root, path) as hot:
+        feed = LiveFeed(lake=hot)
+
+        class NeverStarts(ScriptedSupervisor):
+            async def run(self):
+                raise AssertionError("unavailable hot started acquisition")
+
+        feed.attach(NeverStarts([]))
+        with history_client(feed, archive) as client:
+            assert client.get("/health").status_code == 200
+            response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+            assert response.status_code == 404, "unknown hot was silently replaced by empty success"
+            assert "hot" in response.json()["detail"].lower()
+        assert feed.capacity_exhausted and not feed._latest
+        assert feed.statuses()["venues"][0]["sources"][0]["state"] == "unavailable"
+        with pytest.raises(ValueError, match="hot"):
+            hot.replay()
+    assert (archive / "live/updates.duckdb").read_bytes() == original
+
+
+def test_partial_crash_accounting_refuses_acquisition_but_retains_readable_history(tmp_path):
+    import json
+
+    archive = tmp_path / "archive"
+    seed(archive, candles()[:2])
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    with LiveBuffer(
+        root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec)
+    ) as hot:
+        hot.append(candles()[2])
+    intent = root / "budget-intent-000002.json"
+    intent.rename(root / "retained-original-intent.json")
+    intent.write_bytes(b"{")  # Controlled partial receipt, not a claimed actual crash outcome.
+    spec_path = tmp_path / "budget.json"
+    spec_path.write_text(json.dumps(spec), encoding="utf-8")
+    with LiveBuffer.from_bounded_config(root, spec_path) as stopped:
+        assert stopped.read_only
+        with history_client(LiveFeed(lake=stopped), archive) as client:
+            response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+        assert response.status_code == 200
+        assert [bar["close"] for bar in response.json()["primary"]["bars"]] == [100, 101, 102]
+    assert len(list(root.glob("budget-intent-*.json"))) == 2
+    assert intent.read_bytes() == b"{"

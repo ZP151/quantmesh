@@ -47,7 +47,9 @@ Admission takes min(leaf_remaining, globally earmarked allowance), leaves the
 close/failure reserve unused by normal operations, and checks actual current
 free space minus next peak/reserve is >=50GB. Before constructor storage effects
 and each accepted append attempt, it exclusively creates and fsyncs one numbered
-intent consuming the **whole** peak reservation. POSIX also fsyncs parent dirs.
+intent consuming the **whole** peak reservation. POSIX fsyncs every ancestor
+directory through the filesystem root, including entries created recursively;
+syncing only the hot root and its immediate parent is insufficient.
 Failure, duplicate delivery, small actual growth and restart never refund it.
 An existing unaccounted hot root or altered/malformed accounting is refused.
 This is conservative admission under an externally established bound, **not a
@@ -104,6 +106,10 @@ Failure before publication leaves an open session. Publication itself is not
 acknowledged as directory-durable: if a crash loses the link, restart refuses;
 if it survives, its fully prepared content proves the already completed normal
 DB close. An exception/stop/crash before normal close never prepares authority.
+The production feed's application-shutdown cancellation joins accepted work,
+releases its session owner, then calls the actual bounded buffer close. Failure
+poisons before closure. A capacity stop alone does not close that connection,
+so the still-running HTTP service retains its persisted reads.
 Normal restart still validates all cumulative intents, expiry, physical free
 space and original allowance, then charges another startup peak. It refunds
 nothing and cannot reset, rotate or adopt an unfinished session.
@@ -123,6 +129,23 @@ peak proof or exclusive global earmark has been established by this leaf.
 Unfinished-session controlled re-admission, if required, needs a separately
 verified operator budget/recovery decision with all old receipts retained; no
 automatic reset, extra approval UI or recovery framework is introduced here.
+
+Planner clarified the inherited hot-read failure boundary during the reduced
+leaf's R1: unreadable hot must not prevent the workstation HTTP service mounting.
+An admitted hot file that is missing, incompatible or unreadable becomes an
+explicit stopped unavailable reader, with no substitute DB or empty replay.
+Persisted reads raise a fixed error; the existing history adapter converts that
+failure to HistoryUnavailable/404. No archive-only success can silently discard
+unknown hot observations. Feed initialization/attachment does not invent cached
+updates or recovery cursors, providers stay stopped and source state unavailable.
+Manifest-backed history still wins and can be read without that replay. A never
+admitted root with no DB/storage/session evidence retains the separate verified
+empty stopped reader. Controlled bad-hot tests prove this boundary; they are
+not a claim that the successful actual startup-crash test reproduced an outage.
+Malformed/partial budget accounting on the production config factory also
+refuses acquisition without resetting evidence: existing readable observations
+may still be read, while unknown/unreadable data remains explicitly unavailable.
+This does not accept that accounting as a write approval or refund any attempt.
 
 ## Consequences, deployment and rollback
 

@@ -14,8 +14,11 @@ freeze minimal implementation near60minutes, bounded independent review <=2round
 
 ## Architecture / files / limits
 
-Only live/buffer.py and live/feed.py runtime changes, corresponding tiny tests
-and necessary ADR/iteration/plan records. Existing DuckDB, budget, owner-loop and
+Only live/buffer.py and live/feed.py runtime changes initially. Planner's R1
+boundary ruling additionally authorizes the minimal existing live_history.py
+replay-error adapter, within original B's five-file pool; no other wiring was
+needed. Corresponding tiny tests and necessary ADR/iteration/plan records.
+Existing DuckDB, budget, owner-loop and
 history service reused. No dependency, host, original DB, provider, Goal, real
 allocation/peak proof, SPY, paid resource, new API/service/format/rotation/reset.
 
@@ -57,6 +60,34 @@ Final affected boundary310pass/2explicit Windows directory-fsync skips/6warnings
 Windows protocol tests explicitly model that capability only; separate platform
 tests exercise unmodeled production refusal and original archive GET200/bad404.
 Native durability and actual production capacity are not established here.
+
+## One aggregate R1 correction
+
+Independent R1 report session-review-r1.md returns CHANGES REQUIRED: production
+normal shutdown never calls actual close, and recursive mkdir ancestors were
+not all synced. One independent invocation57pass/2native skips does not close
+those call-graph/durability findings. Root also clarifies that controlled bad hot
+must preserve HTTP/manifest-first while replay returns existing unavailable404,
+without pretending previously admitted hot is empty.
+
+Real aggregate RED43:5failed/1passed, covering actual TestClient lifespan,
+specific ancestor-before-DuckDB ordering, corrupt/missing admitted hot and
+manifest preference; GREEN44:6passed. Controlled corruption after healthy close
+also RED46:2failed/2passed, then GREEN47:4passed. No outage is claimed for the
+actual startup-crash reproduction, which independently passed. Candidate crash
+tests now always mount HTTP, both before and after a real child COMMIT/os._exit;
+never skip HTTP assertions on an exception. Persisted unreadability is explicit
+404, otherwise actual hot rows must be retained. Both crash modes passed48.
+
+The one aggregate changes buffer/feed and the authorized tiny existing-history
+adapter only. Final R2 is the last round; any unresolved structural gap returns
+to Planner without further source correction or a reset90min clock.
+
+Final aggregate adds controlled partial-accounting RED51/GREEN52: the config
+factory refuses acquisition without taking down readable persisted history or
+altering the partial receipt. Hot missing after healthy close cannot be adopted
+as a new empty DB; a failed charged constructor instead mounts stopped/unavailable.
+Changed-source checks53 pass; the final corrected focused run54 is retained.
 
 ## Operator boundary
 

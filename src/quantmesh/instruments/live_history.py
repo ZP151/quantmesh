@@ -349,7 +349,11 @@ def _replay_series(
             raise HistoryUnavailableError("read-only archive unavailable or incompatible") from None
     identities = {}
     updates = []
-    for update in [*archived, *buffer.replay(**filters)]:
+    try:
+        hot_updates = buffer.replay(**filters)
+    except Exception:
+        raise HistoryUnavailableError("persisted hot replay unavailable or incompatible") from None
+    for update in [*archived, *hot_updates]:
         key = (update.venue, update.instrument, update.kind, update.source_event_id)
         evidence = (
             update.content_digest,

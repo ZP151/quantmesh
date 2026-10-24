@@ -122,7 +122,7 @@ class HotCacheBudget:
             handle.flush()
             os.fsync(handle.fileno())
         if hasattr(os, "O_DIRECTORY"):
-            for parent in (path.parent, path.parent.parent):
+            for parent in path.parents:
                 descriptor = os.open(parent, os.O_RDONLY | os.O_DIRECTORY)
                 try:
                     os.fsync(descriptor)
@@ -208,6 +208,7 @@ class HotCacheBudget:
                 if (
                     len(sessions) > 16384
                     or (attempts and not sessions)
+                    or (attempts and not (self.root / "live/updates.duckdb").is_file())
                     or (not attempts and (self.root / "live").exists())
                 ):
                     raise ValueError("session evidence missing")
@@ -456,6 +457,11 @@ class LiveBuffer:
         except LiveCapacityExceeded:
             logging.getLogger(__name__).warning("Live acquisition disabled: hot capacity exhausted")
             return cls._stopped_reader(root)
+        except (OSError, ValueError):
+            # Invalid/partial accounting never grants admission, but readable
+            # persisted observations and the HTTP service need not be discarded.
+            logging.getLogger(__name__).error("Live acquisition disabled: hot budget unavailable")
+            return cls._stopped_reader(root)
 
     @classmethod
     def open_bounded_hot(cls, root: Path, budget: HotCacheBudget) -> LiveBuffer:
@@ -465,19 +471,46 @@ class LiveBuffer:
             # Exhausting admission must not remove previously persisted reads.
             logging.getLogger(__name__).warning("Live acquisition disabled: hot capacity exhausted")
             return cls._stopped_reader(root)
+        except Exception:
+            # A failed constructor remains an unfinished charged session, never
+            # permission to discard formerly persisted hot observations.
+            budget.fail_session()
+            if budget._session is None:
+                raise  # Invalid configuration did not authorize a storage attempt.
+            logging.getLogger(__name__).error("Live acquisition disabled: hot storage unavailable")
+            return cls._stopped_reader(root)
 
     @classmethod
     def _stopped_reader(cls, root: Path) -> LiveBuffer:
-        if (Path(root) / "live/updates.duckdb").exists():
-            return cls(root, read_only=True)
-        # No hot was ever admitted: an empty, read-only in-memory reader carries
-        # zero observations. It never creates a disk DB or stands in for archive.
+        path = Path(root) / "live/updates.duckdb"
+        unavailable = False
+        if path.exists():
+            try:
+                return cls(root, read_only=True)
+            except ValueError:
+                unavailable = True
+        elif (
+            any(Path(root).glob("budget-intent-*.json"))
+            or any(Path(root).glob("budget-session-*.json"))
+            or path.parent.exists()
+        ):
+            unavailable = True  # Former admission is not proof of an empty store.
         reader = cls.__new__(cls)
         reader.root = Path(root)
-        reader.path = reader.root / "live/updates.duckdb"
+        reader.path = path
         reader.read_only, reader.write_budget = True, None
+        reader.read_unavailable = unavailable
         reader.retention = timedelta(0)
         reader._connection_lock = threading.RLock()
+        if unavailable:
+            # No fake empty DB: every persisted read refuses explicitly, while
+            # the stopped feed and manifest-backed HTTP service can still mount.
+            reader._con = None
+            logging.getLogger(__name__).error(
+                "Persisted hot replay unavailable; acquisition disabled"
+            )
+            return reader
+        # Only never-admitted hot can truthfully contribute zero observations.
         reader._con = duckdb.connect(
             ":memory:",
             config={
@@ -502,6 +535,7 @@ class LiveBuffer:
             raise ValueError("retention_days must be non-negative")
         self.root = Path(root)
         self.read_only = read_only
+        self.read_unavailable = False
         self.write_budget = write_budget
         if write_budget is not None:
             if retention_days != 0 or read_only or write_budget.root != self.root.absolute():
@@ -924,10 +958,15 @@ class LiveBuffer:
 
     # -- reads ------------------------------------------------------------
 
+    def _require_readable(self) -> None:
+        if self.read_unavailable:
+            raise ValueError("persisted hot replay unavailable")
+
     def price_trail(
         self, identities: list[tuple[str, str]], limit: int = 20
     ) -> dict[str, list[float]]:
         """Return trailing candle closes for exact ``(venue, instrument)`` pairs."""
+        self._require_readable()
         result: dict[str, list[float]] = {
             f"{venue}:{instrument}": [] for venue, instrument in identities
         }
@@ -976,6 +1015,7 @@ class LiveBuffer:
         even when several updates share the same timestamp. Corrupt or
         invalid rows raise instead of being silently skipped.
         """
+        self._require_readable()
         clauses: list[str] = []
         params: list[object] = []
         if venue is not None:
@@ -1024,6 +1064,7 @@ class LiveBuffer:
         self, *, venue: str | None = None, instrument: str | None = None
     ) -> list[MarketUpdate]:
         """The most recent update per stream, preserving both L2 sides."""
+        self._require_readable()
         clauses: list[str] = []
         params: list[object] = []
         if venue is not None:
@@ -1058,6 +1099,7 @@ class LiveBuffer:
 
     def recovery_checkpoints(self, *, venue: str, instruments: list[str]) -> list[MarketUpdate]:
         """Latest durable rows used to restore a venue supervisor's cursors."""
+        self._require_readable()
         if not instruments:
             return []
         placeholders = ", ".join("?" for _ in instruments)
@@ -1104,6 +1146,7 @@ class LiveBuffer:
 
     def statuses(self) -> list[dict[str, object]]:
         """Current per-source state rows (from status updates only)."""
+        self._require_readable()
         with self._connection_lock:
             rows = self._con.execute(
                 "SELECT venue, instrument, state, note, changed_at "
@@ -1122,6 +1165,7 @@ class LiveBuffer:
 
     def quarantined(self) -> list[dict[str, object]]:
         """Persisted identity/content conflicts, in observation order."""
+        self._require_readable()
         with self._connection_lock:
             rows = self._con.execute(
                 "SELECT quarantine_id, venue, instrument, kind, source_event_id, "
@@ -1144,6 +1188,7 @@ class LiveBuffer:
         """The recorded extent: earliest/latest ``received_at``, row
         count and distinct venues — the replay-window metadata (iteration
         0019 slice 4). All bounds are UTC instants."""
+        self._require_readable()
         with self._connection_lock:
             row = self._con.execute(
                 "SELECT COUNT(*), MIN(received_at), MAX(received_at) FROM market_updates"
@@ -1164,7 +1209,8 @@ class LiveBuffer:
             if getattr(self, "_closed", False):
                 return
             try:
-                self._con.close()
+                if self._con is not None:
+                    self._con.close()
                 self._closed = True
                 if self.write_budget is not None:
                     self.write_budget.close_session()

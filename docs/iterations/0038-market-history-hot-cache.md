@@ -177,3 +177,53 @@ expiry/free/cumulative restart gates are covered. Initial Ruff formatting errors
 retained (39); changed-file Ruff/format/diff pass (40 and final precommit check).
 No whole-repository/native suite, actual host/DB/provider, CI or production peak
 measurement. Independent reduced-leaf plus whole-boundary review remains pending.
+
+### Reduced-leaf R1 and sole aggregate correction
+
+Independent R1 on a6a9015 returned CHANGES REQUIRED, two Important source
+findings: production lifespan never actually closes the hot buffer, and
+recursive mkdir does not fsync all ancestor entries. Its single invocation
+57pass/2Windows native skips/6warnings15.06s includes an unconditional actual
+startup-crash/archiveHTTP test that passed. No real crash outage was reproduced.
+Report session-review-r1.md SHA256
+6d206f3230ad3f7041a731c680ae435e0de3597f21d027c1c064d330587f591f;
+raw log SHA2567e12a87acc092ca0bd947e6b168b3d004262c00c9d8a444f0c5681ad88f18694.
+
+Root Planner additionally ruled the inherited unreadable-hot boundary explicit:
+HTTP remains mounted; manifest history keeps priority; previously admitted hot
+that is unreadable/missing cannot be silently replaced with empty/archive-only
+success. Replay uses existing HistoryUnavailable404. The tiny live_history.py
+adapter is authorized within original B's five-file pool; other runtime files
+were not rewritten. Same original90min deadline, no new Goal/approval/timebox.
+
+One aggregate test-first correction: real43 RED5/1pass verifies actual
+TestClient production lifespan without test/manual close, ancestor entry sync
+before actual DuckDB open, controlled invalid/missing formerly admitted hot and
+manifest priority;44GREEN6. Deep-directory syscalls are explicitly modeled for
+ordering on Windows; no physical power-loss/native durability claim. Controlled
+invalid/missing hot after an actual healthy close additionally46RED2/2pass,
+47GREEN4. Failed/unknown hot uses no fake DB, all persisted reads refuse, no
+cached updates/cursors are invented, supervised source stays unavailable and
+providers never start. Canonical bytes unchanged; manifest-first still works.
+
+Actual application-shutdown cancellation now joins accepted I/O, releases owner
+then closes the real bounded DB. Any failure poisons before closure. Capacity
+stop alone retains the connection for HTTP reads. All ancestor directories are
+synced, not just two. Actual child-process crashes before and after a real COMMIT
+both pass48; HTTP assertions are unconditional, readable hot rows are retained
+or replay explicitly404, never skipped by a caught constructor exception.
+Affected focused check45 passed157/2native skips/6warnings23.98s before the final
+healthy-close corruption and post-COMMIT crash additions. The original310-test
+boundary is not repeated; exact new-head broad/native CI belongs to publisher.
+Final corrected focused evidence and independent FINAL R2 remain pending.
+
+Final aggregate also exercises controlled partial accounting:51RED1 at config
+factory startup,52GREEN1. Acquisition is refused and damaged receipt retained,
+while actual readable archive+hot rows still return100/101/102 rather than
+discarding hot or resetting the ledger. Missing DB after healthy close refuses
+before storage admission; invalid DB constructor failure retains its charged,
+unfinished session and becomes explicit unavailable. Changed-source checks53
+pass for buffer/feed/live_history and the two test files. Run50 passed160 with
+2native skips/6warnings28.76s; final run54 follows the partial-accounting guard.
+Final corrected focused54 passes161/2explicit native skips/6warnings27.58s;
+no repeated310-test boundary or full/native suite. Source freezes for FINAL R2.

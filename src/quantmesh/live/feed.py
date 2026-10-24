@@ -300,7 +300,7 @@ class LiveFeed:
         self.capacity_exhausted = bool(lake is not None and lake.read_only)
         self.capacity_stop_error: str | None = None
         self._capacity_stop: asyncio.Event | None = None
-        if self._lake is not None:
+        if self._lake is not None and not self._lake.read_unavailable:
             for update in self._lake.latest():
                 self._ingest_cached(update.model_copy(deep=True))
 
@@ -332,7 +332,7 @@ class LiveFeed:
         """Register a supervisor; the pump runs it and drains its outbox."""
         with self._lock:
             self._supervisors.append(supervisor)
-            if self._lake is not None:
+            if self._lake is not None and not self._lake.read_unavailable:
                 supervisor.on_persisted(
                     self._lake.recovery_checkpoints(
                         venue=supervisor.venue.value,
@@ -917,6 +917,7 @@ class LiveFeed:
         if budget is not None:
             budget.claim_owner()
         healthy = True
+        normal_shutdown = False
         self._loop = asyncio.get_running_loop()
         self._capacity_stop = asyncio.Event()
         self._io_gate = asyncio.Lock()
@@ -933,6 +934,7 @@ class LiveFeed:
         except LiveCapacityExceeded:
             self.capacity_exhausted = True
         except asyncio.CancelledError:
+            normal_shutdown = True
             raise
         except BaseException:
             healthy = False
@@ -959,6 +961,10 @@ class LiveFeed:
             finally:
                 if budget is not None:
                     budget.release_owner(clean=healthy and not self.capacity_exhausted)
+                    if normal_shutdown:
+                        # Application shutdown has joined all accepted I/O.
+                        # Capacity stop alone keeps the DB open for HTTP reads.
+                        self._lake.close()
 
     async def _wait_capacity_stop(self) -> None:
         assert self._capacity_stop is not None
