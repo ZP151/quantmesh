@@ -1,5 +1,7 @@
 # Equivalent read-only history tail — issue218 B2 follow-up
 
+Issue: https://github.com/ZP151/quantmesh/issues/218.
+
 Planner: one action is original default BTC ONE_DAY archive+hot history, all
 original predicates and10000 events. Root authorized a bounded60min leaf from
 actualACK09:54:21Z through10:54:21Z; plan is
@@ -55,3 +57,18 @@ freezes for one independent known-query plus affected-boundary review, at most
 two rounds/one aggregate correction. Local commits bypass hooks after explicit
 checks; sole publisher owns exact-head CI/normal merge and immutable root/operator
 receipt. This is candidate software evidence, not actual B2 recovery/host READY.
+
+Independent R1 PASS: frozen source/test dab1cf9b93a405027e0db307f504a5a586780022,
+treeed1290e8aab7f97181e9280a186aa7a0f046924d; Standards0/Spec0, no correction
+requested. Reviewer verified historical/current local_seq PK invariants and all
+original caller/manifest/archive+hot/failure boundaries. Exactly one authorized
+focused invocation220passed/2Windows native-fsync skips/6existing warnings55.07s,
+exit0. No extra repro/suite/native action or tracked mutation. Retained report
+output/market-history-hot-cache/tail-review-r1.md SHA256
+a8cfc12cf573dbb30fcc91b22f7cb1d7d562fc0ae27bb14d48bd42439f6f0718;
+raw tail-review-r1-tests.log SHA256
+33afb22e471f749f45d933ecdb5a30adaa1a29a5e0c3d22ccb78fcdc197d4feb.
+This final checkpoint changes only iteration/plan; runtime/tests/ADR remain at
+the reviewed freeze. Exact candidate goes directly to the sole publisher for
+new exactCI/normal merge and immutable merged receipt to root/sole operator.
+No unmerged deployment or automatic operator retry follows this software PASS.

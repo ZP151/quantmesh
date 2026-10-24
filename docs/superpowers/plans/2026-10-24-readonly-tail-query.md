@@ -50,7 +50,7 @@ preserves old zero/negative limit behavior without new LIMIT coercion.
 - [x] Minimal buffer.py tail change; GREEN focused file and legacy live_buffer,
   live_history, market-history-hot-cache/lookup affected boundary, changed Ruff/
   format/diff. Preserve all initial errors and output; no full repository suite.
-- [ ] Freeze commit; one independent known-query and affected-boundary review,
+- [x] Freeze commit; one independent known-query and affected-boundary review,
   at most2rounds/one aggregate correction, then exact reviewed publisher handoff.
   If structural equivalence/memory issue persists, precise STOP, no expansion.
 
@@ -66,3 +66,10 @@ warnings56.28s exit0 across new tail, live_buffer, lookup, live_history and
 market-history-hot-cache.84Ruff/format/diff exit0. Runtime delta9+/3- only.
 Local commit hooks bypassed after these explicit checks; publisher exactCI remains.
 Independent review pending; no real-host query or qualification inferred.
+
+Independent R1 finished PASS on dab1cf9/treeed1290e8 with Standards0/Spec0 and
+no requested correction. One reviewer invocation220pass/2Windows native-fsync
+skips/6existing warnings55.07s exit0; report/raw hashes in the iteration record.
+Final candidate checkpoint edits only iteration/plan, retaining source/test/ADR
+identities. Publisher exactCI/normal merge and sole operator's default-service
+merged-source reacceptance are still outstanding, independent of author timebox.
