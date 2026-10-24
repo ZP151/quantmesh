@@ -5,6 +5,7 @@ import hashlib
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 
+from quantmesh.api.local_csv_snapshots import create_local_csv_snapshots_router
 from quantmesh.api.research_jobs import _SafeRoute
 from quantmesh.data.objects import ObjectIntegrityError
 from quantmesh.research.realdata_snapshots import (
@@ -17,6 +18,7 @@ from quantmesh.research.realdata_snapshots import (
 
 def create_realdata_snapshots_router() -> APIRouter:
     router = APIRouter(prefix="/research/data-snapshots", route_class=_SafeRoute)
+    router.include_router(create_local_csv_snapshots_router())
 
     def catalog(request: Request) -> SnapshotCatalog:
         authority = getattr(request.app.state, "research_snapshots", None)
