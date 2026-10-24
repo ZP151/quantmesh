@@ -21,8 +21,10 @@ text. Unknown batch index/key count/C++ operator remain unknown. No host retry.
   absent/duplicate keys, caller snapshot/transaction and errors. Use only existing
   legal view/in-memory data; no new persistent DB or source copy.
 - [x] Minimal payload-gather predicate change only and focused relevant checks.
-- [ ] One independent delta review, no repeated232suite/old model/old CI/browser.
-- [ ] Immutable publisher/root handoff or precise STOP by original new hard time.
+- [x] One independent delta review: R1 READY, Standards0/Spec0; independent
+  focused18pass/1deselected3.14s. No repeated232suite/old model/old CI/browser.
+- [x] Freeze reviewed source and prepare immutable publisher/root handoff before
+  the original new hard time; final documentation does not change runtime/tests/ADR.
 
 Freeze key query, forward/public API, transaction/lock handling and17-column
 projection. Keep production128MiB/threads1/temp0/RO. Retained old data150353373B
@@ -43,3 +45,12 @@ old sparse IN has HASH_JOIN over17-column SEQ_SCAN; selected scalar form has
 no join and a range filter on its scan. No payload SELECT, schema DDL or data
 change in this metadata case; original DB hash verified unchanged. All RR1
 packet30members/hash/source pins verified without extracting or rerunning host.
+
+Reviewed577b3b3318bd292974463ca769615a1d2457bc52/tree0565854de7d2cd42824c9c2633cbc503fb641379;
+source SHA3cd08da4f04eb7bbbf2482a62e991de5641576a0b1f6ff10ae7975eeb4b5c690.
+R1 report and raw output hashes are in the own iteration and final ignored
+HANDOFF.json. No corrections required. Commit-hook bypass follows explicit scoped
+checks and is disclosed. New exact-head CI/normal merge remain publisher gates;
+native acceptance needs root's separate complete release forecast/decision under
+the corrected carry197988352B/HWM9353, normal other remaining1241088B. Neither
+software READY nor future merge approves native staging or completes research.

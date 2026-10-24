@@ -79,5 +79,31 @@ Corrected host carry197988352B/HWM9353 is separate from this software work.
 Any future release/native probe needs a complete new forecast and root decision;
 no inherited RR1 host window or automatic staging/activation follows a merge.
 
-Independent delta review pending. No broader suite, old model acceptance,
-PR223/224 CI/browser/provider/SDK or host action is performed by this leaf.
+## Independent reviewer and final software handoff
+
+One independent R1 delta review returns READY, Standards0/Spec0 findings, with
+no correction or second round. Reviewed source commit
+577b3b3318bd292974463ca769615a1d2457bc52/tree
+0565854de7d2cd42824c9c2633cbc503fb641379; buffer SHA256
+3cd08da4f04eb7bbbf2482a62e991de5641576a0b1f6ff10ae7975eeb4b5c690.
+The reviewer independently verifies import identity, exact predicate equivalence,
+unchanged other methods with explicit UTF-8 AST input, and runs the permitted
+focused checks once:18passed/1deselected3.14s, exit0. Report
+output/rr1-payload-gather/review-r1.md SHA256
+628b13c5fa73dba208a03a359c919d9ffab5fc40edb732c76588b07533dff352;
+raw review-r1-tests.log SHA256
+ca4b556a3c4df0542dc90493f29941ddad6aaec2b1a2a3f10115dbd482532614.
+Earlier author locale-default AST attempts falsely compared non-ASCII docstrings
+and failed; they are not passing evidence or unrelated source changes.
+
+Final handoff metadata is output/rr1-payload-gather/HANDOFF.json. This documentation
+checkpoint leaves reviewed runtime/tests/ADR bytes unchanged. Local commit hooks
+are bypassed after explicit scoped Ruff/format/whitespace checks; repository-wide
+hooks and release acceptance are not claimed. Publisher owns new exact-head CI
+and normal merge. Root owns any separate new native forecast/decision: corrected
+host carry197988352B/HWM9353 and normal other headroom1241088B must include every
+future source/helper/receipt. No inherited host window or automatic staging.
+
+Software delta READY is not native PASS or completion of the original independent
+research goal. No broader suite, old model acceptance, PR223/224 CI/browser,
+provider/SDK/host action, Goal or automation change is performed by this leaf.
