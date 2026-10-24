@@ -278,3 +278,29 @@ No new environment/package/index/migration, archive copy or real-host query.
 Sole publisher's exact CI/merge and sole operator's merged-source default-service
 reacceptance remain independent gates. Source and market-data rights/UNKNOWN,
 paper/live authority, and original blocked research Goal do not change.
+
+## Bounded complete-row materialization after DX1
+
+The later root-approved short design supersedes the single-statement restriction
+above while preserving one snapshot. DX1 observed OPEN/READ_ONLY_FILESYSTEM for
+archive-default temporary storage; PM1's one metadata-only EXPLAIN identifies
+the existing SEMI hash join and17-column probe scan, not the exact failing C++
+operator. Evidence and retained limitations are in
+[the resource investigation](../iterations/0038-readonly-resource-diagnosis.md).
+
+Tail selection keeps the original filtered local_seq rank/max query. Complete
+17-column records are then retrieved in fixed batches of at most128 keys, under
+the existing connection lock and one transaction. Two txid_current() probes
+detect caller-owned transactions without a failing nested BEGIN. Only an owned
+transaction is begun/committed/rolled back; caller state remains caller-owned.
+Missing/duplicate selected rows refuse explicitly. Forward replay is unchanged.
+The full10000 tail requires79 payload queries and84 total SQL statements in
+autocommit (including probes/BEGIN/keys/COMMIT), rather than one statement.
+This trades statement/scan overhead for bounded engine result materialization;
+existing indexes and DuckDB are reused without a migration or setting change.
+
+The batch bound is a row-count bound, not a total RSS or arbitrary-payload byte
+guarantee. Native DuckDB/resource/decoding errors propagate; no partial or empty
+success substitutes for refusal. A generated wide model with stricter32MiB
+memory/0B spill returns exact10000 rows when the frozen old SQL refuses, but
+production128MiB/threads1/0B/RO and separate merged-source native acceptance remain.
