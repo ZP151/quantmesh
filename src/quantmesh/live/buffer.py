@@ -87,6 +87,9 @@ class HotCacheBudget:
             if self.limit < self.spec.close_failure_reserve_bytes:
                 raise LiveCapacityExceeded("hot capacity exhausted")
             self._lock = threading.RLock()
+            self._session: int | None = None
+            self._failed = False
+            self._owners = 0
             self.header = json.dumps(self.spec.model_dump(), sort_keys=True).encode()
             header_path = self.root / "budget-spec.json"
             if header_path.exists():
@@ -154,20 +157,127 @@ class HotCacheBudget:
 
     def reserve(self, batch_bytes: int = 0) -> None:
         with self._lock:
-            spent = self._check_available(batch_bytes)
-            peak = self.spec.peak_operation_bytes
-            number = spent // peak + 1
-            self._write_once(
-                self.root / f"budget-intent-{number:06d}.json",
-                json.dumps(
-                    {
-                        "attempt": number,
-                        "spec_sha256": hashlib.sha256(self.header).hexdigest(),
-                        "reserved_bytes": peak,
-                    },
-                    sort_keys=True,
-                ).encode(),
-            )
+            try:
+                spent = self._check_available(batch_bytes)
+                peak = self.spec.peak_operation_bytes
+                number = spent // peak + 1
+                self._write_once(
+                    self.root / f"budget-intent-{number:06d}.json",
+                    json.dumps(
+                        {
+                            "attempt": number,
+                            "spec_sha256": hashlib.sha256(self.header).hexdigest(),
+                            "reserved_bytes": peak,
+                        },
+                        sort_keys=True,
+                    ).encode(),
+                )
+            except BaseException:
+                self.fail_session()
+                raise
+
+    def fail_session(self) -> None:
+        """Irreversible within this process; the preexisting open record survives a crash."""
+        with self._lock:
+            self._failed = True
+
+    def _session_record(self, start: int, end: int | None = None) -> bytes:
+        record = {"start_attempt": start, "spec_sha256": hashlib.sha256(self.header).hexdigest()}
+        if end is not None:
+            record["final_attempt"] = end
+        return json.dumps(record, sort_keys=True).encode()
+
+    @staticmethod
+    def _exact_record(path: Path, expected: bytes) -> bool:
+        return (
+            path.is_file()
+            and not is_reparse_point(path)
+            and path.stat().st_size <= 1024
+            and path.read_bytes() == expected
+        )
+
+    def start_session(self) -> None:
+        """Prove prior normal closes, charge startup, fsync open marker before DuckDB I/O."""
+        with self._lock:
+            try:
+                self._require_directory_sync()
+                if self._session is not None:
+                    raise ValueError("session already used")
+                attempts = self._spent() // self.spec.peak_operation_bytes
+                sessions = sorted(self.root.glob("budget-session-*.json"))
+                if (
+                    len(sessions) > 16384
+                    or (attempts and not sessions)
+                    or (not attempts and (self.root / "live").exists())
+                ):
+                    raise ValueError("session evidence missing")
+                starts = [int(path.stem.removeprefix("budget-session-")) for path in sessions]
+                if starts and (starts[0] != 1 or len(set(starts)) != len(starts)):
+                    raise ValueError("session evidence invalid")
+                closed = set(self.root.glob("budget-closed-*.json"))
+                ready = set(self.root.glob("budget-close-ready-*.json"))
+                if len(closed) > 16384 or len(ready) > 16384:
+                    raise ValueError("session evidence invalid")
+                for index, (path, start) in enumerate(zip(sessions, starts, strict=True)):
+                    end = starts[index + 1] - 1 if index + 1 < len(starts) else attempts
+                    receipt = self.root / f"budget-closed-{start:06d}.json"
+                    prepared = self.root / f"budget-close-ready-{start:06d}.json"
+                    if (
+                        path.name != f"budget-session-{start:06d}.json"
+                        or not 1 <= start <= end <= attempts
+                        or not self._exact_record(path, self._session_record(start))
+                        or not self._exact_record(receipt, self._session_record(start, end))
+                        or not self._exact_record(prepared, self._session_record(start, end))
+                    ):
+                        raise ValueError("session not demonstrably closed")
+                    closed.discard(receipt)
+                    ready.discard(prepared)
+                if closed or ready:
+                    raise ValueError("foreign close evidence")
+                self.reserve()  # Failed startup keeps its full intent, even if marker fails.
+                start = attempts + 1
+                self._write_once(
+                    self.root / f"budget-session-{start:06d}.json", self._session_record(start)
+                )
+                self._session = start
+            except Exception:
+                self.fail_session()
+                raise LiveCapacityExceeded("hot admission session unavailable") from None
+
+    def _require_directory_sync(self) -> None:
+        if not hasattr(os, "O_DIRECTORY"):
+            raise LiveCapacityExceeded("durable directory sync unavailable")
+
+    def claim_owner(self) -> None:
+        with self._lock:
+            if self._session is None or self._failed:
+                raise LiveCapacityExceeded("hot admission session unavailable")
+            self._owners += 1
+
+    def release_owner(self, *, clean: bool) -> None:
+        with self._lock:
+            if not clean:
+                self.fail_session()
+            self._owners -= 1
+
+    def close_session(self) -> None:
+        """Called only after successful database close, after accepted work has joined."""
+        with self._lock:
+            if self._failed or self._owners or self._session is None:
+                self.fail_session()
+                return
+            start = self._session
+            raw = self._session_record(start, self._spent() // self.spec.peak_operation_bytes)
+            try:
+                # Prepare+fsync content and directories before atomic publication.
+                # No fallible storage step follows publication. Lost publication
+                # after a crash refuses restart; visible publication proves a true close.
+                ready = self.root / f"budget-close-ready-{start:06d}.json"
+                self._write_once(ready, raw)
+                os.link(ready, self.root / f"budget-closed-{start:06d}.json")
+            except BaseException:
+                self.fail_session()
+                raise
 
     def can_reserve(self) -> bool:
         with self._lock:
@@ -175,11 +285,16 @@ class HotCacheBudget:
                 self._check_available(0)
                 return True
             except LiveCapacityExceeded:
+                self.fail_session()
                 return False
+            except BaseException:
+                self.fail_session()
+                raise
 
     def record_stop_failure(self) -> None:
         """Keep a separate terminal failure receipt; never erase the failed stop file."""
         with self._lock:
+            self.fail_session()
             path = self.root / "budget-stop-failure.json"
             if not path.exists():
                 self._write_once(
@@ -196,7 +311,8 @@ class HotCacheBudget:
 
     def _check_available(self, batch_bytes: int) -> int:
         stop = self.root / "budget-stop.json"
-        if stop.exists() or (self.root / "budget-stop-failure.json").exists():
+        if self._failed or stop.exists() or (self.root / "budget-stop-failure.json").exists():
+            self.fail_session()
             raise LiveCapacityExceeded("hot capacity exhausted")
         spent = self._spent()
         peak = self.spec.peak_operation_bytes
@@ -205,6 +321,7 @@ class HotCacheBudget:
             or batch_bytes > self.spec.max_batch_bytes
             or spent + peak + self.spec.close_failure_reserve_bytes > self.limit
         ):
+            self.fail_session()
             self._write_once(
                 stop,
                 json.dumps(
@@ -220,6 +337,7 @@ class HotCacheBudget:
         try:
             self._headroom(peak + self.spec.close_failure_reserve_bytes)
         except LiveCapacityExceeded:
+            self.fail_session()
             self._write_once(
                 stop,
                 json.dumps(
@@ -388,7 +506,7 @@ class LiveBuffer:
         if write_budget is not None:
             if retention_days != 0 or read_only or write_budget.root != self.root.absolute():
                 raise ValueError("bounded hot requires retention=0 and its exact budget root")
-            write_budget.reserve()  # Includes constructor schema/index/WAL work before it occurs.
+            write_budget.start_session()  # Durable session precedes constructor DB/index/WAL I/O.
         self.retention = timedelta(days=retention_days)
         self.path = self.root / "live" / "updates.duckdb"
         self._connection_lock = threading.RLock()
@@ -536,6 +654,14 @@ class LiveBuffer:
         return self.append_many([update])[0]
 
     def append_many(self, updates: list[MarketUpdate]) -> list[AppendSequence]:
+        try:
+            return self._append_many(updates)
+        except BaseException:
+            if self.write_budget is not None:
+                self.write_budget.fail_session()
+            raise
+
+    def _append_many(self, updates: list[MarketUpdate]) -> list[AppendSequence]:
         """Atomically admit a normalized batch, including both book sides."""
         if self.read_only:
             raise ValueError("read-only archive")
@@ -1035,12 +1161,24 @@ class LiveBuffer:
 
     def close(self) -> None:
         with self._connection_lock:
-            self._con.close()
+            if getattr(self, "_closed", False):
+                return
+            try:
+                self._con.close()
+                self._closed = True
+                if self.write_budget is not None:
+                    self.write_budget.close_session()
+            except BaseException:
+                if self.write_budget is not None:
+                    self.write_budget.fail_session()
+                raise
 
     def __enter__(self) -> LiveBuffer:
         return self
 
     def __exit__(self, *exc: object) -> None:
+        if exc and exc[0] is not None and self.write_budget is not None:
+            self.write_budget.fail_session()
         self.close()
 
 

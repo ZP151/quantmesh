@@ -76,6 +76,54 @@ surface; no second write attempt or refund is granted within the stopped feed.
 Current source_status is not an archive of all failures; original STATUS,
 quarantine, jobs/reports and existing output evidence are retained.
 
+### Reduced durable-admission recovery contract
+
+FINAL R2 rejected the prior process-only assurance: both terminal writes can
+fail with allowance remaining, so consumed intents alone do not prevent restart.
+That whole-slice STOP is retained. Planner separately authorized the minimal
+recovery leaf on issue218; it does not withdraw durable-stop/no-auto-rearm.
+
+Each startup first proves all prior sessions normally closed, then consumes a
+full startup intent and exclusively writes/fsyncs budget-session-NNNNNN.json
+before opening DuckDB or enabling acquisition. The session binds the exact spec
+SHA and startup-intent number. No previous session, malformed/partial/foreign
+evidence, unmatched closure, or an unaccounted DB grants restart. Failed marker
+creation/fsync leaves its attempted intent charged; no storage is enabled.
+An open marker exists before the failure that would otherwise need a new stop
+receipt. Any admission/storage/capacity/failure stop permanently poisons this
+session; a process crash simply leaves it open. Neither restored free space nor
+failure to create either terminal receipt can close it.
+
+Only successful actual DB close, after all feed-owned accepted I/O has joined
+and with no session failure, may close the session. First exclusively write and
+fsync budget-close-ready-NNNNNN.json, including parent directories, containing
+the same spec/start and final consumed-intent number. Finally atomically create
+the exclusive budget-closed-NNNNNN.json hard link to that prepared receipt.
+No fallible storage operation follows publication; no evidence is removed.
+Failure before publication leaves an open session. Publication itself is not
+acknowledged as directory-durable: if a crash loses the link, restart refuses;
+if it survives, its fully prepared content proves the already completed normal
+DB close. An exception/stop/crash before normal close never prepares authority.
+Normal restart still validates all cumulative intents, expiry, physical free
+space and original allowance, then charges another startup peak. It refunds
+nothing and cannot reset, rotate or adopt an unfinished session.
+
+Directory fsync support is mandatory for session admission. On platforms where
+the existing OS adapter lacks O_DIRECTORY (including this Windows runtime),
+production hot admission refuses and history uses the stopped read-only path.
+The Windows protocol tests explicitly model only that directory-durability gate;
+they still use real tiny DBs, files, I/O and a real child-process crash, but are
+not native durability qualification. A separate unmodeled production test proves
+unsupported-directory-sync refusal. POSIX directory-fsync/native CI remains a
+release gate; neither passing unit tests nor a platform skip grants activation.
+
+The external peak proof must include all retained session/open/prepared/closed
+metadata and close/failure costs, as well as every numbered intent. No physical
+peak proof or exclusive global earmark has been established by this leaf.
+Unfinished-session controlled re-admission, if required, needs a separately
+verified operator budget/recovery decision with all old receipts retained; no
+automatic reset, extra approval UI or recovery framework is introduced here.
+
 ## Consequences, deployment and rollback
 
 No original-row copy/move/delete/checkpoint, new service, engine, dependency,

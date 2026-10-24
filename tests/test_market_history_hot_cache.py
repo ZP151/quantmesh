@@ -18,6 +18,20 @@ from tests.test_live_history import _candle
 AT = datetime(2026, 10, 24, 0, 10, tzinfo=UTC)
 
 
+@pytest.fixture(autouse=True)
+def modeled_session_directory_durability_on_windows(monkeypatch):
+    """Protocol unit model only: native directory-fsync proof still requires POSIX CI."""
+    import os
+
+    if not hasattr(os, "O_DIRECTORY"):
+        monkeypatch.setattr(
+            buffer_module.HotCacheBudget,
+            "_require_directory_sync",
+            lambda self: None,
+            raising=False,
+        )
+
+
 def candles():
     return [
         _candle(AT - timedelta(minutes=10 - i * 5), sequence=100 + i, close=100.0 + i)
@@ -622,3 +636,360 @@ def test_postcommit_stop_record_failure_still_delivers_then_stops_and_records_fa
     # The failure evidence is a permanent stop, even if a future retry could write the stop file.
     with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as hot:
         assert hot.read_only and len(hot.replay()) == 1
+
+
+def test_double_stop_write_failure_and_recovered_free_space_cannot_rearm(tmp_path, monkeypatch):
+    from tests.test_live_feed_owned_persistence import ScriptedSupervisor
+
+    archive = tmp_path / "archive"
+    seed(archive, candles()[:2])
+    original_archive = (archive / "live/updates.duckdb").read_bytes()
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    budget = buffer_module.HotCacheBudget(root, spec)
+    with LiveBuffer(root, retention_days=0, write_budget=budget) as hot:
+        feed = LiveFeed(lake=hot)
+        feed.attach(ScriptedSupervisor([]))
+        original_headroom, original_write = budget._headroom, budget._write_once
+
+        def fail_terminal(path, raw):
+            if path.name in {"budget-stop.json", "budget-stop-failure.json"}:
+                raise OSError("terminal writes unavailable before creation")
+            original_write(path, raw)
+
+        def committed_then_free_floor(updates):
+            receipts = original_append(updates)
+
+            def free_floor(needed):
+                raise buffer_module.LiveCapacityExceeded("hot capacity exhausted")
+
+            monkeypatch.setattr(budget, "_headroom", free_floor)
+            return receipts
+
+        original_append = hot.append_many
+        monkeypatch.setattr(hot, "append_many", committed_then_free_floor)
+        monkeypatch.setattr(budget, "_write_once", fail_terminal)
+
+        async def scenario():
+            pump = asyncio.create_task(feed.run())
+            await asyncio.sleep(0)
+            await feed.publish(candles()[0])
+            await asyncio.wait_for(pump, 2)
+            assert feed.capacity_exhausted and len(hot.replay()) == 1
+
+        asyncio.run(scenario())
+        assert not (root / "budget-stop.json").exists()
+        assert not (root / "budget-stop-failure.json").exists()
+        with history_client(feed, archive) as client:
+            response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+        assert response.status_code == 200 and len(response.json()["primary"]["bars"]) == 2
+        monkeypatch.setattr(budget, "_headroom", original_headroom)
+        monkeypatch.setattr(budget, "_write_once", original_write)
+    # Fresh instance, free/write availability restored, two operation charges remain.
+    assert len(list(root.glob("budget-intent-*.json"))) == 2
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert reopened.read_only, "terminal stop was lost across restart with allowance remaining"
+        assert len(reopened.replay()) == 1
+        with history_client(LiveFeed(lake=reopened), archive) as client:
+            assert (
+                client.get("/api/instruments/hyperliquid/BTC/history?range=1d").status_code == 200
+            )
+    assert len(list(root.glob("budget-intent-*.json"))) == 2
+    assert (archive / "live/updates.duckdb").read_bytes() == original_archive
+
+
+@pytest.mark.parametrize("failure", ["write", "fsync"])
+def test_session_marker_must_be_durable_before_any_hot_database_io(tmp_path, monkeypatch, failure):
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    budget = buffer_module.HotCacheBudget(root, spec)
+    original_write = budget._write_once
+
+    def fail_marker(path, raw):
+        if path.name.startswith("budget-session-"):
+            if failure == "fsync":
+                with path.open("xb") as handle:
+                    handle.write(raw)
+                raise OSError("session directory fsync unavailable")
+            raise OSError("session write unavailable")
+        original_write(path, raw)
+
+    monkeypatch.setattr(budget, "_write_once", fail_marker)
+    with LiveBuffer.open_bounded_hot(root, budget) as hot:
+        assert hot.read_only
+        assert not (root / "live").exists()
+        assert len(list(root.glob("budget-intent-*.json"))) == 1  # Failed attempt is not refunded.
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert reopened.read_only
+    assert len(list(root.glob("budget-intent-*.json"))) == 1
+
+
+@pytest.mark.parametrize("failure", ["write", "fsync", "publish", "database", "context_exception"])
+def test_failed_clean_close_never_authorizes_restart(tmp_path, monkeypatch, failure):
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    budget = buffer_module.HotCacheBudget(root, spec)
+    hot = LiveBuffer(root, retention_days=0, write_budget=budget)
+    hot.append(candles()[0])
+    original_write = budget._write_once
+
+    def fail_close(path, raw):
+        if path.name.startswith("budget-close-ready-"):
+            if failure == "fsync":
+                with path.open("xb") as handle:
+                    handle.write(raw)
+                raise OSError("close receipt directory fsync unavailable")
+            raise OSError("close receipt write unavailable")
+        original_write(path, raw)
+
+    if failure in {"write", "fsync"}:
+        monkeypatch.setattr(budget, "_write_once", fail_close)
+        with pytest.raises(OSError):
+            hot.close()
+    elif failure == "publish":
+
+        def fail_publish(*args):
+            raise OSError("atomic close publication unavailable")
+
+        monkeypatch.setattr(buffer_module.os, "link", fail_publish)
+        with pytest.raises(OSError):
+            hot.close()
+    elif failure == "database":
+        real_connection = hot._con
+
+        class FailedClose:
+            def close(self):
+                real_connection.close()
+                raise OSError("database close unknown")
+
+        hot._con = FailedClose()
+        with pytest.raises(OSError):
+            hot.close()
+    else:
+        hot.__exit__(RuntimeError, RuntimeError("abnormal context"), None)
+    assert not list(root.glob("budget-closed-*.json"))
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert reopened.read_only and len(reopened.replay()) == 1
+    assert len(list(root.glob("budget-intent-*.json"))) == 2
+
+
+def test_normal_clean_close_allows_restart_without_refunding_intents(tmp_path):
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    with LiveBuffer(
+        root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec)
+    ) as hot:
+        hot.append(candles()[0])
+    assert len(list(root.glob("budget-closed-*.json"))) == 1
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert not reopened.read_only
+        reopened.append(candles()[1])
+    assert len(list(root.glob("budget-intent-*.json"))) == 4
+
+
+def test_crashed_process_leaves_session_read_only_and_archive_http_available(tmp_path):
+    import json
+    import subprocess
+    import sys
+
+    archive = tmp_path / "archive"
+    seed(archive, candles()[:2])
+    original = (archive / "live/updates.duckdb").read_bytes()
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "\n".join(
+                [
+                    "import json, os, sys",
+                    "from pathlib import Path",
+                    "from quantmesh.live.buffer import HotCacheBudget, LiveBuffer",
+                    # Protocol model only; production refuses missing directory sync.
+                    "if not hasattr(os, 'O_DIRECTORY'):",
+                    "    HotCacheBudget._require_directory_sync = lambda self: None",
+                    "root = Path(sys.argv[1])",
+                    "budget = HotCacheBudget(root, json.loads(sys.argv[2]))",
+                    "hot = LiveBuffer(root, retention_days=0, write_budget=budget)",
+                    "os._exit(0)",
+                ]
+            ),
+            str(root),
+            json.dumps(spec),
+        ],
+        capture_output=True,
+        timeout=10,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert len(list(root.glob("budget-intent-*.json"))) == 1
+    try:
+        hot = LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec))
+    except ValueError as exc:
+        assert "archive" in str(exc)  # Real uncheckpointed WAL may safely refuse read-only reopen.
+    else:
+        with hot:
+            assert hot.read_only
+            feed = LiveFeed(lake=hot)
+            with history_client(feed, archive) as client:
+                response = client.get("/api/instruments/hyperliquid/BTC/history?range=1d")
+            assert response.status_code == 200
+            with history_client(feed, tmp_path / "missing-archive") as client:
+                assert (
+                    client.get("/api/instruments/hyperliquid/BTC/history?range=1d").status_code
+                    == 404
+                )
+    assert (archive / "live/updates.duckdb").read_bytes() == original
+    assert len(list(root.glob("budget-intent-*.json"))) == 1
+
+
+@pytest.mark.parametrize("damage", ["partial", "foreign", "missing", "extra", "closed", "ready"])
+def test_unknown_session_evidence_never_grants_restart(tmp_path, damage):
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    with LiveBuffer(root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec)):
+        pass
+    marker = root / "budget-session-000001.json"
+    if damage == "partial":
+        marker.write_bytes(b"{")
+    elif damage == "foreign":
+        import json
+
+        record = json.loads(marker.read_bytes())
+        record["spec_sha256"] = "c" * 64
+        marker.write_text(json.dumps(record, sort_keys=True), encoding="utf-8")
+    elif damage == "missing":
+        marker.rename(root / "retained-damaged-session.json")
+    elif damage == "closed":
+        (root / "budget-closed-000001.json").write_bytes(b"{}")
+    elif damage == "ready":
+        (root / "budget-close-ready-000001.json").rename(root / "retained-close-ready.json")
+    else:
+        (root / "budget-session-garbage.json").write_bytes(b"{}")
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert reopened.read_only
+    assert len(list(root.glob("budget-intent-*.json"))) == 1
+
+
+def test_normal_shutdown_joins_accepted_commit_before_clean_close(tmp_path):
+    from tests.test_live_feed_owned_persistence import CommitGate, ScriptedSupervisor
+
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    hot = LiveBuffer(root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec))
+    gate = CommitGate(hot._con, [])
+    hot._con = gate
+    feed = LiveFeed(lake=hot)
+    feed.attach(ScriptedSupervisor([]))
+
+    async def scenario():
+        pump = asyncio.create_task(feed.run())
+        await asyncio.sleep(0)
+        publishing = asyncio.create_task(feed.publish(candles()[0]))
+        assert await asyncio.to_thread(gate.entered.wait, 1)
+        pump.cancel()
+        await asyncio.sleep(0)
+        assert not pump.done()
+        assert not list(root.glob("budget-closed-*.json"))
+        gate.release.set()
+        await asyncio.gather(publishing, pump, return_exceptions=True)
+        assert hot.write_budget._owners == 0
+        assert len(hot.replay()) == 1
+        assert not list(root.glob("budget-closed-*.json"))
+
+    try:
+        asyncio.run(scenario())
+    finally:
+        gate.release.set()
+        hot.close()
+    assert len(list(root.glob("budget-closed-*.json"))) == 1
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert not reopened.read_only and len(reopened.replay()) == 1
+
+
+def test_close_with_live_owner_cannot_issue_clean_close(tmp_path):
+    from tests.test_live_feed_owned_persistence import ScriptedSupervisor
+
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    hot = LiveBuffer(root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec))
+    feed = LiveFeed(lake=hot)
+    feed.attach(ScriptedSupervisor([]))
+
+    async def scenario():
+        pump = asyncio.create_task(feed.run())
+        await asyncio.sleep(0)
+        hot.close()
+        pump.cancel()
+        await asyncio.gather(pump, return_exceptions=True)
+
+    asyncio.run(scenario())
+    assert not list(root.glob("budget-closed-*.json"))
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert reopened.read_only
+
+
+@pytest.mark.parametrize("gate", ["expiry", "free", "cumulative"])
+def test_clean_close_does_not_bypass_original_restart_admission(tmp_path, monkeypatch, gate):
+    from collections import namedtuple
+
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=1 if gate == "cumulative" else 4)
+    with LiveBuffer(root, retention_days=0, write_budget=buffer_module.HotCacheBudget(root, spec)):
+        pass
+    budget = buffer_module.HotCacheBudget(root, spec)
+    if gate == "expiry":
+        budget.expires = datetime.now(UTC) - timedelta(seconds=1)
+    elif gate == "free":
+        usage = namedtuple("Usage", "total used free")(
+            100_000_000_000, 51_000_000_000, 49_000_000_000
+        )
+        monkeypatch.setattr(buffer_module.shutil, "disk_usage", lambda path: usage)
+    with LiveBuffer.open_bounded_hot(root, budget) as reopened:
+        assert reopened.read_only
+    assert len(list(root.glob("budget-intent-*.json"))) == 1
+
+
+def test_header_without_intents_cannot_adopt_unaccounted_database(tmp_path):
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    buffer_module.HotCacheBudget(root, spec)  # Header exists, but no storage admission took place.
+    seed(root, candles()[:1])
+    with LiveBuffer.open_bounded_hot(root, buffer_module.HotCacheBudget(root, spec)) as reopened:
+        assert reopened.read_only
+        assert len(reopened.replay()) == 1
+    assert not list(root.glob("budget-intent-*.json"))
+
+
+def test_native_session_directory_fsync_failure_precedes_duckdb_io(tmp_path, monkeypatch):
+    import os
+    import stat
+
+    if not hasattr(os, "O_DIRECTORY"):
+        pytest.skip("Native session directory-fsync proof requires POSIX CI")
+    root = tmp_path / "hot"
+    spec = budget_spec(root, operations=4)
+    budget = buffer_module.HotCacheBudget(root, spec)
+    original_write, original_sync = budget._write_once, os.fsync
+    marker_active = False
+
+    def write(path, raw):
+        nonlocal marker_active
+        marker_active = path.name.startswith("budget-session-")
+        try:
+            original_write(path, raw)
+        finally:
+            marker_active = False
+
+    def sync(descriptor):
+        if marker_active and stat.S_ISDIR(os.fstat(descriptor).st_mode):
+            raise OSError("native directory fsync unavailable")
+        return original_sync(descriptor)
+
+    monkeypatch.setattr(budget, "_write_once", write)
+    monkeypatch.setattr(buffer_module.os, "fsync", sync)
+    with LiveBuffer.open_bounded_hot(root, budget) as hot:
+        assert hot.read_only
+        assert not (root / "live").exists()
+    assert len(list(root.glob("budget-intent-*.json"))) == 1

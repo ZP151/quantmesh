@@ -124,3 +124,56 @@ the two scoped source commits after their explicit targeted checks; exact-head
 broad/native CI and publication were never claimed and are not authorized by
 this STOP handoff. All failed evidence, original DB/WAL and consumed intents
 remain retained.
+
+## Reduced durable-admission leaf — Planner restart2026-10-24
+
+Root accepted FINAL R2 STOP and authorized the minimal pre-I/O session/normal
+clean-close contract as an independent reduced leaf on issue218 and the same
+worktree. Prior STOP/source/logs are retained. Plan:
+docs/superpowers/plans/2026-10-24-durable-hot-admission.md.
+ACK03:29:54UTC/11:29:54SGT; bounded90min ending12:59:54SGT. Sole inline writer;
+buffer/feed and tiny tests only, necessary records. No new Goal/host/provider/
+actual DB/peak manufacture/paid/dependency operations. Actual source qualification,
+capture0/financial0/Phase2NOT_STARTED/PRECISE_UNKNOWN unchanged.
+
+Quant: same operational observation scope; new metadata grants no market-data
+rights, continuity, numerical validity or financial/trading authority.
+Verifier: genuine operations4 double-terminal-write-before-create/free recovery/
+fresh reopen test failed at the intended read_only assertion in30-session-red.log
+(1failed/2upstream warnings/2.30s), with original16MB consumed and no stop files.
+This reproduces R2 rather than relying on operations2 cumulative exhaustion.
+
+Implementer: only buffer/feed runtime changed. Startup consumes its full intent
+then fsyncs an immutable open session before DB I/O. Every failure/stop poisons
+the session; a crash leaves its preexisting marker. Normal DB close after all
+feed owners join prepares/fsyncs close-ready, then atomically publishes an
+exclusive closed hard link, with no fallible storage step after publication.
+Lost publication refuses restart. Prior exact sessions/intents must agree; no
+adoption/reset/refund. Header-only unaccounted DB reproduced RED1 (35), GREEN1
+(36). Initial marker/close/crash/tamper contract RED12 (31), then all unit checks
+(32/33/34), with the two initial32 failures due tests expecting failed startup
+intent to be refunded corrected to the original no-refund contract. The real
+operations4 repro now passes, including original archive GET before/after fresh
+read-only reopen and unchanged archive bytes. Original R2 STOP is not erased.
+
+Ruling: directory fsync is required, not silently skipped for activation.
+Production refuses unsupported platforms before DB/intent admission. Windows
+protocol tests explicitly model that single directory-durability capability;
+actual tiny files/DB/child-process os._exit and fault injection still execute.
+Separate test_hot_admission_platform has no such model and verifies actual
+production refusal, canonical GET200 and bad archive404. Native directory-fsync
+proof/failure tests skip explicitly here and remain POSIX CI gates. No native
+Windows durability or production qualification is claimed. Platform guard RED1
+(37), GREEN56/1skip (38); then native-specific proof adds one Windows skip.
+
+Verifier: the one final affected boundary (41-session-final-compatible.log)
+passes310, skips2explicit Windows directory-fsync proofs,6upstream warnings,
+46.12s. Files: market_history_hot_cache, hot_admission_platform, live_buffer,
+live_buffer_lookup, live_feed, live_feed_owned_persistence, live_history and
+workstation. Real accepted pending COMMIT is joined before normal session close;
+premature close with a live owner cannot publish authority. Clean-close failures,
+actual process crash, tampered/foreign/partial receipts, normal clean reopen and
+expiry/free/cumulative restart gates are covered. Initial Ruff formatting errors
+retained (39); changed-file Ruff/format/diff pass (40 and final precommit check).
+No whole-repository/native suite, actual host/DB/provider, CI or production peak
+measurement. Independent reduced-leaf plus whole-boundary review remains pending.

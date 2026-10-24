@@ -913,6 +913,10 @@ class LiveFeed:
         if self.capacity_exhausted:
             self._stopped = True
             return
+        budget = self._lake.write_budget if self._lake is not None else None
+        if budget is not None:
+            budget.claim_owner()
+        healthy = True
         self._loop = asyncio.get_running_loop()
         self._capacity_stop = asyncio.Event()
         self._io_gate = asyncio.Lock()
@@ -928,6 +932,11 @@ class LiveFeed:
             await asyncio.shield(group)
         except LiveCapacityExceeded:
             self.capacity_exhausted = True
+        except asyncio.CancelledError:
+            raise
+        except BaseException:
+            healthy = False
+            raise
         finally:
             self._accepting = False
             self._stopped = True
@@ -938,13 +947,18 @@ class LiveFeed:
             results = await self._join_owned(asyncio.gather(*owned, return_exceptions=True))
             with contextlib.suppress(asyncio.CancelledError):
                 group.exception()
-            for result in results:
-                if isinstance(result, BaseException) and not isinstance(
-                    result, asyncio.CancelledError
-                ):
-                    if self.capacity_exhausted and isinstance(result, LiveCapacityExceeded):
-                        continue
-                    raise result
+            try:
+                for result in results:
+                    if isinstance(result, BaseException) and not isinstance(
+                        result, asyncio.CancelledError
+                    ):
+                        if self.capacity_exhausted and isinstance(result, LiveCapacityExceeded):
+                            continue
+                        healthy = False
+                        raise result
+            finally:
+                if budget is not None:
+                    budget.release_owner(clean=healthy and not self.capacity_exhausted)
 
     async def _wait_capacity_stop(self) -> None:
         assert self._capacity_stop is not None
