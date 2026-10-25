@@ -121,6 +121,7 @@ from quantmesh.research.frozen_experiments import FrozenExperimentCatalog
 from quantmesh.research.realdata_snapshots import SnapshotCatalog
 from quantmesh.research.reports import ReportRegistry
 from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
+from quantmesh.research.spy_replay import ReplayService
 from quantmesh.settings import settings
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -1113,6 +1114,7 @@ def create_workstation_app(
     packet_monitoring: DecisionWatchStore | None = None,
     packet_reviews: DecisionReviewStore | None = None,
     research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
+    spy_replay_service: ReplayService | None = None,
     research_snapshots_root: Path | None = None,
     frozen_experiments_root: Path | None = None,
     host: str | None = None,
@@ -1418,6 +1420,12 @@ def create_workstation_app(
         _register_kill_switch(app)
         _register_spa_serving(app)
 
+    from quantmesh.api.spy_replay import attach_spy_replay_runtime, create_spy_replay_router
+
+    app.state.spy_replay = None
+    app.include_router(create_spy_replay_router(), prefix="/api")
+    if spy_replay_service is not None:
+        attach_spy_replay_runtime(app, spy_replay_service)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app
 
@@ -1825,6 +1833,16 @@ def main(argv: list[str] | None = None) -> None:
         help="opt in to frozen experiment inspection; requires --research-snapshots-root",
     )
     parser.add_argument(
+        "--spy-replay-root",
+        type=Path,
+        help="opt in to bounded historical replay task/report storage",
+    )
+    parser.add_argument(
+        "--spy-replay-input",
+        type=Path,
+        help="operator-only bound v2 freeze and scoped acceptance descriptor",
+    )
+    parser.add_argument(
         "--vnpy-python",
         type=Path,
         help="opt in to synthetic vn.py research using this existing Windows Python runtime",
@@ -1851,6 +1869,21 @@ def main(argv: list[str] | None = None) -> None:
     ):
         parser.add_argument(flag, type=float, help="positive synthetic rehearsal threshold")
     args = parser.parse_args(argv)
+
+    if args.spy_replay_input is not None and args.spy_replay_root is None:
+        parser.error("--spy-replay-input requires --spy-replay-root")
+    if args.spy_replay_root is not None:
+        if settings.environment != "local":
+            parser.error("SPY development replay requires the local environment")
+        if args.demo:
+            demo_root = (args.demo_root or settings.demo_root).resolve()
+            replay_root = args.spy_replay_root.resolve()
+            if (
+                demo_root == replay_root
+                or demo_root in replay_root.parents
+                or replay_root in demo_root.parents
+            ):
+                parser.error("--spy-replay-root must be separate from the resettable demo root")
 
     paper_limits = None
     cap_values = (
@@ -2148,7 +2181,26 @@ def main(argv: list[str] | None = None) -> None:
                 "pinned fixture and writable output paths"
             )
         attach_fixture_runtime(app, manager)
-    uvicorn.run(app, host=host, port=port)
+    spy_service = None
+    if args.spy_replay_root is not None:
+        from quantmesh.api.spy_replay import attach_spy_replay_runtime
+        from quantmesh.research.spy_replay import ReplayInput
+
+        try:
+            replay_input = (
+                ReplayInput.from_descriptor(args.spy_replay_input)
+                if args.spy_replay_input is not None
+                else None
+            )
+            spy_service = ReplayService(args.spy_replay_root, replay_input=replay_input)
+            attach_spy_replay_runtime(app, spy_service)
+        except (OSError, ValueError):
+            parser.error("SPY replay input or persistent root unavailable; no input was qualified")
+    try:
+        uvicorn.run(app, host=host, port=port)
+    finally:
+        if spy_service is not None:
+            spy_service.close()
 
 
 if __name__ == "__main__":

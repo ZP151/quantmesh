@@ -1,5 +1,40 @@
 # Minimal SPY replay implementation plan
 
+## 2026-10-25 authorized offline Phase2 order
+
+The human explicitly directs the original product/backend and UI chats to build
+the asynchronous product adapter/report-decision/UI work offline now. This
+supersedes the old requirement to wait for actual Phase1 PASS before any Phase2
+coding. Real source-use/field/window/action admission and actual-data acceptance
+remain required; no Yahoo substitution or public fixture/qualification flag.
+Issue205, original MINIMAL-DELIVERY-20261022.md SHA d677e47e40909279bfaec2e5aaaa88e071adc09feb8efeef887cb0f1a83791b2
+remains the specification. No repeated brainstorming/design approval.
+
+Backend owns only spy_replay.py/spy_replay_engine.py, api/spy_replay.py, bounded
+workstation opt-in/lifespan hooks and two targeted test files plus own records.
+Base actual main7a0b062fc5f5132a92d5b9261402ef08019a6b8c, branch
+codex/spy-replay-offline. ACK05:52:36Z; DTO06:07:36Z, E2E07:22:36Z,
+hard08:52:36Z. UI owns all frontend/generated assets, publisher owns combined CI.
+Contract output/spy-replay-offline/INTERFACE.json is frozen and sent via root.
+
+- [x] RED then GREEN: preserve three approved SMA100 math functions (AST checked),
+  synth121-session costed strategy/buyhold/cash and independent cashbook checks.
+- [x] RED then GREEN: real ObjectStore/JsonlStore/WriterLease task, immutable
+  original report and decision binding,32/1/UUID idempotency, interrupted reopen.
+- [x] RED then GREEN: five typed API endpoints, strict public DTO, qualified
+  v2 freeze plus trusted external scoped acceptance only; opt-in lifecycle/CLI.
+- [x] Targeted two-file checks: final38passed/6 existing warnings19.96s, including
+  separate Python-process recovery; scoped lint/format/diff. No old suites/CI.
+- [x] One independent slice review: Standards0, Spec1P2, original NOT_READY.
+  One bounded correction: reject residual terminal shares before publication;
+  four meaningful REDs then GREEN. No retrospective independent READY claim.
+- [x] Final exact source/tree and engineering-vs-real-data handoff to root.
+
+No new provider/SDK/network/data/model/dependency/environment/server effects.
+Test inputs are trusted internal synthetic121-session engineering evidence only.
+No new generic job platform or change to existing fixture/PG/vn.py/DecisionPacket.
+All failures retained; no deletion of ignored evidence or shared board updates.
+
 ## Approved P1 pre/post correction —2026-10-24
 
 Root approved diagnosis ea34bbd9406a84c552aecfa70e5c8b2351cf6d7c509e5c52f49a0c4834d777d9.
