@@ -13,6 +13,7 @@ from quantmesh.research.spy_replay import (
     DecisionRequest,
     ReplayError,
     ReplayJob,
+    ReplayJobRead,
     ReplayOptions,
     ReplayRequest,
     digest,
@@ -101,9 +102,9 @@ def create_spy_replay_router():
         response.status_code = 201 if created else 200
         return job
 
-    @router.get("/jobs/{job_id}", response_model=ReplayJob)
+    @router.get("/jobs/{job_id}", response_model=ReplayJobRead)
     def status(job_id: UUID, request: Request):
-        return authority(request).get(job_id)
+        return authority(request).read(job_id)
 
     @router.get("/jobs/{job_id}/artifact")
     def artifact(job_id: UUID, request: Request, kind: Literal["report", "decision"] = "report"):
