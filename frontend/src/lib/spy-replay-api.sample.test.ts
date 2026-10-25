@@ -52,9 +52,25 @@ it('validates the GET-only view while leaving POST responses on the original job
   expect((await spyReplayApi.get(id)).sample_freshness_view?.lag_complete_sessions).toBe(3)
   expect((await spyReplayApi.submit(id, pins)).job_id).toBe(id)
 })
+// Exact successful GET captured from the publisher's readonly8881 preview;
+// missing legacy role does not erase a known lag from A's original window.
+const actualLegacyRead = {"schema_version":1,"job_id":"37080fae-c01f-4ac3-988e-43c44ca0d8db","request_digest":"e8b0b2b72549aa916320b9897348e6253e681c8433c688ecfb22453bfe6d7558","request":{"snapshot_digest":"683ab1a12cef74aaf0dc34f6b90970fc7a9dba185ebed2c617a30c7091cb43e6","protocol_digest":"cb737650823a5fc1eed3b55e25c01a5d3e49f3ffe5ef000c669fcbac3345724e"},"state":"succeeded","created_at":"2026-10-25T06:29:23.260834Z","updated_at":"2026-10-25T06:29:24.201717Z","completed_at":"2026-10-25T06:29:23.381039Z","report":{"algorithm":"sha256","digest":"ee2445e78f8d67dfc30074a4c257387f881382fd8b56a8b63b19607dd858b472","media_type":"application/json","byte_length":54413},"decision":{"request_digest":"e8b0b2b72549aa916320b9897348e6253e681c8433c688ecfb22453bfe6d7558","report_digest":"ee2445e78f8d67dfc30074a4c257387f881382fd8b56a8b63b19607dd858b472","disposition":"watch","reason":"Engineering integration verified; independent real-data and financial qualification remain insufficient.","schema_version":1,"decision_key":"47b01e79-ef1d-4100-b61a-d334f1c3cfa4","job_id":"37080fae-c01f-4ac3-988e-43c44ca0d8db","snapshot_digest":"683ab1a12cef74aaf0dc34f6b90970fc7a9dba185ebed2c617a30c7091cb43e6","protocol_digest":"cb737650823a5fc1eed3b55e25c01a5d3e49f3ffe5ef000c669fcbac3345724e","created_at":"2026-10-25T06:29:24.196216Z"},"decision_ref":{"algorithm":"sha256","digest":"64014de96c909a5f9030f118660e0a47e42311eee7016da66bb654d0777b0d89","media_type":"application/json","byte_length":640},"error_code":null,"financial_qualification":"INSUFFICIENT","paper_allowed":false,"sample_freshness_view":{"read_at_utc":"2026-10-25T07:31:42.850703Z","evaluated_snapshot_digest":"683ab1a12cef74aaf0dc34f6b90970fc7a9dba185ebed2c617a30c7091cb43e6","calendar_version":"exchange-calendars:4.13.2:XNYS","source_grace_minutes":30,"latest_complete_session":"2026-10-23","lag_complete_sessions":3,"applicability":"unknown","reason":"legacy_sample_role_unknown"}}
+it('reads the actual saved v1 job with unknown role and known original-window lag without losing its report or decision', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(actualLegacyRead)))
+  const saved = await spyReplayApi.get(actualLegacyRead.job_id)
+  expect(saved.state).toBe('succeeded')
+  expect(saved.sample_freshness_view).toMatchObject({ evaluated_snapshot_digest: '683ab1a12cef74aaf0dc34f6b90970fc7a9dba185ebed2c617a30c7091cb43e6', lag_complete_sessions: 3, applicability: 'unknown', reason: 'legacy_sample_role_unknown' })
+  expect(saved.report?.digest).toBe('ee2445e78f8d67dfc30074a4c257387f881382fd8b56a8b63b19607dd858b472')
+  expect(saved.decision_ref?.digest).toBe('64014de96c909a5f9030f118660e0a47e42311eee7016da66bb654d0777b0d89')
+  expect(saved.paper_allowed).toBe(false)
+})
+it.each([-1, 0.5, '3', true])('still rejects malformed lag %j on the actual unknown-role v1 GET', lag => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ ...actualLegacyRead, sample_freshness_view: { ...actualLegacyRead.sample_freshness_view, lag_complete_sessions: lag } })))
+  return expect(spyReplayApi.get(actualLegacyRead.job_id)).rejects.toMatchObject({ code: 'invalid_response' })
+})
 it.each([
   { evaluated_snapshot_digest: 'e'.repeat(64) }, { lag_complete_sessions: -1 }, { lag_complete_sessions: 0.5 },
-  { applicability: 'unknown', reason: 'calendar_unavailable', lag_complete_sessions: 0 },
+  { applicability: 'unknown', reason: 'current', lag_complete_sessions: 0 },
   { applicability: 'recent_diagnostic', reason: 'calendar_unavailable', lag_complete_sessions: 0 },
 ])('does not render an unbound or fabricated read-time age %j', delta => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ ...job, sample_freshness_view: { ...freshness, ...delta } })))

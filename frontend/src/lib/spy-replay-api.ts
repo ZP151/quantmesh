@@ -131,7 +131,7 @@ function sampleFreshness(v: unknown, current: ReplayJob): ReplaySampleFreshness 
     || !(v.source_grace_minutes === null || v.source_grace_minutes === 30) || !(v.latest_complete_session === null || session(v.latest_complete_session)) || !(v.lag_complete_sessions === null || (Number.isSafeInteger(v.lag_complete_sessions) && Number(v.lag_complete_sessions) >= 0))
     || !['fixed_regression_not_required','historical_diagnostic','recent_diagnostic','unknown'].includes(String(v.applicability)) || !reasons.includes(String(v.reason))) return invalid()
   const expectedApplicability = v.reason === 'fixed_sample_no_daily_refresh' ? 'fixed_regression_not_required' : v.reason === 'historical_window_not_recency_target' ? 'historical_diagnostic' : ['current','lags_latest_complete_session'].includes(String(v.reason)) ? 'recent_diagnostic' : 'unknown'
-  if (v.applicability !== expectedApplicability || (v.applicability === 'unknown' && v.lag_complete_sessions !== null)
+  if (v.applicability !== expectedApplicability
     || (v.reason === 'fixed_sample_no_daily_refresh' && v.applicability !== 'fixed_regression_not_required')
     || (v.reason === 'historical_window_not_recency_target' && v.applicability !== 'historical_diagnostic')
     || (v.reason === 'current' && (v.applicability !== 'recent_diagnostic' || v.lag_complete_sessions !== 0 || v.latest_complete_session === null))
