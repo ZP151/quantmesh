@@ -123,7 +123,11 @@ Both accepted by root as bounded P2 defects, not architecture expansion.
  30-final-ruff/31-final-format/32-final-diffcheck:PASS;7 files already formatted.
 - Root requested the original R1 reviewer to check only these known corrections,
   added regressions and final delta as round2; no new fresh review or third round.
-  Round2 result pending before integration release. No feed/buffer changes.
+  Round2 returned known-scope READY, both P2 resolved, no remaining known finding;
+  independently5 PASS/21deselected0.31s. Verified corrected source
+  5954cd4822d8e8e541b86e55499bea829bf95798/tree624ec1bfd967b9ecdd764a091d854e985a20c229.
+  Reports:output/market-data-only/review-r2-known.md and.json. OriginalR1 retained.
+  No feed/buffer changes. No third round or fresh structural re-review dispatched.
 
 ### Review judgments / deferred gates
 
@@ -146,3 +150,21 @@ No deferred Minor findings. Each declined behavior remains a gate owned by main:
 
 Commits bypass broad local hooks with core.hooksPath=NUL under root's targeted-only
 instruction. This is a scoped candidate handoff, not release/native acceptance.
+
+## Final leaf handoff
+
+Source/known-correction gate READY. Author64 targeted checks pass; original fresh
+review54 new checks pass and original reviewer known-fix5 pass. Scoped static
+checks pass. Same-cache final controlled cold-read examples (FINAL-EXAMPLE-*.json,
+33-final-cold-example.log) reopen only tmp29 actual test cache:two different candle
+targets, HTTP history/workspace, blocked mutator403, all source-file hashes
+unchanged by reads, exact owned cache closed. These are engineering examples.
+
+Frozen public interface SHA remainsf7278698f20f676801058395044bdea4ca7f8e4ce855d9d0c7543ccd4ce628c0.
+Final immutable output/market-data-only/HANDOFF.json binds final docs checkpoint,
+corrected runtime commit/tree, source hashes, independent reports, all failed and
+passing evidence pointers, profile, limitations and writer release. Sole publisher
+may integrate this exact backend with separately frozen UI; main/operator owns
+native two-new-completed-minute/chart/stop/close/cold-read acceptance and broad CI.
+This does not mark the original independent-research Goal complete, qualify a
+dataset, promote a strategy or enable trading. No further leaf source work remains.

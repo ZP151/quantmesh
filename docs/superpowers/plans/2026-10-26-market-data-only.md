@@ -50,7 +50,8 @@ before any effect. Default/ordinary --live health and subscription behavior stay
   durable acknowledgement or manufactured provider finality/PIT.
 - [x] Actual CLI opt-in/refusal/failed-launch cleanup tests plus only necessary
   existing default compatibility cases; targeted scoped Ruff/format/diff checks.
-- [ ] One independent reviewer; at most one aggregate correction per round,
+- [x] One independent reviewer; one aggregate correction and root-requested
+  original-reviewer known-fix round2 READY (no further structural review),
   final immutable source/tree/hashes/lifecycle/interface handoff, stop.
 
 Checks use process-local PYTHONPATH=this-worktree/src and Python313, selecting
@@ -87,3 +88,6 @@ native continuously advancing chart acceptance.90seconds is observational.
    Refused over-limit windows do not advance the attempt watermark. Ordinary
    future snapshots still run with KNOWN_GAP; no false healed cursor is created.
    Root requested original reviewer round2 on these known corrections only.
+   Round2 verifies5954cd4822d8e8e541b86e55499bea829bf95798/tree
+   624ec1bfd967b9ecdd764a091d854e985a20c229:both resolved; independent5PASS0.31s.
+   Final source is released to sole publisher; declined native/research gates stay.
