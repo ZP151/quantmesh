@@ -1051,6 +1051,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research/spy-replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Options */
+        get: operations["options_api_research_spy_replay_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/spy-replay/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit */
+        post: operations["submit_api_research_spy_replay_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/spy-replay/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_api_research_spy_replay_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/spy-replay/jobs/{job_id}/artifact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Artifact */
+        get: operations["artifact_api_research_spy_replay_jobs__job_id__artifact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/spy-replay/jobs/{job_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide */
+        post: operations["decide_api_research_spy_replay_jobs__job_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/risk": {
         parameters: {
             query?: never;
@@ -2624,6 +2709,20 @@ export interface components {
             /** Report Id */
             report_id: string;
         };
+        /** DecisionRequest */
+        DecisionRequest: {
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "reject" | "watch";
+            /** Reason */
+            reason: string;
+            /** Report Digest */
+            report_digest: string;
+            /** Request Digest */
+            request_digest: string;
+        };
         /** DecisionReviewRecord */
         DecisionReviewRecord: {
             classification: components["schemas"]["ReviewClassification"];
@@ -4151,6 +4250,164 @@ export interface components {
          * @enum {string}
          */
         QualityStatus: "pass" | "fail" | "not-due" | "unavailable";
+        /** ReplayDecision */
+        ReplayDecision: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decision Key */
+            decision_key: string;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "reject" | "watch";
+            /** Job Id */
+            job_id: string;
+            /** Protocol Digest */
+            protocol_digest: string;
+            /** Reason */
+            reason: string;
+            /** Report Digest */
+            report_digest: string;
+            /** Request Digest */
+            request_digest: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Snapshot Digest */
+            snapshot_digest: string;
+        };
+        /** ReplayInputSummary */
+        ReplayInputSummary: {
+            /** As Of Utc */
+            as_of_utc: string;
+            /**
+             * Evidence Kind
+             * @enum {string}
+             */
+            evidence_kind: "reviewed_opend_freeze_v2" | "engineering_fixture";
+            /** Frozen At Utc */
+            frozen_at_utc: string;
+            /**
+             * Interval
+             * @default 1d
+             * @constant
+             */
+            interval: "1d";
+            /** Limitations */
+            limitations: string[];
+            /** Observation End */
+            observation_end: string;
+            /** Observation Start */
+            observation_start: string;
+            /** Protocol Digest */
+            protocol_digest: string;
+            /** Snapshot Digest */
+            snapshot_digest: string;
+            /**
+             * Symbol
+             * @default SPY
+             * @constant
+             */
+            symbol: "SPY";
+            /** Warmup Start */
+            warmup_start: string;
+        };
+        /** ReplayJob */
+        ReplayJob: {
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            decision?: components["schemas"]["ReplayDecision"] | null;
+            decision_ref?: components["schemas"]["ObjectRef"] | null;
+            /** Error Code */
+            error_code?: ("computation_failed" | "artifact_invalid" | "interrupted") | null;
+            /**
+             * Financial Qualification
+             * @default INSUFFICIENT
+             * @constant
+             */
+            financial_qualification: "INSUFFICIENT";
+            /** Job Id */
+            job_id: string;
+            /**
+             * Paper Allowed
+             * @default false
+             * @constant
+             */
+            paper_allowed: false;
+            report?: components["schemas"]["ObjectRef"] | null;
+            request: components["schemas"]["ReplayRequest"];
+            /** Request Digest */
+            request_digest: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "running" | "succeeded" | "failed" | "interrupted";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ReplayOptions */
+        ReplayOptions: {
+            /** Configured */
+            configured: boolean;
+            /**
+             * Financial Qualification
+             * @default INSUFFICIENT
+             * @constant
+             */
+            financial_qualification: "INSUFFICIENT";
+            /** Fixed */
+            fixed?: {
+                [key: string]: unknown;
+            };
+            input: components["schemas"]["ReplayInputSummary"] | null;
+            /** Limits */
+            limits?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Paper Allowed
+             * @default false
+             * @constant
+             */
+            paper_allowed: false;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /** Unavailable Reason */
+            unavailable_reason: ("not_configured" | "input_not_qualified") | null;
+        };
+        /** ReplayRequest */
+        ReplayRequest: {
+            /** Protocol Digest */
+            protocol_digest: string;
+            /** Snapshot Digest */
+            snapshot_digest: string;
+        };
         /** ResearchJobOptions */
         ResearchJobOptions: {
             /** Datasets */
@@ -6492,6 +6749,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobRecord"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    options_api_research_spy_replay_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayOptions"];
+                };
+            };
+        };
+    };
+    submit_api_research_spy_replay_jobs_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplayRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_api_research_spy_replay_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    artifact_api_research_spy_replay_jobs__job_id__artifact_get: {
+        parameters: {
+            query?: {
+                kind?: "report" | "decision";
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_api_research_spy_replay_jobs__job_id__decision_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayJob"];
                 };
             };
             /** @description Validation Error */
