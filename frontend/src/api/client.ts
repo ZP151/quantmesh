@@ -4367,6 +4367,58 @@ export interface components {
              */
             updated_at: string;
         };
+        /**
+         * ReplayJobRead
+         * @description GET-only extension; POST responses and stored records stay ReplayJob.
+         */
+        ReplayJobRead: {
+            /** Completed At */
+            completed_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            decision?: components["schemas"]["ReplayDecision"] | null;
+            decision_ref?: components["schemas"]["ObjectRef"] | null;
+            /** Error Code */
+            error_code?: ("computation_failed" | "artifact_invalid" | "interrupted") | null;
+            /**
+             * Financial Qualification
+             * @default INSUFFICIENT
+             * @constant
+             */
+            financial_qualification: "INSUFFICIENT";
+            /** Job Id */
+            job_id: string;
+            /**
+             * Paper Allowed
+             * @default false
+             * @constant
+             */
+            paper_allowed: false;
+            report?: components["schemas"]["ObjectRef"] | null;
+            request: components["schemas"]["ReplayRequest"];
+            /** Request Digest */
+            request_digest: string;
+            sample_freshness_view: components["schemas"]["SampleFreshnessView"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "running" | "succeeded" | "failed" | "interrupted";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** ReplayOptions */
         ReplayOptions: {
             /** Configured */
@@ -4490,6 +4542,35 @@ export interface components {
              * @default 900
              */
             timeout_seconds: number;
+        };
+        /** SampleFreshnessView */
+        SampleFreshnessView: {
+            /**
+             * Applicability
+             * @default unknown
+             * @enum {string}
+             */
+            applicability: "fixed_regression_not_required" | "historical_diagnostic" | "recent_diagnostic" | "unknown";
+            /** Calendar Version */
+            calendar_version?: string | null;
+            /** Evaluated Snapshot Digest */
+            evaluated_snapshot_digest: string;
+            /** Lag Complete Sessions */
+            lag_complete_sessions?: number | null;
+            /** Latest Complete Session */
+            latest_complete_session?: string | null;
+            /**
+             * Read At Utc
+             * Format: date-time
+             */
+            read_at_utc: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "fixed_sample_no_daily_refresh" | "historical_window_not_recency_target" | "current" | "lags_latest_complete_session" | "legacy_sample_role_unknown" | "calendar_unavailable" | "report_unavailable" | "input_identity_mismatch" | "sample_end_after_latest_complete";
+            /** Source Grace Minutes */
+            source_grace_minutes?: number | null;
         };
         /**
          * ScenarioLabSnapshot
@@ -6834,7 +6915,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReplayJob"];
+                    "application/json": components["schemas"]["ReplayJobRead"];
                 };
             };
             /** @description Validation Error */
