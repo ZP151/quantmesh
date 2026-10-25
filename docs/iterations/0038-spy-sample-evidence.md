@@ -84,3 +84,38 @@ This leaf owns no frontend/generated assets, combined CI, publication or server.
 Local commit hooks will be bypassed only after scoped checks, not represented as
 broad-hook success. UI integration and new release remain sole publisher's work.
 No old38/37/20 suites are repeated. Root owns continuing Goal/automation.
+
+## Independent R1 and final evidence handoff
+
+Fresh-context reviewer froze9d9c791c977fb33e69a9a5d5d4f53c4393e4ab99 /
+tree e21c8b82b91dee1125fa0d61062f0eae048a19b7. Verdict READY for this bounded
+offline backend delta: Standards0 Important/Critical; Spec0 Important/Critical.
+Independent targeted new-file run:23passed/6 dependency warnings,6.77s,exit0.
+Original report output/spy-sample-evidence/review-r1.md SHA
+b19fa9b288325772c5f09b49fb0fa024fcf1f99b1f83d1175cbfa9be1233ae41;
+raw review-r1-tests.log SHA
+2df5e1721e1e2c7d99f3371274820ec56d259d342b7bb39d0b5ba17064cbdada.
+No source correction requested, no second round needed or claimed. Source hashes
+are recorded in review-r1-evidence.json; final checkpoint changes only own docs.
+
+As requested by root/UI, actual v2 report and actual in-process ASGI GET response
+were read from the already-produced F0 test case, not another numerical run.
+Job33a681e4-b4f9-42d9-9981-6f553b65df0c; actual report original SHA
+dac34c8c92c47548d480fab775484d67687a6faf69fca6f868c497e0ad6a10e6,
+54291bytes. Actual GET JSON SHA
+57f5ded972958d6f5d6f2cbc0ac7a4b41ee3ef2488bf9ccda9516ba15b9f1878,
+1159bytes. Both200 responses; original header/hash verified, math sentinel0calls,
+original ledger SHA unchanged. Evidence construction time07:13:14.920715Z;
+controlled read clock actually observed at read start07:16:06.256688Z. Exact
+original object path, refs, clocks and file hashes are in
+output/spy-sample-evidence/ACTUAL-READ-RECEIPT.json; safe byte examples are
+ACTUAL-REPORT-v2.json and ACTUAL-GET-job-v2.json. Earlier EXAMPLE-* artifacts
+explicitly remain type-serialization examples, not raw HTTP captures.
+
+Reviewer declines combined UI/browser/release, actual source rights/independent
+receipt truth, PIT/finality, real OpenD/server, financial/OOS and Paper/live
+judgments. This leaf shares those limits. Original math source unchanged;
+no current PR226 source/UI/generated changes, push/CI/server/dependency/data
+actions occurred. Final local docs commit still explicitly bypasses hooks after
+scoped checks. Final immutable HANDOFF.json records exact actual head/tree and
+all artifacts for root and sole publisher. Continuing product Goal remains open.

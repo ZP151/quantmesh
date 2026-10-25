@@ -56,8 +56,9 @@ already exist in report JSON. UI owner exposes them with correct nonannualized u
   zero/null/cost semantics through original arithmetic in one targeted new test.
 - [x] New targeted checks cover real stored legacy v1 bytes/decision, cold B/A,
   no rerun, clock boundaries/version unknown and public claim refusal.
-- [ ] Scoped Ruff/format/diff; AST/source provenance; at most two independent
-  review rounds and one aggregate correction; coherent commit and immutable handoff.
+- [x] Scoped Ruff/format/diff and AST/source provenance. One independent R1 READY;
+  23new targeted tests independently pass, no source correction requested.
+  Coherent runtime commit plus final docs checkpoint and immutable handoff.
 
 Command: process-local PYTHONPATH=this-worktree/src, Python313 -m pytest
 tests/test_spy_sample_evidence.py -q --tb=short --basetemp
