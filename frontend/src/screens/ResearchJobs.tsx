@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { api, type ResearchJobOptions, type ResearchJobRecord, type ResearchJobRequest } from '@/lib/api'
 import { LocalCsvPlanning } from './LocalCsvPlanning'
 import { VnpyFixturePanel } from './VnpyFixturePanel'
+import { SpyReplayPanel } from './SpyReplayPanel'
 
 // Operate: extend the incumbent black/green workstation. One configuration column,
 // one durable status/report column. Fixture truth, nonzero costs and lineage stay
@@ -75,7 +76,10 @@ function unavailable(value: number | null | undefined): string {
 const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
 
 export function ResearchJobsScreen() {
-  const [engine, setEngine] = useState('baseline')
+  const [engine, setEngine] = useState(() => {
+    const query = new URLSearchParams(globalThis.location?.search)
+    return query.get('engine') === 'spy-replay' || query.has('spy_job') ? 'spy-replay' : 'baseline'
+  })
   const snapshotId = new URLSearchParams(globalThis.location?.search).get('snapshot')
   if (snapshotId !== null) return <LocalCsvPlanning snapshotId={snapshotId} />
   return <>
@@ -86,9 +90,10 @@ export function ResearchJobsScreen() {
         value={engine} onChange={event => setEngine(event.target.value)}>
         <option value="baseline">QuantMesh registered baselines</option>
         <option value="vnpy">vn.py official strategies · fixture experiment</option>
+        <option value="spy-replay">SPY · SMA100 historical replay</option>
       </select>
     </div>
-    {engine === 'vnpy' ? <VnpyFixturePanel /> : <BaselineResearchJobsScreen />}
+    {engine === 'spy-replay' ? <SpyReplayPanel /> : engine === 'vnpy' ? <VnpyFixturePanel /> : <BaselineResearchJobsScreen />}
   </>
 }
 
