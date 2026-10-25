@@ -94,8 +94,55 @@ suites, CI, native filesystem quota or external provider tests run by this leaf.
 
 ## Reviewer / final status
 
-Source freeze after scoped formatting and59-case GREEN; fresh independent review
-pending. Review and any known correction will be appended before final handoff.
+Initial source freeze c9622c5da4581413e53838dae8e7bc4d00cf2b16, tree
+ee93f06377155200c23c7280d239518e358384c5 after59-case GREEN. One fresh independent
+R1 returned NOT_READY with two Important/P2 findings;54 new cases independently
+PASS in9.86s. Immutable reports:output/market-data-only/review-r1.md and.json.
 Review covers sampling clocks/finite attempts, guard scope, durable cursor and
 normal/capacity/in-flight shutdown, default compatibility and source ownership.
 Native chart/server acceptance remains with main/operator after sole publication.
+
+### One aggregate correction / known round2
+
+R1: over-limit refusal advanced attempted-through, allowing a second reconnect to
+request a truncated tail. R2: disconnect before first REST discarded the known
+observed baseline, permitting pre-session or truncated initial recovery.
+Both accepted by root as bounded P2 defects, not architecture expansion.
+
+-26-review-corrections-red:all5 new cases failed against frozen c9622c5, covering
+  durable/failed initial target then two consecutive long reconnects, plus first
+  disconnect in same minute/within one completed minute/beyond horizon.
+- Fix in hyperliquid.py only: retain initial observed baseline independently of
+  resettable WS/current and actual-attempt watermark; screen entire known range
+  before attempted-slot filtering, and do not mark refused ranges attempted.
+  Future ordinary snapshots remain possible and explicitly KNOWN_GAP.
+-27 retained two test-only enum-string mistakes after three behavior cases passed;
+  use actual ContinuityState enum in new assertions and existing in-flight oracle.
+ 28-review-corrections-green:5 PASS/21deselected0.30s.
+-29-final-targeted-compat:64 PASS (59new+5named existing),6 existing warnings11.93s.
+ 30-final-ruff/31-final-format/32-final-diffcheck:PASS;7 files already formatted.
+- Root requested the original R1 reviewer to check only these known corrections,
+  added regressions and final delta as round2; no new fresh review or third round.
+  Round2 result pending before integration release. No feed/buffer changes.
+
+### Review judgments / deferred gates
+
+No deferred Minor findings. Each declined behavior remains a gate owned by main:
+
+1. Native quota, peak, fsync and prepared mount: controlled Windows evidence only;
+   physical containment remains unproved until operator acceptance (risk: disk).
+2. Actual provider rate, availability/finality: no external calls; display partial
+   observations with unknown finality (risk: incomplete or later revised bars).
+3. Wire-byte and total shutdown bound: no new guarantee; synchronous request is
+   joined before close (risk: request/loop delay until transport returns).
+4. UI/client/bundle/native two-minute chart: separate frozen UI and sole publisher/
+   operator acceptance (risk: source works but merged UI/native route may fail).
+5. Rights/redistribution: no new copied source/dependency; data/source qualification
+   separate (risk: unapproved redistribution; no such promotion by this leaf).
+6. PIT/OOS/SPY/paper/live promotion: observations do not qualify research or trading
+   (risk: biased research if someone ignores these explicit limitations).
+7. Broad CI/default native runtime: targeted checks only under root's leaf scope;
+   release gates still required (risk: untested broader integration regression).
+
+Commits bypass broad local hooks with core.hooksPath=NUL under root's targeted-only
+instruction. This is a scoped candidate handoff, not release/native acceptance.

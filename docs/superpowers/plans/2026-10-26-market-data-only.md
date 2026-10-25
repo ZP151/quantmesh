@@ -48,7 +48,7 @@ before any effect. Default/ordinary --live health and subscription behavior stay
   exact target windows and actual request/receipt clocks, finite reconnect and
   failed-slot attempt watermarks, same-cache persistence/close accounting. No early
   durable acknowledgement or manufactured provider finality/PIT.
-- [ ] Actual CLI opt-in/refusal/failed-launch cleanup tests plus only necessary
+- [x] Actual CLI opt-in/refusal/failed-launch cleanup tests plus only necessary
   existing default compatibility cases; targeted scoped Ruff/format/diff checks.
 - [ ] One independent reviewer; at most one aggregate correction per round,
   final immutable source/tree/hashes/lifecycle/interface handoff, stop.
@@ -81,3 +81,9 @@ native continuously advancing chart acceptance.90seconds is observational.
    UI, licensing/PIT, out-of-sample/paper evidence and broad CI remain separate gates.
 6. Root terminated Stooq cashbook qualification; no SPY research job or fixture
    substitute is introduced by this BTC engineering slice.
+7. R1 identified two recovery bookkeeping defects. Five new cases failed against
+   c9622c5, then passed after retaining the observed baseline across disconnects
+   and screening the whole known horizon before attempted-slot suppression.
+   Refused over-limit windows do not advance the attempt watermark. Ordinary
+   future snapshots still run with KNOWN_GAP; no false healed cursor is created.
+   Root requested original reviewer round2 on these known corrections only.

@@ -6,7 +6,7 @@ import pytest
 
 from quantmesh.hyperliquid.errors import HyperliquidProtocolError
 from quantmesh.live import hyperliquid as hl
-from quantmesh.live.contract import UpdateKind
+from quantmesh.live.contract import ContinuityState, UpdateKind
 from quantmesh.live.supervisor import ScriptedVenueTransport
 
 AT = datetime(2026, 10, 25, 16, tzinfo=UTC)
@@ -228,3 +228,42 @@ def test_failed_known_slot_does_not_allow_truncating_a_long_reconnect_gap():
     source.resync(AT + timedelta(minutes=10))
     assert len(rest.calls) == 1
     assert source.observation_issue == "recovery_limit"
+
+
+@pytest.mark.parametrize("durable", [False, True])
+def test_repeated_reconnect_cannot_shrink_a_refused_known_gap(durable):
+    rest = Rest(error=not durable)
+    source, _ = supervisor(rest, limit=2)
+    source.on_open(AT)
+    source.on_frame(frame(AT), AT)
+    source.on_frame(frame(AT + timedelta(minutes=1)), AT + timedelta(minutes=1, seconds=2))
+    observed = [u for u in source.drain() if u.kind is UpdateKind.CANDLE]
+    source.on_persisted(observed)
+    assert ("BTC" in source._last_candle_open) is durable
+    rest.error = False
+    source.on_disconnect(AT + timedelta(minutes=1, seconds=5))
+    assert source.resync(AT + timedelta(minutes=10)) == []
+    assert source.resync(AT + timedelta(minutes=11)) == []
+    assert len(rest.calls) == 1 and source.observation_issue == "recovery_limit"
+    # Refusing truncated reconnect recovery must not disable ordinary future
+    # observations; they remain partial KNOWN_GAP evidence, never a healed cursor.
+    source.on_frame(frame(AT + timedelta(minutes=12)), AT + timedelta(minutes=12, seconds=2))
+    assert len(rest.calls) == 2 and rest.calls[-1][2] == AT + timedelta(minutes=11)
+    later = [u for u in source.drain() if u.kind is UpdateKind.CANDLE]
+    assert len(later) == 1 and later[0].continuity is ContinuityState.KNOWN_GAP
+
+
+@pytest.mark.parametrize("seconds, expected_count", [(20, 0), (60, 1), (600, 0)])
+def test_first_observed_minute_survives_disconnect_before_any_rest(seconds, expected_count):
+    rest = Rest()
+    source, _ = supervisor(rest, limit=2)
+    source.on_open(AT)
+    source.on_frame(frame(AT), AT + timedelta(seconds=2))
+    assert rest.calls == [] and source._last_candle_open == {}
+    source.on_disconnect(AT + timedelta(seconds=10))
+    recovered = source.resync(AT + timedelta(seconds=seconds))
+    assert len(recovered) == expected_count and len(rest.calls) == expected_count
+    if expected_count:
+        assert rest.calls[0][2:] == (AT, AT + timedelta(minutes=1) - timedelta(milliseconds=1))
+    elif seconds > 60:
+        assert source.observation_issue == "recovery_limit"

@@ -12,7 +12,7 @@ from quantmesh.api.workstation import create_workstation_app
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.live import supervisor as supervisor_module
 from quantmesh.live.buffer import HotCacheBudget, LiveBuffer
-from quantmesh.live.contract import UpdateKind
+from quantmesh.live.contract import ContinuityState, UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.hyperliquid import CandleObservation, HyperliquidVenueSupervisor
 from tests.test_hyperliquid_candle_only import frame, row
@@ -302,7 +302,11 @@ def test_shutdown_during_synchronous_rest_joins_request_before_cache_close(
         # Conservative cursor omission is safe; acknowledgement without COMMIT is not.
         acked = [u for u in acknowledged if u.kind is UpdateKind.CANDLE]
         assert {u.source_event_id for u in acked} <= {u.source_event_id for u in rows}
-        eligible = [u for u in acked if u.continuity.value not in {"known_gap", "unrecoverable"}]
+        eligible = [
+            u
+            for u in acked
+            if u.continuity not in {ContinuityState.KNOWN_GAP, ContinuityState.UNRECOVERABLE}
+        ]
         assert ("BTC" in source._last_candle_open) == bool(eligible)
         if eligible:
             assert source._last_candle_open["BTC"] == eligible[-1].data_time

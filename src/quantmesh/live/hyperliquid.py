@@ -170,6 +170,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         self.resync_request_limit = candle_recovery_limit if candle_only else _RESYNC_MAX_CANDLES
         self.observation_issue = None
         self._sample_current_open = None
+        self._observation_baseline = None
         self._attempted_through = None
         self._mode_last_status = None
         self._rest = rest
@@ -761,6 +762,10 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             raise ValueError
         if bar.timestamp != current:
             return []  # an old interim is never promoted by elapsed local time
+        if self._observation_baseline is None:
+            # Preserve the session's known start across disconnects, including
+            # the interval before its first completed target/REST attempt.
+            self._observation_baseline = current
         previous = self._sample_current_open
         self._sample_current_open = current
         if previous is None or current <= previous:
@@ -771,6 +776,15 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         return self._observe_window(target, target, now)
 
     def _observe_window(self, start, final_open, now, *, recovery=False):
+        if start > final_open:
+            return []
+        if self._observation_baseline is None:
+            self._observation_baseline = start
+        # Check the entire known gap before suppressing already attempted slots.
+        # Refusal is not a network attempt and must never shrink future recovery.
+        if _minute_open_count(start, final_open) > self.resync_request_limit:
+            self._observation_problem("recovery_limit", now)
+            return []
         if self._attempted_through is not None:
             start = max(start, self._attempted_through + timedelta(minutes=1))
         if start > final_open:
@@ -779,9 +793,6 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         # Mark the entire attempted target range before the network call, even
         # on failure. Same-slot frames/reconnect cannot amplify automatic intent.
         self._attempted_through = final_open
-        if count > self.resync_request_limit:
-            self._observation_problem("recovery_limit", now)
-            return []
         end = final_open + timedelta(minutes=1) - timedelta(milliseconds=1)
         try:
             observation = self._rest.observe_candles("BTC", "1m", start=start, end=end)
@@ -864,11 +875,12 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         current = _floor_minute(now)
         self._sample_current_open = current
         durable = self._last_candle_open.get("BTC")
-        known = durable if durable is not None else self._attempted_through
         start = (
-            known + timedelta(minutes=1)
-            if known is not None
-            else (current - timedelta(minutes=self.resync_request_limit))
+            durable + timedelta(minutes=1)
+            if durable is not None
+            else self._observation_baseline
+            if self._observation_baseline is not None
+            else current - timedelta(minutes=self.resync_request_limit)
         )
         return self._observe_window(start, current - timedelta(minutes=1), now, recovery=True)
 
