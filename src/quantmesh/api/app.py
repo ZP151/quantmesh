@@ -140,6 +140,9 @@ def observability_router() -> APIRouter:
             if hasattr(request.app.state, "live")
             else "operator"
         )
+        if getattr(request.app.state, "market_data_only", False):
+            payload["market_data_only"] = True
+            payload["market_data_acquisition"] = request.app.state.market_data_status()
         return payload
 
     @router.get("/account")
