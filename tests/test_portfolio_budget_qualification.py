@@ -320,6 +320,85 @@ def test_stdout_stderr_and_nonzero_exit_are_retained(verifier, tmp_path):
     assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="native registration pidfd")
+@pytest.mark.parametrize(
+    "transition",
+    ["terminal-empty", "live-empty", "terminal-wrong-nonce"],
+)
+def test_registration_environment_transition_keeps_only_owned_terminal_output(
+    verifier, tmp_path, monkeypatch, transition
+):
+    """A real child exits while its first /proc environment is being read."""
+    tmp_path.chmod(0o700)
+    release = tmp_path / "release-registration-exit"
+    code = (
+        "import sys,time;from pathlib import Path;"
+        "\nwhile not Path(sys.argv[1]).exists():"
+        "\n time.sleep(0.005)"
+        "\nprint('raw-out');print('raw-err',file=sys.stderr);sys.exit(7)"
+    )
+    original_identity, original_read_bytes = verifier.Child.identity, Path.read_bytes
+    state = {"pid": None, "handle": None, "observed": False}
+
+    def reading_identity(handle, pid):
+        state["pid"] = pid
+        state["handle"] = handle
+        try:
+            return original_identity(handle, pid)
+        finally:
+            state["pid"] = None
+
+    def transitioning_environment(path):
+        pid = state["pid"]
+        if not state["observed"] and pid and path == Path("/proc") / str(pid) / "environ":
+            raw = original_read_bytes(path)
+            assert b"QM_BACKUP_COMMAND_OWNER=" + state["handle"].nonce.encode() in raw.split(b"\0")
+            state["observed"] = True
+            if transition != "live-empty":
+                release.touch()
+                fd = os.pidfd_open(pid)
+                try:
+                    assert select.select([fd], [], [], 3)[0]
+                finally:
+                    os.close(fd)
+            return b"QM_BACKUP_COMMAND_OWNER=wrong\0" if transition.endswith("wrong-nonce") else b""
+        return original_read_bytes(path)
+
+    runner = verifier.Commands(tmp_path, tmp_path)
+    try:
+        with monkeypatch.context() as boundary:
+            boundary.setattr(verifier.Child, "identity", reading_identity)
+            boundary.setattr(Path, "read_bytes", transitioning_environment)
+            boundary.setattr(
+                signal,
+                "pidfd_send_signal",
+                lambda *args: pytest.fail("no signal to an unregistered leader"),
+            )
+            expected = (
+                "command failed" if transition == "terminal-empty" else "family ownership refused"
+            )
+            with pytest.raises(ValueError, match=expected):
+                runner.python(["-c", code, str(release)])
+        assert state["observed"]
+        if transition == "terminal-empty":
+            receipt = runner.receipts[-1]
+            assert receipt["exit"] == 7
+            assert (tmp_path / receipt["stdout"]).read_bytes() == b"raw-out\n"
+            assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
+        else:
+            assert not runner.receipts
+        assert all(
+            not member.signals
+            for handle in runner.command_processes
+            for member in handle.members.values()
+        )
+    finally:
+        release.touch()
+        for handle in runner.command_processes:
+            handle.process.wait(timeout=3)
+            handle.close()
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="retained native leader pidfd")
 @pytest.mark.parametrize("transition", ["terminal-empty", "live-empty", "terminal-wrong-nonce"])
 def test_owned_leader_exit_during_environment_read_preserves_retention(

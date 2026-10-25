@@ -232,18 +232,16 @@ def test_owned_default_tail_under_tighter_memory_without_sql_payload_sort(tmp_pa
     # Oracle equivalence at the unchanged production SQL setting, not only counts.
     with LiveBuffer(tmp_path, read_only=True) as lake:
         oracle = [_row_to_update(row) for row in legacy_rows(lake._con, limit=10_000, **filters)]
+    # The weaker historical SQL sometimes fits 16MiB, so its OOM is not a
+    # reliable gate. The larger, width-checked negative model is in
+    # test_live_buffer_batched_tail.py; this model checks the positive reader.
     with LiveBuffer(tmp_path, read_only=True) as lake:
-        lake._con.execute("SET memory_limit='16MiB'")  # Test-only stricter model, never runtime.
+        lake._con.execute("SET memory_limit='16MiB'")  # Test-only, never runtime.
         assert lake._con.execute("SELECT current_setting('threads')").fetchone()[0] == 1
         assert (
             lake._con.execute("SELECT current_setting('max_temp_directory_size')").fetchone()[0]
             == "0 bytes"
         )
-        with pytest.raises(duckdb.OutOfMemoryException):
-            legacy_rows(lake._con, limit=10_000, **filters)
-    # Fresh read-only connection avoids inheriting the failed statement's buffers.
-    with LiveBuffer(tmp_path, read_only=True) as lake:
-        lake._con.execute("SET memory_limit='16MiB'")
         rows = lake.replay(tail=True, limit=10_000, **filters)
         assert rows == oracle
         assert len(rows) == 10_000

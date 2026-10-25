@@ -60,7 +60,11 @@ def test_actual_five_endpoint_loop_original_bytes_and_cold_reopen(tmp_path):
     # Lifespan actually released the writer lease; new service can reopen.
     cold = ReplayService(tmp_path)
     with TestClient(app(cold)) as client:
-        assert client.get(BASE + f"/jobs/{key}").json() == decided.json()
+        cold_job = client.get(BASE + f"/jobs/{key}").json()
+        freshness = cold_job.pop("sample_freshness_view")
+        assert freshness["evaluated_snapshot_digest"] == job["request"]["snapshot_digest"]
+        assert freshness["reason"] == "fixed_sample_no_daily_refresh"
+        assert cold_job == decided.json()
         assert client.get(BASE + f"/jobs/{key}/artifact").content == raw
         assert client.get(BASE + f"/jobs/{key}/artifact?kind=decision").content == decision_raw
 

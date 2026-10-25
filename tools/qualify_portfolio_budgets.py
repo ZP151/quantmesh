@@ -292,16 +292,14 @@ class Child(owned.CommandProcess):
         environment = (proc / "environ").read_bytes()
         if b"QM_BACKUP_COMMAND_OWNER=" + self.nonce.encode() not in environment.split(b"\0"):
             member = self.members.get((pid, fields[19]))
-            if (
-                not environment
-                and pid == self.pid
-                and fields[19] == self.ticks
-                and member is not None
-                and member.ready()
-            ):
-                # A retained leader may lose /proc/environ while exiting. This
-                # terminal pidfd grants retirement only, never signal authority.
-                raise ProcessLookupError("terminal owned leader")
+            if not environment and pid == self.pid and fields[19] == self.ticks:
+                if member is not None and member.ready():
+                    # A retained leader may lose /proc/environ while exiting.
+                    raise ProcessLookupError("terminal owned leader")
+                if member is None and self.process.poll() is not None:
+                    # The original Popen leader also may exit during its first
+                    # scan. Retirement grants no admission or signal authority.
+                    raise ProcessLookupError("terminal unregistered leader")
             raise ValueError("command family ownership refused; no unowned signal")
         return {
             "pid": pid,

@@ -258,6 +258,16 @@ def test_wide_default_tail_refusal_and_bounded_full_row_equivalence():
     )
     keys = [r[0] for r in connection.execute(key, [10000]).fetchall()]
     assert len(keys) == 10000
+    # Verify the negative model actually projects more than twice its 32MiB
+    # cap before asking the old full-width query to refuse.
+    wide_count = connection.execute(
+        "SELECT count(*) FROM market_updates WHERE local_seq > 6000 AND kind='candle'"
+    ).fetchone()[0]
+    sample_width = connection.execute(
+        "SELECT length(payload_json) FROM market_updates WHERE local_seq=16000"
+    ).fetchone()[0]
+    assert wide_count > 9600 and sample_width >= 8192
+    assert wide_count * sample_width > 64 * 1024 * 1024
     # Frozen9cdf wide membership query must genuinely refuse in this model.
     with pytest.raises(duckdb.OutOfMemoryException):
         connection.execute(

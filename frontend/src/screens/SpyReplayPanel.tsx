@@ -3,7 +3,7 @@ import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePreferences } from '@/lib/preferences'
-import { spyReplayApi, replayUuid, replayReport, SpyReplayError, type ReplayOptions, type ReplayRequest, type ReplayJob, type ReplayArtifact, type ReplayDecisionRequest } from '@/lib/spy-replay-api'
+import { spyReplayApi, replayUuid, replayReport, SpyReplayError, type ReplayOptions, type ReplayRequest, type ReplayJob, type ReplayArtifact, type ReplayDecisionRequest, type ReplayReport, type ReplaySampleFreshness, type ReplaySampleFact } from '@/lib/spy-replay-api'
 
 const STORAGE = 'quantmesh.spy-replay.v1'
 type Intent = { key: string; request: ReplayRequest; refused?: 'input_pin_mismatch' | 'input_not_qualified' | 'invalid_request'; decision?: { key: string; body: ReplayDecisionRequest } }
@@ -104,7 +104,10 @@ export function SpyReplayPanel() {
     if (!retain(pending)) return
     locked.current = true; setBusy(true); setError(null)
     const token = generation.current
-    try { accept(await spyReplayApi.submit(saved.key, saved.request), token) } catch (cause) {
+    try {
+      const value = await spyReplayApi.submit(saved.key, saved.request); accept(value, token)
+      if (alive.current && token === generation.current) void read(value.job_id, value.request)
+    } catch (cause) {
       if (alive.current && token === generation.current) {
         if (cause instanceof SpyReplayError && cause.status === 422 && ['input_pin_mismatch','input_not_qualified','invalid_request'].includes(cause.code)) retain({ ...pending, refused: cause.code as Intent['refused'] })
         setError(issue(cause))
@@ -125,7 +128,10 @@ export function SpyReplayPanel() {
     if (!proposal || !proposal.body.reason || proposal.body.reason.length > 1000) return
     if (!retain({ ...intent, decision: proposal })) return
     locked.current = true; setBusy(true); setError(null); const token = generation.current
-    try { accept(await spyReplayApi.decide(job, proposal.key, proposal.body), token) } catch (cause) { if (alive.current && token === generation.current) setError(issue(cause)) }
+    try {
+      const value = await spyReplayApi.decide(job, proposal.key, proposal.body); accept(value, token)
+      if (alive.current && token === generation.current) void read(value.job_id, value.request)
+    } catch (cause) { if (alive.current && token === generation.current) setError(issue(cause)) }
     finally { locked.current = false; if (alive.current) setBusy(false) }
   }
   function open() {
@@ -177,6 +183,7 @@ export function SpyReplayPanel() {
       </section>}
       {step === 'report' && job?.state === 'succeeded' && <section aria-labelledby="spy-report" className="space-y-3"><h3 id="spy-report" className="font-semibold">{w.report}</h3>
         {artifactError ? <><p role="alert" className="text-sm">{w.artifact}</p><Button className="min-h-11" variant="outline" onClick={() => void fetchArtifacts(job, generation.current)}>{w.retryReport}</Button></> : !report ? <p className="text-sm text-muted-foreground">{w.verify}</p> : <>
+          <ReportSample report={verifiedReport!} freshness={job.sample_freshness_view} locale={locale} />
           <ReportView artifact={report} job={job} locale={locale} scenario={scenario} onScenario={setScenario} />
           <div className="flex flex-wrap gap-2 border-t pt-3"><Button className="min-h-11" onClick={() => setSelectedStep('decision')}>{u.next}</Button><Button variant="outline" className="min-h-11" onClick={() => download(report, `${job.job_id}-report.json`)}>{w.download}</Button></div>
         </>}
@@ -202,6 +209,73 @@ export function SpyReplayPanel() {
   </Page>
 }
 
+function ReportSample({ report, freshness, locale }: { report: ReplayReport; freshness?: ReplaySampleFreshness; locale: 'en' | 'zh-CN' }) {
+  // Only immutable report facts enter this component. Current options describe
+  // the next input and must never fill evidence gaps in an older saved report.
+  const zh = locale === 'zh-CN'
+  const unknown = zh ? '未知' : 'Unknown'
+  const sample = report.schema_version === 2 ? report.sample_evidence : undefined
+  const synthetic = report.evidence_kind === 'engineering_fixture'
+  const fact = (value?: ReplaySampleFact) => {
+    if (!value) return unknown
+    if (value.value === null) return value.status === 'synthetic' || value.status === 'not_applicable' ? (synthetic ? (zh ? 'N/A · 合成样本' : 'N/A · synthetic') : 'N/A') : unknown
+    return value.status === 'synthetic' ? `${value.value} · ${zh ? '合成声明' : 'synthetic declaration'}` : value.value
+  }
+  // The GET view is ephemeral. Validate its report calendar/role association
+  // after the artifact arrives; never reuse a newer input's age or timestamps.
+  const roles = { fixed_golden: 'fixed_regression_not_required', historical_diagnostic: 'historical_diagnostic', rolling_diagnostic: 'recent_diagnostic' }
+  const view = freshness && freshness.evaluated_snapshot_digest === report.snapshot_digest
+    && (freshness.calendar_version === null || freshness.calendar_version === report.window.calendar_version)
+    && (freshness.applicability === 'unknown' || (sample && freshness.applicability === roles[sample.sample_role])) ? freshness : undefined
+  const freshnessReasons: Record<ReplaySampleFreshness['reason'], string> = {
+    fixed_sample_no_daily_refresh: zh ? '固定工程样本，无需每日刷新' : 'No daily refresh required',
+    historical_window_not_recency_target: zh ? '历史诊断窗口，不以近期覆盖为目标' : 'Historical diagnostic window, not a recency target',
+    current: zh ? '已覆盖近期样本目标' : 'Current for its recent-sample target',
+    lags_latest_complete_session: zh ? `落后 ${view?.lag_complete_sessions} 个已完成会话` : `${view?.lag_complete_sessions} completed sessions behind`,
+    legacy_sample_role_unknown: zh ? '未知 · 旧报告未记录样本角色' : 'Unknown · legacy sample role not recorded',
+    calendar_unavailable: zh ? '未知 · 原始日历不可用' : 'Unknown · original calendar unavailable',
+    report_unavailable: zh ? '未知 · 原始报告不可用' : 'Unknown · original report unavailable',
+    input_identity_mismatch: zh ? '未知 · 输入身份不匹配' : 'Unknown · input identity mismatch',
+    sample_end_after_latest_complete: zh ? '未知 · 截止超过最新完整会话' : 'Unknown · sample ends after latest completed session',
+  }
+  const role = sample?.sample_role === 'fixed_golden' ? (zh ? '固定工程回归' : 'Fixed engineering regression') : sample?.sample_role === 'rolling_diagnostic' ? (zh ? '近期历史诊断，非独立样本外' : 'Recent historical diagnostic, not independent OOS') : sample ? (zh ? '历史阶段诊断，非独立样本外' : 'Historical diagnostic, not independent OOS') : synthetic ? (zh ? '未知 · 仅知工程来源类别' : 'Unknown · engineering evidence kind only') : (zh ? '未知 · 仅知真实来源类别' : 'Unknown · real-source evidence kind only')
+  const structural = sample ? `${sample.quality.rows} ${zh ? '行；缺失' : 'rows; missing'} ${sample.quality.missing_sessions}; ${zh ? '重复' : 'duplicates'} ${sample.quality.duplicate_sessions}` : unknown
+  const facts = [
+    [zh ? '快照 SHA-256' : 'Snapshot SHA-256', report.snapshot_digest],
+    [zh ? '协议 SHA-256' : 'Protocol SHA-256', report.protocol_digest],
+    [zh ? '样本标识 / 版本' : 'Sample ID / version', sample ? `${sample.sample_id} / ${sample.sample_version}` : unknown],
+    [zh ? '原始截至时间' : 'Original as-of', sample?.as_of_utc ?? report.window.as_of_utc ?? unknown],
+    [sample?.timestamp_basis === 'synthetic_declared' ? (zh ? '冻结时间 · 合成声明' : 'Freeze time · synthetic declaration') : (zh ? '冻结时间' : 'Freeze time'), sample?.frozen_at_utc ?? unknown],
+    [zh ? '实际请求时间' : 'Actual requested time', fact(sample?.times.requested_at_utc)],
+    [zh ? '实际接收时间' : 'Actual received time', fact(sample?.times.received_at_utc)],
+    [zh ? '实际 POST 审阅时间' : 'Actual POST-reviewed time', fact(sample?.times.post_reviewed_at_utc)],
+    [zh ? '实际审阅时间' : 'Actual reviewed time', fact(sample?.times.acceptance_reviewed_at_utc)],
+    [zh ? '实际可用时间' : 'Actual available time', fact(sample?.times.available_at_utc)],
+    [zh ? '结构检查' : 'Structural checks', structural],
+    [zh ? '来源使用依据' : 'Source use', fact(sample?.source_facts.source_use)],
+    [zh ? '允许用途' : 'Allowed use', fact(sample?.source_facts.allowed_use)],
+    ['PIT', fact(sample?.source_facts.pit)],
+    [zh ? '修订状态' : 'Revision status', fact(sample?.source_facts.revision_status)],
+    [zh ? '公司行动覆盖' : 'Action coverage', fact(sample?.source_facts.action_coverage)],
+    [zh ? '价格口径 / 币种 / 量单位' : 'Price / currency / volume unit', sample ? [sample.source_facts.price_adjustment, sample.source_facts.currency, sample.source_facts.volume_unit].map(value => fact(value)).join(' / ') : unknown],
+    [zh ? '结构复核时间（非供应商审阅）' : 'Structural check time (not provider review)', sample?.last_checked_at_utc ?? unknown],
+    [zh ? '复核范围' : 'Check scope', sample ? (sample.check_scope === 'structural_bytes_only' ? (zh ? '结构与字节；非来源资格认证' : 'Structure and bytes; not source qualification') : (zh ? '结构、字节与收据绑定；非独立真实性证明' : 'Structure, bytes and receipt bindings; not independent authenticity proof')) : unknown],
+    [zh ? '下次版本触发' : 'Next version trigger', sample ? (sample.next_trigger === 'code_protocol_or_boundary_change' ? (zh ? '代码、协议或边界变化；无需每日刷新' : 'Code, protocol or boundary change; no daily refresh') : (zh ? '新的合格冻结版本；不自动取数' : 'New qualified frozen version; no automatic capture')) : unknown],
+    [zh ? '首次查看时间' : 'First viewed time', fact(sample?.first_viewed_at_utc)],
+    [zh ? '试验次数' : 'Trial count', `${unknown} · ${zh ? '缺少完整试验历史' : 'trial history unavailable'}`],
+    [zh ? '读取时间（独立视图）' : 'Read clock (separate view)', view?.read_at_utc ?? unknown],
+  ]
+  return <section aria-labelledby="spy-sample" className="space-y-2 rounded-md border px-3 py-3 text-xs">
+    <div className="flex flex-wrap items-center justify-between gap-1"><h4 id="spy-sample" className="text-sm font-medium">{zh ? '本报告样本' : "This report's sample"}</h4>{!sample && <span className="text-muted-foreground">{zh ? '旧报告 · 缺失事实保持未知' : 'Legacy report · missing facts remain unknown'}</span>}</div>
+    <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-2"><div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">{zh ? '角色' : 'Role'}</dt><dd>{role}</dd></div><div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">{zh ? '截止会话' : 'Cutoff session'}</dt><dd>{report.window.score_end}</dd></div></dl>
+    <p className="text-muted-foreground">{zh ? '结构' : 'Structure'}: {structural} · {zh ? '来源与 PIT 另述' : 'source and PIT are separate'}</p>
+    <p className="text-muted-foreground">{zh ? '读取时新鲜度' : 'Read-time freshness'}: {view ? freshnessReasons[view.reason] : (zh ? '未知 · 缺少绑定的读取视图' : 'Unknown · no bound read-time view')}{view?.latest_complete_session && <span className="ml-2">{zh ? '最新完整会话' : 'Latest completed session'}: {view.latest_complete_session}</span>}</p>
+    <details><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{zh ? '样本身份与证据' : 'Sample identity and evidence'}</summary><dl className="grid gap-x-6 gap-y-2 pb-2 sm:grid-cols-2">{facts.map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="break-all">{value}</dd></div>)}</dl>
+      {sample && <details><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{zh ? '原始证据引用（仅哈希）' : 'Original evidence references (hashes only)'}</summary><dl className="space-y-2 pb-2">{Object.entries(sample.refs).map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="break-all">{value?.digest ?? (synthetic ? (zh ? 'N/A · 合成样本' : 'N/A · synthetic') : unknown)}</dd></div>)}</dl></details>}
+    </details>
+  </section>
+}
+
 function ReportView({ artifact, job, locale, scenario, onScenario }: { artifact: ReplayArtifact; job: ReplayJob; locale: 'en' | 'zh-CN'; scenario: Scenario; onScenario: (value: Scenario) => void }) {
   const r = replayReport(artifact.value, job); const zh = locale === 'zh-CN'; const u = flow[locale]
   const unavailable = zh ? '不可用' : 'Unavailable'
@@ -213,9 +287,11 @@ function ReportView({ artifact, job, locale, scenario, onScenario }: { artifact:
       <div className="overflow-x-auto"><table className="w-full text-left text-sm tabular-nums"><caption className="sr-only">{scenario === 'base5' ? (zh ? '基准成本结果' : 'Base cost results') : (zh ? '压力成本结果' : 'Stress cost results')}</caption><thead className="text-xs text-muted-foreground"><tr><th className="py-2 pr-4 font-normal">{zh ? '结果' : 'Result'}</th><th className="py-2 pr-4 text-right font-normal">SMA100</th><th className="py-2 text-right font-normal">{zh ? '买入持有' : 'Buy-and-hold'}</th></tr></thead><tbody>
         {[[zh ? '净收益率' : 'Net return', 'total_return', 'percent'], [zh ? '期末资金' : 'Terminal equity', 'terminal_equity', 'usd'], [zh ? '最大回撤' : 'Max drawdown', 'max_drawdown', 'percent'], [zh ? '综合摩擦成本' : 'Combined friction', 'friction_usd', 'usd'], [zh ? '成交笔数' : 'Fills', 'fills', 'number']].map(([label, metric, format]) => <tr key={metric} className="border-t"><th className="py-2 pr-4 font-normal">{label}</th>{(['strategy','buyhold'] as const).map(track => { const v = s[track].metrics[metric as keyof typeof s.strategy.metrics]; return <td key={track} className="py-2 text-right whitespace-nowrap">{format === 'usd' ? usd(v as number) : number(v, format === 'percent')}</td> })}</tr>)}
       </tbody></table></div>
+      <p className="text-xs tabular-nums">{zh ? 'SMA100 入场次数' : 'Long entries'}: {s.strategy.metrics.long_entries == null ? unavailable : number(s.strategy.metrics.long_entries)} · {zh ? '成交名义额 / 初始资金' : 'Traded notional / initial capital'}: {s.strategy.metrics.gross_traded_notional_over_initial_capital == null ? unavailable : `${number(s.strategy.metrics.gross_traded_notional_over_initial_capital)}×`} ({zh ? '非年化' : 'not annualized'})</p>
+      <p className="text-xs text-muted-foreground">{zh ? '成交笔数不等于完整交易轮数或独立机会数。' : 'Fills are not round trips or independent opportunities.'}</p>
       <p className="text-sm text-muted-foreground">{zh ? '策略相对买入持有' : 'Strategy minus buy-and-hold'}: {usd(s.comparison.terminal_equity_difference_usd)} · {number(s.comparison.total_return_difference * 100)} {zh ? '个百分点' : 'percentage points'}</p>
       <p className="text-xs text-muted-foreground">{zh ? '综合成本代理；费用 / 价差 / 滑点拆分未经校准。' : 'Combined cost proxy; fee / spread / slippage split is uncalibrated.'}</p>
-      <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{u.metrics}</summary><p className="mb-3 text-muted-foreground">{zh ? '仅 21 个观察日；费用 / 价差 / 滑点拆分未经校准，不按零处理。' : 'Only 21 observation sessions; fee / spread / slippage breakdown is uncalibrated, never zero.'}</p><dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2">{[['CAGR', 'cagr', true], [zh ? '年化波动' : 'Annualized volatility', 'annualized_volatility', true], ['Sharpe (rf=0)', 'naive_sharpe_rf_zero', false], ['Sortino (target=0)', 'sortino_target_zero', false], ['Calmar', 'calmar', false]].map(([label, metric, percent]) => <div key={String(metric)}><dt className="text-muted-foreground">{label}</dt><dd>{number(s.strategy.metrics[metric as keyof typeof s.strategy.metrics], !!percent)}</dd></div>)}</dl>{r.limitations.map((limitation, i) => <p key={i} className="mb-2 text-muted-foreground">{limitation}</p>)}</details>
+      <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{u.metrics}</summary><p className="mb-3 text-muted-foreground">{zh ? '仅 21 个观察日，年化比率估计不稳定，不构成策略有效性证据；不可用值不按零处理。费用 / 价差 / 滑点拆分未经校准。' : 'Only 21 observation sessions: annualized ratios are unstable diagnostics, not strategy-validity evidence. Undefined values are not zero; fee / spread / slippage split is uncalibrated.'}</p><dl className="mb-3 grid grid-cols-2 gap-x-4 gap-y-2">{[['CAGR', 'cagr', true], [zh ? '年化波动' : 'Annualized volatility', 'annualized_volatility', true], ['Sharpe (rf=0)', 'naive_sharpe_rf_zero', false], ['Sortino (target=0)', 'sortino_target_zero', false], ['Calmar', 'calmar', false]].map(([label, metric, percent]) => <div key={String(metric)}><dt className="text-muted-foreground">{label}</dt><dd>{number(s.strategy.metrics[metric as keyof typeof s.strategy.metrics], !!percent)}</dd></div>)}</dl>{r.limitations.map((limitation, i) => <p key={i} className="mb-2 text-muted-foreground">{limitation}</p>)}</details>
     </section> })()}
     <p className="border-t pt-3 text-sm">{zh ? '现金基准（利息 0%）' : 'Cash benchmark (0% interest)'}: {usd(r.calculation.cash_benchmark.terminal_equity)} · {number(r.calculation.cash_benchmark.total_return, true)} · {zh ? '回撤' : 'drawdown'} {number(r.calculation.cash_benchmark.max_drawdown, true)}</p>
   </div>

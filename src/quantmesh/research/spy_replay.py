@@ -9,7 +9,7 @@ import math
 import platform
 import threading
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Annotated, Literal
 from uuid import UUID
@@ -17,6 +17,7 @@ from uuid import UUID
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from quantmesh.data.calendars import XNYS_REGULAR_VERSION, CalendarService, SessionPolicy
 from quantmesh.data.objects import ObjectRef, ObjectStore, is_reparse_point
 from quantmesh.ops.paper_controls import WriterLease
 from quantmesh.persistence.jsonl import JsonlStore
@@ -72,6 +73,251 @@ def _now():
 
 class Contract(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, allow_inf_nan=False)
+
+
+class EvidenceFact(Contract):
+    value: str | None = Field(default=None, max_length=160)
+    status: Literal["recorded", "synthetic", "unknown", "not_applicable"] = "unknown"
+    reason: str | None = Field(default="not_recorded", max_length=160)
+
+    @model_validator(mode="after")
+    def available_or_reason(self):
+        if self.status in {"unknown", "not_applicable"}:
+            if self.value is not None or not self.reason:
+                raise ValueError("unknown fact needs reason")
+        elif self.value is None or self.reason is not None:
+            raise ValueError("available fact needs value")
+        return self
+
+
+def _fact(value=None, *, status="recorded", reason=None):
+    return EvidenceFact(value=value, status=status, reason=reason)
+
+
+class EvidenceTimes(Contract):
+    requested_at_utc: EvidenceFact = Field(default_factory=EvidenceFact)
+    received_at_utc: EvidenceFact = Field(default_factory=EvidenceFact)
+    post_reviewed_at_utc: EvidenceFact = Field(default_factory=EvidenceFact)
+    acceptance_reviewed_at_utc: EvidenceFact = Field(default_factory=EvidenceFact)
+    available_at_utc: EvidenceFact = Field(default_factory=EvidenceFact)
+
+    @model_validator(mode="after")
+    def utc_times(self):
+        for name in type(self).model_fields:
+            value = getattr(self, name).value
+            if value is not None and datetime.fromisoformat(value).utcoffset() != timedelta(0):
+                raise ValueError("UTC required")
+        return self
+
+
+class EvidenceRefs(Contract):
+    freeze: ObjectRef | None = None
+    raw_capture: ObjectRef | None = None
+    authorization: ObjectRef | None = None
+    post_review: ObjectRef | None = None
+    acceptance: ObjectRef | None = None
+    normalized_bars: ObjectRef | None = None
+    distributions: ObjectRef | None = None
+
+    @model_validator(mode="after")
+    def bounded(self):
+        if any(
+            ref is not None and ref.byte_length > 8 * MAX_OBJECT
+            for name in type(self).model_fields
+            for ref in [getattr(self, name)]
+        ):
+            raise ValueError("evidence reference too large")
+        return self
+
+
+class SourceFacts(Contract):
+    source_use: EvidenceFact = Field(default_factory=EvidenceFact)
+    allowed_use: EvidenceFact = Field(default_factory=EvidenceFact)
+    pit: EvidenceFact = Field(default_factory=EvidenceFact)
+    revision_status: EvidenceFact = Field(default_factory=EvidenceFact)
+    price_adjustment: EvidenceFact = Field(default_factory=EvidenceFact)
+    currency: EvidenceFact = Field(default_factory=EvidenceFact)
+    volume_unit: EvidenceFact = Field(default_factory=EvidenceFact)
+    dividend_unit: EvidenceFact = Field(default_factory=EvidenceFact)
+    action_coverage: EvidenceFact = Field(default_factory=EvidenceFact)
+
+
+class ReviewHashes(Contract):
+    action_coverage_sha256: Digest | None = None
+    field_semantics_sha256: Digest | None = None
+    independent_input_review_sha256: Digest | None = None
+
+
+class SampleProvenance(Contract):
+    """Trusted construction only; never accepted from the public request."""
+
+    sample_id: str = Field(default="SPY", min_length=1, max_length=80)
+    sample_version: str | None = Field(default=None, min_length=1, max_length=80)
+    parent_version: str | None = Field(default=None, min_length=1, max_length=80)
+    sample_role: Literal["fixed_golden", "historical_diagnostic", "rolling_diagnostic"] | None = (
+        None
+    )
+    times: EvidenceTimes = Field(default_factory=EvidenceTimes)
+    refs: EvidenceRefs = Field(default_factory=EvidenceRefs)
+    source_facts: SourceFacts = Field(default_factory=SourceFacts)
+    review_hashes: ReviewHashes = Field(default_factory=ReviewHashes)
+
+
+class SampleQuality(Contract):
+    rows: Literal[121] = 121
+    warmup_sessions: Literal[100] = 100
+    observation_sessions: Literal[21] = 21
+    missing_sessions: Literal[0] = 0
+    duplicate_sessions: Literal[0] = 0
+    ordered_sessions_match: Literal[True] = True
+    ohlcv_checked: Literal[True] = True
+    structural_status: Literal["PASS"] = "PASS"
+
+
+class SampleCalendar(Contract):
+    calendar_id: Literal["XNYS"] = "XNYS"
+    calendar_version: str = Field(min_length=1, max_length=100)
+    source_grace_minutes: Literal[30] = 30
+    last_session: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+
+class SampleEvidence(SampleProvenance):
+    schema_version: Literal[1] = 1
+    snapshot_digest: Digest
+    protocol_digest: Digest
+    evidence_kind: Literal["engineering_fixture", "reviewed_opend_freeze_v2"]
+    sample_version: str = Field(min_length=1, max_length=80)
+    sample_role: Literal["fixed_golden", "historical_diagnostic", "rolling_diagnostic"]
+    purpose: Literal["fixed_engineering_regression", "historical_development_diagnostic"]
+    as_of_utc: str
+    frozen_at_utc: str
+    timestamp_basis: Literal["synthetic_declared", "source_receipts"]
+    provider: Literal["synthetic", "opend"]
+    quality: SampleQuality = Field(default_factory=SampleQuality)
+    calendar: SampleCalendar
+    exposure_status: Literal["synthetic_not_oos", "historical_exposed_not_independent_oos"]
+    first_viewed_at_utc: EvidenceFact = Field(default_factory=EvidenceFact)
+    trial_count: None = None
+    trial_count_reason: Literal["trial_history_unavailable"] = "trial_history_unavailable"
+    last_checked_at_utc: str
+    check_scope: Literal["structural_bytes_only", "structural_bytes_and_receipt_bindings"]
+    next_trigger: Literal["code_protocol_or_boundary_change", "new_qualified_frozen_version"]
+
+    @model_validator(mode="after")
+    def bounded_and_honest(self):
+        for value in (self.as_of_utc, self.frozen_at_utc, self.last_checked_at_utc):
+            if datetime.fromisoformat(value).utcoffset() != timedelta(0):
+                raise ValueError("UTC required")
+        if self.refs.freeze is not None and self.refs.freeze.digest != self.snapshot_digest:
+            raise ValueError("freeze identity mismatch")
+        synthetic = self.evidence_kind == "engineering_fixture"
+        if synthetic:
+            if (self.provider, self.timestamp_basis, self.sample_role, self.purpose) != (
+                "synthetic",
+                "synthetic_declared",
+                "fixed_golden",
+                "fixed_engineering_regression",
+            ) or any(
+                getattr(self.refs, name) is not None
+                for name in ("freeze", "raw_capture", "authorization", "post_review", "acceptance")
+            ):
+                raise ValueError("synthetic is not source qualification")
+        elif (self.provider, self.timestamp_basis, self.purpose) != (
+            "opend",
+            "source_receipts",
+            "historical_development_diagnostic",
+        ) or self.sample_role == "fixed_golden":
+            raise ValueError("source evidence identity mismatch")
+        if len(canonical(self.model_dump(mode="json"))) > 32768:
+            raise ValueError("sample evidence too large")
+        return self
+
+
+class SampleFreshnessView(Contract):
+    read_at_utc: datetime
+    evaluated_snapshot_digest: Digest
+    calendar_version: str | None = None
+    source_grace_minutes: int | None = None
+    latest_complete_session: str | None = None
+    lag_complete_sessions: int | None = Field(default=None, ge=0)
+    applicability: Literal[
+        "fixed_regression_not_required", "historical_diagnostic", "recent_diagnostic", "unknown"
+    ] = "unknown"
+    reason: Literal[
+        "fixed_sample_no_daily_refresh",
+        "historical_window_not_recency_target",
+        "current",
+        "lags_latest_complete_session",
+        "legacy_sample_role_unknown",
+        "calendar_unavailable",
+        "report_unavailable",
+        "input_identity_mismatch",
+        "sample_end_after_latest_complete",
+    ]
+
+
+def sample_freshness_view(report, snapshot_digest, read_at):
+    """Read-only age from this artifact's calendar; never from next-input options."""
+    data = dict(read_at_utc=read_at, evaluated_snapshot_digest=snapshot_digest)
+    if report is None:
+        return SampleFreshnessView(**data, reason="report_unavailable")
+    if report.get("snapshot_digest") != snapshot_digest:
+        return SampleFreshnessView(**data, reason="input_identity_mismatch")
+    window = report.get("window", {})
+    if not isinstance(window, dict):
+        return SampleFreshnessView(**data, reason="calendar_unavailable")
+    data.update(
+        calendar_version=window.get("calendar_version"),
+        source_grace_minutes=window.get("source_grace_minutes"),
+    )
+    try:
+        last = date.fromisoformat(window["score_end"])
+        if (
+            window["calendar_version"] != XNYS_REGULAR_VERSION
+            or window["source_grace_minutes"] != 30
+            or read_at.utcoffset() != timedelta(0)
+            or not date(2000, 1, 3) <= last <= date(2035, 12, 31)
+            or not date(2000, 2, 3) <= read_at.date() <= date(2035, 12, 31)
+        ):
+            raise ValueError("calendar unavailable")
+        sessions = CalendarService().sessions(
+            "XNYS",
+            min(last, read_at.date() - timedelta(days=30)),
+            read_at.date(),
+            policy=SessionPolicy.REGULAR,
+        )
+        complete = [
+            s.session_date.isoformat()
+            for s in sessions
+            if s.close_at + timedelta(minutes=30) <= read_at
+        ]
+        latest = complete[-1]
+    except Exception:
+        return SampleFreshnessView(**data, reason="calendar_unavailable")
+    data["latest_complete_session"] = latest
+    if last.isoformat() > latest:
+        return SampleFreshnessView(**data, reason="sample_end_after_latest_complete")
+    data["lag_complete_sessions"] = sum(day > last.isoformat() for day in complete)
+    role = report.get("sample_evidence", {}).get("sample_role")
+    if role == "fixed_golden":
+        return SampleFreshnessView(
+            **data,
+            applicability="fixed_regression_not_required",
+            reason="fixed_sample_no_daily_refresh",
+        )
+    if role == "historical_diagnostic":
+        return SampleFreshnessView(
+            **data, applicability=role, reason="historical_window_not_recency_target"
+        )
+    if role == "rolling_diagnostic":
+        return SampleFreshnessView(
+            **data,
+            applicability="recent_diagnostic",
+            reason="current"
+            if data["lag_complete_sessions"] == 0
+            else "lags_latest_complete_session",
+        )
+    return SampleFreshnessView(**data, reason="legacy_sample_role_unknown")
 
 
 class ReplayRequest(Contract):
@@ -169,6 +415,12 @@ class _StoredJob(ReplayJob):
     implementation_digest: Digest
 
 
+class ReplayJobRead(ReplayJob):
+    """GET-only extension; POST responses and stored records stay ReplayJob."""
+
+    sample_freshness_view: SampleFreshnessView
+
+
 class ReplayInputSummary(Contract):
     snapshot_digest: Digest
     protocol_digest: Digest
@@ -235,6 +487,7 @@ class ReplayInput:
     frozen_at_utc: datetime
     evidence_kind: Literal["reviewed_opend_freeze_v2", "engineering_fixture"]
     source_root: Path | None = None
+    provenance: SampleProvenance | None = None
 
     def verified(self):
         freezer = _freezer()
@@ -318,6 +571,72 @@ class ReplayInput:
             + LIMITATIONS,
         )
 
+    def evidence(self, protocol, bars):
+        """Capture known immutable facts before math; absence never becomes approval."""
+        if digest(canonical(protocol)) != digest(self.protocol_bytes) or len(bars) != 121:
+            raise ReplayError("input_not_qualified")
+        p = self.provenance or SampleProvenance()
+        synthetic = self.evidence_kind == "engineering_fixture"
+        values = p.model_dump()
+        if synthetic:
+            no_receipt = _fact(status="not_applicable", reason="synthetic_no_provider_receipt")
+            values["times"] = {name: no_receipt for name in EvidenceTimes.model_fields}
+            facts = {
+                name: _fact(status="not_applicable", reason="synthetic_not_market_evidence")
+                for name in SourceFacts.model_fields
+            }
+            for name, value in dict(
+                price_adjustment="raw",
+                currency="USD",
+                volume_unit="shares",
+                dividend_unit="USD/share",
+                action_coverage=(
+                    "synthetic_defined_events"
+                    if _json(self.distributions_json)
+                    else "synthetic_defined_empty"
+                ),
+            ).items():
+                facts[name] = _fact(value, status="synthetic")
+            values["source_facts"] = facts
+        refs = p.refs.model_dump()
+        refs.update(
+            normalized_bars=protocol["members"]["normalized-bars.csv"],
+            distributions=protocol["members"]["normalized-distributions.json"],
+        )
+        w = protocol["window"]
+        return SampleEvidence(
+            **{
+                **values,
+                "refs": refs,
+                "sample_version": p.sample_version or self.snapshot_digest,
+                "sample_role": p.sample_role
+                or ("fixed_golden" if synthetic else "historical_diagnostic"),
+            },
+            snapshot_digest=self.snapshot_digest,
+            protocol_digest=digest(self.protocol_bytes),
+            evidence_kind=self.evidence_kind,
+            purpose="fixed_engineering_regression"
+            if synthetic
+            else "historical_development_diagnostic",
+            as_of_utc=w["as_of_utc"],
+            frozen_at_utc=self.frozen_at_utc.isoformat(),
+            timestamp_basis="synthetic_declared" if synthetic else "source_receipts",
+            provider="synthetic" if synthetic else "opend",
+            calendar=SampleCalendar(
+                calendar_version=w["calendar_version"], last_session=w["score_end"]
+            ),
+            exposure_status="synthetic_not_oos"
+            if synthetic
+            else "historical_exposed_not_independent_oos",
+            last_checked_at_utc=_now().isoformat(),
+            check_scope="structural_bytes_and_receipt_bindings"
+            if p.refs.acceptance
+            else "structural_bytes_only",
+            next_trigger="code_protocol_or_boundary_change"
+            if synthetic
+            else "new_qualified_frozen_version",
+        )
+
     @classmethod
     def from_descriptor(cls, path: Path):
         """Operator-only config consumes a bound actual external acceptance receipt.
@@ -357,6 +676,51 @@ class ReplayInput:
             )
             if approval.use_document_sha256 != authorization["use_document_sha256"]:
                 raise ValueError
+            review = _json(
+                store.get_bytes(ObjectRef.model_validate(frozen["members"]["post-review.json"]))
+            )
+            raw = _json(
+                store.get_bytes(ObjectRef.model_validate(frozen["members"]["raw-capture.json"]))
+            )
+            freeze_ref = ObjectRef(
+                digest=descriptor["freeze_digest"], byte_length=0, media_type="application/json"
+            )
+            freeze_ref = freeze_ref.model_copy(
+                update={"byte_length": store.path_for(freeze_ref).stat().st_size}
+            )
+            store.get_bytes(freeze_ref)
+            provenance = SampleProvenance(
+                times=EvidenceTimes(
+                    requested_at_utc=_fact(raw["requested_at_utc"]),
+                    received_at_utc=_fact(raw["received_at_utc"]),
+                    post_reviewed_at_utc=_fact(review["reviewed_at_utc"]),
+                    acceptance_reviewed_at_utc=_fact(approval.reviewed_at_utc.isoformat()),
+                    available_at_utc=_fact(status="unknown", reason="not_established_by_receipts"),
+                ),
+                refs=EvidenceRefs(
+                    freeze=freeze_ref,
+                    acceptance=approval_ref,
+                    raw_capture=ObjectRef.model_validate(frozen["members"]["raw-capture.json"]),
+                    authorization=ObjectRef.model_validate(
+                        frozen["members"]["capture-authorization.json"]
+                    ),
+                    post_review=ObjectRef.model_validate(frozen["members"]["post-review.json"]),
+                ),
+                source_facts=SourceFacts(
+                    source_use=_fact(authorization["use_status"]),
+                    allowed_use=_fact(authorization["scope"]),
+                    price_adjustment=_fact(review["price_adjustment"]),
+                    currency=_fact(review["currency"]),
+                    volume_unit=_fact(review["volume_unit"]),
+                    dividend_unit=_fact(review["dividend_unit"]),
+                    action_coverage=_fact(review["action_coverage_status"]),
+                ),
+                review_hashes=ReviewHashes(
+                    action_coverage_sha256=review["action_coverage_sha256"],
+                    field_semantics_sha256=review["field_semantics_sha256"],
+                    independent_input_review_sha256=approval.independent_input_review_sha256,
+                ),
+            )
             value = cls(
                 snapshot_digest=descriptor["freeze_digest"],
                 protocol_bytes=store.get_bytes(protocol_ref),
@@ -369,6 +733,7 @@ class ReplayInput:
                 frozen_at_utc=datetime.fromisoformat(frozen["frozen_at_utc"]),
                 evidence_kind="reviewed_opend_freeze_v2",
                 source_root=root,
+                provenance=provenance,
             )
             value.verified()
             return value
@@ -397,13 +762,14 @@ class _Acceptance(Contract):
 class ReplayService:
     """One writer, one bounded synchronous computation; no automatic rerun."""
 
-    def __init__(self, root: Path, *, replay_input: ReplayInput | None = None):
+    def __init__(self, root: Path, *, replay_input: ReplayInput | None = None, read_clock=_now):
         self.root = Path(root).absolute()
         _safe(self.root)
         self._condition = threading.Condition(threading.RLock())
         self._inflight = None
         self._closing = self._closed = self._broken = False
         self._input = replay_input
+        self._read_clock = read_clock
         if replay_input is not None:
             replay_input.verified()
             if replay_input.source_root is not None:
@@ -481,6 +847,32 @@ class ReplayService:
                 )
                 if any(report.get(k) != v for k, v in expected.items()):
                     raise ValueError
+                version = report.get("schema_version")
+                if type(version) is not int or version not in {1, 2}:
+                    raise ValueError("unsupported report version")
+                if version == 1:
+                    if "sample_evidence" in report:
+                        raise ValueError("legacy evidence cannot be backfilled")
+                else:
+                    evidence = SampleEvidence.model_validate(report["sample_evidence"])
+                    if (
+                        evidence.snapshot_digest,
+                        evidence.protocol_digest,
+                        evidence.evidence_kind,
+                        evidence.as_of_utc,
+                        evidence.calendar.calendar_version,
+                        evidence.calendar.last_session,
+                        evidence.calendar.source_grace_minutes,
+                    ) != (
+                        job.request.snapshot_digest,
+                        job.request.protocol_digest,
+                        report["evidence_kind"],
+                        report["window"]["as_of_utc"],
+                        report["window"]["calendar_version"],
+                        report["window"]["score_end"],
+                        report["window"]["source_grace_minutes"],
+                    ):
+                        raise ValueError("sample evidence binding mismatch")
             if job.decision_ref is not None and self._object(job.decision_ref) != canonical(
                 job.decision.model_dump(mode="json")
             ):
@@ -509,6 +901,17 @@ class ReplayService:
     def get(self, key):
         with self._condition:
             return self._public(self._find(key))
+
+    def read(self, key):
+        with self._condition:
+            job = self._find(key)
+            report = _json(self._object(job.report)) if job.report is not None else None
+            return ReplayJobRead(
+                **self._public(job).model_dump(),
+                sample_freshness_view=sample_freshness_view(
+                    report, job.request.snapshot_digest, self._read_clock()
+                ),
+            )
 
     def submit(self, request: ReplayRequest, key):
         request = ReplayRequest.model_validate(request.model_dump())
@@ -543,6 +946,7 @@ class ReplayService:
             ):
                 raise ReplayError("input_not_qualified")
             protocol, frame, distributions = self._input.verified()
+            sample_evidence = self._input.evidence(protocol, frame)
             at = _now()
             job = _StoredJob(
                 job_id=key,
@@ -560,7 +964,7 @@ class ReplayService:
             w = protocol["window"]
             calculation = engine.calculate(frame, distributions, w["score_start"], w["score_end"])
             report = dict(
-                schema_version=1,
+                schema_version=2,
                 job_id=key,
                 request_digest=request_digest,
                 **request.model_dump(),
@@ -572,6 +976,7 @@ class ReplayService:
                 runtime=dict(python=platform.python_version(), pandas=pd.__version__),
                 window=w,
                 costs=protocol["costs"],
+                sample_evidence=sample_evidence.model_dump(mode="json"),
                 calculation=calculation,
                 financial_qualification="INSUFFICIENT",
                 paper_allowed=False,
