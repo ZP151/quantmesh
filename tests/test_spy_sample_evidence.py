@@ -5,6 +5,7 @@ import csv
 import io
 import json
 import platform
+import re
 import zlib
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -102,6 +103,7 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
     assert protocol["runtime"] == dict(
         calendar="4.13.2", numpy="2.5.2", pandas="2.3.3", python=platform.python_version()
     )
+    assert re.fullmatch(r"3\.13\.[0-9]+", protocol["runtime"]["python"]) is not None
     # The protocol records the Python patch version. Pin every other byte of
     # the fixture while accepting the patch version installed on this runner.
     protocol["runtime"]["python"] = "<python-patch>"
