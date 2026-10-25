@@ -64,6 +64,14 @@ def test_future_price_change_cannot_change_first_trade():
     )
 
 
+@pytest.mark.parametrize("terminal_volume", [0, 1000])
+def test_incomplete_terminal_liquidation_cannot_produce_calculation(terminal_volume):
+    bars = frame()
+    bars.loc[bars.index[102] :, "volume"] = terminal_volume
+    with pytest.raises(ArithmeticError, match="terminal liquidation incomplete"):
+        engine.calculate(bars, [], bars.index[100], bars.index[-1])
+
+
 def synthetic_input():
     """Trusted Python-only fixture; no public DTO can construct/admit this."""
     import csv
@@ -433,6 +441,52 @@ def test_failed_math_has_no_report_and_keeps_fixed_safe_error(tmp_path, monkeypa
     assert job.state == "failed" and job.report is None and job.error_code == "computation_failed"
     assert "PRIVATE DETAIL" not in job.model_dump_json()
     service.close()
+
+
+@pytest.mark.parametrize("terminal_volume", [0, 1000])
+def test_incomplete_terminal_liquidation_publishes_failed_job_without_report(
+    tmp_path, terminal_volume
+):
+    import io
+    import json
+    from dataclasses import replace
+    from uuid import uuid4
+
+    from quantmesh.data.objects import ObjectRef
+    from quantmesh.research.spy_replay import ReplayError, ReplayService, canonical, digest
+
+    value = synthetic_input()
+    bars = pd.read_csv(io.BytesIO(value.bars_csv))
+    bars.loc[102:, "volume"] = terminal_volume
+    raw = bars.to_csv(index=False, lineterminator="\n").encode()
+    protocol = json.loads(value.protocol_bytes)
+    protocol["members"]["normalized-bars.csv"] = ObjectRef(
+        digest=digest(raw), byte_length=len(raw), media_type="text/csv"
+    ).model_dump()
+    protocol_bytes = canonical(protocol)
+    value = replace(
+        value,
+        bars_csv=raw,
+        protocol_bytes=protocol_bytes,
+        snapshot_digest=digest(b"INTERNAL SYNTHETIC121" + raw + protocol_bytes),
+    )
+    # This exercises the verified input, actual volume cap, service and storage.
+    service = ReplayService(tmp_path, replay_input=value)
+    try:
+        key = uuid4()
+        job = service.submit(request_for(value), key)[0]
+        assert job.state == "failed"
+        assert job.report is None and job.error_code == "computation_failed"
+        with pytest.raises(ReplayError, match="not_found"):
+            service.artifact(key)
+    finally:
+        service.close()
+    reopened = ReplayService(tmp_path)
+    try:
+        assert reopened.get(key) == job
+        assert reopened.submit(request_for(value), key)[0] == job
+    finally:
+        reopened.close()
 
 
 def test_separate_python_process_recovers_same_job_report_and_decision(tmp_path):

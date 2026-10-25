@@ -243,6 +243,8 @@ def calculate(frame, distributions, start_date, end_date):
             if len(daily) != 21:
                 raise ValueError("expected21 observation sessions")
             _reconcile(daily, trades, bps)
+            if daily.iloc[-1].shares != 0:
+                raise ArithmeticError("terminal liquidation incomplete")
             scenario[label] = {
                 "metrics": metrics(daily, trades),
                 "daily": daily.rename_axis("date").reset_index().to_dict(orient="records"),

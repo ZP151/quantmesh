@@ -23,10 +23,12 @@ Contract output/spy-replay-offline/INTERFACE.json is frozen and sent via root.
   original report and decision binding,32/1/UUID idempotency, interrupted reopen.
 - [x] RED then GREEN: five typed API endpoints, strict public DTO, qualified
   v2 freeze plus trusted external scoped acceptance only; opt-in lifecycle/CLI.
-- [x] Targeted two-file checks:34passed/6 existing warnings34.45s, including
+- [x] Targeted two-file checks: final38passed/6 existing warnings19.96s, including
   separate Python-process recovery; scoped lint/format/diff. No old suites/CI.
-- [ ] One independent slice review, one bounded correction if needed (max2rounds),
-  final exact source/tree and engineering-vs-real-data handoff to root.
+- [x] One independent slice review: Standards0, Spec1P2, original NOT_READY.
+  One bounded correction: reject residual terminal shares before publication;
+  four meaningful REDs then GREEN. No retrospective independent READY claim.
+- [x] Final exact source/tree and engineering-vs-real-data handoff to root.
 
 No new provider/SDK/network/data/model/dependency/environment/server effects.
 Test inputs are trusted internal synthetic121-session engineering evidence only.

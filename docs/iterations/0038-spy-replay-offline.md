@@ -78,3 +78,37 @@ Before source freeze, six changed Python files pass scoped Ruff/format and
 git diff --check. Local commit hooks are explicitly bypassed after those targeted
 checks; no broad-hook/full-suite acceptance is claimed. Independent review pending.
 Sole publisher owns combined frontend/generated resources and new release CI.
+
+## Independent review and bounded R1 correction
+
+Reviewer independently froze51ecc8627c8f308768ae707db636363cc5405c5e /
+tree eebcd2db8839967c9e99021a77e616c5e2d36a6f: Standards0 findings;
+Spec1 P2/Important, verdict NOT_READY. The synthetic low-volume counterexample
+left979 shares after a clipped final exit yet published success. Original review,
+raw34-pass focused suite and actual counterexample remain in
+output/spy-replay-offline/review-r1.md, review-r1-tests.log and review-r1-repro.log.
+This is the original review verdict; no retrospective READY claim is made.
+
+Implementer made one bounded TDD correction: four new actual behavioral REDs
+(zero and partial final sell, direct calculation and real verified service/store)
+showed missing exception and erroneous succeeded state. Raw18-terminal-red.log:
+4failed/21deselected,2.47s. Two adapter lines now reject residual terminal shares
+in any required scenario before report publication; no inherited math, API or
+cost contract changed. Raw19-terminal-green.log:4passed/21deselected,1.83s.
+Both failed jobs have no report, reject artifact download and reopen/retry under
+the same key without recomputation. Ordinary high-volume success still passes.
+
+Verifier final focused boundary20-final-boundary.log:38passed/6 existing warnings,
+19.96s,exit0, covering the same actual factory/API loop and separate Python
+reopening. Scoped Ruff/format and whitespace pass. Fresh UTF-8 AST comparison
+still proves the original three functions identical, with final packaged engine
+SHA24e1eff2b0a57a67eeca2bf5ab7e410435773565b1223cc326878681544a9124
+in math-provenance-final.json. No second independent review is claimed; this is
+the permitted one-batch author correction with explicit RED/GREEN evidence.
+
+Planner handoff: bounded offline backend slice is delivered for sole publisher
+integration; UI/bundle/combined release CI and actual qualified OpenD submission
+remain owned outside this leaf. Five endpoints and both frozen UI JSON contracts
+remain byte-identical. Actual input acceptance, real UI-to-decision evidence,
+independent OOS/Paper and broad regression acceptance are not established here.
+Root owns the continuing long Goal; this backend leaf creates no Goal/automation.
