@@ -4,6 +4,7 @@ import base64
 import csv
 import io
 import json
+import platform
 import zlib
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -94,12 +95,21 @@ def test_new_report_v2_has_bound_structural_and_unknown_source_evidence(tmp_path
 
 def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
     value = flat_input(named=True)
-    assert (
-        value.snapshot_digest == "4bad22e533de50cae86bc5f0f3a8621b93c7435874bcc4917ef256ff4bcf33fa"
+    protocol = json.loads(value.protocol_bytes)
+    assert replay.digest(value.bars_csv) == (
+        "7e702010cb52a0937898c12fa141a76e10bdd8d98c34394c861edaccb3214d99"
     )
-    assert (
-        replay.digest(value.protocol_bytes)
-        == "a2f4d17a055bdda8520f1a559d3d46f1371761ad1faadec08629b88f1ec46b41"
+    assert protocol["runtime"] == dict(
+        calendar="4.13.2", numpy="2.5.2", pandas="2.3.3", python=platform.python_version()
+    )
+    # The protocol records the Python patch version. Pin every other byte of
+    # the fixture while accepting the patch version installed on this runner.
+    protocol["runtime"]["python"] = "<python-patch>"
+    assert replay.digest(replay.canonical(protocol)) == (
+        "59ad8d0dee47214ec84f970821e122e2edcdc833e094d076eebe9b63f24ea2a5"
+    )
+    assert value.snapshot_digest == replay.digest(
+        b"INTERNAL SYNTHETIC121" + value.bars_csv + value.protocol_bytes
     )
     service = replay.ReplayService(tmp_path, replay_input=value)
     try:
