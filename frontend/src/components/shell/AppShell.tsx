@@ -17,11 +17,13 @@ function SidebarContent({
   onNavigate,
   version,
   runtimeMode,
+  marketDataOnly = false,
   t,
 }: {
   onNavigate?: () => void
   version: string
   runtimeMode: 'demo' | 'live' | 'operator'
+  marketDataOnly?: boolean
   t: ReturnType<typeof usePreferences>['t']
 }) {
   const location = useLocation()
@@ -34,7 +36,7 @@ function SidebarContent({
         </Badge>
       </div>
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label={t('shell.nav.screens')}>
-        {NAV_GROUPS.map((group) => (
+        {marketDataOnly ? <NavLink to="/instruments/hyperliquid/BTC?range=1d&mode=line" onClick={onNavigate} className="block rounded-lg px-2 py-3 text-sm focus-visible:ring-2 focus-visible:ring-ring">{t('marketData.chart')}</NavLink> : NAV_GROUPS.map((group) => (
           <div key={group}>
             <p className="px-2 pb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
               {t(NAV_ITEMS.find((item) => item.group === group)?.groupKey ?? 'group.ops')}
@@ -69,7 +71,7 @@ function SidebarContent({
       </nav>
       <p className="border-t border-border px-4 py-3 text-[10px] leading-relaxed text-muted-foreground">
         {t('shell.loopback')}{' '}
-        {runtimeMode === 'demo'
+        {marketDataOnly ? t('marketData.mode') : runtimeMode === 'demo'
           ? t('shell.footerDemo')
           : runtimeMode === 'live'
             ? t('shell.footerLive')
@@ -95,7 +97,14 @@ export function AppShell() {
   const queryClient = useQueryClient()
   const { t } = usePreferences()
 
-  const health = useSurface(['health'], api.health)
+  const health = useQuery({ queryKey: ['health'], queryFn: api.health,
+    refetchInterval: query => query.state.data?.market_data_only === true ? 5_000 : false })
+  const marketDataOnly = health.data?.market_data_only === true
+  const params = new URLSearchParams(location.search)
+  const marketRouteAllowed = location.pathname === '/instruments/hyperliquid/BTC'
+    && params.getAll('range').length === 1 && params.get('range') === '1d'
+    && params.getAll('mode').length === 1 && params.get('mode') === 'line'
+    && [...params.keys()].every(key => key === 'range' || key === 'mode')
   const runtimeMode = health.data?.runtime_mode ?? 'operator'
   const demoStatus = useQuery({
     queryKey: ['demo-status'],
@@ -129,14 +138,14 @@ export function AppShell() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+      if (!marketDataOnly && health.data !== undefined && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
         setPaletteOpen((value) => !value)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [health.data, marketDataOnly])
 
   const title = t(NAV_ITEMS.find((item) => isNavActive(location.pathname, item))?.labelKey ?? 'shell.workstation')
 
@@ -144,7 +153,7 @@ export function AppShell() {
     <div className="min-h-screen bg-background">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-border bg-sidebar lg:block">
-        <SidebarContent version={healthVersion} runtimeMode={runtimeMode} t={t} />
+        <SidebarContent version={healthVersion} runtimeMode={runtimeMode} marketDataOnly={marketDataOnly} t={t} />
       </aside>
 
       {/* Mobile drawer */}
@@ -164,6 +173,7 @@ export function AppShell() {
               onNavigate={() => setMobileNav(false)}
               version={healthVersion}
               runtimeMode={runtimeMode}
+              marketDataOnly={marketDataOnly}
               t={t}
             />
           </div>
@@ -229,7 +239,7 @@ export function AppShell() {
               </Badge>
             )}
 
-            <Button
+            {!marketDataOnly && <Button
               variant={engaged ? 'destructive' : 'outline'}
               size="sm"
               className="gap-1.5 font-mono text-[11px]"
@@ -240,9 +250,9 @@ export function AppShell() {
             >
               <Power className="size-3.5" aria-hidden />
               <span className="hidden min-[430px]:inline">{killSwitchLabel}</span>
-            </Button>
+            </Button>}
 
-            {demoAttached && (
+            {!marketDataOnly && demoAttached && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -266,7 +276,7 @@ export function AppShell() {
               </Button>
             )}
 
-            <Separator orientation="vertical" className="mx-1 h-5" />
+            {!marketDataOnly && <><Separator orientation="vertical" className="mx-1 h-5" />
 
             <Button
               variant="outline"
@@ -295,7 +305,7 @@ export function AppShell() {
               title={t('shell.openSettings')}
             >
               <Settings className="size-4" aria-hidden />
-            </NavLink>
+            </NavLink></>}
           </div>
         </header>
 
@@ -303,18 +313,21 @@ export function AppShell() {
           <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5" aria-hidden />
             <span>
-              {runtimeMode === 'demo'
+              {marketDataOnly ? t('marketData.mode') : runtimeMode === 'demo'
                 ? t('shell.demoSession')
                 : runtimeMode === 'live'
                   ? t('shell.liveSession')
                   : t('shell.operatorSession')}
             </span>
           </div>
-          <Outlet />
+          {health.isPending ? <p role="status">{t('screen.workspace.loading')}</p>
+            : health.data === undefined ? <p role="alert">{t('surface.unavailable', { title: t('shell.workstation') })}</p>
+            : marketDataOnly && !marketRouteAllowed ? <section className="space-y-3 py-4"><p>{t('marketData.unavailable')}</p><NavLink className="inline-flex min-h-11 items-center underline underline-offset-4" to="/instruments/hyperliquid/BTC?range=1d&mode=line">{t('marketData.open')}</NavLink></section>
+            : <Outlet />}
         </main>
       </div>
 
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} demoAttached={demoAttached} />
+      {!marketDataOnly && health.data !== undefined && <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} demoAttached={demoAttached} />}
     </div>
   )
 }

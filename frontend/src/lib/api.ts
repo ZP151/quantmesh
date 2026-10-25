@@ -256,6 +256,11 @@ export interface Health {
   paper_mode: boolean
   live_trading: boolean
   runtime_mode: 'demo' | 'live' | 'operator'
+  market_data_only?: boolean
+  market_data_acquisition?: {
+    state: 'starting' | 'running' | 'capacity_stopped' | 'stopped' | 'failed'
+    reason: null | 'bounded_cache_read_only' | 'capacity_exhausted' | 'budget_stop_persistence_failed' | 'candle_observation_unavailable' | 'candle_gap' | 'recovery_limit' | 'feed_failed' | 'cache_close_failed' | 'shutdown'
+  }
   deployment?: {
     environment: 'staging'
     build_ref: string
