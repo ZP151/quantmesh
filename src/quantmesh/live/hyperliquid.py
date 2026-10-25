@@ -20,6 +20,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
 from quantmesh.domain.market_data import Bar
@@ -44,6 +45,7 @@ from quantmesh.live.contract import (
     ContinuityState,
     MarketUpdate,
     Provenance,
+    SourceState,
     UpdateKind,
 )
 from quantmesh.live.supervisor import GapFinding, VenueSupervisor
@@ -51,6 +53,13 @@ from quantmesh.live.supervisor import GapFinding, VenueSupervisor
 _CANDLE_INTERVAL = "1m"
 _RESYNC_WINDOW = timedelta(minutes=5)  # REST candle backfill window on reconnect
 _RESYNC_MAX_CANDLES = 5_000
+
+
+@dataclass(frozen=True)
+class CandleObservation:
+    rows: list[dict]
+    requested_at: datetime
+    received_at: datetime
 
 
 def _instrument(coin: str) -> Instrument:
@@ -73,6 +82,7 @@ def _update(
     source_event_id: str | None = None,
     snapshot_epoch: str | None = None,
     continuity_evidence: ContinuityEvidence | None = None,
+    received_at: datetime | None = None,
 ) -> MarketUpdate:
     return MarketUpdate(
         venue=Venue.HYPERLIQUID,
@@ -86,6 +96,7 @@ def _update(
         snapshot_epoch=snapshot_epoch,
         continuity_evidence=continuity_evidence,
         payload=payload,
+        **({"received_at": received_at} if received_at is not None else {}),
     )
 
 
@@ -94,9 +105,7 @@ def _levels(rows: list) -> list[list[float]]:
 
 
 def _source_id(value: object) -> str:
-    canonical = json.dumps(value, separators=(",", ":"), ensure_ascii=False).encode(
-        "utf-8"
-    )
+    canonical = json.dumps(value, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
 
 
@@ -143,21 +152,42 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
     def venue(self) -> Venue:
         return Venue.HYPERLIQUID
 
-    def __init__(self, transport, *, rest: RestTransport | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        transport,
+        *,
+        rest: RestTransport | None = None,
+        candle_only: bool = False,
+        candle_recovery_limit: int = 5,
+        **kwargs,
+    ) -> None:
         super().__init__(transport, **kwargs)
+        if candle_only and (
+            type(candle_recovery_limit) is not int or not 1 <= candle_recovery_limit <= 5
+        ):
+            raise ValueError("market_data_configuration_invalid")
+        self.candle_only = candle_only
+        self.resync_request_limit = candle_recovery_limit if candle_only else _RESYNC_MAX_CANDLES
+        self.observation_issue = None
+        self._sample_current_open = None
+        self._observation_baseline = None
+        self._attempted_through = None
+        self._mode_last_status = None
         self._rest = rest
         self._coins: list[str] = []
         self._last_trade_identity: dict[str, str] = {}
         self._last_candle_open: dict[str, datetime] = {}
         self._continuity_pending: dict[tuple[str, str], ContinuityState] = {}
         self._last_event_id: dict[tuple[str, str], str] = {}
-        self._disconnect_context: dict[
-            tuple[str, str], tuple[datetime, str | None]
-        ] = {}
+        self._disconnect_context: dict[tuple[str, str], tuple[datetime, str | None]] = {}
 
     def specs(self, watchlist: list[str]) -> dict[str, dict]:
         """identifier -> subscription spec (the SDK's identifier rules)."""
         self._coins = list(watchlist)
+        if self.candle_only:
+            if watchlist != ["BTC"]:
+                raise ValueError("market_data_configuration_invalid")
+            return {"candle:btc,1m": {"type": "candle", "coin": "BTC", "interval": "1m"}}
         specs: dict[str, dict] = {}
         for coin in watchlist:
             specs[f"candle:{coin.lower()},{_CANDLE_INTERVAL}"] = {
@@ -175,6 +205,11 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
     # -- dispatch -------------------------------------------------------------
 
     def dispatch(self, frame: object, now: datetime) -> list[MarketUpdate]:
+        if self.candle_only:
+            try:
+                return self._dispatch_observation(frame, now)
+            except Exception:
+                raise HyperliquidProtocolError("market_data_frame_invalid") from None
         if not isinstance(frame, dict):
             raise HyperliquidProtocolError(f"frame must be an object, got {type(frame).__name__}")
         channel = frame.get("channel")
@@ -217,9 +252,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             f"frame for unsubscribed identifier {identifier!r} (channel {channel!r})"
         )
 
-    def _on_candle(
-        self, identifier: str, data: object, now: datetime
-    ) -> list[MarketUpdate]:
+    def _on_candle(self, identifier: str, data: object, now: datetime) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].rsplit(",", 1)[0].upper()
         bar = parse_candle_frame(data, _instrument(coin), interval=_CANDLE_INTERVAL)
         final = bar.timestamp + timedelta(minutes=1) <= now
@@ -254,9 +287,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             )
         ]
 
-    def _on_book(
-        self, identifier: str, data: object, now: datetime
-    ) -> list[MarketUpdate]:
+    def _on_book(self, identifier: str, data: object, now: datetime) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].upper()
         book = parse_l2_book_frame(data, _instrument(coin))
         bids = _levels(book.bids)
@@ -294,9 +325,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             ),
         ]
 
-    def _on_trades(
-        self, identifier: str, data: object, now: datetime
-    ) -> list[MarketUpdate]:
+    def _on_trades(self, identifier: str, data: object, now: datetime) -> list[MarketUpdate]:
         coin = identifier.split(":")[1].upper()
         events = parse_trades_frame(data, _instrument(coin))
         updates: list[MarketUpdate] = []
@@ -321,9 +350,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                         "price": event.price,
                         "size": event.quantity,
                         "side": (
-                            "buy"
-                            if event.aggressor_side is None
-                            else event.aggressor_side.value
+                            "buy" if event.aggressor_side is None else event.aggressor_side.value
                         ),
                         "tid": tid,
                         "block_time_ms": block_time,
@@ -349,9 +376,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
         durable: bool = True,
     ) -> tuple[ContinuityState, ContinuityEvidence | None]:
         del consume, durable  # acknowledgement, not parsing, advances durable state
-        continuity = self._continuity_pending.get(
-            (coin, channel), ContinuityState.COMPLETE
-        )
+        continuity = self._continuity_pending.get((coin, channel), ContinuityState.COMPLETE)
         evidence = None
         if continuity is not ContinuityState.COMPLETE:
             disconnected_at, last_id = self._disconnect_context.get(
@@ -395,9 +420,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             elif update.kind is UpdateKind.QUOTE:
                 channel = "bbo"
             elif update.kind is UpdateKind.METRICS:
-                channel = (
-                    "allMids" if set(update.payload) == {"mid"} else "activeAssetCtx"
-                )
+                channel = "allMids" if set(update.payload) == {"mid"} else "activeAssetCtx"
             if channel is None:
                 continue
             self._last_event_id[(coin, channel)] = update.source_event_id
@@ -407,6 +430,20 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             self._disconnect_context.pop(key, None)
 
     def on_disconnect(self, now: datetime) -> list[GapFinding]:
+        if self.candle_only:
+            self._continuity_pending[("BTC", "candle")] = ContinuityState.UNKNOWN_AFTER_DISCONNECT
+            self._disconnect_context[("BTC", "candle")] = (
+                now,
+                self._last_event_id.get(("BTC", "candle")),
+            )
+            self._sample_current_open = None
+            self.connected = False
+            findings, self._gap_pending = self._gap_pending, []
+            for key, state, note in self._freshness.transitions(
+                self._source_keys(), now, connected=False
+            ):
+                self._mode_status(state, note, now)
+            return findings
         for coin in self._coins:
             for channel in (
                 "candle",
@@ -415,16 +452,12 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 "allMids",
                 "activeAssetCtx",
             ):
-                self._continuity_pending[(coin, channel)] = (
-                    ContinuityState.UNKNOWN_AFTER_DISCONNECT
-                )
+                self._continuity_pending[(coin, channel)] = ContinuityState.UNKNOWN_AFTER_DISCONNECT
                 self._disconnect_context[(coin, channel)] = (
                     now,
                     self._last_event_id.get((coin, channel)),
                 )
-            self._continuity_pending[(coin, "trades")] = (
-                ContinuityState.UNRECOVERABLE
-            )
+            self._continuity_pending[(coin, "trades")] = ContinuityState.UNRECOVERABLE
             self._disconnect_context[(coin, "trades")] = (
                 now,
                 self._last_event_id.get((coin, "trades")),
@@ -473,15 +506,17 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 now,
                 recovery_source="hyperliquid-websocket",
             )
-            updates.append(_update(
-                _instrument(coin),
-                UpdateKind.METRICS,
-                payload,
-                data_time=now,
-                continuity=continuity,
-                source_event_id=source_event_id,
-                continuity_evidence=evidence,
-            ))
+            updates.append(
+                _update(
+                    _instrument(coin),
+                    UpdateKind.METRICS,
+                    payload,
+                    data_time=now,
+                    continuity=continuity,
+                    source_event_id=source_event_id,
+                    continuity_evidence=evidence,
+                )
+            )
         return updates
 
     def _on_asset_ctx(self, data: object, now: datetime) -> list[MarketUpdate]:
@@ -498,21 +533,25 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 now,
                 recovery_source="hyperliquid-websocket",
             )
-            updates.append(_update(
-                _instrument(coin),
-                UpdateKind.METRICS,
-                metrics,
-                data_time=now,
-                continuity=continuity,
-                source_event_id=source_event_id,
-                continuity_evidence=evidence,
-            ))
+            updates.append(
+                _update(
+                    _instrument(coin),
+                    UpdateKind.METRICS,
+                    metrics,
+                    data_time=now,
+                    continuity=continuity,
+                    source_event_id=source_event_id,
+                    continuity_evidence=evidence,
+                )
+            )
         return updates
 
     # -- reconnect recovery -----------------------------------------------------
 
     def resync(self, now: datetime) -> list[MarketUpdate]:
         """REST-heal the channels that went dark; report unhealable gaps."""
+        if self.candle_only:
+            return self._resync_observations(now)
         if self._rest is None:
             self._gap_pending.append(
                 GapFinding("hyperliquid", "no REST transport; reconnect gaps reported only")
@@ -543,9 +582,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
             bars = []
             recovery_state = ContinuityState.KNOWN_GAP
             if expected_count > _RESYNC_MAX_CANDLES:
-                self._continuity_pending[(coin, "candle")] = (
-                    ContinuityState.UNRECOVERABLE
-                )
+                self._continuity_pending[(coin, "candle")] = ContinuityState.UNRECOVERABLE
                 self._gap_pending.append(
                     GapFinding(
                         coin,
@@ -554,9 +591,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 )
             elif expected_opens:
                 try:
-                    rows = self._rest.candles(
-                        coin, _CANDLE_INTERVAL, start=start, end=final_open
-                    )
+                    rows = self._rest.candles(coin, _CANDLE_INTERVAL, start=start, end=final_open)
                     parsed = [
                         parse_candle_frame(row, instrument, interval=_CANDLE_INTERVAL)
                         for row in rows
@@ -618,9 +653,7 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                 book = parse_l2_book_frame(snapshot, instrument)
                 bids = _levels(book.bids)
                 asks = _levels(book.asks)
-                epoch = book_snapshot_epoch(
-                    int(to_ms(book.timestamp)), coin, bids, asks
-                )
+                epoch = book_snapshot_epoch(int(to_ms(book.timestamp)), coin, bids, asks)
                 bid_id = book_side_source_event_id(epoch, "bid")
                 ask_id = book_side_source_event_id(epoch, "ask")
                 continuity, evidence = self._resume_evidence(
@@ -666,6 +699,190 @@ class HyperliquidVenueSupervisor(VenueSupervisor):
                     )
                 )
         return updates
+
+    def on_frame(self, frame: object, now: datetime) -> None:
+        if not self.candle_only:
+            return super().on_frame(frame, now)
+        updates = self.dispatch(frame, now)
+        self._push_many(updates)
+        if isinstance(frame, dict) and frame.get("channel") == "candle":
+            # Valid filtered interims renew connector liveness only. No event,
+            # source identity or durable sequence is created for their prices.
+            self._freshness.note_activity("BTC", now)
+
+    async def run(self) -> None:
+        if not self.candle_only:
+            return await super().run()
+        try:
+            await super().run()
+        finally:
+            # Cancellation joins the actual socket owner as well as the feed.
+            self.close(datetime.now(UTC))
+
+    def on_tick(self, now: datetime) -> None:
+        if not self.candle_only:
+            return super().on_tick(now)
+        if self.connected:
+            for _key, state, note in self._freshness.transitions(
+                self._source_keys(), now, connected=True
+            ):
+                if state is SourceState.CONNECTED and self.observation_issue:
+                    state, note = SourceState.LAGGING, self.observation_issue
+                self._mode_status(state, note, now)
+
+    def _mode_status(self, state, note, now):
+        if state is SourceState.CONNECTED:
+            note = None  # healthy note wording is not a persistent state transition
+        key = (state, note)
+        if key != self._mode_last_status:
+            self._push(self._status("BTC", state, note, now))
+            self._mode_last_status = key
+
+    def _observation_problem(self, code, now):
+        changed = self.observation_issue != code
+        self.observation_issue = code
+        self._continuity_pending[("BTC", "candle")] = ContinuityState.KNOWN_GAP
+        if changed:
+            self._gap_pending.append(GapFinding("BTC", code))
+        self._mode_status(SourceState.LAGGING, code, now)
+
+    def _dispatch_observation(self, frame, now):
+        if not isinstance(frame, dict) or now.utcoffset() != timedelta(0):
+            raise ValueError
+        if frame.get("channel") in {"pong", "subscriptionResponse"}:
+            return []
+        if frame.get("channel") != "candle":
+            raise ValueError
+        data = frame.get("data")
+        if not isinstance(data, dict) or data.get("s") != "BTC" or data.get("i") != "1m":
+            raise ValueError
+        bar = parse_candle_frame(data, _instrument("BTC"), interval="1m")
+        current = _floor_minute(now)
+        if bar.timestamp > current:
+            raise ValueError
+        if bar.timestamp != current:
+            return []  # an old interim is never promoted by elapsed local time
+        if self._observation_baseline is None:
+            # Preserve the session's known start across disconnects, including
+            # the interval before its first completed target/REST attempt.
+            self._observation_baseline = current
+        previous = self._sample_current_open
+        self._sample_current_open = current
+        if previous is None or current <= previous:
+            return []
+        target = current - timedelta(minutes=1)
+        if current != previous + timedelta(minutes=1):
+            self._observation_problem("candle_gap", now)
+        return self._observe_window(target, target, now)
+
+    def _observe_window(self, start, final_open, now, *, recovery=False):
+        if start > final_open:
+            return []
+        if self._observation_baseline is None:
+            self._observation_baseline = start
+        # Check the entire known gap before suppressing already attempted slots.
+        # Refusal is not a network attempt and must never shrink future recovery.
+        if _minute_open_count(start, final_open) > self.resync_request_limit:
+            self._observation_problem("recovery_limit", now)
+            return []
+        if self._attempted_through is not None:
+            start = max(start, self._attempted_through + timedelta(minutes=1))
+        if start > final_open:
+            return []
+        count = _minute_open_count(start, final_open)
+        # Mark the entire attempted target range before the network call, even
+        # on failure. Same-slot frames/reconnect cannot amplify automatic intent.
+        self._attempted_through = final_open
+        end = final_open + timedelta(minutes=1) - timedelta(milliseconds=1)
+        try:
+            observation = self._rest.observe_candles("BTC", "1m", start=start, end=end)
+            if not isinstance(observation, CandleObservation) or not (
+                observation.requested_at.utcoffset()
+                == observation.received_at.utcoffset()
+                == timedelta(0)
+                and end < observation.requested_at <= observation.received_at
+                and now <= observation.requested_at
+                and len(observation.rows) == count
+            ):
+                raise ValueError
+            bars = []
+            for index, row in enumerate(observation.rows):
+                expected = start + timedelta(minutes=index)
+                if not isinstance(row, dict) or (
+                    row.get("s"),
+                    row.get("i"),
+                    row.get("t"),
+                    row.get("T"),
+                ) != (
+                    "BTC",
+                    "1m",
+                    int(to_ms(expected)),
+                    int(to_ms(expected + timedelta(minutes=1))) - 1,
+                ):
+                    raise ValueError
+                bars.append(parse_candle_frame(row, _instrument("BTC"), interval="1m"))
+        except Exception:
+            self._observation_problem("candle_observation_unavailable", now)
+            return []
+        if recovery:
+            durable = self._last_candle_open.get("BTC")
+            self._continuity_pending[("BTC", "candle")] = (
+                ContinuityState.RECOVERED
+                if durable is not None and start == durable + timedelta(minutes=1)
+                else ContinuityState.KNOWN_GAP
+            )
+        updates = []
+        for bar in bars:
+            source_id = _candle_source_id("BTC", bar, final=True)
+            continuity, evidence = self._resume_evidence(
+                "BTC",
+                "candle",
+                source_id,
+                observation.received_at,
+                recovery_source="hyperliquid-public-info",
+            )
+            updates.append(
+                _update(
+                    _instrument("BTC"),
+                    UpdateKind.CANDLE,
+                    {
+                        "interval": "1m",
+                        "open": bar.open,
+                        "high": bar.high,
+                        "low": bar.low,
+                        "close": bar.close,
+                        "volume": bar.volume,
+                        # Existing replay's completion filter; explicitly an observed
+                        # post-close snapshot, not a provider immutability watermark.
+                        "final": True,
+                        "observation_basis": "post_close_rest_snapshot",
+                        "provider_finality": "unknown",
+                        "historical_pit": "unknown",
+                    },
+                    data_time=bar.timestamp,
+                    sequence=int(to_ms(bar.timestamp)),
+                    continuity=continuity,
+                    source_event_id=source_id,
+                    continuity_evidence=evidence,
+                    received_at=observation.received_at,
+                )
+            )
+        self.observation_issue = None
+        self._mode_status(SourceState.CONNECTED, None, observation.received_at)
+        return updates
+
+    def _resync_observations(self, now):
+        current = _floor_minute(now)
+        self._sample_current_open = current
+        durable = self._last_candle_open.get("BTC")
+        start = (
+            durable + timedelta(minutes=1)
+            if durable is not None
+            else self._observation_baseline
+            if self._observation_baseline is not None
+            else current - timedelta(minutes=self.resync_request_limit)
+        )
+        return self._observe_window(start, current - timedelta(minutes=1), now, recovery=True)
 
 
 def _frame_time(row: dict) -> datetime:
@@ -814,9 +1031,7 @@ class LiveHyperliquidTransport:
         import websockets
 
         if self._socket is None:
-            self._socket = await websockets.connect(
-                self._url, open_timeout=self._connect_timeout_s
-            )
+            self._socket = await websockets.connect(self._url, open_timeout=self._connect_timeout_s)
         if self._outbox:
             pending, self._outbox = self._outbox, []
             for message in pending:

@@ -1105,6 +1105,7 @@ def create_workstation_app(
     demo_quote_provider: Callable[[Instrument, datetime], Quote] | None = None,
     workspace_clock: Callable[[], datetime] | None = None,
     live_feed: LiveFeed | None = None,
+    market_data_only: bool = False,
     history_archive_root: Path | None = None,
     prediction: PredictionBoard | None = None,
     data_catalog: DataCatalogReader | None = None,
@@ -1155,6 +1156,53 @@ def create_workstation_app(
     renders the cross-venue comparison from the feed's latest state —
     no board without its feed, no fabricated probability.
     """
+    if market_data_only:
+        from quantmesh.api.market_data_only import build_market_data_app
+
+        if (
+            settings.allow_live_trading
+            or not settings.default_paper_mode
+            or settings.legacy_ui
+            or not _is_loopback(host or settings.workstation_host)
+            or any(
+                value is not None
+                for value in (
+                    marks,
+                    markets,
+                    watchlist,
+                    experiments,
+                    promotions,
+                    reports,
+                    forecasts,
+                    alerts,
+                    journal,
+                    mappings,
+                    decisions,
+                    documents,
+                    hl_posture,
+                    enablement,
+                    history,
+                    price_forecasts,
+                    proposal_ledger,
+                    account_sink,
+                    demo_quote_provider,
+                    history_archive_root,
+                    prediction,
+                    data_catalog,
+                    decision_packets,
+                    packet_copilot_store,
+                    packet_copilot,
+                    packet_monitoring,
+                    packet_reviews,
+                    research_jobs_client,
+                    spy_replay_service,
+                    research_snapshots_root,
+                    frozen_experiments_root,
+                )
+            )
+        ):
+            raise WorkstationConfigError("market_data_configuration_invalid")
+        return build_market_data_app(account=account, feed=live_feed, clock=workspace_clock)
     if frozen_experiments_root is not None and research_snapshots_root is None:
         raise WorkstationConfigError("frozen experiments require a configured snapshot root")
     host = settings.workstation_host if host is None else host
@@ -1823,6 +1871,18 @@ def main(argv: list[str] | None = None) -> None:
         help="loopback port override (default: QUANTMESH_WORKSTATION_PORT or 8765)",
     )
     parser.add_argument(
+        "--market-data-only",
+        action="store_true",
+        help="BTC minute observation chart, HTTP read-only with bounded cache writes",
+    )
+    parser.add_argument(
+        "--market-data-recovery-bars",
+        type=int,
+        choices=range(1, 6),
+        default=None,
+        help="mode-only reconnect observation bound1..5 (default5); no initial backfill",
+    )
+    parser.add_argument(
         "--research-snapshots-root",
         type=Path,
         help="opt in to local SPY snapshot import/storage outside a resettable demo root",
@@ -1869,6 +1929,55 @@ def main(argv: list[str] | None = None) -> None:
     ):
         parser.add_argument(flag, type=float, help="positive synthetic rehearsal threshold")
     args = parser.parse_args(argv)
+
+    if args.market_data_recovery_bars is not None and not args.market_data_only:
+        parser.error("market_data_configuration_invalid")
+    if args.market_data_only:
+        if (
+            not args.live
+            or args.demo
+            or settings.allow_live_trading
+            or not settings.default_paper_mode
+            or settings.legacy_ui
+            or settings.live_cache_root is None
+            or settings.live_cache_budget_file is None
+            or not _is_loopback(settings.workstation_host)
+            or any(
+                value is not None
+                for value in (
+                    args.demo_root,
+                    args.seed,
+                    args.research_snapshots_root,
+                    args.frozen_experiments_root,
+                    args.spy_replay_root,
+                    args.spy_replay_input,
+                    args.vnpy_python,
+                    args.vnpy_fixture,
+                    args.vnpy_root,
+                    args.paper_control_root,
+                    args.paper_max_order_quantity,
+                    args.paper_max_notional,
+                    args.paper_max_position_quantity,
+                )
+            )
+        ):
+            parser.error("market_data_configuration_invalid")
+        port = settings.workstation_port if args.port is None else args.port
+        if not 1 <= port <= 65535:
+            parser.error("market_data_configuration_invalid")
+        from quantmesh.api.market_data_only import build_market_data_cli_app
+
+        try:
+            app = build_market_data_cli_app(
+                host=settings.workstation_host, recovery_limit=args.market_data_recovery_bars or 5
+            )
+        except Exception:
+            parser.error("market_data_configuration_invalid")
+        try:
+            uvicorn.run(app, host=settings.workstation_host, port=port)
+        finally:
+            app.state.market_data_dispose_unstarted()
+        return
 
     if args.spy_replay_input is not None and args.spy_replay_root is None:
         parser.error("--spy-replay-input requires --spy-replay-root")

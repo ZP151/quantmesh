@@ -11,8 +11,10 @@ import {
   type HistoricalVenue,
   type HistoryRange,
   type MarketUpdate,
+  type Health,
+  type InstrumentWorkspace,
 } from '@/lib/api'
-import { isSourceBacked, useLiveConnection } from '@/lib/live'
+import { ageText, isSourceBacked, useLiveConnection } from '@/lib/live'
 import { usePreferences } from '@/lib/preferences'
 import { WorkspaceHeader } from './instrument/WorkspaceHeader'
 import { CockpitDetailScreen } from './CockpitDetail'
@@ -45,6 +47,13 @@ function forecastHorizon(value: string | null): ForecastHorizon {
   return value === '7' || value === '126' ? Number(value) as ForecastHorizon : 30
 }
 
+function allowedMarketChart(venue: string, symbol: string, search: URLSearchParams) {
+  return venue === 'hyperliquid' && symbol === 'BTC'
+    && search.getAll('range').length === 1 && search.get('range') === '1d'
+    && search.getAll('mode').length === 1 && search.get('mode') === 'line'
+    && [...search.keys()].every(key => key === 'range' || key === 'mode')
+}
+
 interface PacketSelection {
   contextKey: string
   mode: 'fresh' | 'persisted'
@@ -54,16 +63,21 @@ interface PacketSelection {
 }
 
 export function InstrumentWorkspaceScreen() {
+  const { t } = usePreferences()
+  const health = useQuery({ queryKey: ['health'], queryFn: api.health, retry: false })
   const { symbol = '', venue = '' } = useParams()
   const [search] = useSearchParams()
   const packetId = search.get('packet')
-  const supported = venue === 'moomoo' && ['AAPL', 'NVDA'].includes(symbol)
+  const supported = health.data !== undefined && health.data.market_data_only !== true && venue === 'moomoo' && ['AAPL', 'NVDA'].includes(symbol)
   const packet = useQuery({
     queryKey: ['decision-packet', packetId],
     queryFn: () => api.decisionPacket(packetId!),
     enabled: supported && packetId !== null && DECISION_PACKET_ID.test(packetId),
     retry: false, staleTime: Infinity,
   })
+  if (health.isPending) return <WorkspaceLoading />
+  if (health.data === undefined) return <WorkspaceError error={health.error} symbol={symbol} venue={venue} />
+  if (health.data.market_data_only === true && !allowedMarketChart(venue, symbol, search)) return <p>{t('marketData.unavailable')}</p>
   if (supported && packetId !== null && DECISION_PACKET_ID.test(packetId) && packet.isPending) return <WorkspaceLoading />
   if (supported && packetId !== null && packet.isError) return <WorkspaceError error={packet.error} symbol={symbol} venue={venue} />
   const lab = supported && (packetId !== null ? packet.data?.scenario_lab != null : search.get('analysis') === 'fresh' && search.get('horizon') !== '126')
@@ -80,9 +94,11 @@ function LegacyInstrumentWorkspaceScreen() {
     retry: false,
   })
   const liveChart = health.data?.runtime_mode === 'live' && venue === 'hyperliquid'
+  const marketDataOnly = health.data?.market_data_only === true
+  const [marketDisplay, setMarketDisplay] = useState({ mode: 'line' as 'line' | 'candles', volume: false, sma20: false, sma50: false })
   const defaultMode = liveChart ? 'line' : 'candles'
   const range = historyRange(search.get('range'), liveChart ? '1d' : '6m')
-  const requestedPacketValue = search.get('packet')
+  const requestedPacketValue = marketDataOnly ? null : search.get('packet')
   const requestedPacketId = requestedPacketValue !== null && DECISION_PACKET_ID.test(requestedPacketValue)
     ? requestedPacketValue
     : null
@@ -93,10 +109,10 @@ function LegacyInstrumentWorkspaceScreen() {
     () => ['instrument-workspace', venue, symbol, range, compare],
     [compare, range, symbol, venue],
   )
-  const mode = search.get('mode') === 'line' ? 'line' : search.get('mode') === 'candles' ? 'candles' : defaultMode
-  const volume = search.get('volume') === '1'
-  const showSma20 = search.get('sma20') === '1'
-  const showSma50 = search.get('sma50') === '1'
+  const mode = marketDataOnly ? marketDisplay.mode : search.get('mode') === 'line' ? 'line' : search.get('mode') === 'candles' ? 'candles' : defaultMode
+  const volume = marketDataOnly ? marketDisplay.volume : search.get('volume') === '1'
+  const showSma20 = marketDataOnly ? marketDisplay.sma20 : search.get('sma20') === '1'
+  const showSma50 = marketDataOnly ? marketDisplay.sma50 : search.get('sma50') === '1'
   const validVenue = isVenue(venue)
   const queryClient = useQueryClient()
   const [packetSelection, setPacketSelection] = useState<PacketSelection | null>(null)
@@ -174,6 +190,7 @@ function LegacyInstrumentWorkspaceScreen() {
   }
   if (query.isPending) return <WorkspaceLoading />
   if (query.isError && query.data === undefined) {
+    if (marketDataOnly) return <section className="space-y-3"><AcquisitionState acquisition={health.data?.market_data_acquisition} /><p role="status">{query.error instanceof ApiError && query.error.status === 404 ? t('marketData.collecting') : t('surface.unavailable', { title: 'BTC' })}</p><p className="text-xs text-muted-foreground">{t('marketData.semantics')}</p></section>
     if (liveRuntime && query.error instanceof ApiError && query.error.status === 404) {
       return <>
         <p className="border-y border-border py-3 text-sm text-muted-foreground" role="status">
@@ -185,6 +202,20 @@ function LegacyInstrumentWorkspaceScreen() {
     return <WorkspaceError error={query.error} symbol={symbol} venue={venue} />
   }
   const workspace = query.data
+  if (marketDataOnly) return <section className="min-w-0 space-y-4" aria-label={t('marketData.chart')}>
+    <header className="space-y-2"><h1 className="text-xl font-semibold">BTC · 1D</h1><p className="text-sm">{t('marketData.mode')}</p><AcquisitionState acquisition={health.data?.market_data_acquisition} /></header>
+    {query.isRefetchError && <WorkspaceRefreshWarning error={query.error} />}
+    <p className="text-sm text-muted-foreground">{t('marketData.partial')}</p>
+    <ObservedTime history={workspace.history} />
+    {stream === 'down' && <p className="text-xs" role="status">{t('marketData.transportDown')}</p>}
+    <dl className="grid min-w-0 gap-x-6 gap-y-2 text-xs sm:grid-cols-3"><div><dt className="text-muted-foreground">{t('marketData.source')}</dt><dd className="break-words">{workspace.history.source}</dd></div><div><dt className="text-muted-foreground">{t('marketData.asof')}</dt><dd><time dateTime={workspace.history.as_of}>{workspace.history.as_of}</time></dd></div><div><dt className="text-muted-foreground">{t('marketData.rows')}</dt><dd>{workspace.history.coverage.rows}</dd></div></dl>
+    <MarketCanvas chartFirst comparison={null} forecast={null} history={workspace.history} mode={mode} range="1d" volume={volume} showSma20={showSma20} showSma50={showSma50}
+      onModeChange={next => setMarketDisplay(value => ({ ...value, mode: next }))} onRangeChange={() => {}}
+      onVolumeChange={next => setMarketDisplay(value => ({ ...value, volume: next }))}
+      onSma20Change={next => setMarketDisplay(value => ({ ...value, sma20: next }))} onSma50Change={next => setMarketDisplay(value => ({ ...value, sma50: next }))} />
+    <p className="text-xs text-muted-foreground">{t('marketData.quote')}</p>
+    <details className="border-t text-xs"><summary className="min-h-11 cursor-pointer py-3">{t('marketData.coverage')}</summary><div className="space-y-2 pb-3"><p>{t('marketData.semantics')}</p><p>{t('marketData.sequence')}</p><p className="break-words">{workspace.history.coverage.start} → {workspace.history.coverage.end}</p><p className="break-words">{workspace.history.license}</p>{workspace.history.limitations.map((value, index) => <p className="break-words" key={index}>{value}</p>)}{(workspace.history.gaps?.length ?? 0) > 0 && <p className="break-words">{t('screen.workspace.historyGaps', { count: String(workspace.history.gaps.length), detail: workspace.history.gaps.join(', ') })}</p>}</div></details>
+  </section>
   const displayedRange = query.isPlaceholderData ? workspace.history.range : range
   const decisionContextKey = `${venue}:${symbol}:${range}`
   const workspaceContextKey = `${workspace.instrument.venue}:${workspace.instrument.symbol}:${workspace.history.range}`
@@ -479,3 +510,19 @@ function LegacyInstrumentWorkspaceScreen() {
 }
 
 export default InstrumentWorkspaceScreen
+
+function AcquisitionState({ acquisition }: { acquisition?: Health['market_data_acquisition'] }) {
+  const { t } = usePreferences()
+  const stopped = acquisition !== undefined && !['starting', 'running'].includes(acquisition.state)
+  return <div className="space-y-1 text-sm" role="status"><p>{acquisition ? t(`marketData.${acquisition.state}`) : t('surface.unavailable', { title: t('marketData.mode') })}</p>{acquisition?.reason && <p className="break-words text-xs text-muted-foreground">{t('marketData.reason')}: {acquisition.reason}</p>}{stopped && <p className="text-xs text-muted-foreground">{t('marketData.retained')}</p>}</div>
+}
+
+function ObservedTime({ history }: { history: InstrumentWorkspace['history'] }) {
+  const { locale, t } = usePreferences()
+  const [, tick] = useState(0)
+  useEffect(() => { const timer = setInterval(() => tick(value => value + 1), 5_000); return () => clearInterval(timer) }, [])
+  const last = history.bars.at(-1)
+  const instant = Date.parse(last?.timestamp ?? '')
+  const age = Number.isFinite(instant) ? Math.max(0, Date.now() - instant) : null
+  return <dl className="grid min-w-0 gap-x-6 gap-y-2 text-xs sm:grid-cols-3"><div><dt>{t('marketData.lastMinute')}</dt><dd aria-label={t('marketData.lastMinute')} className="break-words">{last?.timestamp ?? t('marketData.unknown')}</dd></div><div><dt>{t('marketData.age')}</dt><dd aria-label={t('marketData.age')}>{age === null ? t('marketData.unknown') : ageText(age, locale)}</dd></div><div><dt>{t('marketData.received')}</dt><dd className="break-words">{last?.live_lineage?.received_at ?? t('marketData.unknown')}</dd></div></dl>
+}
