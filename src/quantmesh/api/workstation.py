@@ -51,7 +51,7 @@ from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from urllib.parse import quote, urlsplit
 
 from fastapi import APIRouter, Depends, FastAPI, Form, HTTPException, Request
@@ -67,10 +67,7 @@ from quantmesh.ai.retrieval import DocumentIndex
 from quantmesh.ai.transport import HttpModelTransport
 from quantmesh.api.app import _order_summary, create_app
 from quantmesh.api.data_catalog import DataCatalogReader, data_catalog_router
-from quantmesh.api.frozen_experiments import create_frozen_experiments_router
 from quantmesh.api.paper_controls import paper_controls_router
-from quantmesh.api.realdata_snapshots import create_realdata_snapshots_router
-from quantmesh.api.research_jobs import create_research_jobs_router
 from quantmesh.api.watchlist import WatchlistError, WatchlistRecord, WatchlistStore
 from quantmesh.data.catalog import TrustedDataCatalog
 from quantmesh.domain.models import Instrument, Quote, Venue
@@ -120,9 +117,11 @@ from quantmesh.research.experiments import ExperimentRegistry
 from quantmesh.research.frozen_experiments import FrozenExperimentCatalog
 from quantmesh.research.realdata_snapshots import SnapshotCatalog
 from quantmesh.research.reports import ReportRegistry
-from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
 from quantmesh.research.spy_replay import ReplayService
 from quantmesh.settings import settings
+
+if TYPE_CHECKING:
+    from quantmesh.research.service_client import LocalResearchClient, ResearchServiceClient
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 STATIC_DIR = Path(__file__).parent / "static"
@@ -193,6 +192,19 @@ def _spa_missing_page() -> str:
 
 class WorkstationConfigError(ValueError):
     """The workstation was constructed with an invalid configuration."""
+
+
+def _research_router_factories():
+    """Load ordinary research dependencies before ordinary assembly has effects."""
+    from quantmesh.api.frozen_experiments import create_frozen_experiments_router
+    from quantmesh.api.realdata_snapshots import create_realdata_snapshots_router
+    from quantmesh.api.research_jobs import create_research_jobs_router
+
+    return (
+        create_research_jobs_router,
+        create_realdata_snapshots_router,
+        create_frozen_experiments_router,
+    )
 
 
 def _is_loopback(host: str) -> bool:
@@ -1203,6 +1215,11 @@ def create_workstation_app(
         ):
             raise WorkstationConfigError("market_data_configuration_invalid")
         return build_market_data_app(account=account, feed=live_feed, clock=workspace_clock)
+    (
+        create_research_jobs_router,
+        create_realdata_snapshots_router,
+        create_frozen_experiments_router,
+    ) = _research_router_factories()
     if frozen_experiments_root is not None and research_snapshots_root is None:
         raise WorkstationConfigError("frozen experiments require a configured snapshot root")
     host = settings.workstation_host if host is None else host
@@ -1979,6 +1996,7 @@ def main(argv: list[str] | None = None) -> None:
             app.state.market_data_dispose_unstarted()
         return
 
+    _research_router_factories()
     if args.spy_replay_input is not None and args.spy_replay_root is None:
         parser.error("--spy-replay-input requires --spy-replay-root")
     if args.spy_replay_root is not None:
