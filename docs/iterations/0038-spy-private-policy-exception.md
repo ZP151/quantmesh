@@ -1,6 +1,7 @@
 # Iteration 0038: SPY private diagnostic exception, bounded product leaf
 
-Status: core frozen550bf3f; R1 two P2 fixes implemented, known-fix R2 pending.
+Status: bounded offline software READY after the sole known-fix R2; actual data
+and the original independent research Goal remain uncompleted.
 Issue: [#177](https://github.com/ZP151/quantmesh/issues/177).
 Base actual main:198a9f8776ed6531c8ca206086f4a600e1969a65,
 tree006714ab12e841048162099ec9e06f36e3422154 (merged PR230).
@@ -99,10 +100,14 @@ Those proof rereads now use the bounded reader. CLI `verify --policy-exception`
 explicitly opts into the1MiB v3 manifest path; default legacy behavior is retained.
 This is completion of the same known F2 correction, not a third structural review.
 42-final-core.log:44PASS/5 existing warnings after that correction and formatting;
-41-final-ruff.log and43-final-source-pins.json pass. Final source now awaits
-the same reviewer's R2 closure only, with no further structural audit.
-R2 reviews only these known corrections and targeted evidence. No third structural
-round; no collector dispatch or completion claim before that review returns.
+41-final-ruff.log and43-final-source-pins.json pass.
+The same R2 is now CLOSED READY onbee08a95514639dd75b7fa42d3a4e80b6c64bfab/tree
+09055fb3a6db1db503908bfe5580172c28be679f. Report `review-r2.md` SHA256
+1daf83477ae3f5fc1ba71bba03be6f2689e8f9aa5d3c85e6901bbc71d0416800 closes both
+R1 findings with no unresolved known finding. Reviewer independently ran40 checks
+on6a0d plus the final4 residual regressions onbee08, inspected author44PASS and
+original15AST pins, and freshly recomputed the unchanged engine hash. No third
+structural round or actual data/numerical/CI/deployment acceptance is inferred.
 
 ## Commit and integration boundary
 
@@ -113,6 +118,11 @@ fixes; it is not final acceptance. Commit hooks were explicitly bypassed for the
 scoped source freeze because the sole publisher owns broad suites/CI/generated
 artifacts. No push, PR or CI was performed by this writer. New glue uses existing
 project engines/packages and adds no copied upstream source or license changes.
+Final reviewed source isbee08a9; the following administrative commit changes only
+this iteration and the owned plan to record the completed review. The immutable
+handoff and bundle preserve exact final commit/tree, proof/log hashes and collector
+contract. Sole publisher owns API generation/build/exact-lock CI/merge/deployment;
+software READY alone is not a dispatch admission or a real-input qualification.
 
 ## Remaining user-loop evidence
 

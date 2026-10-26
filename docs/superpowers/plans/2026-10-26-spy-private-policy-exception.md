@@ -1,6 +1,10 @@
 # SPY once-only private policy exception — technical boundary / short plan
 
-Status: **approved and implemented within the five-file lock; independent review pending**.
+Status: **bounded offline implementation reviewed READY; real input/research pending**.
+Final sourcebee08a95514639dd75b7fa42d3a4e80b6c64bfab/tree
+09055fb3a6db1db503908bfe5580172c28be679f. One independent whole-slice R1 found
+two P2; the same known-fix R2 closed both. No third structural review. Durable
+evidence is in the owned iteration. Publisher and real operator gates remain.
 Root selected this plan and one implementation writer. Initial implementation ACK
 was 2026-10-26T07:44:53Z. A harness update interrupted execution; recovery ACK
 2026-10-26T14:38:51Z starts the renewed core deadline15:38:51Z and final reviewed
