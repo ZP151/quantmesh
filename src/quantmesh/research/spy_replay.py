@@ -21,6 +21,7 @@ from quantmesh.data.calendars import XNYS_REGULAR_VERSION, CalendarService, Sess
 from quantmesh.data.objects import ObjectRef, ObjectStore, is_reparse_point
 from quantmesh.ops.paper_controls import WriterLease
 from quantmesh.persistence.jsonl import JsonlStore
+from quantmesh.research import spy_policy_exception as once
 from quantmesh.research import spy_replay_engine as engine
 
 Digest = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
@@ -233,6 +234,38 @@ class SampleEvidence(SampleProvenance):
         return self
 
 
+EXCEPTION_KIND = "reviewed_opend_policy_exception_once_v3"
+PROOF_NAMES = {
+    "human-approval.json",
+    "source-use-policy.md",
+    "capture-intent.json",
+    "capture-authorization.json",
+    "post-review.json",
+    "acceptance.json",
+    "freeze.json",
+    "protocol.json",
+}
+
+
+class ExceptionSampleEvidence(SampleEvidence):
+    schema_version: Literal[2] = 2
+    evidence_kind: Literal["reviewed_opend_policy_exception_once_v3"]
+    policy_exception: once.OnceBinding
+    capture_intent_ref: ObjectRef
+    proof_refs: dict[str, ObjectRef]
+
+    @model_validator(mode="after")
+    def proof_bounds(self):
+        if set(self.proof_refs) != PROOF_NAMES or any(
+            not 1
+            <= ref.byte_length
+            <= (MAX_OBJECT if name in {"protocol.json", "freeze.json"} else once.MAX_PROOF)
+            for name, ref in self.proof_refs.items()
+        ):
+            raise ValueError("exception_proofs_invalid")
+        return self
+
+
 class SampleFreshnessView(Contract):
     read_at_utc: datetime
     evaluated_snapshot_digest: Digest
@@ -435,11 +468,16 @@ class ReplayInputSummary(Contract):
     limitations: list[str]
 
 
+class ExceptionInputSummary(ReplayInputSummary):
+    evidence_kind: Literal["reviewed_opend_policy_exception_once_v3"]
+    policy_exception: once.OnceBinding
+
+
 class ReplayOptions(Contract):
     schema_version: Literal[1] = 1
     configured: bool
     unavailable_reason: Literal["not_configured", "input_not_qualified"] | None
-    input: ReplayInputSummary | None
+    input: ReplayInputSummary | ExceptionInputSummary | None
     fixed: dict = Field(
         default_factory=lambda: dict(
             strategy_id="SMA100-long-cash",
@@ -485,9 +523,14 @@ class ReplayInput:
     bars_csv: bytes
     distributions_json: bytes
     frozen_at_utc: datetime
-    evidence_kind: Literal["reviewed_opend_freeze_v2", "engineering_fixture"]
+    evidence_kind: Literal[
+        "reviewed_opend_freeze_v2", "engineering_fixture", "reviewed_opend_policy_exception_once_v3"
+    ]
     source_root: Path | None = None
     provenance: SampleProvenance | None = None
+    policy_exception: once.OnceBinding | None = None
+    capture_intent_ref: ObjectRef | None = None
+    proof_refs: dict[str, ObjectRef] | None = None
 
     def verified(self):
         freezer = _freezer()
@@ -495,7 +538,30 @@ class ReplayInput:
         w = protocol["window"]
         if freezer.plan_window(datetime.fromisoformat(w["as_of_utc"])) != w:
             raise ReplayError("input_not_qualified")
-        expected = freezer._protocol_v2(w)
+        exception = self.evidence_kind == EXCEPTION_KIND
+        if exception:
+            if (
+                self.source_root is None
+                or self.policy_exception is None
+                or self.capture_intent_ref is None
+            ):
+                raise ReplayError("input_not_qualified")
+            frozen = freezer.reopen_freeze(
+                self.source_root, self.snapshot_digest, policy_exception=True
+            )
+            if (
+                frozen["protocol"] != protocol
+                or frozen["policy_exception"] != self.policy_exception.model_dump(mode="json")
+                or frozen["capture_intent_ref"] != self.capture_intent_ref.model_dump(mode="json")
+            ):
+                raise ReplayError("input_not_qualified")
+            expected = freezer._protocol_v3(
+                w,
+                self.policy_exception.model_dump(mode="json"),
+                self.capture_intent_ref.model_dump(mode="json"),
+            )
+        else:
+            expected = freezer._protocol_v2(w)
         if any(
             protocol.get(k) != expected[k]
             for k in (
@@ -513,7 +579,11 @@ class ReplayInput:
             raise ReplayError("input_not_qualified")
         if self.frozen_at_utc.utcoffset() != UTC.utcoffset(self.frozen_at_utc):
             raise ReplayError("input_not_qualified")
-        if self.evidence_kind not in {"reviewed_opend_freeze_v2", "engineering_fixture"}:
+        if self.evidence_kind not in {
+            "reviewed_opend_freeze_v2",
+            "engineering_fixture",
+            EXCEPTION_KIND,
+        }:
             raise ReplayError("input_not_qualified")
         for name, raw in (
             ("normalized-bars.csv", self.bars_csv),
@@ -554,7 +624,8 @@ class ReplayInput:
     def summary(self):
         p, _, _ = self.verified()
         w = p["window"]
-        return ReplayInputSummary(
+        cls = ExceptionInputSummary if self.policy_exception is not None else ReplayInputSummary
+        return cls(
             snapshot_digest=self.snapshot_digest,
             protocol_digest=digest(self.protocol_bytes),
             as_of_utc=w["as_of_utc"],
@@ -563,9 +634,22 @@ class ReplayInput:
             observation_start=w["score_start"],
             observation_end=w["score_end"],
             evidence_kind=self.evidence_kind,
+            **(
+                {"policy_exception": self.policy_exception}
+                if self.policy_exception is not None
+                else {}
+            ),
             limitations=(
                 ["Synthetic engineering fixture; not real market acceptance."]
                 if self.evidence_kind == "engineering_fixture"
+                else []
+            )
+            + (
+                [
+                    "diagnostic_only_under_policy_exception; external API storage "
+                    "applicability UNKNOWN; no provider permission verification."
+                ]
+                if self.policy_exception is not None
                 else []
             )
             + LIMITATIONS,
@@ -604,7 +688,17 @@ class ReplayInput:
             distributions=protocol["members"]["normalized-distributions.json"],
         )
         w = protocol["window"]
-        return SampleEvidence(
+        cls = ExceptionSampleEvidence if self.policy_exception is not None else SampleEvidence
+        return cls(
+            **(
+                {
+                    "policy_exception": self.policy_exception,
+                    "capture_intent_ref": self.capture_intent_ref,
+                    "proof_refs": self.proof_refs,
+                }
+                if self.policy_exception is not None
+                else {}
+            ),
             **{
                 **values,
                 "refs": refs,
@@ -650,6 +744,12 @@ class ReplayInput:
             if path.stat().st_size > 16384:
                 raise ValueError
             descriptor = _json(path.read_bytes())
+            if (
+                isinstance(descriptor, dict)
+                and type(descriptor.get("schema_version")) is int
+                and descriptor["schema_version"] == 3
+            ):
+                return cls._from_v3_descriptor(descriptor)
             if set(descriptor) != {"freeze_root", "freeze_digest", "acceptance"}:
                 raise ValueError
             root = Path(descriptor["freeze_root"]).absolute()
@@ -740,6 +840,109 @@ class ReplayInput:
         except Exception:
             raise ReplayError("input_not_qualified") from None
 
+    @classmethod
+    def _from_v3_descriptor(cls, descriptor):
+        if set(descriptor) != {"schema_version", "freeze_root", "freeze_digest", "acceptance"}:
+            raise ValueError("v3_descriptor_invalid")
+        root = Path(descriptor["freeze_root"]).absolute()
+        _safe(root)
+        freezer, store = _freezer(), ObjectStore(root)
+        frozen = freezer.reopen_freeze(root, descriptor["freeze_digest"], policy_exception=True)
+        if frozen["schema_id"] != "qm.spy-daily.freeze.v3.policy-exception-once":
+            raise ValueError("v3_descriptor_invalid")
+        acceptance_ref = ObjectRef.model_validate(descriptor["acceptance"])
+        if acceptance_ref.byte_length > once.MAX_PROOF:
+            raise ValueError
+        acceptance = _AcceptanceV3.model_validate(
+            once.loads(once.read_object(store, acceptance_ref))
+        )
+        binding = once.verify_authority(frozen["policy_exception"], store)
+        protocol_ref = ObjectRef.model_validate(frozen["protocol_ref"])
+        members = frozen["members"]
+        if (
+            acceptance.snapshot_digest != descriptor["freeze_digest"]
+            or acceptance.protocol_digest != protocol_ref.digest
+            or acceptance.reviewed_at_utc < datetime.fromisoformat(frozen["frozen_at_utc"])
+            or acceptance.use_document_sha256 != binding.policy_document_ref.digest
+            or acceptance.authorization_sha256 != members["capture-authorization.json"]["digest"]
+            or acceptance.post_review_sha256 != members["post-review.json"]["digest"]
+            or acceptance.policy_exception != binding
+            or acceptance.capture_intent_ref.model_dump(mode="json") != frozen["capture_intent_ref"]
+        ):
+            raise ValueError("acceptance_binding_invalid")
+        raw = _json(once.read_object(store, members["raw-capture.json"], limit=freezer.MAX_BYTES))
+        review = _json(once.read_object(store, members["post-review.json"]))
+        freeze_probe = ObjectRef(
+            digest=descriptor["freeze_digest"], byte_length=0, media_type="application/json"
+        )
+        freeze_ref = freeze_probe.model_copy(
+            update={"byte_length": store.path_for(freeze_probe).stat().st_size}
+        )
+        proofs = {
+            name: ObjectRef.model_validate(members[name])
+            for name in (
+                "human-approval.json",
+                "source-use-policy.md",
+                "capture-intent.json",
+                "capture-authorization.json",
+                "post-review.json",
+            )
+        }
+        proofs.update(
+            {
+                "acceptance.json": acceptance_ref,
+                "freeze.json": freeze_ref,
+                "protocol.json": protocol_ref,
+            }
+        )
+        provenance = SampleProvenance(
+            times=EvidenceTimes(
+                requested_at_utc=_fact(raw["requested_at_utc"]),
+                received_at_utc=_fact(raw["received_at_utc"]),
+                post_reviewed_at_utc=_fact(review["reviewed_at_utc"]),
+                acceptance_reviewed_at_utc=_fact(acceptance.reviewed_at_utc.isoformat()),
+                available_at_utc=_fact(status="unknown", reason="not_established_by_receipts"),
+            ),
+            refs=EvidenceRefs(
+                freeze=freeze_ref,
+                acceptance=acceptance_ref,
+                raw_capture=ObjectRef.model_validate(members["raw-capture.json"]),
+                authorization=ObjectRef.model_validate(members["capture-authorization.json"]),
+                post_review=ObjectRef.model_validate(members["post-review.json"]),
+            ),
+            source_facts=SourceFacts(
+                source_use=_fact("POLICY_EXCEPTION_ONCE"),
+                allowed_use=_fact(binding.scope),
+                price_adjustment=_fact(review["price_adjustment"]),
+                currency=_fact(review["currency"]),
+                volume_unit=_fact(review["volume_unit"]),
+                dividend_unit=_fact(review["dividend_unit"]),
+                action_coverage=_fact(review["action_coverage_status"]),
+            ),
+            review_hashes=ReviewHashes(
+                action_coverage_sha256=review["action_coverage_sha256"],
+                field_semantics_sha256=review["field_semantics_sha256"],
+                independent_input_review_sha256=acceptance.independent_input_review_sha256,
+            ),
+        )
+        value = cls(
+            snapshot_digest=descriptor["freeze_digest"],
+            protocol_bytes=once.read_object(store, protocol_ref, limit=MAX_OBJECT),
+            bars_csv=once.read_object(store, members["normalized-bars.csv"], limit=MAX_OBJECT),
+            distributions_json=once.read_object(
+                store, members["normalized-distributions.json"], limit=MAX_OBJECT
+            ),
+            frozen_at_utc=datetime.fromisoformat(frozen["frozen_at_utc"]),
+            evidence_kind=EXCEPTION_KIND,
+            source_root=root,
+            provenance=provenance,
+            policy_exception=binding,
+            capture_intent_ref=acceptance.capture_intent_ref,
+            proof_refs=proofs,
+        )
+        value.verified()
+        return value
+
 
 class _Acceptance(Contract):
     status: Literal["accepted_for_historical_development_replay"]
@@ -757,6 +960,15 @@ class _Acceptance(Contract):
         ) or self.reviewed_at_utc.utcoffset() != UTC.utcoffset(self.reviewed_at_utc):
             raise ValueError("acceptance evidence invalid")
         return self
+
+
+class _AcceptanceV3(_Acceptance):
+    schema_version: Literal[3]
+    status: Literal["accepted_for_policy_exception_historical_diagnostic"]
+    authorization_sha256: Digest
+    post_review_sha256: Digest
+    policy_exception: once.OnceBinding
+    capture_intent_ref: ObjectRef
 
 
 class ReplayService:
@@ -848,13 +1060,15 @@ class ReplayService:
                 if any(report.get(k) != v for k, v in expected.items()):
                     raise ValueError
                 version = report.get("schema_version")
-                if type(version) is not int or version not in {1, 2}:
+                if type(version) is not int or version not in {1, 2, 3}:
                     raise ValueError("unsupported report version")
                 if version == 1:
                     if "sample_evidence" in report:
                         raise ValueError("legacy evidence cannot be backfilled")
                 else:
-                    evidence = SampleEvidence.model_validate(report["sample_evidence"])
+                    evidence = (
+                        ExceptionSampleEvidence if version == 3 else SampleEvidence
+                    ).model_validate(report["sample_evidence"])
                     if (
                         evidence.snapshot_digest,
                         evidence.protocol_digest,
@@ -873,12 +1087,158 @@ class ReplayService:
                         report["window"]["source_grace_minutes"],
                     ):
                         raise ValueError("sample evidence binding mismatch")
+                    if version == 3:
+                        self._verify_exception(job, evidence, report)
             if job.decision_ref is not None and self._object(job.decision_ref) != canonical(
                 job.decision.model_dump(mode="json")
             ):
                 raise ValueError
         except Exception:
             raise ReplayError("artifact_invalid") from None
+
+    def _verify_exception(self, job, evidence, report):
+        """Verify thin original proof objects without current input, prices or math."""
+        b, refs = evidence.policy_exception, evidence.proof_refs
+        once.verify_authority(b, self.objects)
+        proof = {
+            name: once.read_object(
+                self.objects,
+                ref,
+                limit=MAX_OBJECT if name in {"protocol.json", "freeze.json"} else once.MAX_PROOF,
+            )
+            for name, ref in refs.items()
+        }
+        frozen, protocol, auth, review = (
+            _json(proof[name])
+            for name in (
+                "freeze.json",
+                "protocol.json",
+                "capture-authorization.json",
+                "post-review.json",
+            )
+        )
+        acceptance = _AcceptanceV3.model_validate(once.loads(proof["acceptance.json"]))
+        if (
+            job.job_id != b.job_idempotency_key
+            or evidence.snapshot_digest != refs["freeze.json"].digest
+            or evidence.protocol_digest != refs["protocol.json"].digest
+            or evidence.refs.freeze != refs["freeze.json"]
+            or evidence.refs.acceptance != refs["acceptance.json"]
+            or evidence.refs.authorization != refs["capture-authorization.json"]
+            or evidence.refs.post_review != refs["post-review.json"]
+            or refs["human-approval.json"] != b.human_approval_ref
+            or refs["source-use-policy.md"] != b.policy_document_ref
+            or refs["capture-intent.json"] != evidence.capture_intent_ref
+            or frozen.get("schema_id") != "qm.spy-daily.freeze.v3.policy-exception-once"
+            or frozen.get("policy_exception") != b.model_dump(mode="json")
+            or frozen.get("capture_intent_ref")
+            != evidence.capture_intent_ref.model_dump(mode="json")
+            or frozen.get("protocol_ref") != refs["protocol.json"].model_dump(mode="json")
+            or frozen.get("members") != protocol.get("members")
+            or acceptance.policy_exception != b
+            or acceptance.capture_intent_ref != evidence.capture_intent_ref
+            or acceptance.snapshot_digest != evidence.snapshot_digest
+            or acceptance.protocol_digest != evidence.protocol_digest
+            or acceptance.use_document_sha256 != b.policy_document_ref.digest
+            or acceptance.authorization_sha256 != refs["capture-authorization.json"].digest
+            or acceptance.post_review_sha256 != refs["post-review.json"].digest
+            or acceptance.independent_input_review_sha256
+            != evidence.review_hashes.independent_input_review_sha256
+        ):
+            raise ValueError("exception_report_binding_invalid")
+        freezer = _freezer()
+        as_of = datetime.fromisoformat(protocol["window"]["as_of_utc"])
+        requested = datetime.fromisoformat(evidence.times.requested_at_utc.value)
+        checked_auth = freezer._authorization(auth, as_of, requested, proof_store=self.objects)
+        checked_review = freezer._typed_record(
+            freezer.PostReviewV3,
+            review,
+            ("history_available", "full_action_history_reviewed"),
+            "post_review_unqualified",
+        )
+        expected_facts = SourceFacts(
+            source_use=_fact("POLICY_EXCEPTION_ONCE"),
+            allowed_use=_fact(b.scope),
+            price_adjustment=_fact(checked_review["price_adjustment"]),
+            currency=_fact(checked_review["currency"]),
+            volume_unit=_fact(checked_review["volume_unit"]),
+            dividend_unit=_fact(checked_review["dividend_unit"]),
+            action_coverage=_fact(checked_review["action_coverage_status"]),
+        )
+        if (
+            report["window"] != protocol["window"]
+            or report["costs"] != protocol["costs"]
+            or evidence.as_of_utc != protocol["window"]["as_of_utc"]
+            or datetime.fromisoformat(evidence.frozen_at_utc)
+            != datetime.fromisoformat(frozen["frozen_at_utc"])
+            or evidence.source_facts != expected_facts
+            or evidence.calendar
+            != SampleCalendar(
+                calendar_version=protocol["window"]["calendar_version"],
+                last_session=protocol["window"]["score_end"],
+            )
+        ):
+            raise ValueError("exception_displayed_facts_invalid")
+        marker = once.verify_intent(b, checked_auth, evidence.capture_intent_ref, self.objects)
+        members = frozen["members"]
+        if (
+            checked_review["policy_exception"] != b.model_dump(mode="json")
+            or checked_review["authorization_sha256"] != refs["capture-authorization.json"].digest
+            or checked_review["capture_sha256"] != evidence.refs.raw_capture.digest
+            or checked_review["capture_intent_ref"]
+            != evidence.capture_intent_ref.model_dump(mode="json")
+            or members["raw-capture.json"] != evidence.refs.raw_capture.model_dump(mode="json")
+            or any(
+                members[name] != refs[name].model_dump(mode="json")
+                for name in (
+                    "capture-authorization.json",
+                    "post-review.json",
+                    "human-approval.json",
+                    "source-use-policy.md",
+                    "capture-intent.json",
+                )
+            )
+            or members["normalized-bars.csv"]
+            != evidence.refs.normalized_bars.model_dump(mode="json")
+            or members["normalized-distributions.json"]
+            != evidence.refs.distributions.model_dump(mode="json")
+            or checked_review["action_coverage_sha256"]
+            != evidence.review_hashes.action_coverage_sha256
+            or checked_review["field_semantics_sha256"]
+            != evidence.review_hashes.field_semantics_sha256
+            or not as_of
+            <= datetime.fromisoformat(marker["consumed_at_utc"])
+            <= requested
+            <= datetime.fromisoformat(evidence.times.received_at_utc.value)
+            <= datetime.fromisoformat(review["reviewed_at_utc"])
+            <= datetime.fromisoformat(frozen["frozen_at_utc"])
+            <= acceptance.reviewed_at_utc
+            or datetime.fromisoformat(frozen["frozen_at_utc"])
+            - datetime.fromisoformat(review["reviewed_at_utc"])
+            > timedelta(minutes=30)
+            or evidence.times.post_reviewed_at_utc.value != review["reviewed_at_utc"]
+            or datetime.fromisoformat(evidence.times.acceptance_reviewed_at_utc.value)
+            != acceptance.reviewed_at_utc
+            or evidence.source_facts.source_use.value != "POLICY_EXCEPTION_ONCE"
+            or evidence.source_facts.pit.status != "unknown"
+            or evidence.source_facts.revision_status.status != "unknown"
+        ):
+            raise ValueError("exception_report_proof_invalid")
+        expected = freezer._protocol_v3(
+            protocol["window"],
+            b.model_dump(mode="json"),
+            evidence.capture_intent_ref.model_dump(mode="json"),
+        )
+        for key in (
+            "runtime",
+            "normalizer_sha256",
+            "source_code_sha256",
+            "policy_binding_code_sha256",
+        ):
+            expected[key] = protocol[key]
+        expected["members"] = members
+        if protocol != expected or freezer._digest(protocol["window"]) != b.window_sha256:
+            raise ValueError("exception_protocol_invalid")
 
     def _find(self, key):
         job = next((j for j in self._records() if j.job_id == _uuid(key)), None)
@@ -941,12 +1301,29 @@ class ReplayService:
             ):
                 raise ReplayError("input_pin_mismatch")
             if (
+                self._input.policy_exception is not None
+                and key != self._input.policy_exception.job_idempotency_key
+            ):
+                raise ReplayError("invalid_request")
+            if (
                 digest(Path(__file__).read_bytes()) != _SOURCE_SHA
                 or digest(Path(engine.__file__).read_bytes()) != _ENGINE_SHA
             ):
                 raise ReplayError("input_not_qualified")
             protocol, frame, distributions = self._input.verified()
             sample_evidence = self._input.evidence(protocol, frame)
+            if self._input.policy_exception is not None:
+                source = ObjectStore(self._input.source_root)
+                for name, ref in self._input.proof_refs.items():
+                    limit = (
+                        MAX_OBJECT if name in {"protocol.json", "freeze.json"} else once.MAX_PROOF
+                    )
+                    raw_proof = once.read_object(source, ref, limit=limit)
+                    if (
+                        not 1 <= len(raw_proof) <= limit
+                        or self.objects.put_bytes(ref.media_type, raw_proof) != ref
+                    ):
+                        raise ReplayError("input_not_qualified")
             at = _now()
             job = _StoredJob(
                 job_id=key,
@@ -964,7 +1341,7 @@ class ReplayService:
             w = protocol["window"]
             calculation = engine.calculate(frame, distributions, w["score_start"], w["score_end"])
             report = dict(
-                schema_version=2,
+                schema_version=3 if self._input.policy_exception is not None else 2,
                 job_id=key,
                 request_digest=request_digest,
                 **request.model_dump(),

@@ -314,9 +314,28 @@ def test_run_step_emits_one_first_failure_event_and_timeout_exit_code(
 
 def test_run_step_accepts_zero_exit_during_final_controller_wait(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(release_gate, "STEPS", [])
+    class ExitedDuringWait:
+        pid = 4242
+        returncode = None
+        polls = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, traceback):
+            return False
+
+        def poll(self):
+            self.polls += 1
+            if self.polls == 2:
+                self.returncode = 0
+            return self.returncode
+
+    proc = ExitedDuringWait()
+    monkeypatch.setattr(release_gate.subprocess, "Popen", lambda *args, **kwargs: proc)
     ok, _ = release_gate.run_step(
         "deadline success probe",
-        [sys.executable, "-u", "-c", "import time; time.sleep(0.05)"],
+        [sys.executable, "-u", "-c", "pass"],
         tmp_path,
         tmp_path,
         timeout=0.5,
@@ -324,6 +343,7 @@ def test_run_step_accepts_zero_exit_during_final_controller_wait(tmp_path: Path,
     )
 
     assert ok is True
+    assert proc.polls >= 2
     assert "TIMEOUT" not in (tmp_path / "01-deadline-success-probe.log").read_text()
     assert _events(tmp_path)[-1]["exit_code"] == 0
 

@@ -104,11 +104,12 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
         calendar="4.13.2", numpy="2.5.2", pandas="2.3.3", python=platform.python_version()
     )
     assert re.fullmatch(r"3\.13\.[0-9]+", protocol["runtime"]["python"]) is not None
-    # The protocol records the Python patch version. Pin every other byte of
-    # the fixture while accepting the patch version installed on this runner.
+    # The protocol records the Python patch version and the normalizer source
+    # hash. Pin the current v3-extended source bytes while accepting this
+    # runner's Python patch version; original stored reports are unchanged.
     protocol["runtime"]["python"] = "<python-patch>"
     assert replay.digest(replay.canonical(protocol)) == (
-        "59ad8d0dee47214ec84f970821e122e2edcdc833e094d076eebe9b63f24ea2a5"
+        "f5afaf49dd3402193e16e3da0a84f314050aa155aa663879a502ef6884516ddd"
     )
     assert value.snapshot_digest == replay.digest(
         b"INTERNAL SYNTHETIC121" + value.bars_csv + value.protocol_bytes
