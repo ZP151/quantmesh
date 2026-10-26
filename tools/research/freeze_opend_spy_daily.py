@@ -830,7 +830,7 @@ def _loads(raw):
         raise FreezeError("invalid_json") from None
 
 
-def reopen_freeze(root, freeze_digest):
+def reopen_freeze(root, freeze_digest, *, policy_exception=False):
     if not isinstance(freeze_digest, str) or not re.fullmatch(r"[0-9a-f]{64}", freeze_digest):
         raise FreezeError("freeze_digest_invalid")
     store = ObjectStore(Path(root))
@@ -841,7 +841,12 @@ def reopen_freeze(root, freeze_digest):
     size = path.stat().st_size
     if size > MAX_BYTES:
         raise FreezeError("payload_too_large")
-    freeze = _loads(store.get_bytes(probe.model_copy(update={"byte_length": size})))
+    reference = probe.model_copy(update={"byte_length": size})
+    freeze = _loads(
+        once.read_object(store, reference, limit=1024 * 1024)
+        if policy_exception
+        else store.get_bytes(reference)
+    )
     if (
         isinstance(freeze, dict)
         and freeze.get("schema_id") == "qm.spy-daily.freeze.v3.policy-exception-once"
@@ -1053,7 +1058,7 @@ def _reopen_v3(store, freeze):
     ):
         raise FreezeError("v3_freeze_invalid")
     binding = once.verify_authority(freeze["policy_exception"], store)
-    protocol = _loads(store.get_bytes(ObjectRef.model_validate(freeze["protocol_ref"])))
+    protocol = _loads(once.read_object(store, freeze["protocol_ref"], limit=1024 * 1024))
     if set(freeze["members"]) != {
         "raw-capture.json",
         "capture-authorization.json",
@@ -1066,8 +1071,16 @@ def _reopen_v3(store, freeze):
         "capture-intent.json",
     }:
         raise FreezeError("v3_members_invalid")
+    data_names = {
+        "raw-capture.json",
+        "normalized-bars.csv",
+        "normalized-distributions.json",
+        "warmup-distributions.json",
+    }
     members = {
-        name: store.get_bytes(ObjectRef.model_validate(ref))
+        name: once.read_object(
+            store, ref, limit=MAX_BYTES if name in data_names else once.MAX_PROOF
+        )
         for name, ref in freeze["members"].items()
     }
     raw, auth, review = (

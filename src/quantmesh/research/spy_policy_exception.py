@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import stat
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated, Literal
@@ -119,8 +120,8 @@ class OnceBinding(BaseModel):
 def verify_authority(binding, store):
     try:
         b = OnceBinding.model_validate(binding)
-        approval = loads(_proof_bytes(store, b.human_approval_ref))
-        _proof_bytes(store, b.policy_document_ref)
+        approval = loads(read_object(store, b.human_approval_ref))
+        read_object(store, b.policy_document_ref)
         if (
             approval.get("status") != "HUMAN_APPROVED_ONCE"
             or approval.get("proposal_sha256") != PROPOSAL_SHA256
@@ -141,11 +142,36 @@ def _safe(root):
     return path
 
 
-def _proof_bytes(store, ref):
-    path = _safe(store.path_for(ref))
-    if not 1 <= ref.byte_length <= MAX_PROOF or path.stat().st_size != ref.byte_length:
+def _bounded_bytes(path, ref, limit):
+    path = _safe(path)
+    metadata = path.stat()
+    if (
+        not 1 <= ref.byte_length <= limit
+        or metadata.st_size != ref.byte_length
+        or not stat.S_ISREG(metadata.st_mode)
+    ):
         raise ValueError("policy_proof_invalid")
-    return store.get_bytes(ref)
+    with path.open("rb") as handle:
+        before = os.fstat(handle.fileno())
+        raw = handle.read(ref.byte_length + 1)
+        after = os.fstat(handle.fileno())
+    _safe(path)
+    if (
+        len(raw) != ref.byte_length
+        or sha(raw) != ref.digest
+        or before.st_size != after.st_size
+        or before.st_mtime_ns != after.st_mtime_ns
+        or not os.path.samestat(metadata, before)
+        or not os.path.samestat(after, path.stat())
+    ):
+        raise ValueError("policy_proof_invalid")
+    return raw
+
+
+def read_object(store, ref, *, limit=MAX_PROOF):
+    """Read original v3 bytes with a cap before allocation and exact CAS integrity."""
+    ref = ObjectRef.model_validate(ref)
+    return _bounded_bytes(store.path_for(ref), ref, limit)
 
 
 def _configured_authority(binding):
@@ -196,7 +222,7 @@ def verify_intent(binding, authorization, ref, store, *, require_live_marker=Fal
     reference = ObjectRef.model_validate(ref)
     if reference.media_type != "application/json" or not 1 <= reference.byte_length <= MAX_PROOF:
         raise ValueError("policy_intent_invalid")
-    raw = _proof_bytes(store, reference)
+    raw = read_object(store, reference)
     marker = loads(raw)
     if (
         set(marker)
@@ -211,7 +237,6 @@ def verify_intent(binding, authorization, ref, store, *, require_live_marker=Fal
     if require_live_marker:
         root = _configured_authority(b)
         path = root / f"capture-intent-{b.once_scope_id}.json"
-        _safe(path)
-        if path.stat().st_size != len(raw) or path.read_bytes() != raw:
+        if _bounded_bytes(path, reference, MAX_PROOF) != raw:
             raise ValueError("policy_intent_invalid")
     return marker

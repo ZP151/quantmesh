@@ -546,7 +546,9 @@ class ReplayInput:
                 or self.capture_intent_ref is None
             ):
                 raise ReplayError("input_not_qualified")
-            frozen = freezer.reopen_freeze(self.source_root, self.snapshot_digest)
+            frozen = freezer.reopen_freeze(
+                self.source_root, self.snapshot_digest, policy_exception=True
+            )
             if (
                 frozen["protocol"] != protocol
                 or frozen["policy_exception"] != self.policy_exception.model_dump(mode="json")
@@ -845,13 +847,15 @@ class ReplayInput:
         root = Path(descriptor["freeze_root"]).absolute()
         _safe(root)
         freezer, store = _freezer(), ObjectStore(root)
-        frozen = freezer.reopen_freeze(root, descriptor["freeze_digest"])
+        frozen = freezer.reopen_freeze(root, descriptor["freeze_digest"], policy_exception=True)
         if frozen["schema_id"] != "qm.spy-daily.freeze.v3.policy-exception-once":
             raise ValueError("v3_descriptor_invalid")
         acceptance_ref = ObjectRef.model_validate(descriptor["acceptance"])
         if acceptance_ref.byte_length > once.MAX_PROOF:
             raise ValueError
-        acceptance = _AcceptanceV3.model_validate_json(store.get_bytes(acceptance_ref))
+        acceptance = _AcceptanceV3.model_validate(
+            once.loads(once.read_object(store, acceptance_ref))
+        )
         binding = once.verify_authority(frozen["policy_exception"], store)
         protocol_ref = ObjectRef.model_validate(frozen["protocol_ref"])
         members = frozen["members"]
@@ -866,8 +870,8 @@ class ReplayInput:
             or acceptance.capture_intent_ref.model_dump(mode="json") != frozen["capture_intent_ref"]
         ):
             raise ValueError("acceptance_binding_invalid")
-        raw = _json(store.get_bytes(ObjectRef.model_validate(members["raw-capture.json"])))
-        review = _json(store.get_bytes(ObjectRef.model_validate(members["post-review.json"])))
+        raw = _json(once.read_object(store, members["raw-capture.json"], limit=freezer.MAX_BYTES))
+        review = _json(once.read_object(store, members["post-review.json"]))
         freeze_probe = ObjectRef(
             digest=descriptor["freeze_digest"], byte_length=0, media_type="application/json"
         )
@@ -923,10 +927,10 @@ class ReplayInput:
         )
         value = cls(
             snapshot_digest=descriptor["freeze_digest"],
-            protocol_bytes=store.get_bytes(protocol_ref),
-            bars_csv=store.get_bytes(ObjectRef.model_validate(members["normalized-bars.csv"])),
-            distributions_json=store.get_bytes(
-                ObjectRef.model_validate(members["normalized-distributions.json"])
+            protocol_bytes=once.read_object(store, protocol_ref, limit=MAX_OBJECT),
+            bars_csv=once.read_object(store, members["normalized-bars.csv"], limit=MAX_OBJECT),
+            distributions_json=once.read_object(
+                store, members["normalized-distributions.json"], limit=MAX_OBJECT
             ),
             frozen_at_utc=datetime.fromisoformat(frozen["frozen_at_utc"]),
             evidence_kind=EXCEPTION_KIND,
@@ -1084,7 +1088,7 @@ class ReplayService:
                     ):
                         raise ValueError("sample evidence binding mismatch")
                     if version == 3:
-                        self._verify_exception(job, evidence)
+                        self._verify_exception(job, evidence, report)
             if job.decision_ref is not None and self._object(job.decision_ref) != canonical(
                 job.decision.model_dump(mode="json")
             ):
@@ -1092,11 +1096,18 @@ class ReplayService:
         except Exception:
             raise ReplayError("artifact_invalid") from None
 
-    def _verify_exception(self, job, evidence):
+    def _verify_exception(self, job, evidence, report):
         """Verify thin original proof objects without current input, prices or math."""
         b, refs = evidence.policy_exception, evidence.proof_refs
         once.verify_authority(b, self.objects)
-        proof = {name: self._object(ref) for name, ref in refs.items()}
+        proof = {
+            name: once.read_object(
+                self.objects,
+                ref,
+                limit=MAX_OBJECT if name in {"protocol.json", "freeze.json"} else once.MAX_PROOF,
+            )
+            for name, ref in refs.items()
+        }
         frozen, protocol, auth, review = (
             _json(proof[name])
             for name in (
@@ -1106,7 +1117,7 @@ class ReplayService:
                 "post-review.json",
             )
         )
-        acceptance = _AcceptanceV3.model_validate_json(proof["acceptance.json"])
+        acceptance = _AcceptanceV3.model_validate(once.loads(proof["acceptance.json"]))
         if (
             job.job_id != b.job_idempotency_key
             or evidence.snapshot_digest != refs["freeze.json"].digest
@@ -1145,6 +1156,29 @@ class ReplayService:
             ("history_available", "full_action_history_reviewed"),
             "post_review_unqualified",
         )
+        expected_facts = SourceFacts(
+            source_use=_fact("POLICY_EXCEPTION_ONCE"),
+            allowed_use=_fact(b.scope),
+            price_adjustment=_fact(checked_review["price_adjustment"]),
+            currency=_fact(checked_review["currency"]),
+            volume_unit=_fact(checked_review["volume_unit"]),
+            dividend_unit=_fact(checked_review["dividend_unit"]),
+            action_coverage=_fact(checked_review["action_coverage_status"]),
+        )
+        if (
+            report["window"] != protocol["window"]
+            or report["costs"] != protocol["costs"]
+            or evidence.as_of_utc != protocol["window"]["as_of_utc"]
+            or datetime.fromisoformat(evidence.frozen_at_utc)
+            != datetime.fromisoformat(frozen["frozen_at_utc"])
+            or evidence.source_facts != expected_facts
+            or evidence.calendar
+            != SampleCalendar(
+                calendar_version=protocol["window"]["calendar_version"],
+                last_session=protocol["window"]["score_end"],
+            )
+        ):
+            raise ValueError("exception_displayed_facts_invalid")
         marker = once.verify_intent(b, checked_auth, evidence.capture_intent_ref, self.objects)
         members = frozen["members"]
         if (
@@ -1281,10 +1315,10 @@ class ReplayService:
             if self._input.policy_exception is not None:
                 source = ObjectStore(self._input.source_root)
                 for name, ref in self._input.proof_refs.items():
-                    raw_proof = source.get_bytes(ref)
                     limit = (
                         MAX_OBJECT if name in {"protocol.json", "freeze.json"} else once.MAX_PROOF
                     )
+                    raw_proof = once.read_object(source, ref, limit=limit)
                     if (
                         not 1 <= len(raw_proof) <= limit
                         or self.objects.put_bytes(ref.media_type, raw_proof) != ref

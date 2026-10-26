@@ -1,6 +1,6 @@
 # Iteration 0038: SPY private diagnostic exception, bounded product leaf
 
-Status: implementation complete; source freeze and independent review pending.
+Status: core frozen550bf3f; R1 two P2 fixes implemented, known-fix R2 pending.
 Issue: [#177](https://github.com/ZP151/quantmesh/issues/177).
 Base actual main:198a9f8776ed6531c8ca206086f4a600e1969a65,
 tree006714ab12e841048162099ec9e06f36e3422154 (merged PR230).
@@ -59,6 +59,12 @@ early GREEN filenames do not make their actual failed exits pass.
 - 28-frontend-green.log:11 checks passed across the two new parser/panel files.
 - 27-ruff.log: all five locked Python files pass; formatter applied only there.
 - 29-typecheck.log: scoped TypeScript check exits0.
+- 30-source-pins.json:15 original data/calendar/wire AST nodes and the complete
+  packaged engine bytes match base. The engine SHA is
+  6e8ad80f134b7c1f44bcb4cb7695e784009953aba9060326e8ecb2a54e624b8e.
+- 32-frontend-lint.log: scoped oxlint exits0. No frontend code changed after28/29/32.
+- 33-original-trust-pins.json: copied original approval/policy/proposal hashes and
+  production predicate values match. No canonical marker, real B0 or SDK created.
 
 Python calculator tests use a deliberately nonfinancial sentinel, not an actual
 backtest or a numerical golden. This is an explicit testing deviation from the
@@ -70,9 +76,34 @@ suite, SDK, host, financial calculation, GH or CI was run by this leaf.
 
 ## Reviewer
 
-One independent whole-slice review follows source freeze. At most one known-fix
-round2; a third structural failure returns to Planner rather than expanding scope.
-No acceptance claim is made before that review returns.
+The sole fresh independent whole-slice Spec/Quality R1 found two P2 and no P1.
+`review-r1.md` SHA1abf376fdafc1693ae10aecfe48aeb186e439ae4f2c636fe97b46d4ae1eb470c
+and the authorized bounded synthetic probe preserve the counterexamples.
+First, saved v3 displayed dates/scope/field facts could differ from original thin
+proofs. Second, v3 acceptance allowed duplicate JSON keys and several proof paths
+read before checking actual size. No tracked source was edited by the reviewer.
+
+16 new negative regressions reproduce both roots (34-review-regressions-red.log).
+The bounded correction routes new v3 loads/copies through one stat/capped-read/hash
+reader, rejects duplicate acceptance on initial and cold paths, and binds saved
+window/costs/as-of/frozen/source facts/calendar to original protocol/freeze/review.
+V3 replay requests opt into a bounded manifest read; old calls retain their prior
+path. No old schema, raw data budget, normalizer or financial calculation changes.
+35-review-fix-green.log: all40 new Python checks pass,5 existing warnings.
+After formatting,37-final-core.log repeats40PASS on the final source bytes;
+38-final-ruff.log and39-final-source-pins.json pass. No frontend source changed.
+R2 reviews only these known corrections and targeted evidence. No third structural
+round; no collector dispatch or completion claim before that review returns.
+
+## Commit and integration boundary
+
+Core source freeze550bf3f9d8a0a7388fe9be0cb209e92dd8f8cf7c/tree
+f207b854cd2d477bad753473590bf111105f02f8 at15:05Z precedes the15:38Z core deadline.
+Immutable `CORE-FREEZE.json` is explicitly REVIEW_PENDING and retained even after
+fixes; it is not final acceptance. Commit hooks were explicitly bypassed for the
+scoped source freeze because the sole publisher owns broad suites/CI/generated
+artifacts. No push, PR or CI was performed by this writer. New glue uses existing
+project engines/packages and adds no copied upstream source or license changes.
 
 ## Remaining user-loop evidence
 

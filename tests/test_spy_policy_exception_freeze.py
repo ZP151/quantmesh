@@ -203,6 +203,29 @@ def test_v3_freeze_and_reopen_bind_original_policy_and_consumed_intent(authority
     assert reopened["capture_intent_ref"]["digest"]
 
 
+@pytest.mark.parametrize("member", ["protocol_ref", "post-review.json", "raw-capture.json"])
+def test_v3_reopen_refuses_changed_size_before_object_read(authority, monkeypatch, member):
+    result, _, _, _ = frozen_v3(authority)
+    ref = ObjectRef.model_validate(
+        result[member] if member == "protocol_ref" else result["members"][member]
+    )
+    store = ObjectStore(authority[0])
+    path = store.path_for(ref)
+    path.write_bytes(path.read_bytes() + b" ")
+    reads = []
+    original = ObjectStore.get_bytes
+
+    def observed(self, reference):
+        if reference == ref:
+            reads.append(reference)
+        return original(self, reference)
+
+    monkeypatch.setattr(ObjectStore, "get_bytes", observed)
+    with pytest.raises(ValueError):
+        freezer.reopen_freeze(authority[0], result["freeze_digest"])
+    assert reads == []
+
+
 def test_policy_does_not_relax_real_fields_or_review_timing(authority):
     root, _, binding = authority
     auth, marker = consumed(authority)

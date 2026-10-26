@@ -1,5 +1,6 @@
 """Versioned binding/one-job tests; calculator is an explicit nonfinancial sentinel."""
 
+import copy
 import json
 from contextlib import closing
 from datetime import timedelta
@@ -202,3 +203,139 @@ def test_cold_missing_original_policy_refuses_without_options_fallback(
     original.write_bytes(b"tampered controlled fixture")
     with pytest.raises(replay.ReplayError, match="artifact_invalid"):
         replay.ReplayService(target)
+
+
+def test_duplicate_acceptance_keys_are_not_independent_approval(authority):
+    path, _, acceptance = descriptor(authority)
+    store = ObjectStore(authority[0])
+    duplicate = b'{"status":"REJECTED_DO_NOT_RUN",' + freezer._canonical(acceptance)[1:]
+    ref = store.put_bytes("application/json", duplicate)
+    record = json.loads(path.read_bytes())
+    record["acceptance"] = ref.model_dump(mode="json")
+    path.write_bytes(freezer._canonical(record))
+    with pytest.raises(replay.ReplayError, match="input_not_qualified"):
+        replay.ReplayInput.from_descriptor(path)
+
+
+def test_oversized_acceptance_refuses_before_object_read(authority, monkeypatch):
+    path, _, _ = descriptor(authority)
+    ref = replay.ObjectRef.model_validate(json.loads(path.read_bytes())["acceptance"])
+    store = ObjectStore(authority[0])
+    store.path_for(ref).write_bytes(b"x" * (16384 + 1))
+    reads = []
+    original = ObjectStore.get_bytes
+
+    def observed(self, reference):
+        if reference == ref:
+            reads.append(reference)
+        return original(self, reference)
+
+    monkeypatch.setattr(ObjectStore, "get_bytes", observed)
+    with pytest.raises(replay.ReplayError, match="input_not_qualified"):
+        replay.ReplayInput.from_descriptor(path)
+    assert reads == []
+
+
+def test_copy_oversized_proof_refuses_before_read_or_calculator(authority, tmp_path, monkeypatch):
+    path, _, _ = descriptor(authority)
+    value = replay.ReplayInput.from_descriptor(path)
+    ref = value.proof_refs["acceptance.json"]
+    target = tmp_path / "bounded-copy"
+    calls, reads = [], []
+    original = ObjectStore.get_bytes
+
+    def observed(self, reference):
+        if reference == ref:
+            reads.append(reference)
+        return original(self, reference)
+
+    monkeypatch.setattr(ObjectStore, "get_bytes", observed)
+    monkeypatch.setattr(replay.engine, "calculate", lambda *args: calls.append(1))
+    request = replay.ReplayRequest(
+        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
+    )
+    with closing(replay.ReplayService(target, replay_input=value)) as service:
+        ObjectStore(authority[0]).path_for(ref).write_bytes(b"x" * (16384 + 1))
+        with pytest.raises(ValueError):
+            service.submit(request, authority[2]["job_idempotency_key"])
+    assert reads == [] and calls == []
+
+
+@pytest.mark.parametrize(
+    "target,field,value",
+    [
+        ("sample", "frozen_at_utc", "2020-01-01T00:00:00+00:00"),
+        ("facts", "currency", "EUR"),
+        ("facts", "allowed_use", "COMMERCIAL_DISTRIBUTION_ALLOWED"),
+        ("facts", "price_adjustment", "adjusted"),
+        ("facts", "volume_unit", "lots"),
+        ("facts", "dividend_unit", "EUR/share"),
+        ("facts", "action_coverage", "not_reviewed"),
+        ("both", "as_of_utc", "2020-01-01T00:00:00+00:00"),
+        ("window", "score_start", "2020-01-01"),
+    ],
+)
+def test_cold_v3_facts_must_match_original_proofs(
+    authority, tmp_path, monkeypatch, target, field, value
+):
+    path, _, _ = descriptor(authority)
+    configured = replay.ReplayInput.from_descriptor(path)
+    monkeypatch.setattr(
+        replay.engine,
+        "calculate",
+        lambda *args: {"controlled_test_seam": "NO_FINANCIAL_COMPUTATION"},
+    )
+    request = replay.ReplayRequest(
+        snapshot_digest=configured.snapshot_digest,
+        protocol_digest=replay.digest(configured.protocol_bytes),
+    )
+    key, jobs = authority[2]["job_idempotency_key"], tmp_path / "changed-evidence"
+    with closing(replay.ReplayService(jobs, replay_input=configured)) as service:
+        job, _ = service.submit(request, key)
+        report = json.loads(service.artifact(key))
+        if target == "sample":
+            report["sample_evidence"][field] = value
+        elif target == "facts":
+            report["sample_evidence"]["source_facts"][field]["value"] = value
+        elif target == "both":
+            report["sample_evidence"][field] = report["window"][field] = value
+        else:
+            report["window"][field] = value
+        changed = service._updated(
+            service._find(key),
+            report=service.objects.put_bytes("application/json", replay.canonical(report)),
+        )
+        service._replace(changed)
+        assert job.report != changed.report
+    with pytest.raises(replay.ReplayError, match="artifact_invalid"):
+        replay.ReplayService(jobs)
+
+
+def test_cold_duplicate_acceptance_refuses_even_with_consistent_refs(
+    authority, tmp_path, monkeypatch
+):
+    path, _, acceptance = descriptor(authority)
+    value = replay.ReplayInput.from_descriptor(path)
+    monkeypatch.setattr(replay.engine, "calculate", lambda *args: {"controlled_test_seam": True})
+    request = replay.ReplayRequest(
+        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
+    )
+    key, jobs = authority[2]["job_idempotency_key"], tmp_path / "ambiguous-cold"
+    with closing(replay.ReplayService(jobs, replay_input=value)) as service:
+        service.submit(request, key)
+        report = copy.deepcopy(json.loads(service.artifact(key)))
+        ref = service.objects.put_bytes(
+            "application/json",
+            b'{"status":"REJECTED_DO_NOT_RUN",' + freezer._canonical(acceptance)[1:],
+        )
+        evidence = report["sample_evidence"]
+        evidence["proof_refs"]["acceptance.json"] = ref.model_dump(mode="json")
+        evidence["refs"]["acceptance"] = ref.model_dump(mode="json")
+        service._replace(
+            service._updated(
+                service._find(key),
+                report=service.objects.put_bytes("application/json", replay.canonical(report)),
+            )
+        )
+    with pytest.raises(replay.ReplayError, match="artifact_invalid"):
+        replay.ReplayService(jobs)
