@@ -997,7 +997,7 @@ def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
         reopened = page.get_by_test_id("packet-outcome-review")
         reopened.get_by_text("Review saved", exact=True).wait_for()
         assert reopened.get_by_text(review_id, exact=True).is_visible()
-        assert reopened.get_by_text(outcome_id, exact=True).is_visible()
+        assert reopened.get_by_text(outcome_id, exact=True).last.is_visible()
         assert _decision_packet_id(page) == packet_id
 
 
@@ -1051,7 +1051,9 @@ def test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigatio
     with _serve_restarted_demo(demo_station.root) as restarted:
         before_orders = restarted.app.state.account_store.get().orders
         page.goto(f"{restarted.url}/app/markets/watchlist")
-        nvda = page.get_by_role("row").filter(has=page.get_by_role("cell", name="NVDA", exact=True))
+        nvda = page.get_by_role("row").filter(
+            has=page.get_by_role("link", name="Open chart NVDA", exact=True)
+        )
         nvda.get_by_text("Reviewed", exact=True).wait_for()
         nvda.locator("summary").click()
         for identity in (packet_id, proposal_id, order_id, outcome_id, review_id):
@@ -1066,7 +1068,9 @@ def test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigatio
         assert not nvda.locator("details").evaluate("element => element.open")
         page.keyboard.press("Enter")
         assert nvda.locator("details").evaluate("element => element.open")
-        aapl = page.get_by_role("row").filter(has=page.get_by_role("cell", name="AAPL", exact=True))
+        aapl = page.get_by_role("row").filter(
+            has=page.get_by_role("link", name="Open chart AAPL", exact=True)
+        )
         assert aapl.get_by_text("Pending confirmation", exact=True).is_visible()
         aapl.locator("summary").click()
         assert aapl.get_by_text(pending_id, exact=True).is_visible()
