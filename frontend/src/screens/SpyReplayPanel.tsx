@@ -117,7 +117,7 @@ export function SpyReplayPanel() {
   }
   function start() {
     if (!options?.configured || !options.input || locked.current) return
-    const next: Intent = { key: crypto.randomUUID(), request: { snapshot_digest: options.input.snapshot_digest, protocol_digest: options.input.protocol_digest } }
+    const next: Intent = { key: options.input.evidence_kind === 'reviewed_opend_policy_exception_once_v3' ? options.input.policy_exception!.job_idempotency_key : crypto.randomUUID(), request: { snapshot_digest: options.input.snapshot_digest, protocol_digest: options.input.protocol_digest } }
     if (!retain(next)) return
     generation.current++; currentJob.current = null; setJob(null); setReport(null); setDecisionArtifact(null); setPaused(false); setSelectedStep(null); setScenario('base5')
     void submit(next)
@@ -145,11 +145,13 @@ export function SpyReplayPanel() {
   const automaticStep: Step = job?.decision ? 'decision' : job?.state === 'succeeded' ? 'report' : 'input'
   const step = selectedStep && available[selectedStep] ? selectedStep : automaticStep
   const evidenceKind = verifiedReport?.evidence_kind ?? (!job ? options?.input?.evidence_kind : null)
+  const onceInput = options?.input?.evidence_kind === 'reviewed_opend_policy_exception_once_v3' ? options.input.policy_exception : undefined
+  const exceptionLabel = locale === 'zh-CN' ? '私人诊断 · 单次内部政策例外' : 'Private diagnostic · Single-use internal policy exception'
   const percent = (v: number) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(v)
   return <Page title={w.title} description={w.subtitle}>
     <div className="space-y-2 border-b pb-4">
       <div className="flex flex-wrap items-center gap-2"><Badge variant="outline" className="h-auto whitespace-normal border-amber-500/40 text-amber-600 dark:text-amber-400">{u.safety}</Badge>
-        {evidenceKind && <Badge variant="outline" className="h-auto whitespace-normal">{evidenceKind === 'engineering_fixture' ? w.engineering : w.reviewed}</Badge>}
+        {evidenceKind && <Badge variant="outline" className="h-auto whitespace-normal">{evidenceKind === 'engineering_fixture' ? w.engineering : evidenceKind === 'reviewed_opend_policy_exception_once_v3' ? exceptionLabel : w.reviewed}</Badge>}
       </div>
       <p className="text-sm">{u.contract}</p>
       <p className="text-xs text-muted-foreground">{w.costs} · {w.compare}</p>
@@ -168,17 +170,18 @@ export function SpyReplayPanel() {
         <h3 id="spy-input" className="text-base font-semibold">{job ? (locale === 'zh-CN' ? '下一轮回放的配置' : 'Configuration for the next replay') : w.input}</h3>
         {job && <p className="text-sm text-muted-foreground">{locale === 'zh-CN' ? '已打开的报告保留原来的输入与日期。' : 'The opened report keeps its original input and dates.'}</p>}
         {options?.input ? <div className="space-y-2 text-sm">
-          {job && <Badge variant="outline" className="h-auto whitespace-normal">{options.input.evidence_kind === 'engineering_fixture' ? w.engineering : w.reviewed}</Badge>}
+          {job && <Badge variant="outline" className="h-auto whitespace-normal">{options.input.evidence_kind === 'engineering_fixture' ? w.engineering : onceInput ? exceptionLabel : w.reviewed}</Badge>}
           <p>{w.dates}: <span className="font-mono">{options.input.observation_start} → {options.input.observation_end}</span></p>
           <details className="text-xs text-muted-foreground"><summary className="flex min-h-11 cursor-pointer items-center">{u.details}</summary><div className="space-y-2 pb-2"><p className="break-words">{w.asof}: {options.input.as_of_utc}<br />{w.frozen}: {options.input.frozen_at_utc}</p>{options.input.limitations.map((v, i) => <p key={i}>{v}</p>)}</div></details>
         </div> : <p className="text-sm text-muted-foreground">{options ? w.unavailable : w.loading}</p>}
         {!options && error && <Button className="min-h-11" variant="outline" onClick={() => void loadOptions()}>{u.retryOptions}</Button>}
-        {!intent && <Button className="min-h-11" disabled={!options?.configured || busy} onClick={start}>{w.start}</Button>}
+        {onceInput && <p className="text-sm">{exceptionLabel} · {locale === 'zh-CN' ? '外部 API 原件保存适用性：未知' : 'External API storage applicability: Unknown'}</p>}
+        {!intent && <Button className="min-h-11" disabled={!options?.configured || busy} onClick={start}>{onceInput ? (locale === 'zh-CN' ? '开始或重开本次诊断' : 'Start or reopen this diagnostic') : w.start}</Button>}
         {intent && !job && <div className="space-y-3"><p className="text-sm text-muted-foreground">{w.retained}</p><code className="block break-all text-xs">{intent.key}</code>
           <Button className="min-h-11" variant="outline" disabled={busy} onClick={() => void read(intent.key, intent.request)}>{w.recover}</Button>
           {!busy && <Button className="min-h-11" variant="outline" onClick={() => void submit(intent)}>{w.retry}</Button>}
           {intent.refused && <Button className="min-h-11" variant="outline" disabled={busy || !options?.configured} onClick={start}>{locale === 'zh-CN' ? '使用当前配置的输入开始' : 'Start with current configured input'}</Button>}</div>}
-        {job && (job.state === 'failed' || job.state === 'interrupted' || !!job.decision) && !busy && <Button className="min-h-11" variant="outline" disabled={!options?.configured} onClick={start}>{w.newJob}</Button>}
+        {job && (job.state === 'failed' || job.state === 'interrupted' || !!job.decision) && !busy && <Button className="min-h-11" variant="outline" disabled={!options?.configured} onClick={start}>{onceInput ? (locale === 'zh-CN' ? '重开本次诊断' : 'Reopen this diagnostic') : w.newJob}</Button>}
         {job && <Button className="min-h-11" variant="outline" disabled={busy} onClick={() => { setPaused(false); void read(job.job_id, job.request) }}>{w.recover}</Button>}
       </section>}
       {step === 'report' && job?.state === 'succeeded' && <section aria-labelledby="spy-report" className="space-y-3"><h3 id="spy-report" className="font-semibold">{w.report}</h3>
@@ -214,7 +217,8 @@ function ReportSample({ report, freshness, locale }: { report: ReplayReport; fre
   // the next input and must never fill evidence gaps in an older saved report.
   const zh = locale === 'zh-CN'
   const unknown = zh ? '未知' : 'Unknown'
-  const sample = report.schema_version === 2 ? report.sample_evidence : undefined
+  const sample = report.schema_version >= 2 ? report.sample_evidence : undefined
+  const policy = report.schema_version === 3 ? sample?.policy_exception : undefined
   const synthetic = report.evidence_kind === 'engineering_fixture'
   const fact = (value?: ReplaySampleFact) => {
     if (!value) return unknown
@@ -253,7 +257,8 @@ function ReportSample({ report, freshness, locale }: { report: ReplayReport; fre
     [zh ? '实际可用时间' : 'Actual available time', fact(sample?.times.available_at_utc)],
     [zh ? '结构检查' : 'Structural checks', structural],
     [zh ? '来源使用依据' : 'Source use', fact(sample?.source_facts.source_use)],
-    [zh ? '允许用途' : 'Allowed use', fact(sample?.source_facts.allowed_use)],
+    [policy ? (zh ? '内部用途' : 'Internal scope') : (zh ? '允许用途' : 'Allowed use'), fact(sample?.source_facts.allowed_use)],
+    ...(policy ? [[zh ? '人决定 SHA-256' : 'Human decision SHA-256', policy.once_scope_id], [zh ? '政策原件 SHA-256' : 'Policy document SHA-256', policy.policy_document_ref.digest], [zh ? '唯一采集意图' : 'Single capture intent', policy.capture_intent_id]] : []),
     ['PIT', fact(sample?.source_facts.pit)],
     [zh ? '修订状态' : 'Revision status', fact(sample?.source_facts.revision_status)],
     [zh ? '公司行动覆盖' : 'Action coverage', fact(sample?.source_facts.action_coverage)],
@@ -267,6 +272,7 @@ function ReportSample({ report, freshness, locale }: { report: ReplayReport; fre
   ]
   return <section aria-labelledby="spy-sample" className="space-y-2 rounded-md border px-3 py-3 text-xs">
     <div className="flex flex-wrap items-center justify-between gap-1"><h4 id="spy-sample" className="text-sm font-medium">{zh ? '本报告样本' : "This report's sample"}</h4>{!sample && <span className="text-muted-foreground">{zh ? '旧报告 · 缺失事实保持未知' : 'Legacy report · missing facts remain unknown'}</span>}</div>
+    {policy && <p className="text-sm">{zh ? '私人诊断 · 单次内部政策例外 · 外部 API 原件保存适用性：未知' : 'Private diagnostic · Single-use internal policy exception · External API storage applicability: Unknown'}</p>}
     <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-2"><div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">{zh ? '角色' : 'Role'}</dt><dd>{role}</dd></div><div className="flex flex-wrap gap-x-2"><dt className="text-muted-foreground">{zh ? '截止会话' : 'Cutoff session'}</dt><dd>{report.window.score_end}</dd></div></dl>
     <p className="text-muted-foreground">{zh ? '结构' : 'Structure'}: {structural} · {zh ? '来源与 PIT 另述' : 'source and PIT are separate'}</p>
     <p className="text-muted-foreground">{zh ? '读取时新鲜度' : 'Read-time freshness'}: {view ? freshnessReasons[view.reason] : (zh ? '未知 · 缺少绑定的读取视图' : 'Unknown · no bound read-time view')}{view?.latest_complete_session && <span className="ml-2">{zh ? '最新完整会话' : 'Latest completed session'}: {view.latest_complete_session}</span>}</p>
