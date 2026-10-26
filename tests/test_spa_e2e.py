@@ -197,9 +197,10 @@ def _main_text(page) -> str:
 
 
 def _wait_demo_attached(page) -> None:
-    """The shell's provenance line switches from the operator-mode
-    placeholder once the demo-status query settles."""
-    page.get_by_text("Deterministic paper session", exact=False).first.wait_for()
+    """The demo badge enters the DOM once the demo-status query settles."""
+    page.locator("header").get_by_text("Paper demo · seed", exact=False).first.wait_for(
+        state="attached"
+    )
 
 
 def _reset_demo(page, base_url: str) -> None:
@@ -288,8 +289,7 @@ def test_demo_paper_workflow_through_the_ui(page, base_url) -> None:
     page.goto(f"{base_url}/app/")
     _wait_demo_attached(page)
     page.get_by_text("hyperliquid", exact=False).first.wait_for()
-    text = _main_text(page)
-    assert "Deterministic paper session" in text
+    assert page.locator("header").get_by_text("Paper demo · seed", exact=False).is_visible()
 
     # Paper order: hyperliquid SOL-USD BUY 10 through the real pipeline.
     page.goto(f"{base_url}/app/trading/order")
@@ -512,7 +512,8 @@ def test_data_readiness_mobile_geometry_375(page, base_url) -> None:
     if file_box["y"] + file_box["height"] > import_box["y"] + 1:
         violations.append(("file selector and import action share a row", file_box, import_box))
     targets = page.locator("main button, main summary, main input[type='file']")
-    assert targets.count() == 7  # refresh, file, import, two downloads, lineage, history
+    # Format tabs, refresh, file, import, two downloads, lineage, history.
+    assert targets.count() == 9
     for target in targets.all():
         assert target.is_visible()
         box = target.bounding_box()
