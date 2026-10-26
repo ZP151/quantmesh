@@ -3011,6 +3011,43 @@ export interface components {
             /** Upper */
             upper: number;
         };
+        /** ExceptionInputSummary */
+        ExceptionInputSummary: {
+            /** As Of Utc */
+            as_of_utc: string;
+            /**
+             * Evidence Kind
+             * @constant
+             */
+            evidence_kind: "reviewed_opend_policy_exception_once_v3";
+            /** Frozen At Utc */
+            frozen_at_utc: string;
+            /**
+             * Interval
+             * @default 1d
+             * @constant
+             */
+            interval: "1d";
+            /** Limitations */
+            limitations: string[];
+            /** Observation End */
+            observation_end: string;
+            /** Observation Start */
+            observation_start: string;
+            policy_exception: components["schemas"]["OnceBinding"];
+            /** Protocol Digest */
+            protocol_digest: string;
+            /** Snapshot Digest */
+            snapshot_digest: string;
+            /**
+             * Symbol
+             * @default SPY
+             * @constant
+             */
+            symbol: "SPY";
+            /** Warmup Start */
+            warmup_start: string;
+        };
         /**
          * ForecastMetrics
          * @description Promotion evidence for one horizon.
@@ -3853,6 +3890,65 @@ export interface components {
             /** Media Type */
             media_type: string;
         };
+        /** OnceBinding */
+        OnceBinding: {
+            /** Authority Root Sha256 */
+            authority_root_sha256: string;
+            /** Capture Intent Id */
+            capture_intent_id: string;
+            /**
+             * Diagnostic Status
+             * @constant
+             */
+            diagnostic_status: "diagnostic_only_under_policy_exception";
+            /**
+             * External Api Storage Applicability
+             * @constant
+             */
+            external_api_storage_applicability: "UNKNOWN";
+            human_approval_ref: components["schemas"]["ObjectRef"];
+            /**
+             * Internal Decision
+             * @constant
+             */
+            internal_decision: "APPROVE_ONCE_PRIVATE_DIAGNOSTIC_EXCEPTION";
+            /**
+             * Internal Once Exception
+             * @constant
+             */
+            internal_once_exception: "HUMAN_APPROVED";
+            /** Job Idempotency Key */
+            job_idempotency_key: string;
+            /** Once Scope Id */
+            once_scope_id: string;
+            /** Output Root Sha256 */
+            output_root_sha256: string;
+            policy_document_ref: components["schemas"]["ObjectRef"];
+            /**
+             * Policy Status
+             * @constant
+             */
+            policy_status: "POLICY_EXCEPTION_ONCE";
+            /** Proposal Sha256 */
+            proposal_sha256: string;
+            /**
+             * Provider Permission Verified
+             * @constant
+             */
+            provider_permission_verified: false;
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 3;
+            /**
+             * Scope
+             * @constant
+             */
+            scope: "US.SPY/1d/private_research";
+            /** Window Sha256 */
+            window_sha256: string;
+        };
         /**
          * Order
          * @description Replayable order; state fields must agree with the event history.
@@ -4433,7 +4529,8 @@ export interface components {
             fixed?: {
                 [key: string]: unknown;
             };
-            input: components["schemas"]["ReplayInputSummary"] | null;
+            /** Input */
+            input: components["schemas"]["ReplayInputSummary"] | components["schemas"]["ExceptionInputSummary"] | null;
             /** Limits */
             limits?: {
                 [key: string]: unknown;
