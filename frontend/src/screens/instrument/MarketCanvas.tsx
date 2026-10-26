@@ -25,6 +25,7 @@ const RANGES: readonly { label: string; value: HistoryRange }[] = [
 
 export interface MarketCanvasProps {
   chartFirst?: boolean
+  showStatistics?: boolean
   archivedPacket?: boolean
   archivedPacketAsOf?: string
   comparison: ComparisonSeries | null
@@ -193,7 +194,7 @@ export function MarketCanvas(props: MarketCanvasProps) {
         primary={{ ...props.history, bars }}
         volume={props.volume && hasVolume}
       />
-      <IndicatorStrip values={values} />
+      {props.showStatistics !== false && <IndicatorStrip values={values} />}
     </div>
   )
 }

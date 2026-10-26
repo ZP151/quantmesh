@@ -26,6 +26,21 @@ function mount(path = '/instruments/hyperliquid/BTC?range=1d&mode=line') {
   return client
 }
 beforeEach(() => { vi.clearAllMocks(); localStorage.clear(); vi.mocked(api.health).mockResolvedValue(health); vi.mocked(api.instrumentWorkspace).mockResolvedValue(sample()) })
+it.each([1, 2, 60])('summary applicability marks market-only evaluation as not run and hides summary for %s observed bars', async count => {
+  const original = sample()
+  const bars = Array.from({ length: count }, (_, index) => ({ ...original.history.bars[0], timestamp: new Date(Date.UTC(2026, 9, 26, 7, 39 - count + index)).toISOString().replace('.000Z', 'Z'), close: index === 0 ? 79966 : 80002 }))
+  vi.mocked(api.instrumentWorkspace).mockResolvedValue({ ...original, history: { ...original.history, bars, coverage: { ...original.history.coverage, rows: count } } })
+  mount(); await screen.findByTestId('observed-bars')
+  expect(screen.getByText('Market data acquisition · Strategy evaluation has not been run.')).toBeInTheDocument()
+  expect(screen.queryByText('Realized volatility')).not.toBeInTheDocument()
+  expect(screen.queryByText('Drawdown')).not.toBeInTheDocument()
+  expect(screen.queryByText('Forecast distribution')).not.toBeInTheDocument()
+  expect(screen.getByText('hyperliquid-live-replay')).toBeInTheDocument()
+  expect(screen.getByText('Partial observed coverage · not qualified 24-hour history')).toBeInTheDocument()
+  expect(screen.getByLabelText('Last observed minute (UTC)')).toHaveTextContent(bars.at(-1)!.timestamp)
+  expect(screen.getByLabelText('Time since last observed minute')).not.toBeEmptyDOMElement()
+  expect(screen.getByTestId('observed-bars')).toHaveTextContent(`${bars[0].timestamp}:79966`)
+})
 it('uses only the fixed BTC1d formal API and renders observed bars without research or trading consumers', async () => {
   mount(); await screen.findByTestId('observed-bars')
   expect(api.instrumentWorkspace).toHaveBeenCalledWith('hyperliquid', 'BTC', '1d', [])

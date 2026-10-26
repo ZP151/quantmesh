@@ -209,10 +209,11 @@ function LegacyInstrumentWorkspaceScreen() {
     <ObservedTime history={workspace.history} />
     {stream === 'down' && <p className="text-xs" role="status">{t('marketData.transportDown')}</p>}
     <dl className="grid min-w-0 gap-x-6 gap-y-2 text-xs sm:grid-cols-3"><div><dt className="text-muted-foreground">{t('marketData.source')}</dt><dd className="break-words">{workspace.history.source}</dd></div><div><dt className="text-muted-foreground">{t('marketData.asof')}</dt><dd><time dateTime={workspace.history.as_of}>{workspace.history.as_of}</time></dd></div><div><dt className="text-muted-foreground">{t('marketData.rows')}</dt><dd>{workspace.history.coverage.rows}</dd></div></dl>
-    <MarketCanvas chartFirst comparison={null} forecast={null} history={workspace.history} mode={mode} range="1d" volume={volume} showSma20={showSma20} showSma50={showSma50}
+    <MarketCanvas chartFirst showStatistics={false} comparison={null} forecast={null} history={workspace.history} mode={mode} range="1d" volume={volume} showSma20={showSma20} showSma50={showSma50}
       onModeChange={next => setMarketDisplay(value => ({ ...value, mode: next }))} onRangeChange={() => {}}
       onVolumeChange={next => setMarketDisplay(value => ({ ...value, volume: next }))}
       onSma20Change={next => setMarketDisplay(value => ({ ...value, sma20: next }))} onSma50Change={next => setMarketDisplay(value => ({ ...value, sma50: next }))} />
+    <p className="text-xs text-muted-foreground" role="note">{t('marketData.noStrategyEvaluation')}</p>
     <p className="text-xs text-muted-foreground">{t('marketData.quote')}</p>
     <details className="border-t text-xs"><summary className="min-h-11 cursor-pointer py-3">{t('marketData.coverage')}</summary><div className="space-y-2 pb-3"><p>{t('marketData.semantics')}</p><p>{t('marketData.sequence')}</p><p className="break-words">{workspace.history.coverage.start} → {workspace.history.coverage.end}</p><p className="break-words">{workspace.history.license}</p>{workspace.history.limitations.map((value, index) => <p className="break-words" key={index}>{value}</p>)}{(workspace.history.gaps?.length ?? 0) > 0 && <p className="break-words">{t('screen.workspace.historyGaps', { count: String(workspace.history.gaps.length), detail: workspace.history.gaps.join(', ') })}</p>}</div></details>
   </section>

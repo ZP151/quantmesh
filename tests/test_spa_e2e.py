@@ -197,9 +197,10 @@ def _main_text(page) -> str:
 
 
 def _wait_demo_attached(page) -> None:
-    """The shell's provenance line switches from the operator-mode
-    placeholder once the demo-status query settles."""
-    page.get_by_text("Deterministic paper session", exact=False).first.wait_for()
+    """The demo badge enters the DOM once the demo-status query settles."""
+    page.locator("header").get_by_text("Paper demo · seed", exact=False).first.wait_for(
+        state="attached"
+    )
 
 
 def _reset_demo(page, base_url: str) -> None:
@@ -288,8 +289,7 @@ def test_demo_paper_workflow_through_the_ui(page, base_url) -> None:
     page.goto(f"{base_url}/app/")
     _wait_demo_attached(page)
     page.get_by_text("hyperliquid", exact=False).first.wait_for()
-    text = _main_text(page)
-    assert "Deterministic paper session" in text
+    assert page.locator("header").get_by_text("Paper demo · seed", exact=False).is_visible()
 
     # Paper order: hyperliquid SOL-USD BUY 10 through the real pipeline.
     page.goto(f"{base_url}/app/trading/order")
@@ -512,7 +512,8 @@ def test_data_readiness_mobile_geometry_375(page, base_url) -> None:
     if file_box["y"] + file_box["height"] > import_box["y"] + 1:
         violations.append(("file selector and import action share a row", file_box, import_box))
     targets = page.locator("main button, main summary, main input[type='file']")
-    assert targets.count() == 7  # refresh, file, import, two downloads, lineage, history
+    # Format tabs, refresh, file, import, two downloads, lineage, history.
+    assert targets.count() == 9
     for target in targets.all():
         assert target.is_visible()
         box = target.bounding_box()
@@ -996,7 +997,7 @@ def test_nvda_filled_open_packet_review_saves_and_reopens_exact_identity(
         reopened = page.get_by_test_id("packet-outcome-review")
         reopened.get_by_text("Review saved", exact=True).wait_for()
         assert reopened.get_by_text(review_id, exact=True).is_visible()
-        assert reopened.get_by_text(outcome_id, exact=True).is_visible()
+        assert reopened.get_by_text(outcome_id, exact=True).last.is_visible()
         assert _decision_packet_id(page) == packet_id
 
 
@@ -1050,7 +1051,9 @@ def test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigatio
     with _serve_restarted_demo(demo_station.root) as restarted:
         before_orders = restarted.app.state.account_store.get().orders
         page.goto(f"{restarted.url}/app/markets/watchlist")
-        nvda = page.get_by_role("row").filter(has=page.get_by_role("cell", name="NVDA", exact=True))
+        nvda = page.get_by_role("row").filter(
+            has=page.get_by_role("link", name="Open chart NVDA", exact=True)
+        )
         nvda.get_by_text("Reviewed", exact=True).wait_for()
         nvda.locator("summary").click()
         for identity in (packet_id, proposal_id, order_id, outcome_id, review_id):
@@ -1065,7 +1068,9 @@ def test_shadow_decision_inbox_replays_paper_review_and_exact_keyboard_navigatio
         assert not nvda.locator("details").evaluate("element => element.open")
         page.keyboard.press("Enter")
         assert nvda.locator("details").evaluate("element => element.open")
-        aapl = page.get_by_role("row").filter(has=page.get_by_role("cell", name="AAPL", exact=True))
+        aapl = page.get_by_role("row").filter(
+            has=page.get_by_role("link", name="Open chart AAPL", exact=True)
+        )
         assert aapl.get_by_text("Pending confirmation", exact=True).is_visible()
         aapl.locator("summary").click()
         assert aapl.get_by_text(pending_id, exact=True).is_visible()

@@ -15,6 +15,7 @@
 export const messages = {
   en: {
     'marketData.mode': 'Market data acquisition · Trading disabled',
+    'marketData.noStrategyEvaluation': 'Market data acquisition · Strategy evaluation has not been run.',
     'marketData.chart': 'BTC · observed minute history',
     'marketData.unavailable': 'This view is unavailable in market-data-only mode.',
     'marketData.open': 'Open BTC chart',
@@ -1297,6 +1298,7 @@ export const messages = {
   },
   'zh-CN': {
     'marketData.mode': '行情采集 · 交易关闭',
+    'marketData.noStrategyEvaluation': '行情采集 · 尚未进行策略评估',
     'marketData.chart': 'BTC · 已观测分钟历史',
     'marketData.unavailable': '仅行情模式不提供此视图。',
     'marketData.open': '打开 BTC 图表',
