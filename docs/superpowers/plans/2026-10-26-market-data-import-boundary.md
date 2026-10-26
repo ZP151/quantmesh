@@ -33,9 +33,9 @@ runtime, remove routes or relax client types to Any.
   a concrete conflicting consumer stops scope expansion and returns to root.
 - [x] Same four cases GREEN. Scoped Ruff/format/diff; one necessary new
   complete-runtime route-boundary check if the implementation changes that seam.
-- [ ] Freeze source commit/tree; reuse original reviewer for independent narrow
+- [x] Freeze source commit/tree; reuse original reviewer for independent narrow
   diff review. At most known-correction round2, no third structural review.
-- [ ] Final iteration and immutable HANDOFF with hashes/limits to root/publisher.
+- [x] Final iteration and immutable HANDOFF with hashes/limits to root/publisher.
   Sole publisher owns push/CI/normal merge; native window remains separate.
 
 ## Test method
@@ -60,3 +60,9 @@ only inspect route item types instead of pretending they are flat routes. Correc
 08 check confirms exact factory identities, construction of all three routers,
 public signatures and ordinary function bodies unchanged except loader calls.
 No product/source change for this oracle correction. Scoped Ruff/format/diff PASS.
+
+Independent reused reviewer R1 READY/no findings on e2020218b11bbda84bd419b1ac18879100db45fb,
+tree471b0f4ad47689e2a0c3021a947ae82759448679; one fresh4PASS9.62s and independent
+diff check. No round2 needed. Final docs checkpoint changes no reviewed source or
+tests. Writer released to sole publisher after immutable HANDOFF sealing; all
+native/rights/complete-runtime/broad-release gates remain separate.

@@ -62,11 +62,45 @@ Owned evidence:output/market-data-import-boundary/.
 -07-final-targeted.log:4 PASS9.74s.09-final-ruff/10-final-format/11-final-diffcheck
  PASS;2 files already formatted. Historical59new/5compat and full suites not run.
 
-One reused independent narrow reviewer pending exact source freeze. Known
-corrections maxround2; no third review.
+One reused independent narrow reviewer R1 returned READY/no actionable findings
+on source e2020218b11bbda84bd419b1ac18879100db45fb/tree
+471b0f4ad47689e2a0c3021a947ae82759448679. Independent new-file run4 PASS9.62s,
+source/tree/decision hash verified, diff check passes; no source/index/docs edits
+by reviewer. Reports in output/market-data-import-boundary/review-r1.md and.json.
+No round2 or third review needed. Author accepts the scope/declined judgments.
 No package/host/server/provider/CI action or default/full-suite replay authorized.
 
 No runtime get_type_hints consumer of these postponed client names was found.
 This does not introduce a promise to evaluate every forward annotation without
 its type-only modules; a concrete existing consumer would return to root before
 any scope expansion. Native server remains the supplied STOP/unarmed state.
+
+## Final judgments and handoff
+
+No deferred Minor or unresolved findings. This leaf's declined behaviors stay:
+
+1. Native runtime/server/UID access: no host action; STOP remains the supplied
+   state, and actual startup can still fail until exact runtime acceptance.
+2. Writable cache/provider/network/advancing chart: not exercised by readonly
+   import tests, so real acquisition still requires the separate merged window.
+3. Unchanged sampling/recovery/feed/buffer/durability: prior evidence retained,
+   not retested or inferred from the four import cases.
+4. Hypothetical future annotation evaluation: no existing factory consumer found;
+   a future concrete consumer must resolve its type namespace explicitly.
+5. Full installed closure: pg8000 remains core; this does not certify an incomplete
+   runtime for normal modes. Missing driver stays an explicit fail-fast error.
+6. Broad CI/old suites/UI/bundle/browser: publisher/acceptance gates; scoped checks
+   could miss unrelated integration regressions and do not replace those gates.
+7. Rights/PIT/OOS/paper/live promotion: unchanged and unqualified by import fix.
+
+Source commit and final docs checkpoint use core.hooksPath=NUL under root's
+targeted-only/no-old-suite instruction. No GH push/PR/CI/host/native action by
+author. This new managed worktree preserves the previous d5a0819 leaf/output.
+
+Immutable output/market-data-import-boundary/HANDOFF.json binds exact runtime
+head/tree, final docs head/tree, four tracked file hashes, retained RED/GREEN/
+oracle failure/static/review evidence, root-approved decision and writer release.
+Final source/tests match reviewed e2020218 byte-for-byte. Root/sole publisher
+owns push/CI/normal merge. Next native window only after merged fix and exact
+runtime binding; previous64PASS is not native evidence and original research
+Goal is not marked complete. No further source changes remain in this leaf.
