@@ -852,6 +852,8 @@ def reopen_freeze(root, freeze_digest, *, policy_exception=False):
         and freeze.get("schema_id") == "qm.spy-daily.freeze.v3.policy-exception-once"
     ):
         return _reopen_v3(store, freeze)
+    if policy_exception:
+        raise FreezeError("v3_freeze_invalid")
     if (
         not isinstance(freeze, dict)
         or set(freeze)
@@ -1008,9 +1010,9 @@ def _freeze_v3(raw, as_of, evidence, output, *, frozen_at):
         "normalized-bars.csv": _csv_bytes(normalized["bars"]),
         "normalized-distributions.json": _canonical(normalized["distributions"]),
         "warmup-distributions.json": _canonical(normalized["warmup_distributions"]),
-        "human-approval.json": store.get_bytes(binding.human_approval_ref),
-        "source-use-policy.md": store.get_bytes(binding.policy_document_ref),
-        "capture-intent.json": store.get_bytes(ObjectRef.model_validate(raw["capture_intent_ref"])),
+        "human-approval.json": once.read_object(store, binding.human_approval_ref),
+        "source-use-policy.md": once.read_object(store, binding.policy_document_ref),
+        "capture-intent.json": once.read_object(store, raw["capture_intent_ref"]),
     }
     refs = {
         name: store.put_bytes(
@@ -1272,12 +1274,13 @@ def main(argv=None, *, clock=lambda: datetime.now(UTC)):
     verify = sub.add_parser("verify", help="reopen original frozen objects without evaluation")
     verify.add_argument("--root", required=True, type=Path)
     verify.add_argument("--digest", required=True)
+    verify.add_argument("--policy-exception", action="store_true", help="bounded v3 manifest read")
     args = parser.parse_args(argv)
     try:
         if args.command == "window":
             result = plan_window(_stamp(args.as_of, "as_of_utc"))
         elif args.command == "verify":
-            result = reopen_freeze(args.root, args.digest)
+            result = reopen_freeze(args.root, args.digest, policy_exception=args.policy_exception)
         elif args.command == "capture":
             result = _capture_once(args, clock)
         else:

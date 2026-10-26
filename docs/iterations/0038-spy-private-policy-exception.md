@@ -92,6 +92,15 @@ path. No old schema, raw data budget, normalizer or financial calculation change
 35-review-fix-green.log: all40 new Python checks pass,5 existing warnings.
 After formatting,37-final-core.log repeats40PASS on the final source bytes;
 38-final-ruff.log and39-final-source-pins.json pass. No frontend source changed.
+During this same R2, reviewer freshly ran40PASS (review-r2-pytest.log) and identified
+three remaining `_freeze_v3` rereads under the already-known size-check finding.
+40-r2-known-residual-red.log records4 failing regressions before correction.
+Those proof rereads now use the bounded reader. CLI `verify --policy-exception`
+explicitly opts into the1MiB v3 manifest path; default legacy behavior is retained.
+This is completion of the same known F2 correction, not a third structural review.
+42-final-core.log:44PASS/5 existing warnings after that correction and formatting;
+41-final-ruff.log and43-final-source-pins.json pass. Final source now awaits
+the same reviewer's R2 closure only, with no further structural audit.
 R2 reviews only these known corrections and targeted evidence. No third structural
 round; no collector dispatch or completion claim before that review returns.
 

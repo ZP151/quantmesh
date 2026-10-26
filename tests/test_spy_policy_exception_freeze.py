@@ -226,6 +226,60 @@ def test_v3_reopen_refuses_changed_size_before_object_read(authority, monkeypatc
     assert reads == []
 
 
+@pytest.mark.parametrize(
+    "name", ["human-approval.json", "source-use-policy.md", "capture-intent.json"]
+)
+def test_freeze_rechecks_proof_size_after_review_before_copy(authority, monkeypatch, name):
+    root, _, binding = authority
+    store, reads, selected = ObjectStore(root), [], []
+    original_review = freezer._reviewed_inputs_v3
+    original_get = ObjectStore.get_bytes
+
+    def replaced_after_review(raw, *args):
+        result = original_review(raw, *args)
+        reference = {
+            "human-approval.json": binding["human_approval_ref"],
+            "source-use-policy.md": binding["policy_document_ref"],
+            "capture-intent.json": raw["capture_intent_ref"],
+        }[name]
+        selected.append(ObjectRef.model_validate(reference))
+        store.path_for(selected[0]).write_bytes(b"x" * (16384 + 1))
+        return result
+
+    def observed(self, reference):
+        if selected and reference == selected[0]:
+            reads.append(reference)
+        return original_get(self, reference)
+
+    monkeypatch.setattr(freezer, "_reviewed_inputs_v3", replaced_after_review)
+    monkeypatch.setattr(ObjectStore, "get_bytes", observed)
+    with pytest.raises(ValueError):
+        frozen_v3(authority)
+    assert selected and reads == []
+
+
+def test_cli_explicit_v3_verify_caps_manifest_before_read(authority, monkeypatch, capsys):
+    result, _, _, _ = frozen_v3(authority)
+    store = ObjectStore(authority[0])
+    ref = ObjectRef.model_validate(result["freeze_ref"])
+    store.path_for(ref).write_bytes(b"x" * (1024 * 1024 + 1))
+    original, reads = ObjectStore.get_bytes, []
+
+    def observed(self, reference):
+        if reference.digest == ref.digest:
+            reads.append(reference)
+        return original(self, reference)
+
+    monkeypatch.setattr(ObjectStore, "get_bytes", observed)
+    assert (
+        freezer.main(
+            ["verify", "--root", str(authority[0]), "--digest", ref.digest, "--policy-exception"]
+        )
+        == 2
+    )
+    assert reads == [] and "freeze_failed" in capsys.readouterr().err
+
+
 def test_policy_does_not_relax_real_fields_or_review_timing(authority):
     root, _, binding = authority
     auth, marker = consumed(authority)
