@@ -39,7 +39,7 @@ from quantmesh.instruments.decision_packets import (
 )
 from quantmesh.instruments.history import HistoryService, HistoryUnavailableError
 from quantmesh.instruments.inbox import DecisionInbox, DecisionInboxError, DecisionInboxService
-from quantmesh.instruments.live_history import LiveHistoryService
+from quantmesh.instruments.live_history import LiveHistoryService, inspect_saved_series
 from quantmesh.instruments.monitoring import (
     DecisionWatchService,
     DecisionWatchState,
@@ -245,7 +245,7 @@ def instrument_router() -> APIRouter:
                 return service.inspect(venue, symbol, at=selected, observed_at=observed_at)
             if isinstance(service, HistoryService):
                 series = service.history(venue, symbol, HistoryRange.ONE_DAY, as_of=selected)
-                return HistoricalInspection.from_observations(series, observed_at=observed_at)
+                return inspect_saved_series(series, observed_at=observed_at)
             raise HistoryUnavailableError("no historical service is attached")
         except HistoryUnavailableError as error:
             raise HTTPException(

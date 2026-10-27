@@ -531,6 +531,28 @@ def _replay_series_with_receipt(
     return series, segment[-1][0].received_at
 
 
+def inspect_saved_series(
+    series: HistoricalSeries, *, observed_at: datetime, source_received_at: datetime | None = None
+) -> HistoricalInspection:
+    """Narrow only the inspection view; retain the source's manifest coverage/evidence."""
+    step = interval_to_timedelta(series.interval)
+    start = len(series.bars) - 1
+    while start > 0 and series.bars[start].timestamp == series.bars[start - 1].timestamp + step:
+        start -= 1
+    selected = series.bars[start:]
+    if len(selected) < 2:
+        raise HistoryUnavailableError(
+            "saved inspection requires at least two contiguous observed bars"
+        )
+    if len(selected) > 10_000:
+        raise HistoryUnavailableError("saved inspection exceeds the 10000-bar result bound")
+    return HistoricalInspection.from_observations(
+        series.model_copy(update={"bars": selected}),
+        observed_at=observed_at,
+        source_received_at=source_received_at,
+    )
+
+
 class LiveHistoryService:
     """One shared history authority for both history and workspace APIs."""
 
@@ -588,7 +610,7 @@ class LiveHistoryService:
             except HistoryUnavailableError:
                 pass
             else:
-                return HistoricalInspection.from_observations(series, observed_at=observed_at)
+                return inspect_saved_series(series, observed_at=observed_at)
         series, received_at = _replay_series_with_receipt(
             self._feed,
             venue,
@@ -597,9 +619,7 @@ class LiveHistoryService:
             as_of=at,
             archive_root=self._archive_root,
         )
-        return HistoricalInspection.from_observations(
-            series, observed_at=observed_at, source_received_at=received_at
-        )
+        return inspect_saved_series(series, observed_at=observed_at, source_received_at=received_at)
 
     def compare(
         self,

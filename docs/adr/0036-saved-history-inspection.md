@@ -22,6 +22,12 @@ filter, per-store10000 tail/final10000/128-key batch/128MiB/one-thread/0spill gu
 is widened. Native refusal propagates as explicit unavailable. Bounded rows are
 not a claim of arbitrary-payload total RSS or production-scale success.
 
+Inspection also narrows a successfully validated manifest series to its last
+exactly contiguous segment, requiring2..10000 bars. It preserves source manifest
+coverage and gap evidence in the primary object; the UI derives returned extent
+and count from the actual returned bars. Original manifest history remains
+unchanged, including its existing one-bar/multiple-segment response behavior.
+
 The new immutable wrapper carries primary, observed_at, window_end, source_time,
 source_received_at, stale and stale_after_seconds. Source time is the last returned
 bar time; its separate receipt remains original. Staleness is display metadata:

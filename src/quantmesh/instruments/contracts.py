@@ -487,6 +487,11 @@ class HistoricalInspection(StrictContract):
             or self.primary.as_of != self.window_end
             or self.window_end > self.observed_at
             or self.source_time != self.primary.bars[-1].timestamp
+            or not 2 <= len(self.primary.bars) <= 10_000
+            or any(
+                right.timestamp - left.timestamp != interval_to_timedelta(self.primary.interval)
+                for left, right in zip(self.primary.bars, self.primary.bars[1:])
+            )
             or any(bar.is_live_tail for bar in self.primary.bars)
             or (self.source_received_at is not None and self.source_received_at > self.window_end)
         ):
