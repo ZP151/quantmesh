@@ -105,11 +105,11 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
     )
     assert re.fullmatch(r"3\.13\.[0-9]+", protocol["runtime"]["python"]) is not None
     # The protocol records the Python patch version and the normalizer source
-    # hash. Pin the current v3-extended source bytes while accepting this
-    # runner's Python patch version; original stored reports are unchanged.
+    # hash. Pin the reviewed offline event parser source bytes while accepting
+    # this runner's Python patch version; original stored reports are unchanged.
     protocol["runtime"]["python"] = "<python-patch>"
     assert replay.digest(replay.canonical(protocol)) == (
-        "f5afaf49dd3402193e16e3da0a84f314050aa155aa663879a502ef6884516ddd"
+        "ac871ad84cc1ee20808414d5e989dcce7b7d0d7f59474edbd4c038088cf53457"
     )
     assert value.snapshot_digest == replay.digest(
         b"INTERNAL SYNTHETIC121" + value.bars_csv + value.protocol_bytes
