@@ -83,11 +83,12 @@ export function InstrumentWorkspaceScreen() {
   if (health.data.market_data_only === true && !allowedMarketChart(venue, symbol, search)) return <p>{t('marketData.unavailable')}</p>
   const canInspect = isVenue(venue) && (venue === 'hyperliquid' || (venue === 'moomoo' && ['AAPL', 'NVDA'].includes(symbol)))
   if (inspecting && canInspect) return <SavedHistoryInspection key={`${venue}:${symbol}`} venue={venue} symbol={symbol} onReturn={() => setInspecting(false)} />
-  if (supported && packetId !== null && DECISION_PACKET_ID.test(packetId) && packet.isPending) return <WorkspaceLoading />
-  if (supported && packetId !== null && packet.isError) return <WorkspaceError error={packet.error} symbol={symbol} venue={venue} />
+  const inspectionEntry = canInspect && <div className="mb-3 flex justify-end"><Button variant="outline" className="min-h-11" onClick={() => setInspecting(true)}>{t('inspection.open')}</Button></div>
+  if (supported && packetId !== null && DECISION_PACKET_ID.test(packetId) && packet.isPending) return <>{inspectionEntry}<WorkspaceLoading /></>
+  if (supported && packetId !== null && packet.isError) return <>{inspectionEntry}<WorkspaceError error={packet.error} symbol={symbol} venue={venue} /></>
   const lab = supported && (packetId !== null ? packet.data?.scenario_lab != null : search.get('analysis') === 'fresh' && search.get('horizon') !== '126')
   return <>
-    {canInspect && <div className="mb-3 flex justify-end"><Button variant="outline" className="min-h-11" onClick={() => setInspecting(true)}>{t('inspection.open')}</Button></div>}
+    {inspectionEntry}
     {lab ? <ScenarioLabWorkspace /> : <LegacyInstrumentWorkspaceScreen />}
   </>
 }

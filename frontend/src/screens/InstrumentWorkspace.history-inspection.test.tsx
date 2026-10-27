@@ -51,6 +51,16 @@ it('opens before current data loads, reads independent GET and shows distinct ti
   expect(screen.queryByRole('button', { name: /Paper|Watch|Reject|Forecast/i })).not.toBeInTheDocument()
   expect(api.decisionPacket).not.toHaveBeenCalled(); expect(api.saveDecisionPacket).not.toHaveBeenCalled()
 })
+it.each(['pending', 'error'] as const)('keeps saved history accessible while a persisted packet is %s', async packetState => {
+  vi.mocked(api.decisionPacket).mockImplementation(() => packetState === 'pending'
+    ? new Promise(() => {})
+    : Promise.reject(new ApiError(503, 'packet unavailable')))
+  mount('/instruments/moomoo/AAPL?packet=packet-000000000000000000000001')
+  if (packetState === 'error') await screen.findByRole('alert')
+  const input = await open()
+  submit(input)
+  await waitFor(() => expect(api.historyInspection).toHaveBeenCalledWith('moomoo', 'AAPL', sample.window_end, expect.any(AbortSignal)))
+})
 it('rejects unzoned/future input locally, keeps explicit offset and never adds a workspace anchor', async () => {
   mount(); const input = await open()
   for (const value of ['2026-10-23T23:44:01', '2999-01-01T00:00:00Z']) {
