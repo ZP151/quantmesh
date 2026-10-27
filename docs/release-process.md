@@ -131,8 +131,10 @@ versions. The first operator-facing product release line is `0.1.x`:
 - the corresponding Git tag uses the readable form `vX.Y.Z-rcN`;
 - operator acceptance promotes the same verified scope to package version
   `X.Y.Z` and tag `vX.Y.Z` in a separately verified promotion commit;
-- later compatible fixes increment the patch; a deliberately incompatible
-  product release increments the minor.
+- later compatible fixes increment the patch; before 1.0, a minor increment
+  may also identify a bounded new operator-facing capability line while
+  compatibility is maintained. Any incompatible behavior must be described
+  separately in its release notes.
 
 Tags are created only from a verified main commit. The version string lives in
 `pyproject.toml` and `quantmesh/__init__.py`; they must agree, and the package

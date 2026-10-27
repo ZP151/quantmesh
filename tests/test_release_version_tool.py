@@ -1,4 +1,4 @@
-"""Tests for release intent discovery across compatible patch releases."""
+"""Tests for release intent discovery across candidate lines."""
 
 from pathlib import Path
 
@@ -16,11 +16,13 @@ def test_release_notes_select_highest_pep440_version(
         "v0.1.0-rc8.md",
         "v0.1.1-rc1.md",
         "v0.1.1-rc1.zh-CN.md",
+        "v0.2.0-rc1.md",
+        "v0.2.0-rc1.zh-CN.md",
     ):
         (tmp_path / name).write_text("release", encoding="utf-8")
     monkeypatch.setattr(check_release_version, "NOTES_DIR", tmp_path)
 
-    assert check_release_version._release_note_version() == "0.1.1rc1"
+    assert check_release_version._release_note_version() == "0.2.0rc1"
 
 
 def test_version_tags_cover_compatible_patch_candidates(
