@@ -40,6 +40,8 @@ Exit-cap: strict exit25 shares permits10; later hold closes still request remain
 
 Fresh read-only code review at the demonstrable CLI boundary, at most two rounds; prior morning document review is historical and not reused as source approval.
 
+Source R1 reviewed92bd488 and independently ran47 new tests (exit0). Two P2s: flat terminal close could enter; partial full exits lost original decision identity. Both reproduced with failing regressions before correction. Terminal now suppresses entry in both arms and retains a terminal-session fence after flat/supplied exit, preventing window extension; the additional fence regression first failed. Full exits retain the original immutable Action through partial/zero/unavailable continuations and terminal priority, clearing it only when actually flat. A terminal action can enforce final liquidation without relabeling the original trend-exit cause/identity. R2 is limited to this material delta and affected regressions.
+
 ## Verifier
 
 Targeted new tests and actual fixed-case CLI outputs required. Sole publisher owns final applicable CI/integration; historical financial suites will not be rerun by this owner. Final raw logs, trace, source hashes and commit will accompany the handoff.

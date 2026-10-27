@@ -142,8 +142,10 @@ class Campaign:
     initial_quantity: int = 0
     consumed: tuple[str, ...] = ()
     pending_full_exit: str | None = None
+    full_exit_origin: Action | None = None
     last_close: int = -1
     last_fill: int = -1
+    terminal_session: int | None = None
     pending: Action | None = None
     execution: SizedAction | None = None
 
@@ -152,6 +154,8 @@ class Campaign:
         _integer(self.initial_quantity, "initial_quantity")
         _integer(self.last_close, "last_close", minimum=-1)
         _integer(self.last_fill, "last_fill", minimum=-1)
+        if self.terminal_session is not None:
+            _integer(self.terminal_session, "terminal_session")
         if self.shares:
             _decimal(self.initial_price, "initial_price", positive=True)
             if not self.initial_quantity:
@@ -165,6 +169,15 @@ class Campaign:
         if self.pending_full_exit is not None:
             if not self.shares or self.pending_full_exit not in _EXIT_CAUSES:
                 raise ValueError("pending_full_exit")
+            origin = self.full_exit_origin
+            if (
+                not isinstance(origin, Action)
+                or origin.kind != "full_exit"
+                or origin.reason != self.pending_full_exit
+            ):
+                raise ValueError("full_exit_origin")
+        elif self.full_exit_origin is not None:
+            raise ValueError("full_exit_origin")
         if self.execution is not None and self.execution.action != self.pending:
             raise ValueError("pending_execution")
 
@@ -210,6 +223,8 @@ def on_close(
 ) -> tuple[Campaign, Action]:
     """Propose research action only; account cash cannot affect the trend signal."""
     _account_matches(state, account)
+    if state.terminal_session is not None:
+        raise ValueError("terminal_boundary")
     if state.pending is not None or state.execution is not None:
         raise ValueError("pending_action")
     if type(overlay) is not bool:
@@ -221,11 +236,15 @@ def on_close(
     signal = doublema_signal(close.closes)
     kind, reason, quantity, stages = "hold", signal, 0, ()
     exit_cause = state.pending_full_exit
+    exit_origin = state.full_exit_origin
     if not close.available:
         reason = "unavailable"
-    elif close.terminal and state.shares:
-        kind, reason, quantity = "full_exit", "terminal", state.shares
-        exit_cause = "terminal"
+    elif close.terminal:
+        if state.shares:
+            kind, reason, quantity = "full_exit", "terminal", state.shares
+            exit_cause = exit_cause or "terminal"
+        else:
+            reason = "terminal_flat"
     elif signal == "warmup":
         pass
     elif state.shares and (exit_cause or signal == "exit_long"):
@@ -255,11 +274,15 @@ def on_close(
         kind, reason, quantity = "entry", "trend_entry", None
     averages = _averages(close.closes) if len(close.closes) > 100 else ()
     action = Action(close.session, kind, signal, reason, quantity, stages, averages)
+    if kind == "full_exit" and exit_origin is None:
+        exit_origin = action
     state = replace(
         state,
         last_close=close.session,
         pending=action if kind != "hold" else None,
         pending_full_exit=exit_cause,
+        full_exit_origin=exit_origin,
+        terminal_session=close.session + 1 if close.terminal else None,
     )
     return state, action
 
@@ -332,7 +355,11 @@ def on_fill(state: Campaign, sized: SizedAction, fill: Fill) -> Campaign:
     if action.reason == "terminal" and shares:
         raise ValueError("terminal_liquidation_incomplete")
     if not shares:
-        return Campaign(last_close=state.last_close, last_fill=fill.session)
+        return Campaign(
+            last_close=state.last_close,
+            last_fill=fill.session,
+            terminal_session=state.terminal_session,
+        )
     initial_price, initial_quantity = state.initial_price, state.initial_quantity
     if action.kind == "entry":
         initial_price, initial_quantity = fill.price, fill.quantity

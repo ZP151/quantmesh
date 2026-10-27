@@ -287,11 +287,14 @@ def render_text(trace):
             else:
                 lines.append("    requested=0 allowed=0 supplied_fill=none")
             state = row["campaign_after"]
+            origin = state["full_exit_origin"]
             lines.append(
                 f"    shares={state['shares']} P0={state['initial_price']} "
                 f"Q0={state['initial_quantity']} "
                 f"consumed={','.join(state['consumed']) or 'none'} "
                 f"pending_full_exit={state['pending_full_exit'] or 'none'}"
+                f" origin_close={origin['session'] if origin else 'none'}"
+                f" terminal_open={state['terminal_session']}"
             )
     return "\n".join(lines)
 

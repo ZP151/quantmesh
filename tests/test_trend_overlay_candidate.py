@@ -38,6 +38,11 @@ def held(p, *, shares=100, q0=100, consumed=(), pending_full_exit=None):
         initial_quantity=q0,
         consumed=consumed,
         pending_full_exit=pending_full_exit,
+        full_exit_origin=(
+            p.Action(100, "full_exit", "exit_long", pending_full_exit, shares)
+            if pending_full_exit
+            else None
+        ),
     )
 
 
@@ -232,6 +237,52 @@ def test_terminal_cap_cannot_be_reported_as_complete():
     assert sized.allowed == 10
     with pytest.raises(ValueError, match="terminal_liquidation_incomplete"):
         p.on_fill(state, sized, p.Fill(102, 10, D(100)))
+
+
+@pytest.mark.parametrize("overlay", [False, True])
+def test_terminal_flat_crossover_cannot_open_a_final_session_position(overlay):
+    p = policy()
+    state, action = decide(p, p.Campaign(), bars=entering(), terminal=True, overlay=overlay)
+    assert action.signal == "enter_long"
+    assert action.kind == "hold" and action.reason == "terminal_flat"
+    assert state.pending is None and state.shares == 0
+
+
+def test_terminal_boundary_cannot_be_extended_after_flat_or_supplied_exit():
+    p = policy()
+    state, _ = decide(p, p.Campaign(), bars=entering(), terminal=True)
+    with pytest.raises(ValueError, match="terminal_boundary"):
+        p.on_close(state, p.Close(102, entering()), account(p))
+    state, action = decide(p, held(p, shares=10), terminal=True)
+    state, sized = p.size_at_open(state, action, opening(p), account(p, 10))
+    state = p.on_fill(state, sized, p.Fill(102, 10, D(100)))
+    with pytest.raises(ValueError, match="terminal_boundary"):
+        p.on_close(state, p.Close(102, entering()), account(p))
+
+
+def test_partial_exit_keeps_the_original_decision_through_hold_and_terminal():
+    p = policy()
+    state, origin = decide(p, held(p, shares=25), bars=exiting())
+    state, sized = p.size_at_open(
+        state, origin, opening(p, price="80", volume=1000), account(p, 25)
+    )
+    state = p.on_fill(state, sized, p.Fill(102, 10, D(80)))
+    assert state.full_exit_origin == origin
+    state, continuation = p.on_close(state, p.Close(102, closes("75")), account(p, 15))
+    assert continuation.signal == "hold" and continuation.session == 102
+    assert state.full_exit_origin == origin
+    state, sized = p.size_at_open(
+        state, continuation, opening(p, session=103, price="75", volume=1000), account(p, 15)
+    )
+    state = p.on_fill(state, sized, p.Fill(103, 10, D(75)))
+    state, terminal = p.on_close(state, p.Close(103, closes("75"), terminal=True), account(p, 5))
+    assert terminal.reason == "terminal"
+    assert state.full_exit_origin == origin and state.pending_full_exit == "trend_exit"
+    state, sized = p.size_at_open(
+        state, terminal, opening(p, session=104, price="75"), account(p, 5)
+    )
+    state = p.on_fill(state, sized, p.Fill(104, 5, D(75)))
+    assert state.full_exit_origin is None and state.pending_full_exit is None
 
 
 def test_overlay_off_keeps_signal_and_exit_but_skips_all_stages():
