@@ -1,6 +1,6 @@
 # Iteration0038 — same-capture SPY event representation compatibility
 
-Status: active software slice; real data qualification remains independent.
+Status: READY after fresh narrow R1; real data qualification remains independent.
 Issue: [#177](https://github.com/ZP151/quantmesh/issues/177).
 Base actual main eee9d03a15852018f40aaa0c26463539c2859ef4/tree
 93c50c309113ab3dc92300b6ff22e3b45a4e4d33, merged PR232.
@@ -81,8 +81,25 @@ Historical08/11 logs and a narrowed date/cash-only final probe are retained.
 
 ## Reviewer / remaining gate
 
-Freeze source after final targeted checks/pins and dispatch one fresh narrow
-parser/lineage reviewer; at most known-fix R2. Do not reopen the old v3 slice.
+Source freeze6ef815613777a3656cfc60bc69719a589e95c9a2/tree
+cf04987297a7c526ca1315eeb29930879feca879 is independently READY. The sole fresh
+narrow Spec/Quality R1 reports0 findings and independently runs49PASS/5existing
+warnings, source pinsPASS and whitespacePASS; no R2 is needed. Report
+`review-r1.md` SHA00bf8e8818ab56048e6619e1e67190f66ee14a7d4f19f202228c09bf1d8303b3.
+Reviewer reads actual event-only receipt13 but does not rerun actual probe or
+access raw prices. Its first metadata command used an incorrect iteration path;
+that file-not-found is retained, then the correct tracked record was read.
+No old44/F0 or prior-v3 review is repeated. The final administrative commit only
+updates this iteration/plan; source and test bytes stay exactly reviewed.
+
+Actual event-only receipt13 SHA
+a7fdde80030a6f245e6bb78b05cfe52ea20167710b0a11c8a24017609a73516a is format-only.
+The first verifiable increment and reviewed source both finish before the selected
+04:22:03Z first-increment deadline; final packet also precedes05:22:03Z. Original
+03:22:03Z ACK remains the only clock origin. All failures and early checkpoints stay.
+Commits use scoped hooks bypass because publisher owns broad CI/build gates;
+author does no GH, build, dependency installation, host, SDK or actual math.
+
 Sole publisher owns generated artifacts/CI/normal merge/deployment. Independent
 actual B evidence, later real PostReview→freeze→acceptance and the already-authorized
 single actual job remain outside this software completion. Goal stays ACTIVE.

@@ -4,6 +4,10 @@
 > verification-before-completion. Root selected this exact two-production-file lock;
 > implementation is active in the isolated spy-event-parser-compat leaf.
 
+Status: source6ef815613777a3656cfc60bc69719a589e95c9a2 reviewed READY by one
+fresh narrow R1,0 findings.49 new targeted checks and actual EVENT-ONLY receipt
+pass. Actual data qualification/numerical execution remain outside this delivery.
+
 Actual ACK2026-10-27T03:22:03Z (SGT11:22:03); this plan deadline03:37:03Z.
 The new human timebox is approved, not waiting for an owner: first verifiable
 increment<=05:22:03Z, reviewable slice<=07:22:03Z, counted from this same ACK.
@@ -131,29 +135,29 @@ previous reviewed branch or its immutable delivery packet.
 
 ## RED/GREEN and independent review
 
-- [ ] Add only the new test file. Run `python -m pytest
+- [x] Add only the new test file. Run `python -m pytest
   tests/test_spy_event_parser_compat.py -q` with owned unique basetemp and preserve
   the missing-profile/date/cash/lineage RED. No old44 tests or F0 rerun.
-- [ ] Locale-independent positives for both actual event lexemes; strict invalid
+- [x] Locale-independent positives for both actual event lexemes; strict invalid
   dates/months/case/whitespace and impossible dates. Prohibit locale calls in the seam.
-- [ ] Exact Decimal cross-proof positive; absent/duplicate/same-date wrong amount,
+- [x] Exact Decimal cross-proof positive; absent/duplicate/same-date wrong amount,
   currency, exponent, zero/negative, compound and in-window noncash all refuse.
-- [ ] Out-of-window Cash Gain stays uninterpreted after ex-date filtering; the two
+- [x] Out-of-window Cash Gain stays uninterpreted after ex-date filtering; the two
   warmup records/pay dates survive, without generating warmup cash holdings.
-- [ ] Explicit profile only on this v3 cohort; wrong raw/auth/marker/source hashes,
+- [x] Explicit profile only on this v3 cohort; wrong raw/auth/marker/source hashes,
   unknown/partial profile, v1/v2 profile laundering all refuse. Existing legacy parser
   vectors still have the same results through new-file regression cases only.
-- [ ] Controlled v3 freeze/reopen/report-proof tests retain original capture/source
+- [x] Controlled v3 freeze/reopen/report-proof tests retain original capture/source
   identity and record a distinct new normalizer hash/version; missing/altered
   lineage fails warm and cold without current options. Calculator is a sentinel,
   never a real strategy. Existing8 proof refs and all object limits stay unchanged.
-- [ ] After GREEN, scoped Ruff/format/diff and original engine/strategy/cash/date/
+- [x] After GREEN, scoped Ruff/format/diff and original engine/strategy/cash/date/
   cost/window/transport AST/raw pins. New targeted file only; no old whole suites,
   CI, dependency install, SDK, host, new timestamps/window/nonce/authority.
-- [ ] One fresh narrow independent reviewer checks only this parser/lineage diff,
+- [x] One fresh narrow independent reviewer checks only this parser/lineage diff,
   with at most known-fix R2. Do not re-review the old v3 slice or F0. Sole publisher
   owns exact-lock API generation/build/CI/PR/merge/deployment.
-- [ ] Optional ignored actual EVENT-ONLY probe rehashes immutable raw/auth/marker
+- [x] Optional ignored actual EVENT-ONLY probe rehashes immutable raw/auth/marker
   before/after and checks just the derived event representation, labels
   `FORMAT_COMPAT_ONLY_NOT_DATA_QUALIFICATION`, and emits no normalized prices,
   freeze, qualified PostReview, acceptance or financial result.
