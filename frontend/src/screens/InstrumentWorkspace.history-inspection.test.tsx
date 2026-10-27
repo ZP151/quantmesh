@@ -92,10 +92,19 @@ it('does not offer inspection outside the approved private-minute scope', async 
 })
 it('keeps chart toggles local and functional without another saved-window read', async () => {
   mount(); const input = await open(); submit(input); await screen.findByTestId('inspection-bars')
-  const volume = screen.getByRole('button', { name: 'Volume', exact: true })
+  const volume = screen.getByRole('button', { name: 'Volume' })
   fireEvent.click(volume)
   expect(volume).toHaveAttribute('aria-pressed', 'true')
-  fireEvent.click(screen.getByRole('button', { name: 'Candles', exact: true }))
-  expect(screen.getByRole('button', { name: 'Candles', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  fireEvent.click(screen.getByRole('button', { name: 'Candles' }))
+  expect(screen.getByRole('button', { name: 'Candles' })).toHaveAttribute('aria-pressed', 'true')
   expect(api.historyInspection).toHaveBeenCalledTimes(1)
+})
+it('labels the returned bars coverage and count separately from a wider manifest', async () => {
+  vi.mocked(api.historyInspection).mockResolvedValue({ ...sample, primary: { ...primary,
+    coverage: { ...primary.coverage, start: '2026-10-01T00:00:00Z', end: '2026-10-26T00:00:00Z', rows: 500 },
+  } })
+  mount(); const input = await open(); submit(input); await screen.findByTestId('inspection-bars')
+  expect(screen.getByLabelText('Returned coverage')).toHaveTextContent('2026-10-23T23:42:00Z → 2026-10-23T23:43:00Z')
+  expect(screen.getByText(/2 saved rows/)).toBeInTheDocument()
+  expect(screen.queryByText(/500 saved rows/)).not.toBeInTheDocument()
 })

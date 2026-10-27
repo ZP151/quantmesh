@@ -58,10 +58,10 @@ export function SavedHistoryInspection({ venue, symbol, onReturn }: {
         {([
           ['inspection.viewed', value.observed_at], ['inspection.selected', value.window_end],
           ['inspection.sourceTime', value.source_time], ['inspection.receipt', value.source_received_at ?? t('inspection.unknownReceipt')],
-          ['inspection.source', value.primary.source], ['inspection.coverage', `${value.primary.coverage.start} → ${value.primary.coverage.end}`],
+          ['inspection.source', value.primary.source], ['inspection.coverage', `${value.primary.bars[0].timestamp} → ${value.primary.bars[value.primary.bars.length - 1].timestamp}`],
         ] as const).map(([label, text]) => <div key={label}><dt className="text-muted-foreground">{t(label)}</dt><dd aria-label={t(label)} className="mt-1 break-words font-mono">{text}</dd></div>)}
       </dl>
-      <p className="text-xs text-muted-foreground">{value.primary.coverage.rows} {t('inspection.rows')} · {value.primary.interval} · {value.primary.license}</p>
+      <p className="text-xs text-muted-foreground">{value.primary.bars.length} {t('inspection.rows')} · {value.primary.interval} · {value.primary.license}</p>
       <MarketCanvas chartFirst showStatistics={false} history={value.primary} comparison={null} forecast={null}
         mode={mode} onModeChange={setMode} range="1d" onRangeChange={() => {}}
         volume={volume} showSma20={sma20} showSma50={sma50}

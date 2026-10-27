@@ -6,9 +6,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from quantmesh.domain.models import Venue
+from quantmesh.data.manifest import DatasetManifest, SeriesCoverage
+from quantmesh.domain.market_data import Bar
+from quantmesh.domain.models import Instrument, InstrumentType, Venue
 from quantmesh.instruments.api import instrument_router
-from quantmesh.instruments.contracts import HistoryRange
+from quantmesh.instruments.contracts import DatasetBinding, HistoryRange
 from quantmesh.instruments.history import HistoryService
 from quantmesh.instruments.live_history import LiveHistoryService
 from quantmesh.live.buffer import LiveBuffer
@@ -215,3 +217,93 @@ def test_existing_history_json_and_current_clock_unchanged(mounted):
         ).status_code
         == 405
     )
+
+
+@pytest.mark.parametrize("wrapped", [False, True])
+@pytest.mark.parametrize("single_row", [False, True])
+def test_genuine_manifest_last_segment_minimum_and_original_coverage(mounted, wrapped, single_row):
+    client, app, hot, _root = mounted
+    instrument = Instrument(
+        symbol="BTC",
+        venue=Venue.HYPERLIQUID,
+        instrument_type=InstrumentType.PERPETUAL,
+        currency="USD",
+    )
+    selected_times = (
+        ["2026-10-23T23:40:00Z"]
+        if single_row
+        else [
+            "2026-10-23T23:20:00Z",
+            "2026-10-23T23:25:00Z",
+            "2026-10-23T23:35:00Z",
+            "2026-10-23T23:40:00Z",
+        ]
+    )
+    stamps = ["2026-10-01T00:00:00Z", *selected_times, "2026-10-26T00:00:00Z"]
+    rows = [
+        Bar(
+            instrument=instrument,
+            timestamp=datetime.fromisoformat(stamp),
+            interval="5m",
+            open=100,
+            high=101,
+            low=99,
+            close=100,
+            volume=1,
+        )
+        for stamp in stamps
+    ]
+
+    class SyntheticDataset:
+        name = "inspection-synthetic-manifest"
+        manifest = DatasetManifest(
+            revision=1,
+            dataset=name,
+            source="SYNTHETIC MANIFEST FIXTURE",
+            license="engineering-only",
+            generated_at=AT,
+            coverage=[
+                SeriesCoverage(
+                    interval="5m",
+                    venue=Venue.HYPERLIQUID,
+                    symbol="BTC",
+                    start=rows[0].timestamp,
+                    end=rows[-1].timestamp,
+                    rows=len(rows),
+                )
+            ],
+        )
+
+        def read_bars(self, *, start, end, **kwargs):
+            return [row for row in rows if start <= row.timestamp <= end]
+
+    dataset = SyntheticDataset()
+    historical = HistoryService(
+        [
+            DatasetBinding(
+                dataset_id=dataset.name,
+                interval="5m",
+                venue=Venue.HYPERLIQUID,
+                symbol="BTC",
+                calendar="24/7",
+                adjustment="unadjusted",
+            )
+        ],
+        dataset_loader=lambda _: dataset,
+    )
+    app.state.history = (
+        LiveHistoryService(historical, LiveFeed(lake=hot)) if wrapped else historical
+    )
+    original = client.get("/api/instruments/hyperliquid/BTC/history?range=1d").json()
+    assert len(original["primary"]["bars"]) == len(selected_times)
+    response = inspect(client)
+    if single_row:
+        assert response.status_code == 404, response.text
+        assert "two" in response.text
+    else:
+        assert response.status_code == 200, response.text
+        value = response.json()
+        assert [bar["timestamp"] for bar in value["primary"]["bars"]] == selected_times[-2:]
+        assert value["primary"]["coverage"] == original["primary"]["coverage"]
+        assert value["source_received_at"] is None
+    assert client.get("/api/instruments/hyperliquid/BTC/history?range=1d").json() == original

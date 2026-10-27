@@ -21,3 +21,11 @@ Owned normal FastAPI factory on127.0.0.1:18765 and Vite dev15173 exercised the a
 Browser acceptance15:52:31.968–15:52:34.401Z: current→historical result587ms, full operation including390px screenshot and return2432ms. At390px viewport document scrollWidth375 (no overflow), historical Paper actions0. Date edit immediately clears old graph; Oct22 empty window explicitly404/unavailable; returning current leaves original URL and current requests without anchor. Desktop/mobile full screenshots and unavailable/return screenshots plus browser-acceptance.json/actual-api.json retained in output/history-inspection. This is synthetic engineering proof, not financial qualification. Vite acceptance config needed .mts for ESM and positional root/cwd; original two startup errors preserved in session history, production config untouched.
 
 Source state ready for first whole-slice review; review/cleanup/final handoff pending. Source hooks bypassed for checkpoint after explicit targeted checks; final applicable CI remains publisher-owned.
+
+## Independent R1 and one aggregate correction
+
+R1 on31c199de556f982bb18b8940bcfb06f3b7cde69e:2Important/0Critical. A real in-memory DatasetManifest+HistoryService discriminator returns disjoint segments/single bars and manifest-wide coverage; parent verifies these conflict with this inspection's promised last-segment/min2 and UI returned-coverage labels. R1/report/repro including initial missing-revision fixture error retained.
+
+18 genuine RED4 across plain/wrapped actual HistoryService and multi/single-bar windows;19 UI RED1 for wider manifest row count/extent. One aggregate correction adds inspection-only narrowing (2..10000 contiguous returned bars), preserves original manifest coverage/gap evidence and existing history responses, and derives UI returned extent/count from actual bars. No new DTO/aggregation or relaxed policy.21 GREEN19backend;22 GREEN9newUI;23 TypeScript PASS. Known test-only getByRole exact options corrected in this batch;16 prior TS error retained. Ruff/format and changed UI lint pass. Three original current Paper/token/future-quote/time-regression checks15 PASS3; they remain independent of display staleness.
+
+Second/final independent review pending; no third structural patch cycle permitted. Final current-source browser/checkpoint and owned-service cleanup still to be recorded.
