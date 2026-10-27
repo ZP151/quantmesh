@@ -21,6 +21,7 @@ import stat
 import sys
 from contextlib import contextmanager, nullcontext
 from datetime import UTC, date, datetime, time, timedelta
+from decimal import Decimal
 from importlib.metadata import version
 from pathlib import Path
 from typing import Literal
@@ -41,6 +42,33 @@ from quantmesh.research import spy_policy_exception as once  # noqa: E402
 ENGINE_ORIGINAL_SHA256 = "bf69680b7d3e2be8e3c9b6baf8a19ab09972fa501118cc3b0c9aa9045b056f22"
 MAX_BYTES = 8 * 1024 * 1024
 MAX_ACTION_ROWS = 512
+EVENT_PROFILE = "opend_spy_cash_dividend_en_month_v1"
+EVENT_DATE_FORMAT = "english_month_abbrev_day_year"
+_EVENT_COHORT = {
+    "capture_sha256": "d882c232ed68666ea35d1d3876470bcc60853c6f7678d281cda9403a58e3d9ae",
+    "authorization_sha256": "bb456ef4a8c54bcd84caae1cd55d3b09e71a3f1a784736b8ebdf9249297f38de",
+    "capture_intent_sha256": "828286295b5a3a41892fc969eb083f5452b56a836116a82a788306a7787143ac",
+    "source_commit": "eee9d03a15852018f40aaa0c26463539c2859ef4",
+    "source_tree": "93c50c309113ab3dc92300b6ff22e3b45a4e4d33",
+    "collector_sha256": "85ffc0f284f998db81390ea5a95aeba1be6b0486da8efe8aa5b3f67b08fc05ca",
+    "source_code_sha256": {
+        "src/quantmesh/moomoo/provider.py": (
+            "2118be55f7d1bf0a91f699c9a7fafb62f895b0c89401be3ab702642f765d46d3"
+        ),
+        "src/quantmesh/moomoo/opend.py": (
+            "6c1ee822393b9bf3d874cf3343de365595dd76a6ea53ea33b9501444de008ddd"
+        ),
+        "src/quantmesh/moomoo/market_data.py": (
+            "803121447057b1f440cc48f8836c4d12b63f0c830cb5eb4deacce7ddc47e4e9b"
+        ),
+        "src/quantmesh/data/calendars.py": (
+            "c861f8e1c1d58fe617e086a0af70c8dfd16febfd72d492b22875ede15140f7ee"
+        ),
+        "src/quantmesh/data/objects.py": (
+            "b77d8e4729e8673ebaf37b8734938c74add0c409d71cab8820ca521d0cc61404"
+        ),
+    },
+}
 _LOADED_SOURCE = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 _NY = ZoneInfo("America/New_York")
 _SOURCE_MODULES = (
@@ -167,6 +195,11 @@ class PostReviewV3(PostReview):
     capture_intent_ref: ObjectRef
 
 
+class PostReviewV3EventCompat(PostReviewV3):
+    normalization_profile: Literal["opend_spy_cash_dividend_en_month_v1"]
+    event_date_format: Literal["english_month_abbrev_day_year"]
+
+
 def _canonical(value) -> bytes:
     try:
         raw = json.dumps(
@@ -226,6 +259,43 @@ def _typed_record(model, record, true_fields, code):
         return valid
     except (ValueError, TypeError, ValidationError):
         raise FreezeError(code) from None
+
+
+def _post_review_v3(record):
+    model = (
+        PostReviewV3EventCompat
+        if isinstance(record, dict) and "normalization_profile" in record
+        else PostReviewV3
+    )
+    return _typed_record(
+        model,
+        record,
+        ("history_available", "full_action_history_reviewed"),
+        "post_review_unqualified",
+    )
+
+
+def _normalization_metadata(review):
+    """Closed cohort origin, never copied from self-declared protocol metadata."""
+    if "normalization_profile" not in review:
+        return None
+    if (
+        review["normalization_profile"] != EVENT_PROFILE
+        or review.get("event_date_format") != EVENT_DATE_FORMAT
+        or review.get("capture_sha256") != _EVENT_COHORT["capture_sha256"]
+        or review.get("authorization_sha256") != _EVENT_COHORT["authorization_sha256"]
+        or review.get("capture_intent_ref", {}).get("digest")
+        != _EVENT_COHORT["capture_intent_sha256"]
+    ):
+        raise FreezeError("normalization_cohort_invalid")
+    return {
+        "profile": EVENT_PROFILE,
+        "profile_version": 1,
+        "capture_origin": {
+            **_EVENT_COHORT,
+            "source_code_sha256": dict(_EVENT_COHORT["source_code_sha256"]),
+        },
+    }
 
 
 def _authorization_time(valid, as_of, requested_at):
@@ -390,6 +460,61 @@ def _cash_statement(statement):
             raise FreezeError("cash_statement_unsupported")
         amount += _number(float(match[1]))
     return amount
+
+
+def _event_day(value):
+    """Exact English source lexeme, independent of the process locale."""
+    months = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    match = (
+        re.fullmatch(r"([A-Z][a-z]{2}) ([1-9]|[12][0-9]|3[01]), ([0-9]{4})", value)
+        if isinstance(value, str)
+        else None
+    )
+    try:
+        if match is None:
+            raise ValueError
+        return date(int(match[3]), months.index(match[1]) + 1, int(match[2])).isoformat()
+    except (ValueError, TypeError):
+        raise FreezeError("event_date_format_unsupported") from None
+
+
+def _event_view(raw, window, review):
+    """Derived event representation only; raw bytes and original actions stay intact."""
+    if (
+        review.get("normalization_profile") != EVENT_PROFILE
+        or review.get("event_date_format") != EVENT_DATE_FORMAT
+    ):
+        raise FreezeError("normalization_profile_invalid")
+    sessions, factors = set(window["sessions"]), {}
+    for row in _rows(raw["adjustment_factors"]):
+        ex = _day(row.get("ex_div_date"))
+        if ex not in sessions:
+            continue
+        if ex in factors:
+            raise FreezeError("duplicate_adjustment_date")
+        value = _number(row.get("per_cash_div"), nonnegative=True)
+        factors[ex] = Decimal(str(value))
+    rows = []
+    for original in _rows(raw["dividends"]):
+        ex = _event_day(original.get("ex_date"))
+        row = {**original, "ex_date": ex}
+        if ex in sessions:
+            statement = original.get("statement")
+            match = (
+                re.fullmatch(r"Cash Dividend: ((?:0|[1-9][0-9]*)(?:\.[0-9]+)?)USD", statement)
+                if isinstance(statement, str) and len(statement) <= 1000
+                else None
+            )
+            if match is None:
+                raise FreezeError("cash_statement_unsupported")
+            amount = Decimal(match[1])
+            if amount <= 0 or ex not in factors or amount != factors[ex]:
+                raise FreezeError("cash_event_exact_cross_proof_failed")
+            pay = original.get("dividend_payable_date")
+            row["dividend_payable_date"] = _event_day(pay) if pay else None
+            row["statement"] = f"Cash Dividend: {amount:f} USD Per Share"
+        rows.append(row)
+    return {**raw, "dividends": {**raw["dividends"], "rows": rows}}
 
 
 def _actions(raw, window, evidence):
@@ -933,7 +1058,7 @@ def reopen_freeze(root, freeze_digest, *, policy_exception=False):
     return {**freeze, "protocol": protocol}
 
 
-def _protocol_v3(window, binding, intent_ref):
+def _protocol_v3(window, binding, intent_ref, *, normalization=None):
     protocol = _protocol_v2(window)
     protocol.update(
         schema_id="qm.spy-daily.replay.protocol.v3.policy-exception-once",
@@ -942,6 +1067,8 @@ def _protocol_v3(window, binding, intent_ref):
         capture_intent_ref=intent_ref,
         policy_binding_code_sha256=_policy_source_identity(),
     )
+    if normalization is not None:
+        protocol["normalization"] = normalization
     return protocol
 
 
@@ -965,12 +1092,7 @@ def _reviewed_inputs_v3(raw, window, envelope, frozen_at, store):
     auth = _authorization(envelope["authorization"], as_of, requested, proof_store=store)
     if auth["schema_version"] != 3:
         raise FreezeError("v3_evidence_invalid")
-    review = _typed_record(
-        PostReviewV3,
-        envelope["review"],
-        ("history_available", "full_action_history_reviewed"),
-        "post_review_unqualified",
-    )
+    review = _post_review_v3(envelope["review"])
     reviewed = _stamp(review["reviewed_at_utc"])
     marker = once.verify_intent(auth["policy_exception"], auth, raw["capture_intent_ref"], store)
     if (
@@ -990,7 +1112,13 @@ def _reviewed_inputs_v3(raw, window, envelope, frozen_at, store):
         or not review["feed"].strip()
     ):
         raise FreezeError("post_review_binding_or_time_invalid")
-    normalized = _normalize_payload({key: raw[key] for key in _PAYLOAD_KEYS}, window, review)
+    payload = {key: raw[key] for key in _PAYLOAD_KEYS}
+    if _normalization_metadata(review) is not None:
+        payload = _event_view(payload, window, review)
+        normalization_review = {**review, "event_date_format": "%Y-%m-%d"}
+    else:
+        normalization_review = review
+    normalized = _normalize_payload(payload, window, normalization_review)
     return auth, review, normalized
 
 
@@ -1025,7 +1153,12 @@ def _freeze_v3(raw, as_of, evidence, output, *, frozen_at):
         ).model_dump(mode="json")
         for name, content in members.items()
     }
-    protocol = _protocol_v3(window, auth["policy_exception"], raw["capture_intent_ref"])
+    protocol = _protocol_v3(
+        window,
+        auth["policy_exception"],
+        raw["capture_intent_ref"],
+        normalization=_normalization_metadata(review),
+    )
     protocol["members"] = refs
     protocol_ref = store.put_bytes("application/json", _canonical(protocol))
     freeze = dict(
@@ -1102,7 +1235,12 @@ def _reopen_v3(store, freeze):
     window = protocol["window"]
     if plan_window(_stamp(window["as_of_utc"])) != window:
         raise FreezeError("protocol_setup_invalid")
-    expected = _protocol_v3(window, freeze["policy_exception"], freeze["capture_intent_ref"])
+    expected = _protocol_v3(
+        window,
+        freeze["policy_exception"],
+        freeze["capture_intent_ref"],
+        normalization=_normalization_metadata(_post_review_v3(review)),
+    )
     for name in (
         "runtime",
         "normalizer_sha256",

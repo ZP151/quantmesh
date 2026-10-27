@@ -1150,12 +1150,7 @@ class ReplayService:
         as_of = datetime.fromisoformat(protocol["window"]["as_of_utc"])
         requested = datetime.fromisoformat(evidence.times.requested_at_utc.value)
         checked_auth = freezer._authorization(auth, as_of, requested, proof_store=self.objects)
-        checked_review = freezer._typed_record(
-            freezer.PostReviewV3,
-            review,
-            ("history_available", "full_action_history_reviewed"),
-            "post_review_unqualified",
-        )
+        checked_review = freezer._post_review_v3(review)
         expected_facts = SourceFacts(
             source_use=_fact("POLICY_EXCEPTION_ONCE"),
             allowed_use=_fact(b.scope),
@@ -1228,6 +1223,7 @@ class ReplayService:
             protocol["window"],
             b.model_dump(mode="json"),
             evidence.capture_intent_ref.model_dump(mode="json"),
+            normalization=freezer._normalization_metadata(checked_review),
         )
         for key in (
             "runtime",
