@@ -28,25 +28,25 @@
 
 Create source and test files named above. Interfaces: frozen Account(cash,shares,receivable), Close(session,closes,available,terminal,unsupported_action), Open(session,price,prior_volumes), Fill(session,quantity,price), Campaign, Action, SizedAction; module functions on_close(state,close,account,overlay=True), size_at_open(state,action,opening,account), on_fill(state,sized,fill), each returns new immutable state plus observable decision where applicable. Campaign quantities only, no cash ledger.
 
-- [ ] Write tests for strict10/20, equality,100-prior warmup, next-open ordering, stale/unsupported data, cash/fee/cap constraints, independent signal vs sizing, stage/jump/priority/reset/full-exit latch and provided-fill validation.
-- [ ] Run `python -m pytest tests/test_trend_overlay_candidate.py -q` using the existing root venv and save RED. Missing source initially fails collection; subsequent test batches must fail assertions on missing behavior, not a broken import.
-- [ ] Implement exact pure policy. Entry budget50% including fee; post-fee concentration75%; prior20 median-volume cap1%; fees5bps (fixed demo) with optional10bps typed opening input for contract stress; dividends only supplied receivable. Positive finite numeric values, integral nonnegative shares, consistent campaign/account required.
-- [ ] Run same targeted command and scoped Ruff/format; save GREEN. Do not run legacy financial suite.
+- [x] Write tests for strict10/20, equality,100-prior warmup, next-open ordering, stale/unsupported data, cash/fee/cap constraints, independent signal vs sizing, stage/jump/priority/reset/full-exit latch and provided-fill validation.
+- [x] Run `python -m pytest tests/test_trend_overlay_candidate.py -q` using the existing root venv and save RED. Missing source initially fails collection; subsequent test batches must fail assertions on missing behavior, not a broken import.
+- [x] Implement exact pure policy. Entry budget50% including fee; post-fee concentration75%; prior20 median-volume cap1%; fees5bps (fixed demo) with optional10bps typed opening input for contract stress; dividends only supplied receivable. Positive finite numeric values, integral nonnegative shares, consistent campaign/account required.
+- [x] Run same targeted command and scoped Ruff/format; save GREEN. Do not run legacy financial suite.
 
 ## Task2 — actual fixed-case CLI and stable readable traces
 
 Create tools/run_trend_overlay_candidate.py; extend the same test file. CLI `--case campaign|exit-cap|cash-cap`, `--format text|json`, defaults campaign/text. Only fixed case IDs; stdout read-only, no file or strategy path arguments. Fixtures specify account and fill snapshots explicitly, never derive cash from generated trades.
 
-- [ ] Add failing CLI subprocess tests: unknown case/option refusal, same input byte-stable JSON identity, both overlay arms, synthetic labels/no-return fields and actual on_close/size_at_open/on_fill outputs.
-- [ ] Run narrow selection to observe RED before implementing CLI/fixture presentation.
-- [ ] Implement fixed fixture event stream and comparison renderer. Trace body pins case-input digest, policy/CLI source digests, per-step inputs/decisions/state, assumptions and evidence type; trace SHA256 covers canonical JSON body excluding its own digest. Human text uses the same trace objects, never a separate invented display.
-- [ ] Run full new test file, actual three cases/text+JSON, validate identity and unchanged legacy file. Save raw outputs/commands/exit codes to own ignored output/0038-trend-overlay-implementation-20261027.
+- [x] Add failing CLI subprocess tests: unknown case/option refusal, same input byte-stable JSON identity, both overlay arms, synthetic labels/no-return fields and actual on_close/size_at_open/on_fill outputs.
+- [x] Run narrow selection to observe RED before implementing CLI/fixture presentation.
+- [x] Implement fixed fixture event stream and comparison renderer. Trace body pins case-input digest, policy/CLI source digests, per-step inputs/decisions/state, assumptions and evidence type; trace SHA256 covers canonical JSON body excluding its own digest. Human text uses the same trace objects, never a separate invented display.
+- [x] Run full new test file, actual three cases/text+JSON, validate identity and unchanged legacy file. Save raw outputs/commands/exit codes to own ignored output/0038-trend-overlay-implementation-20261027.
 
 ## Final boundary and handoff
 
-- [ ] One fresh independent spec/quality review of the whole changed slice, maxR2. Fix only material delta with RED/GREEN and the targeted suite; no third structural patch cycle.
-- [ ] Own iteration contains Planner/Quant/Implementer/Reviewer/Verifier outputs and actual user command/result plus limitations. Own usage describes fixed inputs, no actual fills, no profitability/cashbook/data admission.
-- [ ] Before coherent final commit run new test file, scoped format/lint, repository Ruff once at slice boundary if applicable, git diff --check and submodule status. The sole publisher owns broad CI/final integration; do not independently rerun old full suites or tag rc1.
-- [ ] Freeze tested reviewed commit/head/tree/file hashes, raw logs, CLI examples, approval and progress in immutable HANDOFF; no source changes after freeze. Deliver to root without creating PR/CI/release competing with sole publisher.
+- [x] One fresh independent spec/quality review of the whole changed slice, maxR2. Fix only material delta with RED/GREEN and the targeted suite; no third structural patch cycle.
+- [x] Own iteration contains Planner/Quant/Implementer/Reviewer/Verifier outputs and actual user command/result plus limitations. Own usage describes fixed inputs, no actual fills, no profitability/cashbook/data admission.
+- [x] Before coherent final commit run new test file, scoped format/lint, repository Ruff once at slice boundary if applicable, git diff --check and submodule status. The sole publisher owns broad CI/final integration; do not independently rerun old full suites or tag rc1.
+- [x] Freeze tested reviewed commit/head/tree/file hashes, raw logs, CLI examples, approval and progress in immutable HANDOFF; no source changes after freeze. Deliver to root without creating PR/CI/release competing with sole publisher.
 
 Self-review: all first-policy requirements map to tasks1/2; full ex/pay/marking/settlement accounting and real-data metrics are explicitly excluded. Thirteen research counterexamples are mapped by policy applicability, not mechanically turned into a second backtester. Operator already supplied native execution method and approved scope; no additional plan-approval pause.
