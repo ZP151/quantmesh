@@ -36,3 +36,24 @@ The consequence is a small exception branch rather than a new permission platfor
 Operator policy, independent real-input review, publisher CI/deployment and actual
 research acceptance remain separate gates. No strategy promotion or live trading
 follows from this internal exception.
+
+## 2026-10-27 amendment: same-capture offline event representation
+
+The actual consumed capture has English-month dates and a compact Cash Dividend
+USD representation. Its two in-window amounts exactly cross-match same-ex original
+get_rehab per_cash_div values; dates and pay fields are present. An explicitly
+selected, closed-cohort v3 profile derives the established ISO/per-share event
+representation offline, reusing unchanged original normalization and cash math.
+This is not recapture, refund, new permission, an additional data gate or acceptance.
+The original warmup rule permitting absent pay is preserved; the two actual pay
+dates remain recorded. Window selection precedes cash syntax interpretation.
+
+Raw schema3 has no embedded normalizer/source hash. Preserve original raw/auth/
+intent and PR232 capture/source identities. Add a small named normalization block
+only to a profiled v3 protocol, and let its existing normalizer_sha256 honestly
+record the new offline tool. Derive expected cold lineage from the independently
+validated PostReview profile and fixed cohort, never from protocol self-assertion.
+Existing protocol/post-review CAS proofs bind this distinction without a new
+permission service, ninth proof, raw-history copy or broad schema version.
+Legacy v1/v2 and unprofiled v3 objects retain their prior fields and meanings.
+Actual field qualification and all numerical/budget gates remain independent.
