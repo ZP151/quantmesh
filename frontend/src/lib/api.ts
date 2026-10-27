@@ -565,6 +565,17 @@ export type ComparisonPoint = DeepReadonly<components['schemas']['ComparisonPoin
 export type ComparisonSeries = DeepReadonly<components['schemas']['ComparisonSeries']>
 export type ForecastPath = DeepReadonly<components['schemas']['ForecastPath']>
 export type HistoricalPayload = DeepReadonly<components['schemas']['HistoricalPayload']>
+
+// Isolated additive contract; publisher owns the next generated OpenAPI refresh.
+export interface HistoricalInspection {
+  readonly primary: HistoricalSeries
+  readonly observed_at: string
+  readonly window_end: string
+  readonly source_time: string
+  readonly source_received_at: string | null
+  readonly stale: boolean
+  readonly stale_after_seconds: number
+}
 type GeneratedInstrumentWorkspace = components['schemas']['InstrumentWorkspace']
 type WorkspaceValuation = {
   valuation_complete?: boolean
@@ -857,6 +868,11 @@ export const api = {
     )
     if (!response.ok || data === undefined) throw generatedApiError(response, error)
     return data
+  },
+
+  historyInspection(venue: HistoricalVenue, symbol: string, at: string, signal?: AbortSignal): Promise<HistoricalInspection> {
+    const query = new URLSearchParams({ at })
+    return request(`/api/instruments/${encodeURIComponent(venue)}/${encodeURIComponent(symbol)}/history-inspection?${query}`, { signal })
   },
 
   async instrumentWorkspace(

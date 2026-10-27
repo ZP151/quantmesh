@@ -30,6 +30,8 @@ import { PacketEvidenceSummary, ScenarioEvidence } from './instrument/ScenarioEv
 import { WorkspaceDegraded, WorkspaceError, WorkspaceRefreshWarning } from './instrument/WorkspaceStates'
 import { retainSameInstrument } from './instrument/workspace-query'
 import { ScenarioLabWorkspace } from './instrument/ScenarioLab'
+import { SavedHistoryInspection } from './instrument/SavedHistoryInspection'
+import { Button } from '@/components/ui/button'
 
 const VENUES: readonly HistoricalVenue[] = ['internal', 'moomoo', 'hyperliquid', 'polymarket', 'kalshi']
 const RANGES: readonly HistoryRange[] = ['1d', '5d', '1m', '3m', '6m', '1y']
@@ -67,21 +69,27 @@ export function InstrumentWorkspaceScreen() {
   const health = useQuery({ queryKey: ['health'], queryFn: api.health, retry: false })
   const { symbol = '', venue = '' } = useParams()
   const [search] = useSearchParams()
+  const [inspecting, setInspecting] = useState(false)
   const packetId = search.get('packet')
   const supported = health.data !== undefined && health.data.market_data_only !== true && venue === 'moomoo' && ['AAPL', 'NVDA'].includes(symbol)
   const packet = useQuery({
     queryKey: ['decision-packet', packetId],
     queryFn: () => api.decisionPacket(packetId!),
-    enabled: supported && packetId !== null && DECISION_PACKET_ID.test(packetId),
+    enabled: !inspecting && supported && packetId !== null && DECISION_PACKET_ID.test(packetId),
     retry: false, staleTime: Infinity,
   })
   if (health.isPending) return <WorkspaceLoading />
   if (health.data === undefined) return <WorkspaceError error={health.error} symbol={symbol} venue={venue} />
   if (health.data.market_data_only === true && !allowedMarketChart(venue, symbol, search)) return <p>{t('marketData.unavailable')}</p>
+  const canInspect = isVenue(venue) && (venue === 'hyperliquid' || (venue === 'moomoo' && ['AAPL', 'NVDA'].includes(symbol)))
+  if (inspecting && canInspect) return <SavedHistoryInspection key={`${venue}:${symbol}`} venue={venue} symbol={symbol} onReturn={() => setInspecting(false)} />
   if (supported && packetId !== null && DECISION_PACKET_ID.test(packetId) && packet.isPending) return <WorkspaceLoading />
   if (supported && packetId !== null && packet.isError) return <WorkspaceError error={packet.error} symbol={symbol} venue={venue} />
   const lab = supported && (packetId !== null ? packet.data?.scenario_lab != null : search.get('analysis') === 'fresh' && search.get('horizon') !== '126')
-  return lab ? <ScenarioLabWorkspace /> : <LegacyInstrumentWorkspaceScreen />
+  return <>
+    {canInspect && <div className="mb-3 flex justify-end"><Button variant="outline" className="min-h-11" onClick={() => setInspecting(true)}>{t('inspection.open')}</Button></div>}
+    {lab ? <ScenarioLabWorkspace /> : <LegacyInstrumentWorkspaceScreen />}
+  </>
 }
 
 function LegacyInstrumentWorkspaceScreen() {
