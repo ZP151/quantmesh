@@ -63,10 +63,10 @@ class TestVersionMetadata:
         assert project["project"]["version"] == __version__
 
     def test_version_is_the_release_candidate_line(self) -> None:
-        # Phase 0020 starts the compatible 0.1.1 candidate line. Operator
-        # acceptance may later promote the same verified scope to 0.1.1;
-        # it does not authorize live execution.
-        assert __version__ == "0.1.1rc1"
+        # The reproducible research workstation candidate has its own 0.2
+        # line. Operator acceptance and release gates precede promotion;
+        # this metadata does not authorize live execution.
+        assert __version__ == "0.2.0rc1"
         assert Version(__version__).is_prerelease
 
     def test_workstation_footer_shows_the_package_version(self) -> None:
