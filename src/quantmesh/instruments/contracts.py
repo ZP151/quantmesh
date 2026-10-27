@@ -464,6 +464,66 @@ class HistoricalSeries(StrictContract):
         return self
 
 
+class HistoricalInspection(StrictContract):
+    """A selected saved window, explicitly separate from present-time authority."""
+
+    primary: HistoricalSeries
+    observed_at: datetime
+    window_end: datetime
+    source_time: datetime
+    source_received_at: datetime | None
+    stale: bool
+    stale_after_seconds: float = Field(gt=0)
+
+    @field_validator("observed_at", "window_end", "source_time", "source_received_at")
+    @classmethod
+    def inspection_time_is_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else _utc(value, "inspection time")
+
+    @model_validator(mode="after")
+    def inspection_is_read_only_and_consistent(self) -> "HistoricalInspection":
+        if (
+            self.primary.range is not HistoryRange.ONE_DAY
+            or self.primary.as_of != self.window_end
+            or self.window_end > self.observed_at
+            or self.source_time != self.primary.bars[-1].timestamp
+            or not 2 <= len(self.primary.bars) <= 10_000
+            or any(
+                right.timestamp - left.timestamp != interval_to_timedelta(self.primary.interval)
+                for left, right in zip(self.primary.bars, self.primary.bars[1:])
+            )
+            or any(bar.is_live_tail for bar in self.primary.bars)
+            or (self.source_received_at is not None and self.source_received_at > self.window_end)
+        ):
+            raise ValueError("inspection must describe saved observations in the selected past day")
+        threshold = 2 * interval_to_timedelta(self.primary.interval).total_seconds()
+        if self.stale_after_seconds != threshold or self.stale != (
+            (self.observed_at - self.source_time).total_seconds() > threshold
+        ):
+            raise ValueError("inspection staleness must use the actual viewing time")
+        return self
+
+    @classmethod
+    def from_observations(
+        cls,
+        series: HistoricalSeries,
+        *,
+        observed_at: datetime,
+        source_received_at: datetime | None = None,
+    ) -> "HistoricalInspection":
+        threshold = 2 * interval_to_timedelta(series.interval).total_seconds()
+        source_time = series.bars[-1].timestamp
+        return cls(
+            primary=series,
+            observed_at=observed_at,
+            window_end=series.as_of,
+            source_time=source_time,
+            source_received_at=source_received_at,
+            stale=(observed_at - source_time).total_seconds() > threshold,
+            stale_after_seconds=threshold,
+        )
+
+
 class ComparisonPoint(StrictContract):
     """Normalized closes for one timestamp shared by every comparison series."""
 

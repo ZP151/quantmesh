@@ -16,6 +16,7 @@ from quantmesh.instruments.contracts import (
     CoverageSnapshot,
     DatasetBinding,
     HistoricalBar,
+    HistoricalInspection,
     HistoricalSeries,
     HistoryRange,
     LiveTailLineage,
@@ -325,6 +326,20 @@ def _replay_series(
     as_of: datetime,
     archive_root: Path | None = None,
 ) -> HistoricalSeries:
+    return _replay_series_with_receipt(
+        feed, venue, symbol, selected_range, as_of=as_of, archive_root=archive_root
+    )[0]
+
+
+def _replay_series_with_receipt(
+    feed: LiveFeed,
+    venue: Venue,
+    symbol: str,
+    selected_range: HistoryRange,
+    *,
+    as_of: datetime,
+    archive_root: Path | None = None,
+) -> tuple[HistoricalSeries, datetime]:
     buffer = feed.replay_buffer
     if buffer is None:
         raise HistoryUnavailableError("no manifest history or live replay buffer is attached")
@@ -466,7 +481,7 @@ def _replay_series(
         for update, values in segment
     )
     generated_at = max(update.received_at for update, _values in segment)
-    return HistoricalSeries(
+    series = HistoricalSeries(
         instrument=instrument,
         range=selected_range,
         as_of=as_of,
@@ -513,6 +528,29 @@ def _replay_series(
             else f"{preferred_interval}->{interval}"
         ),
     )
+    return series, segment[-1][0].received_at
+
+
+def inspect_saved_series(
+    series: HistoricalSeries, *, observed_at: datetime, source_received_at: datetime | None = None
+) -> HistoricalInspection:
+    """Narrow only the inspection view; retain the source's manifest coverage/evidence."""
+    step = interval_to_timedelta(series.interval)
+    start = len(series.bars) - 1
+    while start > 0 and series.bars[start].timestamp == series.bars[start - 1].timestamp + step:
+        start -= 1
+    selected = series.bars[start:]
+    if len(selected) < 2:
+        raise HistoryUnavailableError(
+            "saved inspection requires at least two contiguous observed bars"
+        )
+    if len(selected) > 10_000:
+        raise HistoryUnavailableError("saved inspection exceeds the 10000-bar result bound")
+    return HistoricalInspection.from_observations(
+        series.model_copy(update={"bars": selected}),
+        observed_at=observed_at,
+        source_received_at=source_received_at,
+    )
 
 
 class LiveHistoryService:
@@ -558,6 +596,30 @@ class LiveHistoryService:
                 archive_root=self._archive_root,
             )
         return join_live_tail(observed, self._feed, as_of=selected_as_of)
+
+    def inspect(
+        self, venue: Venue, symbol: str, *, at: datetime, observed_at: datetime
+    ) -> HistoricalInspection:
+        """Read a saved day without changing a clock or joining a live snapshot."""
+        if at.tzinfo is None or observed_at.tzinfo is None or at > observed_at:
+            raise ValueError("inspection at must be timezone-aware and not in the future")
+        at = at.astimezone(UTC)
+        if self._historical is not None:
+            try:
+                series = self._historical.history(venue, symbol, HistoryRange.ONE_DAY, as_of=at)
+            except HistoryUnavailableError:
+                pass
+            else:
+                return inspect_saved_series(series, observed_at=observed_at)
+        series, received_at = _replay_series_with_receipt(
+            self._feed,
+            venue,
+            symbol,
+            HistoryRange.ONE_DAY,
+            as_of=at,
+            archive_root=self._archive_root,
+        )
+        return inspect_saved_series(series, observed_at=observed_at, source_received_at=received_at)
 
     def compare(
         self,

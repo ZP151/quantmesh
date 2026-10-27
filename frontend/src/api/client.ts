@@ -314,6 +314,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/instruments/{venue}/{symbol}/history-inspection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instrument History Inspection */
+        get: operations["api_instrument_history_inspection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/instruments/{venue}/{symbol}/workspace": {
         parameters: {
             query?: never;
@@ -1404,6 +1421,23 @@ export interface paths {
         };
         /** Instrument History */
         get: operations["instrument_history_instruments__venue___symbol__history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/instruments/{venue}/{symbol}/history-inspection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Instrument History Inspection */
+        get: operations["instrument_history_inspection_instruments__venue___symbol__history_inspection_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3229,6 +3263,34 @@ export interface components {
             timestamp: string;
             /** Volume */
             volume: number;
+        };
+        /**
+         * HistoricalInspection
+         * @description A selected saved window, explicitly separate from present-time authority.
+         */
+        HistoricalInspection: {
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            primary: components["schemas"]["HistoricalSeries"];
+            /** Source Received At */
+            source_received_at: string | null;
+            /**
+             * Source Time
+             * Format: date-time
+             */
+            source_time: string;
+            /** Stale */
+            stale: boolean;
+            /** Stale After Seconds */
+            stale_after_seconds: number;
+            /**
+             * Window End
+             * Format: date-time
+             */
+            window_end: string;
         };
         /**
          * HistoricalPayload
@@ -5703,6 +5765,40 @@ export interface operations {
             };
         };
     };
+    api_instrument_history_inspection: {
+        parameters: {
+            query: {
+                at: string;
+            };
+            header?: never;
+            path: {
+                venue: components["schemas"]["Venue"];
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoricalInspection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     api_instrument_workspace: {
         parameters: {
             query: {
@@ -7616,6 +7712,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HistoricalPayload"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    instrument_history_inspection_instruments__venue___symbol__history_inspection_get: {
+        parameters: {
+            query: {
+                at: string;
+            };
+            header?: never;
+            path: {
+                venue: components["schemas"]["Venue"];
+                symbol: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoricalInspection"];
                 };
             };
             /** @description Validation Error */
