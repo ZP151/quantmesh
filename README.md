@@ -76,8 +76,8 @@ workflows, start with [local CSV import](docs/research/local-csv-import.md),
 These screens were captured from the current merged source using synthetic
 demo data and a separately mounted, pre-existing **engineering** replay. The
 report's returns are not qualified real-market performance, and its Paper gate
-remains closed. The package version shown in the screens is the existing
-metadata, not a claim that a newer release has been tagged.
+remains closed. The version badge reflects the capture environment and may
+differ from an installed package.
 
 | Overview | Saved research report | Reopened Watch decision |
 | --- | --- | --- |
@@ -117,5 +117,5 @@ inspectable after restart.
 
 QuantMesh is licensed under [Apache 2.0](LICENSE). Third-party runtimes,
 market-data sources and hosted services retain their own license and access
-terms. The latest tag is a historical release baseline; this README describes
-the capabilities currently merged into `main`, not a new tagged release.
+terms. See the [candidate release notes](docs/release-notes/v0.2.0-rc1.md)
+for the current release scope and limitations.
