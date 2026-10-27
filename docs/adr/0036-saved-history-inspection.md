@@ -1,6 +1,6 @@
 # ADR0036 — Saved-day inspection without historical execution authority
 
-Date2026-10-27. Status: approved scope, implementation pending independent review.
+Date2026-10-27UTC. Status: approved scope, independent final R2 READY; publisher integration pending.
 Issue237; extends ADR0034 without changing its current-window or continuity policy.
 
 ## Decision
