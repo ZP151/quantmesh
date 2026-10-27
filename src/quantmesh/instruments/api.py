@@ -18,6 +18,7 @@ from quantmesh.instruments.contracts import (
     DecisionDisposition,
     DecisionPacket,
     DecisionPacketActionResult,
+    HistoricalInspection,
     HistoricalSeries,
     HistoryRange,
     InstrumentWorkspace,
@@ -209,6 +210,47 @@ def _parse_compare(
 
 def instrument_router() -> APIRouter:
     router = APIRouter(tags=["instruments"])
+
+    @router.get(
+        "/instruments/{venue}/{symbol}/history-inspection",
+        response_model=HistoricalInspection,
+        name="instrument_history_inspection",
+    )
+    def history_inspection(
+        request: Request,
+        venue: Venue,
+        symbol: str,
+        at: Annotated[str, Query(min_length=1, max_length=64)],
+    ) -> HistoricalInspection:
+        _validate_api_symbol(symbol, field="symbol")
+        if (
+            set(request.query_params) != {"at"}
+            or len(request.query_params.getlist("at")) != 1
+            or not (
+                venue is Venue.HYPERLIQUID or (venue is Venue.MOOMOO and symbol in {"AAPL", "NVDA"})
+            )
+        ):
+            raise _unprocessable("inspection requires one at and a supported observed instrument")
+        observed_at = datetime.now(UTC)
+        try:
+            selected = datetime.fromisoformat(at)
+        except ValueError:
+            raise _unprocessable("at must be an ISO timestamp with an explicit timezone") from None
+        if selected.tzinfo is None or selected > observed_at:
+            raise _unprocessable("at must have an explicit timezone and must not be in the future")
+        selected = selected.astimezone(UTC)
+        service = getattr(request.app.state, "history", None)
+        try:
+            if isinstance(service, LiveHistoryService):
+                return service.inspect(venue, symbol, at=selected, observed_at=observed_at)
+            if isinstance(service, HistoryService):
+                series = service.history(venue, symbol, HistoryRange.ONE_DAY, as_of=selected)
+                return HistoricalInspection.from_observations(series, observed_at=observed_at)
+            raise HistoryUnavailableError("no historical service is attached")
+        except HistoryUnavailableError as error:
+            raise HTTPException(
+                status_code=404, detail=f"historical inspection unavailable: {error}"
+            ) from error
 
     @router.get(
         "/instruments/{venue}/{symbol}/history",
