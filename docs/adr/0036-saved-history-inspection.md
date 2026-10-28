@@ -92,3 +92,10 @@ real-file synthetic tests establish functional composition, not real archive
 performance/data qualification or native success. See the issue246 iteration and
 2026-10-29-historical-bootstrap-fix plan; new source still requires independent
 review, applicable exact-head CI/normal merge before a new root-owned native phase.
+
+Issue246 source checkpointc0209e6 has independent R1 READY with no actionable
+findings. Author actual23-case GREEN covers the new real-file composition and
+selected default no-disk live behavior. Review is explicitly static/raw-evidence
+review without additional database tests because the bounded cohort retains all
+failed fixtures. Final exact-head review/publication receipts remain separate
+from actual native archive acceptance.

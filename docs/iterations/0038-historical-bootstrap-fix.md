@@ -64,3 +64,28 @@ cohort also forecasts full changed working files, new Git objects/index-lock and
 control logs. No more DB/test reruns may be started without checking that bound;
 independent review is read-only with existing raw results. Sole publisher alone
 owns required broad CI and normal merge. Root must newly admit native afterward.
+
+## Independent source review and freeze
+
+Coherent GREEN checkpointc0209e6ab88501db462708126f0bacd41c0f8be4,
+tree52c6a20f0d6da3e0452e6b9478178317a58cae0d. Fresh whole-slice R1 READY:
+no actionable spec/correctness/standards/trading-safety findings. Reviewer read
+actual retained RED/failure/GREEN logs and independently checked clean diff,
+whitespace and default feed AST preservation plus unchanged inspect/replay/buffer/
+instrument route. Review ran no tests/DB and wrote no artifacts, preserving8MiB.
+Recorded test result remains author's actual23passed, not an independent rerun.
+
+No review correction or runtime/test change follows R1. This own documentation
+checkpoint records that result; second/final exact-head review checks docs-only
+changes. No third review. Final exact HEAD/tree, all seven tracked-file hashes,
+raw evidence/DB hashes, review receipts and actual resource charge are sealed in
+output/historical-bootstrap-fix-20261029/. Last important issue: none found;
+last test-fixture correction remains the retained03->04 manifest fixture change,
+not a source math change or a hidden passing reclassification.
+
+The sole publisher receives the local reviewed branch to enter its existing
+queue, run applicable exact-head CI and normally merge. Author does not push
+duplicate CI, edit publisher/quantity files or start native. Root's separate
+new-source local acceptance plan grants no native bytes or host execution here.
+Real7.4GB read performance and native/API acceptance remain unproved; old timeout
+inner causes/close UNKNOWNs and all failed rows/logs/refs remain retained.
