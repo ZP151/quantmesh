@@ -83,6 +83,7 @@ export function ResearchJobsScreen() {
   const snapshotId = new URLSearchParams(globalThis.location?.search).get('snapshot')
   if (snapshotId !== null) return <LocalCsvPlanning snapshotId={snapshotId} />
   return <>
+    <a href="/app/research/trend-overlay" className="mb-3 mr-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">Trend rule experiment · 趋势规则实验</a>
     <a href="/app/research/data-readiness?format=csv" className="mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">Import daily CSV for protocol planning</a>
     <div className="mb-4 flex flex-wrap items-center gap-3 px-1 text-sm">
       <label htmlFor="research-engine">Research engine</label>

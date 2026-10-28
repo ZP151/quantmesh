@@ -1428,6 +1428,10 @@ def create_workstation_app(
     )
     app.include_router(create_frozen_experiments_router(), prefix="/api")
 
+    from quantmesh.api.trend_overlay import trend_overlay_router
+
+    app.include_router(trend_overlay_router(), prefix="/api")
+
     # Venue-aware observed history is double-mounted like the live surface:
     # root for direct local clients and /api for the SPA. Both handlers read
     # the same injected service and optional feed from app.state.
