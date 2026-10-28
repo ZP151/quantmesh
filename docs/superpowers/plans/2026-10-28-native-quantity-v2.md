@@ -27,26 +27,28 @@
 
 Interfaces in existing engine: frozen QuantityOrder(signed_quantity,requested_quantity,max_fraction,metadata); internal _quantity_policy optional hook in run_cashbook with propose/open-filled/closed notifications using readonly scalar/account snapshots. Only run_cashbook applies cash/share/receivable/cost/mark updates. Legacy control uses the same loop with old target selection. Metrics/_reconcile expressions retain their role; source SHA changes honestly.
 
-- [ ] Write new tests/test_native_daily_kernel.py: hand-derived legacy synthetic numeric control, one fixed quantity/ex-pay/cost ledger, volume partial/terminal failure, negative cash/concentration refusal, single-step hooks and causal close/open ordering. RED missing seam before implementation.
-- [ ] Write tests/test_native_daily_legacy.py: new legacy submit refused with engine calculation spy untouched; genuine committed legacy_root original v1 report/decision bag reopens same ID/bytes/digests without calculation, with changed engine source; proof tamper still rejects. No old market bytes or old test suite execution.
-- [ ] Run new files with existing root venv: `python -B -m pytest tests/test_native_daily_kernel.py tests/test_native_daily_legacy.py -q --basetemp=output/native-quantity-v2/t1 -p no:cacheprovider`; retain bounded RED/GREEN logs. Set PYTHONDONTWRITEBYTECODE=1.
-- [ ] Refactor only existing loop; add guarded internal callbacks, exact original cost line, post-fee numeric checks. Retire legacy submit using existing input_not_qualified public code; preserve existing-ID branch and all read/proof verification. New options truthfully unconfigured/read-only.
-- [ ] Prove GREEN and scoped Ruff/format, numeric control/cash/receivable and old bytes evidence; commit coherent milestone.
+- [x] Write new tests/test_native_daily_kernel.py: hand-derived legacy synthetic numeric control, one fixed quantity/ex-pay/cost ledger, volume partial/terminal failure, negative cash/concentration refusal, single-step hooks and causal close/open ordering. RED missing seam before implementation.
+- [x] Write tests/test_native_daily_legacy.py: new legacy submit refused with engine calculation spy untouched; genuine committed legacy_root original v1 report/decision bag reopens same ID/bytes/digests without calculation, with changed engine source; proof tamper still rejects. No old market bytes or old test suite execution.
+- [x] Run new files with existing root venv: `python -B -m pytest tests/test_native_daily_kernel.py tests/test_native_daily_legacy.py -q --basetemp=output/native-quantity-v2/t1 -p no:cacheprovider`; retain bounded RED/GREEN logs. Set PYTHONDONTWRITEBYTECODE=1.
+- [x] Refactor only existing loop; add guarded internal callbacks, exact original cost line, post-fee numeric checks. Retire legacy submit using existing input_not_qualified public code; preserve existing-ID branch and all read/proof verification. New options truthfully unconfigured/read-only.
+- [x] Prove GREEN and scoped Ruff/format, numeric control/cash/receivable and old bytes evidence; commit coherent milestone.
 
 ## Task2 — closed engineering protocol and actual matrix
 
 New module interfaces: engineering_input(case='campaign-v1') -> trusted closed fixture; freeze_protocol(input) -> canonical bytes; evaluate(input,protocol_bytes) -> canonical result; save/read_result(ObjectStore,ref) -> original immutable bytes. No generic data paths/callables in public inputs; real input disabled. New internal arm adapter calls unchanged on_close/size_at_open/on_fill; cash snapshots floor exact float-to-Decimal to1e-8, raw decimal prices <=8dp; report preserves original unrounded ledger and conversion delta. Native guard refuses any actual numeric mismatch.
 
-- [ ] Add failing tests/test_native_daily_candidate.py for fixed5arm×2cost matrix, generated OPEN fills, ex/pay, prior policy origin/cancellations/terminal and semantic buy_fill_count; source/protocol/input/role/old-profile identity tamper rejection and no math on refusal; content identity/reopen with calculator spy; future close cannot change earlier fills.
-- [ ] Implement fixed engineering-only protocol with namespaced schema, candidate/policy/kernel/adapter/runtime/data/action/calendar/window/cost/arm/numeric-view identities. Retain source-use/OOS/trial unknowns; no real PASS. Reuse existing ObjectStore/calendar/fact models/metrics, not old ReplayInput as new authority.
-- [ ] Implement tools/research/run_native_daily_engineering.py: fixed case selector, text/JSON result, original output optional owned directory only, no market-data/strategy upload option. Run actual fixture once per necessary milestone, retain original result and finite proof.
-- [ ] Run affected new tests and necessary migrated legacy-contract tests only, without old financial/OOS/native/51 suite or broad Windows rerun. Source compatibility migrations must preserve archived read and negative-proof coverage.
+- [x] Add failing tests/test_native_daily_candidate.py for fixed5arm×2cost matrix, generated OPEN fills, ex/pay, prior policy origin/cancellations/terminal and semantic buy_fill_count; source/protocol/input/role/old-profile identity tamper rejection and no math on refusal; content identity/reopen with calculator spy; future close cannot change earlier fills.
+- [x] Implement fixed engineering-only protocol with namespaced schema, candidate/policy/kernel/adapter/runtime/data/action/calendar/window/cost/arm/numeric-view identities. Retain source-use/OOS/trial unknowns; no real PASS. Reuse existing ObjectStore/calendar/fact models/metrics, not old ReplayInput as new authority.
+- [x] Implement tools/research/run_native_daily_engineering.py: fixed case selector, text/JSON result, original output optional owned directory only, no market-data/strategy upload option. Run actual fixture once per necessary milestone, retain original result and finite proof.
+- [x] Run affected new tests and necessary migrated legacy-contract tests only, without old financial/OOS/native/51 suite or broad Windows rerun. Source compatibility migrations must preserve archived read and negative-proof coverage.
 
 ## Final gate and handoff
 
-- [ ] One fresh source review of full slice, maxR2; fix material issues with RED/GREEN. Third structural issue returns to planning with smaller scope.
-- [ ] Scoped format, repository Ruff at coherent final boundary, diff/submodule checks; resource snapshot includes failed temp/logs, no cleanup/refund. No author push/CI/tag.
+- [x] One fresh source review of full slice, maxR2; fix material issues with RED/GREEN. Third structural issue returns to planning with smaller scope.
+- [x] Scoped format, repository Ruff at coherent final boundary, diff/submodule checks; resource snapshot includes failed temp/logs, no cleanup/refund. No author push/CI/tag.
 - [ ] Own iteration records Planner/Quant/Implementer/Reviewer/Verifier, user CLI and actual synthetic results, legacy old SHA and source migration identities. Freeze commit/tree/source/artifact hashes and bounded bundle/HANDOFF for sole publisher.
 - [ ] Publisher performs applicable final CI and normal merge. Consume exact final receipt before completing Goal; source ready alone is not Goal completion.
 
 Self-review: no second cashbook/matcher/cost/metric implementation; core changes, conservative view and retirement are explicit approved behavior.4h is an engineering review target, not real-data qualification. A genuine regression in old immutable records or arithmetic is a stop condition, not a reason to change expected values.
+
+Resource amendment: Root explicitly replaces SAME64MiB hold with96MiB=100663296B (additional33554432B inside existing8GB). Previous excess/failures retained; see iteration resource checkpoint. All original scope/time/review restrictions persist.

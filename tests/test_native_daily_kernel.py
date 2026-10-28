@@ -113,3 +113,22 @@ def test_terminal_open_does_not_read_its_close():
     altered, later = run(Quantities({100: 5}), frame)
     assert later == trades
     assert altered.iloc[-1].equity == original.iloc[-1].equity
+
+
+def test_native_guard_uses_actual_cash_debit_grouping_at_float_boundary():
+    frame = synthetic_frame()
+    frame[["open", "high", "low", "close"]] = 100.1
+    # Exactly the existing ledger's debit. Regrouping cash-price-fee is negative.
+    capital = 100.15005
+    assert capital - 100.1 - 100.1 * 0.0005 < 0
+    daily, trades = engine.run_cashbook(
+        frame,
+        engine.prepare_signals(frame),
+        [],
+        frame.index[100],
+        frame.index[-1],
+        capital=capital,
+        _quantity_policy=Quantities({100: 1}),
+    )
+    assert trades[0]["post_cash"] == 0
+    assert daily.iloc[-1].shares == 0

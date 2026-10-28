@@ -11,6 +11,7 @@ import hashlib
 import io
 import json
 import platform
+import re
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from decimal import ROUND_FLOOR, Context, Decimal, localcontext
@@ -27,8 +28,73 @@ PROTOCOL = "qm.native-daily.candidate.protocol.v1"
 REPORT = "qm.native-daily.candidate.report.v1"
 CANDIDATE = "doublema_daily_overlay_candidate_v1"
 ARMS = ("T", "TO", "B50", "B100", "C")
-CASES = ("campaign-v1", "unpaid-v1")
+CASES = ("campaign-v1", "unpaid-v1", "flat-v1")
 POLICY_SHA = "e2b3c018035c26f1d973022e0f3f4f8a93ba8ef8ecc8872ab5b649b56d49fbab"
+
+# Immutable v1 fixture byte identities; no calendar/generator needed to reopen.
+_V1_INPUTS = {
+    "campaign-v1": {
+        "bars": {
+            "algorithm": "sha256",
+            "byte_length": 4498,
+            "digest": "31cf3153804996fbbedc4afedc1f99744cc425148a0086be50462ee3c2503439",
+            "media_type": "text/csv",
+        },
+        "distributions": {
+            "algorithm": "sha256",
+            "byte_length": 63,
+            "digest": "d2b4d4eb8654a0c80d920932ab2aac06854ebe5ec1eddf4c50b8291677a06bf2",
+            "media_type": "application/json",
+        },
+        "schedule": {
+            "algorithm": "sha256",
+            "byte_length": 11254,
+            "digest": "5555d340695b8d14248a3fc7a727369fa05aac2c0271c0e65fb3db1b134a497f",
+            "media_type": "application/json",
+        },
+    },
+    "flat-v1": {
+        "bars": {
+            "algorithm": "sha256",
+            "byte_length": 4518,
+            "digest": "7385d545621c4ae55ebdc4f4b8af3958bde8fdd45e2276e7ec8488cc59972561",
+            "media_type": "text/csv",
+        },
+        "distributions": {
+            "algorithm": "sha256",
+            "byte_length": 2,
+            "digest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "media_type": "application/json",
+        },
+        "schedule": {
+            "algorithm": "sha256",
+            "byte_length": 11254,
+            "digest": "5555d340695b8d14248a3fc7a727369fa05aac2c0271c0e65fb3db1b134a497f",
+            "media_type": "application/json",
+        },
+    },
+    "unpaid-v1": {
+        "bars": {
+            "algorithm": "sha256",
+            "byte_length": 4498,
+            "digest": "31cf3153804996fbbedc4afedc1f99744cc425148a0086be50462ee3c2503439",
+            "media_type": "text/csv",
+        },
+        "distributions": {
+            "algorithm": "sha256",
+            "byte_length": 63,
+            "digest": "a515569f41383841a2a874d252c1d107ef4bc6f666483a1d29467496dda57b24",
+            "media_type": "application/json",
+        },
+        "schedule": {
+            "algorithm": "sha256",
+            "byte_length": 11254,
+            "digest": "5555d340695b8d14248a3fc7a727369fa05aac2c0271c0e65fb3db1b134a497f",
+            "media_type": "application/json",
+        },
+    },
+}
+
 _AUTHORITY = object()
 _MAX_OBJECT = 1024 * 1024
 
@@ -113,6 +179,8 @@ def engineering_input(case="campaign-v1"):
     dates = [s.session_date.isoformat() for s in sessions]
     closes = [100] * 80 + [101] * 10 + [99] * 10 + [120, 125, 135, 190] + [200] * 17
     opens = [100] * 101 + [150, 125, 135, 190] + [200] * 16
+    if case == "flat-v1":
+        closes, opens = [100] * 121, [100] * 121
     stream = io.StringIO(newline="")
     writer = csv.writer(stream, lineterminator="\n")
     writer.writerow(["date", "open", "high", "low", "close", "volume", "dividend"])
@@ -126,7 +194,7 @@ def engineering_input(case="campaign-v1"):
                 min(opening, closing),
                 closing,
                 1000000,
-                1 if index == 105 else 0,
+                1 if index == 105 and case != "flat-v1" else 0,
             ]
         )
     events = [
@@ -136,6 +204,8 @@ def engineering_input(case="campaign-v1"):
             "amount": 1.0,
         }
     ]
+    if case == "flat-v1":
+        events = []
     schedule = [
         {
             "date": s.session_date.isoformat(),
@@ -172,25 +242,16 @@ def _checked(value):
     return value
 
 
-def _protocol(value):
-    _checked(value)
+def _contract(case, inputs, code, runtime):
+    """Versioned v1 semantics; archived validation never invokes current generation."""
     return {
         "schema_id": PROTOCOL,
         "candidate": CANDIDATE,
-        "case": value.case,
+        "case": case,
         "evidence_kind": "engineering_fixture",
-        "code": _LOADED_CODE,
-        "runtime": {
-            "python": platform.python_version(),
-            "pandas": pd.__version__,
-            "numpy": engine.np.__version__,
-            "calendar": XNYS_REGULAR_VERSION,
-        },
-        "inputs": {
-            "bars": _ref("text/csv", value.bars_csv).model_dump(),
-            "distributions": _ref("application/json", value.distributions_json).model_dump(),
-            "schedule": _ref("application/json", value.schedule_json).model_dump(),
-        },
+        "code": code,
+        "runtime": runtime,
+        "inputs": inputs,
         "window": {
             "warmup": 100,
             "observations": 21,
@@ -211,6 +272,12 @@ def _protocol(value):
             "sell": [[".25", ".10"], [".35", ".20"], [".45", ".30"], [".60", ".40"]],
             "all_exit": "+1.00_or_trend_or_terminal",
             "split": "refuse",
+            "campaign_basis": "P0_Q0_are_initial_actual_fill",
+            "ordinary_stage": "one_opportunity_cancel_unfilled",
+            "full_exit": "retry_remaining_preserving_original_action",
+            "distribution": "overnight_ex_entitlement_pay_OPEN_credit",
+            "shorts": False,
+            "leverage": False,
         },
         "costs": {
             "model": "combined_one_way_turnover_proxy",
@@ -223,6 +290,15 @@ def _protocol(value):
         "arms": list(ARMS),
         "benchmark100_cap_exception": "1.00",
         "source_use": "synthetic_no_vendor",
+        "currency": "USD",
+        "price_adjustment": "constructed_raw",
+        "action_coverage": "fixed_cash_dividends_ex_pay_no_splits",
+        "source_review_refs": [],
+        "exposure": {
+            "historical_SPY": "exposed_consumed_not_admitted",
+            "old_once_scope": "consumed_not_transferable",
+            "new_empirical_trial_ledger_ref": None,
+        },
         "volume_unit": "constructed_shares",
         "trade_venues": "not_market_evidence",
         "PIT": "not_applicable_synthetic",
@@ -237,6 +313,24 @@ def _protocol(value):
         "paper_allowed": False,
         "live_allowed": False,
     }
+
+
+def _protocol(value):
+    _checked(value)
+    inputs = {
+        "bars": _ref("text/csv", value.bars_csv).model_dump(),
+        "distributions": _ref("application/json", value.distributions_json).model_dump(),
+        "schedule": _ref("application/json", value.schedule_json).model_dump(),
+    }
+    if inputs != _V1_INPUTS[value.case]:
+        raise CandidateError("implementation_drift")
+    runtime = {
+        "python": platform.python_version(),
+        "pandas": pd.__version__,
+        "numpy": engine.np.__version__,
+        "calendar": XNYS_REGULAR_VERSION,
+    }
+    return _contract(value.case, inputs, _LOADED_CODE, runtime)
 
 
 def freeze_protocol(value):
@@ -283,7 +377,7 @@ class _Arm:
             opening = policy.Open(
                 view.index,
                 price,
-                tuple(_price(v) for v in view.prior_volumes),
+                tuple(Decimal(str(v)) for v in view.prior_volumes),
                 Decimal(str(view.cost_bps)),
             )
             self.state, self.sized = policy.size_at_open(self.state, action, opening, account)
@@ -362,10 +456,188 @@ class _Arm:
         )
 
 
+def _child_binding(request_digest, arm, bps):
+    return {
+        "schema_id": "qm.native-daily.candidate.arm.v1",
+        "request_digest": request_digest,
+        "arm": arm,
+        "cost_bps": bps,
+    }
+
+
+_METRIC_FIELDS = frozenset(
+    (
+        "sessions",
+        "start",
+        "end",
+        "terminal_equity",
+        "net_profit_usd",
+        "total_return",
+        "cagr",
+        "max_drawdown",
+        "max_underwater_sessions",
+        "annualized_volatility",
+        "naive_sharpe_rf_zero",
+        "sortino_target_zero",
+        "calmar",
+        "worst_day",
+        "historical_es_95",
+        "es_tail_observations",
+        "fills",
+        "friction_usd",
+        "dividend_earned_usd",
+        "dividend_paid_usd",
+        "terminal_receivable",
+        "gross_traded_notional_over_initial_capital",
+        "capacity_clipped_sessions",
+        "terminal_shares",
+        "buy_fill_count",
+        "campaign_entry_count",
+    )
+)
+_DAILY_FIELDS = frozenset(
+    (
+        "date",
+        "signal_date",
+        "target",
+        "shares",
+        "cash",
+        "receivable",
+        "mark",
+        "equity",
+        "net_return",
+        "dividend_earned",
+        "dividend_paid",
+        "friction",
+        "capacity_clipped",
+    )
+)
+
+
+_TRADE_FIELDS = frozenset(
+    (
+        "date",
+        "signal_date",
+        "quantity",
+        "price",
+        "friction",
+        "post_cash",
+        "post_shares",
+        "participation_cap",
+        "capacity_clipped",
+        "forced_terminal_liquidation",
+        "quantity_policy",
+    )
+)
+_TRACE_FIELDS = frozenset(
+    (
+        "session",
+        "date",
+        "order",
+        "filled",
+        "friction",
+        "cash_view",
+        "cash_raw_decimal",
+        "post_cash",
+        "post_shares",
+        "post_receivable",
+        "cancelled",
+        "campaign",
+    )
+)
+_ORDER_FIELDS = frozenset(
+    ("quantity", "requested_quantity", "max_fraction", "budget_fraction", "metadata")
+)
+_COUNT_FIELDS = frozenset(
+    (
+        "sessions",
+        "max_underwater_sessions",
+        "es_tail_observations",
+        "fills",
+        "capacity_clipped_sessions",
+        "terminal_shares",
+        "buy_fill_count",
+        "campaign_entry_count",
+    )
+)
+
+
+def _shaped(rows, fields):
+    return isinstance(rows, list) and all(
+        isinstance(row, dict) and set(row) == fields for row in rows
+    )
+
+
+def _check_matrix(result, schedule):
+    """Check the complete v1 archive shape/bindings without rerunning any math."""
+    dates = [row["date"] for row in schedule[100:]]
+    matrix = result["calculation"]
+    if not isinstance(matrix, dict) or set(matrix) != {"base5", "stress10"}:
+        raise ValueError("matrix")
+    for scenario, bps in (("base5", 5), ("stress10", 10)):
+        if not isinstance(matrix[scenario], dict) or set(matrix[scenario]) != set(ARMS):
+            raise ValueError("arms")
+        for name in ARMS:
+            child = matrix[scenario][name]
+            binding = _child_binding(result["request_digest"], name, bps)
+            if (
+                not isinstance(child, dict)
+                or set(child) != {"binding", "child_id", "metrics", "daily", "trades", "trace"}
+                or canonical(child["binding"]) != canonical(binding)
+                or child["child_id"] != _sha(canonical(binding))
+            ):
+                raise ValueError("child_identity")
+            metrics, daily = child["metrics"], child["daily"]
+            if (
+                not isinstance(metrics, dict)
+                or set(metrics) != _METRIC_FIELDS
+                or any(type(metrics[key]) is not int or metrics[key] < 0 for key in _COUNT_FIELDS)
+                or metrics["sessions"] != 21
+                or metrics["start"] != dates[0]
+                or metrics["end"] != dates[-1]
+                or metrics["terminal_shares"] != 0
+                or not isinstance(daily, list)
+                or len(daily) != 21
+                or any(not isinstance(row, dict) or set(row) != _DAILY_FIELDS for row in daily)
+                or not _shaped(child["trades"], _TRADE_FIELDS)
+                or not _shaped(child["trace"], _TRACE_FIELDS)
+                or len(child["trace"]) != 21
+            ):
+                raise ValueError("incomplete_result")
+            if [row["date"] for row in daily] != dates:
+                raise ValueError("daily_sessions")
+            for index, trace in enumerate(child["trace"], 100):
+                if (
+                    trace["session"] != index
+                    or trace["date"] != dates[index - 100]
+                    or not isinstance(trace["order"], dict)
+                    or set(trace["order"]) != _ORDER_FIELDS
+                    or type(trace["filled"]) is not int
+                ):
+                    raise ValueError("trace_binding")
+            fills = [row for row in child["trace"] if row["filled"] != 0]
+            if len(child["trades"]) != metrics["fills"] or len(fills) != metrics["fills"]:
+                raise ValueError("fill_ledger_incomplete")
+            # Compare original redundant records only; do not calculate balances/fees/metrics.
+            for trade, fill in zip(child["trades"], fills, strict=True):
+                expected = {
+                    "date": fill["date"],
+                    "quantity": fill["filled"],
+                    "friction": fill["friction"],
+                    "post_cash": fill["post_cash"],
+                    "post_shares": fill["post_shares"],
+                    "quantity_policy": fill["order"]["metadata"] or {},
+                }
+                if type(trade["quantity"]) is not int or any(
+                    trade[key] != value for key, value in expected.items()
+                ):
+                    raise ValueError("fill_ledger_binding")
+
+
 def evaluate(value, protocol_bytes):
     _checked(value)
     protocol = _json(protocol_bytes)
-    if protocol != _protocol(value) or canonical(protocol) != protocol_bytes:
+    if protocol_bytes != canonical(_protocol(value)):
         raise CandidateError("protocol_not_qualified")
     frame = pd.read_csv(io.BytesIO(value.bars_csv), dtype={"date": str}).set_index("date")
     distributions = _json(value.distributions_json)
@@ -392,7 +664,10 @@ def evaluate(value, protocol_bytes):
                 and t.get("quantity_policy", {}).get("action", {}).get("kind") == "entry"
                 for t in trades
             )
+            binding = _child_binding(_sha(protocol_bytes), arm_name, bps)
             calculation[name][arm_name] = {
+                "binding": binding,
+                "child_id": _sha(canonical(binding)),
                 "metrics": measured,
                 "daily": daily.rename_axis("date").reset_index().to_dict(orient="records"),
                 "trades": trades,
@@ -440,6 +715,30 @@ def read_result(store: ObjectStore, reference: ObjectRef):
     try:
         protocol_raw = store.get_bytes(ObjectRef.model_validate(result["protocol_ref"]))
         protocol = _json(protocol_raw)
+        if not isinstance(protocol, dict):
+            raise ValueError
+        code, runtime = protocol["code"], protocol["runtime"]
+        if (
+            not isinstance(code, dict)
+            or set(code) != set(_LOADED_CODE)
+            or code["kernel_version"] != "native-daily-v2"
+            or code["legacy_packaged_ancestor"] != engine.LEGACY_PACKAGED_SHA256
+            or code["policy_sha256"] != POLICY_SHA
+            or any(
+                not isinstance(code[key], str) or re.fullmatch(r"[0-9a-f]{64}", code[key]) is None
+                for key in ("kernel_sha256", "policy_sha256", "adapter_sha256")
+            )
+            or not isinstance(runtime, dict)
+            or set(runtime) != {"python", "pandas", "numpy", "calendar"}
+            or any(
+                not isinstance(item, str) or not 1 <= len(item) <= 80 for item in runtime.values()
+            )
+        ):
+            raise ValueError
+        # Archived source/runtime identities remain original; invariant v1 semantics do not.
+        expected = _contract(protocol["case"], _V1_INPUTS[protocol["case"]], code, runtime)
+        if protocol_raw != canonical(expected):
+            raise ValueError
         if (
             result["schema_id"] != REPORT
             or protocol["schema_id"] != PROTOCOL
@@ -455,8 +754,11 @@ def read_result(store: ObjectStore, reference: ObjectRef):
             or result["live_allowed"] is not False
         ):
             raise ValueError
-        for ref in result["inputs"].values():
-            store.get_bytes(ObjectRef.model_validate(ref))
+        stored_inputs = {
+            name: store.get_bytes(ObjectRef.model_validate(ref))
+            for name, ref in result["inputs"].items()
+        }
+        _check_matrix(result, _json(stored_inputs["schedule"]))
     except (KeyError, ValueError, TypeError):
         raise CandidateError("artifact_invalid") from None
     return raw

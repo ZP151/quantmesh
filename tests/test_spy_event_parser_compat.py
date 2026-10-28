@@ -12,6 +12,7 @@ import pytest
 
 from quantmesh.data.objects import ObjectRef, ObjectStore
 from quantmesh.research import spy_replay as replay
+from tests.native_daily_legacy_fixtures import seed_archive
 from tests.test_freeze_opend_spy_daily import AS_OF, payload, post_review
 from tests.test_spy_policy_exception_freeze import authority as _authority
 from tests.test_spy_policy_exception_freeze import consumed
@@ -382,16 +383,13 @@ def test_profile_job_and_cold_reopen_bind_original_profile_without_current_input
         return {"controlled_test_seam": "NO_FINANCIAL_COMPUTATION"}
 
     monkeypatch.setattr(replay.engine, "calculate", sentinel)
-    request = replay.ReplayRequest(
-        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
-    )
     key, target = compat_case[4]["job_idempotency_key"], tmp_path / "jobs"
     with closing(replay.ReplayService(target, replay_input=value)) as service:
-        job, _ = service.submit(request, key)
-        assert job.state == "succeeded" and calls == [1]
+        job = seed_archive(service, value, key)
+        assert job.state == "succeeded" and calls == []
         saved = service.artifact(key)
     with closing(replay.ReplayService(target)) as cold:
-        assert cold.artifact(key) == saved and calls == [1]
+        assert cold.artifact(key) == saved and calls == []
         assert cold.options().configured is False
     # The cold verifier must derive expected origin from the trusted profile/cohort,
     # rather than blessing whatever source hashes the saved protocol says.

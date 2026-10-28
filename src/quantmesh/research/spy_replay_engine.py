@@ -151,7 +151,7 @@ def run_cashbook(
             clipped = clipped or order.requested_quantity > cap
         friction = abs(quantity) * float(row.open) * fee_rate
         if order is not None:
-            post_cash = cash - quantity * float(row.open) - friction
+            post_cash = cash - (quantity * float(row.open) + friction)
             post_shares = shares + quantity
             equity_open = cash + shares * float(row.open) + receivable
             if post_cash < 0 or post_shares < 0:
