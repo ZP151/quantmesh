@@ -1,17 +1,57 @@
-"""Approved SMA100 development arithmetic; no broker, provider or user code.
+"""Native daily v2: one accounting loop with an internal quantity-policy seam.
 
 Mechanical reuse of retained QuantMesh research engine.py, original SHA256
 bf69680b7d3e2be8e3c9b6baf8a19ab09972fa501118cc3b0c9aa9045b056f22.
-prepare_signals/run_cashbook/metrics retain their original AST. No bootstrap or
-old experiment runner is included. Financial/paper qualification is not granted.
+prepare_signals/metrics/reconciliation retain their original expressions. The
+active source identity changes; historical profiles cannot execute this version.
+No provider, broker, arbitrary uploaded strategy or financial qualification.
 """
 
 import math
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 
 ORIGINAL_ENGINE_SHA256 = "bf69680b7d3e2be8e3c9b6baf8a19ab09972fa501118cc3b0c9aa9045b056f22"
+KERNEL_VERSION = "native-daily-v2"
+LEGACY_PACKAGED_SHA256 = "6e8ad80f134b7c1f44bcb4cb7695e784009953aba9060326e8ecb2a54e624b8e"
+
+
+@dataclass(frozen=True)
+class OpenAccount:
+    date: str
+    index: int
+    first: bool
+    terminal: bool
+    open_price: float
+    cash: float
+    shares: int
+    receivable: float
+    prior_volumes: tuple[float, ...]
+    cost_bps: float
+
+
+@dataclass(frozen=True)
+class QuantityOrder:
+    """Trusted internal proposal; it cannot debit cash or create a fill."""
+
+    quantity: int
+    requested_quantity: int | None = None
+    max_fraction: float | None = None
+    budget_fraction: float | None = None
+    metadata: dict | None = None
+
+    def __post_init__(self):
+        if type(self.quantity) is not int:
+            raise ValueError("integer quantity required")
+        if self.requested_quantity is not None and (
+            type(self.requested_quantity) is not int or self.requested_quantity < abs(self.quantity)
+        ):
+            raise ValueError("requested quantity")
+        for bound in (self.max_fraction, self.budget_fraction):
+            if bound is not None and (type(bound) not in (int, float) or not 0 < bound <= 1):
+                raise ValueError("quantity bound")
 
 
 def prepare_signals(frame, lookback=100):
@@ -32,6 +72,7 @@ def run_cashbook(
     cost_bps=5,
     extra_delay=0,
     benchmark=False,
+    _quantity_policy=None,
 ):
     if capital <= 0 or cost_bps < 0 or extra_delay < 0:
         raise ValueError("invalid experiment inputs")
@@ -75,17 +116,58 @@ def run_cashbook(
         )
         if date == chosen[-1]:
             target = 0
-        quantity = 0
-        if target != prior_target:
+        lag_volume = frame.volume.iloc[max(0, index - 20) : index]
+        receivable = sum(amount for _, amount in pending)
+        order = None
+        if _quantity_policy is not None:
+            view = OpenAccount(
+                date,
+                index,
+                date == chosen[0],
+                date == chosen[-1],
+                float(row.open),
+                cash,
+                shares,
+                receivable,
+                tuple(float(v) for v in lag_volume),
+                cost_bps,
+            )
+            order = _quantity_policy.propose(view)
+            if not isinstance(order, QuantityOrder):
+                raise ValueError("quantity proposal required")
+            quantity = order.quantity
+            target = int(shares + quantity > 0)
+        elif target != prior_target:
             quantity = (
                 math.floor((cash + 1e-9) / (row.open * (1 + fee_rate))) if target else -shares
             )
-        lag_volume = frame.volume.iloc[max(0, index - 20) : index]
+        else:
+            quantity = 0
         cap = math.floor(float(lag_volume.median()) * 0.01) if len(lag_volume) else 0
         clipped = abs(quantity) > cap
         if clipped:
             quantity = int(math.copysign(cap, quantity))
+        if order is not None and order.requested_quantity is not None:
+            clipped = clipped or order.requested_quantity > cap
         friction = abs(quantity) * float(row.open) * fee_rate
+        if order is not None:
+            post_cash = cash - quantity * float(row.open) - friction
+            post_shares = shares + quantity
+            equity_open = cash + shares * float(row.open) + receivable
+            if post_cash < 0 or post_shares < 0:
+                raise ArithmeticError("numeric_boundary_mismatch")
+            if quantity > 0 and (
+                (
+                    order.max_fraction is not None
+                    and post_shares * float(row.open)
+                    > order.max_fraction * (equity_open - friction)
+                )
+                or (
+                    order.budget_fraction is not None
+                    and quantity * float(row.open) + friction > order.budget_fraction * equity_open
+                )
+            ):
+                raise ArithmeticError("numeric_boundary_mismatch")
         if quantity:
             cash -= quantity * float(row.open) + friction
             shares += quantity
@@ -103,10 +185,16 @@ def run_cashbook(
                     "forced_terminal_liquidation": date == chosen[-1],
                 }
             )
+            if order is not None:
+                trades[-1]["quantity_policy"] = order.metadata or {}
         if cash < -1e-7 or shares < 0:
             raise ArithmeticError("negative cash or shares")
         if not clipped:
             prior_target = target
+        if _quantity_policy is not None:
+            if date == chosen[-1] and shares:
+                raise ArithmeticError("terminal liquidation incomplete")
+            _quantity_policy.filled(view, order, quantity, friction, cash, shares, receivable)
         receivable = sum(amount for _, amount in pending)
         mark = float(row.open if date == chosen[-1] else row.close)
         equity = cash + shares * mark + receivable
@@ -128,6 +216,8 @@ def run_cashbook(
             }
         )
         previous_equity = equity
+        if _quantity_policy is not None and date != chosen[-1]:
+            _quantity_policy.closed(date, index, cash, shares, receivable)
     return pd.DataFrame(daily).set_index("date"), trades
 
 
