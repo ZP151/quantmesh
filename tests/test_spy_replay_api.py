@@ -1,4 +1,4 @@
-"""Actual API/math/storage paths over trusted synthetic sessions only."""
+"""Retired-profile API/archive storage; arithmetic is independently tested."""
 
 import hashlib
 from uuid import uuid4
@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.research.spy_replay import ReplayService
+from tests.native_daily_legacy_fixtures import seed_archive
 from tests.test_spy_replay import request_for, synthetic_input
 
 BASE = "/api/research/spy-replay"
@@ -22,13 +23,15 @@ def test_actual_five_endpoint_loop_original_bytes_and_cold_reopen(tmp_path):
     value = synthetic_input()
     key, decision_key = str(uuid4()), str(uuid4())
     service = ReplayService(tmp_path, replay_input=value)
+    seed_archive(service, value, key)
     with TestClient(app(service)) as client:
         options = client.get(BASE).json()
-        assert options["configured"] and options["input"]["evidence_kind"] == "engineering_fixture"
+        assert options["configured"] is False and options["input"] is None
+        assert options["unavailable_reason"] == "input_not_qualified"
         assert options["paper_allowed"] is False
         request = request_for(value).model_dump()
         first = client.post(BASE + "/jobs", json=request, headers={"Idempotency-Key": key})
-        assert first.status_code == 201
+        assert first.status_code == 200
         job = first.json()
         assert job["state"] == "succeeded" and job["job_id"] == key
         response = client.get(BASE + f"/jobs/{key}/artifact")
@@ -119,18 +122,19 @@ def test_origin_guard_conflicts_errors_and_openapi_contract(tmp_path):
     service = ReplayService(tmp_path, replay_input=value)
     with TestClient(app(service)) as client:
         request, key = request_for(value).model_dump(), str(uuid4())
+        seed_archive(service, value, key)
         bad = client.post(
             BASE + "/jobs",
             json=request,
             headers={"Idempotency-Key": key, "Origin": "https://attacker.invalid"},
         )
-        assert bad.status_code == 403 and not (tmp_path / "jobs.jsonl").exists()
+        assert bad.status_code == 403 and len(service._records()) == 1
         assert client.post(BASE + "/jobs", json=request).status_code == 422
         assert client.get(BASE + "/jobs/bad").json() == {"detail": "invalid_request"}
         assert client.get(BASE + f"/jobs/{uuid4()}").status_code == 404
         assert (
             client.post(BASE + "/jobs", json=request, headers={"Idempotency-Key": key}).status_code
-            == 201
+            == 200
         )
         changed = {**request, "protocol_digest": "a" * 64}
         assert client.post(
@@ -181,6 +185,7 @@ def test_paper_decision_is_rejected_without_any_decision_effect(tmp_path):
     service = ReplayService(tmp_path, replay_input=value)
     with TestClient(app(service)) as client:
         key = str(uuid4())
+        seed_archive(service, value, key)
         job = client.post(
             BASE + "/jobs", json=request_for(value).model_dump(), headers={"Idempotency-Key": key}
         ).json()

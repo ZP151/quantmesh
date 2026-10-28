@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from quantmesh.research import spy_replay_engine as engine
+from tests.native_daily_legacy_fixtures import seed_archive
 
 
 def frame():
@@ -139,8 +140,8 @@ def test_real_store_report_decision_same_key_and_cold_reopen_do_not_recompute(
     service = ReplayService(tmp_path, replay_input=value)
     key, decision_key = uuid4(), uuid4()
     request = request_for(value)
-    job, created = service.submit(request, key)
-    assert created and job.state == "succeeded" and calls == [1]
+    job = seed_archive(service, value, key)
+    assert job.state == "succeeded" and calls == []
     raw = service.artifact(key)
     assert json.loads(raw)["calculation"]["scenarios"]["base5"]["strategy"]["metrics"][
         "terminal_equity"
@@ -164,44 +165,27 @@ def test_real_store_report_decision_same_key_and_cold_reopen_do_not_recompute(
     assert reopened.artifact(key) == raw
     assert reopened.artifact(key, "decision") == decision_bytes
     assert reopened.submit(request, key)[0] == decided
-    assert calls == [1]
+    assert calls == []
     reopened.close()
 
 
-def test_inflight_read_idempotency_capacity_and_close_joins(tmp_path, monkeypatch):
-    import threading
+def test_archived_read_concurrent_idempotency_and_retired_new_submit(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
     from uuid import uuid4
 
     from quantmesh.research.spy_replay import ReplayError, ReplayService
 
-    entered, release, closed = threading.Event(), threading.Event(), threading.Event()
-    original = engine.calculate
-
-    def blocked(*args):
-        entered.set()
-        assert release.wait(5)
-        return original(*args)
-
-    monkeypatch.setattr(engine, "calculate", blocked)
-    value = synthetic_input()
+    value, key = synthetic_input(), uuid4()
+    monkeypatch.setattr(engine, "calculate", lambda *a: pytest.fail("retired computation"))
     service = ReplayService(tmp_path, replay_input=value)
-    key, results = uuid4(), []
-    worker = threading.Thread(
-        target=lambda: results.append(service.submit(request_for(value), key))
-    )
-    worker.start()
-    assert entered.wait(3)
-    assert service.get(key).state == "running"
-    assert service.submit(request_for(value), key)[0].state == "running"
-    with pytest.raises(ReplayError, match="capacity_exceeded"):
+    original = seed_archive(service, value, key)
+    with ThreadPoolExecutor(2) as pool:
+        results = list(pool.map(lambda _: service.submit(request_for(value), key), range(2)))
+    assert results == [(original, False), (original, False)]
+    with pytest.raises(ReplayError, match="input_not_qualified"):
         service.submit(request_for(value), uuid4())
-    closer = threading.Thread(target=lambda: (service.close(), closed.set()))
-    closer.start()
-    assert not closed.wait(0.05)
-    release.set()
-    worker.join(5)
-    closer.join(5)
-    assert closed.is_set() and results[0][0].state == "succeeded"
+    service.close()
+    assert service._closed
 
 
 def test_interrupted_intent_is_recovered_without_running_math_again(tmp_path, monkeypatch):
@@ -209,16 +193,10 @@ def test_interrupted_intent_is_recovered_without_running_math_again(tmp_path, mo
 
     from quantmesh.research.spy_replay import ReplayService
 
-    value = synthetic_input()
+    value, key = synthetic_input(), uuid4()
+    monkeypatch.setattr(engine, "calculate", lambda *a: pytest.fail("interrupted recompute"))
     service = ReplayService(tmp_path, replay_input=value)
-    key = uuid4()
-
-    def interrupt(*args):
-        raise KeyboardInterrupt
-
-    monkeypatch.setattr(engine, "calculate", interrupt)
-    with pytest.raises(KeyboardInterrupt):
-        service.submit(request_for(value), key)
+    seed_archive(service, value, key, state="running")
     service.close()
     reopened = ReplayService(tmp_path, replay_input=value)
     assert reopened.get(key).state == "interrupted"
@@ -248,29 +226,19 @@ def test_report_object_without_record_publication_is_not_success_or_rerun(tmp_pa
 
     from quantmesh.research.spy_replay import ReplayError, ReplayService
 
-    value = synthetic_input()
+    value, key = synthetic_input(), uuid4()
     service = ReplayService(tmp_path, replay_input=value)
-    key = uuid4()
-    write = service._store.write
-    writes = []
-
-    def fail_publication(records):
-        writes.append(1)
-        if len(writes) == 2:
-            raise OSError("publication refused")
-        return write(records)
-
-    monkeypatch.setattr(service._store, "write", fail_publication)
-    with pytest.raises(ReplayError, match="service_unavailable"):
-        service.submit(request_for(value), key)
-    assert len(list((tmp_path / ".trusted-data-v2/objects/sha256").glob("*/*"))) == 1
-    service.close()
-    cold = ReplayService(tmp_path, replay_input=value)
-    assert cold.get(key).state == "interrupted" and cold.get(key).report is None
-    assert cold.submit(request_for(value), key)[0].state == "interrupted"
+    orphan = service.objects.put_bytes(
+        "application/json", b'{"unpublished_engineering_fixture":true}'
+    )
+    monkeypatch.setattr(engine, "calculate", lambda *a: pytest.fail("orphan rerun"))
     with pytest.raises(ReplayError, match="not_found"):
-        cold.artifact(key)
-    cold.close()
+        service.get(key)
+    with pytest.raises(ReplayError, match="input_not_qualified"):
+        service.submit(request_for(value), key)
+    assert service.objects.get_bytes(orphan) == b'{"unpublished_engineering_fixture":true}'
+    assert not (tmp_path / "jobs.jsonl").exists()
+    service.close()
 
 
 def test_decision_response_loss_replays_original_without_second_write(tmp_path, monkeypatch):
@@ -281,7 +249,7 @@ def test_decision_response_loss_replays_original_without_second_write(tmp_path, 
     value = synthetic_input()
     service = ReplayService(tmp_path, replay_input=value)
     key, decision_key = uuid4(), uuid4()
-    job = service.submit(request_for(value), key)[0]
+    job = seed_archive(service, value, key)
     body = DecisionRequest(
         request_digest=job.request_digest,
         report_digest=job.report.digest,
@@ -320,7 +288,7 @@ def test_actual_object_tamper_is_not_returned_as_original_report(tmp_path):
     value = synthetic_input()
     service = ReplayService(tmp_path, replay_input=value)
     key = uuid4()
-    job = service.submit(request_for(value), key)[0]
+    job = seed_archive(service, value, key)
     service.objects.path_for(job.report).write_bytes(b"{}")
     with pytest.raises(ReplayError, match="artifact_invalid"):
         service.artifact(key)
@@ -346,9 +314,14 @@ def test_fixed_32_job_bound_blocks_33rd_before_computation(tmp_path):
     value = synthetic_input()
     service = ReplayService(tmp_path, replay_input=value)
     for _ in range(32):
-        assert service.submit(request_for(value), uuid4())[0].state == "succeeded"
-    with pytest.raises(ReplayError, match="capacity_exceeded"):
+        seed_archive(service, value, uuid4())
+    with pytest.raises(ReplayError, match="input_not_qualified"):
         service.submit(request_for(value), uuid4())
+    jobs = service._store.read()
+    extra = jobs[0].model_copy(update={"job_id": str(uuid4())})
+    service._store.write([*jobs, extra])
+    with pytest.raises(ReplayError, match="artifact_invalid"):
+        service.get(jobs[0].job_id)
     service.close()
 
 
@@ -429,64 +402,37 @@ def test_static_admission_cannot_use_foreign_stale_or_placeholder_review(tmp_pat
 def test_failed_math_has_no_report_and_keeps_fixed_safe_error(tmp_path, monkeypatch):
     from uuid import uuid4
 
-    from quantmesh.research.spy_replay import ReplayService
+    from quantmesh.research.spy_replay import ReplayError, ReplayService
 
-    def fail(*args):
-        raise ValueError("PRIVATE DETAIL NEVER IN REPORT")
-
-    monkeypatch.setattr(engine, "calculate", fail)
-    value = synthetic_input()
+    value, key = synthetic_input(), uuid4()
     service = ReplayService(tmp_path, replay_input=value)
-    job = service.submit(request_for(value), uuid4())[0]
-    assert job.state == "failed" and job.report is None and job.error_code == "computation_failed"
-    assert "PRIVATE DETAIL" not in job.model_dump_json()
+    monkeypatch.setattr(engine, "calculate", lambda *a: pytest.fail("retired computation"))
+    job = seed_archive(service, value, key, state="failed")
+    assert service.submit(request_for(value), key)[0] == job
+    assert job.report is None and job.error_code == "computation_failed"
+    with pytest.raises(ReplayError, match="not_found"):
+        service.artifact(key)
     service.close()
 
 
-@pytest.mark.parametrize("terminal_volume", [0, 1000])
-def test_incomplete_terminal_liquidation_publishes_failed_job_without_report(
-    tmp_path, terminal_volume
-):
-    import io
-    import json
-    from dataclasses import replace
+def test_archived_terminal_failure_cannot_publish_or_rerun(tmp_path):
     from uuid import uuid4
 
-    from quantmesh.data.objects import ObjectRef
-    from quantmesh.research.spy_replay import ReplayError, ReplayService, canonical, digest
+    from quantmesh.research.spy_replay import ReplayError, ReplayService
 
-    value = synthetic_input()
-    bars = pd.read_csv(io.BytesIO(value.bars_csv))
-    bars.loc[102:, "volume"] = terminal_volume
-    raw = bars.to_csv(index=False, lineterminator="\n").encode()
-    protocol = json.loads(value.protocol_bytes)
-    protocol["members"]["normalized-bars.csv"] = ObjectRef(
-        digest=digest(raw), byte_length=len(raw), media_type="text/csv"
-    ).model_dump()
-    protocol_bytes = canonical(protocol)
-    value = replace(
-        value,
-        bars_csv=raw,
-        protocol_bytes=protocol_bytes,
-        snapshot_digest=digest(b"INTERNAL SYNTHETIC121" + raw + protocol_bytes),
-    )
-    # This exercises the verified input, actual volume cap, service and storage.
+    # New kernel tests exercise actual terminal refusal. Here an archived failed job
+    # must never acquire a report or another numerical attempt after retirement.
+    value, key = synthetic_input(), uuid4()
     service = ReplayService(tmp_path, replay_input=value)
-    try:
-        key = uuid4()
-        job = service.submit(request_for(value), key)[0]
-        assert job.state == "failed"
-        assert job.report is None and job.error_code == "computation_failed"
-        with pytest.raises(ReplayError, match="not_found"):
-            service.artifact(key)
-    finally:
-        service.close()
-    reopened = ReplayService(tmp_path)
-    try:
-        assert reopened.get(key) == job
-        assert reopened.submit(request_for(value), key)[0] == job
-    finally:
-        reopened.close()
+    job = seed_archive(service, value, key, state="failed")
+    assert job.report is None and job.error_code == "computation_failed"
+    with pytest.raises(ReplayError, match="not_found"):
+        service.artifact(key)
+    service.close()
+    reopened = ReplayService(tmp_path, replay_input=value)
+    assert reopened.get(key) == job
+    assert reopened.submit(request_for(value), key)[0] == job
+    reopened.close()
 
 
 def test_separate_python_process_recovers_same_job_report_and_decision(tmp_path):
@@ -502,7 +448,7 @@ def test_separate_python_process_recovers_same_job_report_and_decision(tmp_path)
     value = synthetic_input()
     service = ReplayService(tmp_path, replay_input=value)
     key = uuid4()
-    job = service.submit(request_for(value), key)[0]
+    job = seed_archive(service, value, key)
     service.decide(
         key,
         DecisionRequest(

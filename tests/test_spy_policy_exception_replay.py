@@ -10,6 +10,7 @@ import pytest
 
 from quantmesh.data.objects import ObjectStore
 from quantmesh.research import spy_replay as replay
+from tests.native_daily_legacy_fixtures import seed_archive
 from tests.test_freeze_opend_spy_daily import AS_OF
 from tests.test_spy_policy_exception_freeze import authority as _authority
 from tests.test_spy_policy_exception_freeze import frozen_v3, sha
@@ -79,12 +80,12 @@ def test_single_job_same_payload_and_cold_proof_no_calculation(authority, tmp_pa
     key = authority[2]["job_idempotency_key"]
     target = tmp_path / "jobs"
     with closing(replay.ReplayService(target, replay_input=value)) as service:
-        with pytest.raises(replay.ReplayError, match="invalid_request"):
+        with pytest.raises(replay.ReplayError, match="input_not_qualified"):
             service.submit(request, uuid4())
         assert calls == []
-        job, created = service.submit(request, key)
-        assert created and job.state == "succeeded" and calls == [1]
-        assert service.submit(request, key)[1] is False and calls == [1]
+        job = seed_archive(service, value, key)
+        assert job.state == "succeeded" and calls == []
+        assert service.submit(request, key)[1] is False and calls == []
         changed = request.model_copy(update={"snapshot_digest": "f" * 64})
         with pytest.raises(replay.ReplayError, match="idempotency_conflict"):
             service.submit(changed, key)
@@ -102,7 +103,7 @@ def test_single_job_same_payload_and_cold_proof_no_calculation(authority, tmp_pa
     # Cold service has no current input or options to backfill from.
     with closing(replay.ReplayService(target)) as cold:
         assert cold.artifact(key) == report and cold.get(key).decision.disposition == "watch"
-        assert calls == [1]
+        assert calls == []
 
 
 def test_acceptance_different_policy_or_missing_review_cannot_qualify(authority):
@@ -122,12 +123,9 @@ def test_legacy_report_bytes_stay_read_only_without_exception_backfill(tmp_path,
     monkeypatch.setattr(replay.engine, "calculate", lambda *args: {"engineering_only": True})
     value = synthetic_input()
     key = uuid4()
-    request = replay.ReplayRequest(
-        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
-    )
     target = tmp_path / "legacy"
     with closing(replay.ReplayService(target, replay_input=value)) as service:
-        job, _ = service.submit(request, key)
+        job = seed_archive(service, value, key)
         before = service.artifact(key)
     with closing(replay.ReplayService(target)) as cold:
         assert cold.artifact(key) == before
@@ -150,40 +148,27 @@ def test_failed_once_job_stays_failed_without_new_chance(authority, tmp_path, mo
     )
     key = authority[2]["job_idempotency_key"]
     with closing(replay.ReplayService(tmp_path / "failed", replay_input=value)) as service:
-        assert service.submit(request, key)[0].state == "failed"
-        assert service.submit(request, key)[0].state == "failed" and calls == [1]
+        seed_archive(service, value, key, state="failed")
+        assert service.submit(request, key)[0].state == "failed" and calls == []
 
 
-def test_same_intent_concurrent_submit_returns_one_running_job(authority, tmp_path, monkeypatch):
+def test_archived_intent_concurrent_submit_returns_original_without_math(
+    authority, tmp_path, monkeypatch
+):
     from concurrent.futures import ThreadPoolExecutor
-    from threading import Event
 
     path, _, _ = descriptor(authority)
     value = replay.ReplayInput.from_descriptor(path)
-    entered, release = Event(), Event()
-    calls = []
-
-    def held(*args):
-        calls.append(1)
-        entered.set()
-        assert release.wait(5)
-        return {"controlled_test_seam": True}
-
-    monkeypatch.setattr(replay.engine, "calculate", held)
+    monkeypatch.setattr(replay.engine, "calculate", lambda *a: pytest.fail("retired computation"))
     request = replay.ReplayRequest(
         snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
     )
     key = authority[2]["job_idempotency_key"]
     with closing(replay.ReplayService(tmp_path / "parallel", replay_input=value)) as service:
-        with ThreadPoolExecutor(1) as pool:
-            future = pool.submit(service.submit, request, key)
-            try:
-                assert entered.wait(4)
-                job, created = service.submit(request, key)
-                assert job.state == "running" and not created and calls == [1]
-            finally:
-                release.set()
-            assert future.result(5)[0].state == "succeeded" and calls == [1]
+        original = seed_archive(service, value, key)
+        with ThreadPoolExecutor(2) as pool:
+            results = list(pool.map(lambda _: service.submit(request, key), range(2)))
+        assert all(job == original and not created for job, created in results)
 
 
 def test_cold_missing_original_policy_refuses_without_options_fallback(
@@ -192,12 +177,9 @@ def test_cold_missing_original_policy_refuses_without_options_fallback(
     path, _, _ = descriptor(authority)
     value = replay.ReplayInput.from_descriptor(path)
     monkeypatch.setattr(replay.engine, "calculate", lambda *args: {"controlled_test_seam": True})
-    request = replay.ReplayRequest(
-        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
-    )
     target = tmp_path / "tampered"
     with closing(replay.ReplayService(target, replay_input=value)) as service:
-        service.submit(request, authority[2]["job_idempotency_key"])
+        seed_archive(service, value, authority[2]["job_idempotency_key"])
         ref = value.policy_exception.policy_document_ref
         original = service.objects.path_for(ref)
     original.write_bytes(b"tampered controlled fixture")
@@ -241,6 +223,13 @@ def test_copy_oversized_proof_refuses_before_read_or_calculator(authority, tmp_p
     value = replay.ReplayInput.from_descriptor(path)
     ref = value.proof_refs["acceptance.json"]
     target = tmp_path / "bounded-copy"
+    key = authority[2]["job_idempotency_key"]
+    request = replay.ReplayRequest(
+        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
+    )
+    with closing(replay.ReplayService(target, replay_input=value)) as service:
+        seed_archive(service, value, key)
+    ObjectStore(target).path_for(ref).write_bytes(b"x" * (16384 + 1))
     calls, reads = [], []
     original = ObjectStore.get_bytes
 
@@ -250,14 +239,12 @@ def test_copy_oversized_proof_refuses_before_read_or_calculator(authority, tmp_p
         return original(self, reference)
 
     monkeypatch.setattr(ObjectStore, "get_bytes", observed)
-    monkeypatch.setattr(replay.engine, "calculate", lambda *args: calls.append(1))
-    request = replay.ReplayRequest(
-        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
-    )
-    with closing(replay.ReplayService(target, replay_input=value)) as service:
-        ObjectStore(authority[0]).path_for(ref).write_bytes(b"x" * (16384 + 1))
-        with pytest.raises(ValueError):
-            service.submit(request, authority[2]["job_idempotency_key"])
+    monkeypatch.setattr(replay.engine, "calculate", lambda *a: calls.append(1))
+    with pytest.raises(replay.ReplayError, match="artifact_invalid"):
+        replay.ReplayService(target)
+    with closing(replay.ReplayService(tmp_path / "fresh", replay_input=value)) as fresh:
+        with pytest.raises(replay.ReplayError, match="input_not_qualified"):
+            fresh.submit(request, key)
     assert reads == [] and calls == []
 
 
@@ -285,13 +272,9 @@ def test_cold_v3_facts_must_match_original_proofs(
         "calculate",
         lambda *args: {"controlled_test_seam": "NO_FINANCIAL_COMPUTATION"},
     )
-    request = replay.ReplayRequest(
-        snapshot_digest=configured.snapshot_digest,
-        protocol_digest=replay.digest(configured.protocol_bytes),
-    )
     key, jobs = authority[2]["job_idempotency_key"], tmp_path / "changed-evidence"
     with closing(replay.ReplayService(jobs, replay_input=configured)) as service:
-        job, _ = service.submit(request, key)
+        job = seed_archive(service, configured, key)
         report = json.loads(service.artifact(key))
         if target == "sample":
             report["sample_evidence"][field] = value
@@ -317,12 +300,9 @@ def test_cold_duplicate_acceptance_refuses_even_with_consistent_refs(
     path, _, acceptance = descriptor(authority)
     value = replay.ReplayInput.from_descriptor(path)
     monkeypatch.setattr(replay.engine, "calculate", lambda *args: {"controlled_test_seam": True})
-    request = replay.ReplayRequest(
-        snapshot_digest=value.snapshot_digest, protocol_digest=replay.digest(value.protocol_bytes)
-    )
     key, jobs = authority[2]["job_idempotency_key"], tmp_path / "ambiguous-cold"
     with closing(replay.ReplayService(jobs, replay_input=value)) as service:
-        service.submit(request, key)
+        seed_archive(service, value, key)
         report = copy.deepcopy(json.loads(service.artifact(key)))
         ref = service.objects.put_bytes(
             "application/json",

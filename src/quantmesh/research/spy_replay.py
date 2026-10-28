@@ -6,7 +6,6 @@ import hashlib
 import io
 import json
 import math
-import platform
 import threading
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -1249,9 +1248,9 @@ class ReplayService:
 
     def options(self):
         return ReplayOptions(
-            configured=self._input is not None,
-            unavailable_reason=None if self._input else "input_not_qualified",
-            input=self._input.summary() if self._input else None,
+            configured=False,
+            unavailable_reason="input_not_qualified",
+            input=None,
         )
 
     def get(self, key):
@@ -1283,106 +1282,9 @@ class ReplayService:
                     raise ReplayError("idempotency_conflict")
                 self._verify(existing)
                 return self._public(existing), False
-            if (
-                self._inflight is not None
-                or len(jobs) >= MAX_JOBS
-                or any(j.state == "running" for j in jobs)
-            ):
-                raise ReplayError("capacity_exceeded")
-            if self._input is None:
-                raise ReplayError("input_not_qualified")
-            if (request.snapshot_digest, request.protocol_digest) != (
-                self._input.snapshot_digest,
-                digest(self._input.protocol_bytes),
-            ):
-                raise ReplayError("input_pin_mismatch")
-            if (
-                self._input.policy_exception is not None
-                and key != self._input.policy_exception.job_idempotency_key
-            ):
-                raise ReplayError("invalid_request")
-            if (
-                digest(Path(__file__).read_bytes()) != _SOURCE_SHA
-                or digest(Path(engine.__file__).read_bytes()) != _ENGINE_SHA
-            ):
-                raise ReplayError("input_not_qualified")
-            protocol, frame, distributions = self._input.verified()
-            sample_evidence = self._input.evidence(protocol, frame)
-            if self._input.policy_exception is not None:
-                source = ObjectStore(self._input.source_root)
-                for name, ref in self._input.proof_refs.items():
-                    limit = (
-                        MAX_OBJECT if name in {"protocol.json", "freeze.json"} else once.MAX_PROOF
-                    )
-                    raw_proof = once.read_object(source, ref, limit=limit)
-                    if (
-                        not 1 <= len(raw_proof) <= limit
-                        or self.objects.put_bytes(ref.media_type, raw_proof) != ref
-                    ):
-                        raise ReplayError("input_not_qualified")
-            at = _now()
-            job = _StoredJob(
-                job_id=key,
-                request=request,
-                request_digest=request_digest,
-                state="running",
-                created_at=at,
-                updated_at=at,
-                implementation_digest=digest((_SOURCE_SHA + _ENGINE_SHA).encode()),
-            )
-            self._store.write([*jobs, job])
-            self._inflight = key
-        publishing = False
-        try:
-            w = protocol["window"]
-            calculation = engine.calculate(frame, distributions, w["score_start"], w["score_end"])
-            report = dict(
-                schema_version=3 if self._input.policy_exception is not None else 2,
-                job_id=key,
-                request_digest=request_digest,
-                **request.model_dump(),
-                implementation_digest=job.implementation_digest,
-                evidence_kind=self._input.evidence_kind,
-                engine=dict(
-                    original_sha256=engine.ORIGINAL_ENGINE_SHA256, packaged_sha256=_ENGINE_SHA
-                ),
-                runtime=dict(python=platform.python_version(), pandas=pd.__version__),
-                window=w,
-                costs=protocol["costs"],
-                sample_evidence=sample_evidence.model_dump(mode="json"),
-                calculation=calculation,
-                financial_qualification="INSUFFICIENT",
-                paper_allowed=False,
-                limitations=self._input.summary().limitations,
-            )
-            raw = canonical(report)
-            if len(raw) > MAX_OBJECT:
-                raise ValueError("report too large")
-            ref = self.objects.put_bytes("application/json", raw)
-            completed = self._updated(job, state="succeeded", report=ref, completed_at=_now())
-            self._verify(completed)
-            with self._condition:
-                publishing = True
-                self._replace(completed)
-            return self._public(completed), True
-        except Exception:
-            with self._condition:
-                if publishing:
-                    self._broken = True
-                    raise ReplayError("service_unavailable") from None
-                failed = self._updated(
-                    job, state="failed", completed_at=_now(), error_code="computation_failed"
-                )
-                try:
-                    self._replace(failed)
-                except Exception:
-                    self._broken = True
-                    raise ReplayError("service_unavailable") from None
-            return self._public(failed), True
-        finally:
-            with self._condition:
-                self._inflight = None
-                self._condition.notify_all()
+            # Retired execution profile: original IDs and bytes stay readable,
+            # but no old/once input can run under the versioned quantity kernel.
+            raise ReplayError("input_not_qualified")
 
     def artifact(self, key, kind="report"):
         with self._condition:

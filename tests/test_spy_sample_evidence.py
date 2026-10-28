@@ -16,6 +16,7 @@ from fastapi.testclient import TestClient
 
 from quantmesh.data.objects import ObjectRef, ObjectStore
 from quantmesh.research import spy_replay as replay
+from tests.native_daily_legacy_fixtures import seed_archive
 from tests.test_spy_replay import descriptor_fixture, request_for, synthetic_input
 from tests.test_spy_replay_api import BASE, app
 
@@ -64,7 +65,7 @@ def test_new_report_v2_has_bound_structural_and_unknown_source_evidence(tmp_path
     value = flat_input()
     service = replay.ReplayService(tmp_path, replay_input=value)
     try:
-        job = service.submit(request_for(value), uuid4())[0]
+        job = seed_archive(service, value, uuid4())
         report = json.loads(service.artifact(job.job_id))
         assert report["schema_version"] == 2
         evidence = report["sample_evidence"]
@@ -116,12 +117,14 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
     )
     service = replay.ReplayService(tmp_path, replay_input=value)
     try:
-        job = service.submit(request_for(value), uuid4())[0]
+        job = seed_archive(service, value, uuid4())
         report = json.loads(service.artifact(job.job_id))
         assert report["sample_evidence"]["sample_id"] == "F0"
         assert report["sample_evidence"]["sample_version"] == "F0-v1"
         assert report["sample_evidence"]["sample_role"] == "fixed_golden"
-        for scenario in report["calculation"]["scenarios"].values():
+        bars = value.verified()[1]
+        control = replay.engine.calculate(bars, [], bars.index[100], bars.index[-1])
+        for scenario in control["scenarios"].values():
             metrics = scenario["strategy"]["metrics"]
             for field in (
                 "fills",
@@ -171,7 +174,7 @@ def test_new_job_a_cold_with_b_uses_a_evidence_and_never_recomputes(tmp_path, mo
     value = flat_input(named=True)
     service = replay.ReplayService(tmp_path, replay_input=value)
     key = uuid4()
-    job = service.submit(request_for(value), key)[0]
+    job = seed_archive(service, value, key)
     raw = service.artifact(key)
     body = replay.DecisionRequest(
         request_digest=job.request_digest,
@@ -283,11 +286,12 @@ def test_api_post_and_get_have_distinct_types_and_read_clock_never_writes(tmp_pa
     monkeypatch.setattr(replay.engine, "calculate", count)
     service = replay.ReplayService(tmp_path, replay_input=value, read_clock=lambda: clock[0])
     key = str(uuid4())
+    seed_archive(service, value, key)
     with TestClient(app(service)) as client:
         post = client.post(
             BASE + "/jobs", headers={"Idempotency-Key": key}, json=request_for(value).model_dump()
         )
-        assert post.status_code == 201 and "sample_freshness_view" not in post.json()
+        assert post.status_code == 200 and "sample_freshness_view" not in post.json()
         raw = client.get(BASE + f"/jobs/{key}/artifact").content
         assert json.loads(raw)["schema_version"] == 2
         decision = dict(
@@ -309,7 +313,7 @@ def test_api_post_and_get_have_distinct_types_and_read_clock_never_writes(tmp_pa
         assert a["applicability"] == b["applicability"] == "fixed_regression_not_required"
         assert second["report"] == first["report"] and second["decision"] == first["decision"]
         assert client.get(BASE + f"/jobs/{key}/artifact").content == raw
-        assert (tmp_path / "jobs.jsonl").read_bytes() == before and calls == [1]
+        assert (tmp_path / "jobs.jsonl").read_bytes() == before and calls == []
         schemas = client.get("/openapi.json").json()["paths"]
         assert schemas[BASE + "/jobs/{job_id}"]["get"]["responses"]["200"]["content"][
             "application/json"
@@ -359,7 +363,7 @@ def test_synthetic_label_cannot_be_changed_into_rolling_source_evidence():
 def test_v2_evidence_pin_tamper_is_rejected_on_cold_open(tmp_path):
     value = flat_input(named=True)
     service = replay.ReplayService(tmp_path, replay_input=value)
-    job = service.submit(request_for(value), uuid4())[0]
+    job = seed_archive(service, value, uuid4())
     report = json.loads(service.artifact(job.job_id))
     service.close()
     report["sample_evidence"]["snapshot_digest"] = "b" * 64
