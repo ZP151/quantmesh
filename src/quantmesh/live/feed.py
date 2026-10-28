@@ -268,7 +268,13 @@ class LiveFeed:
         prune_interval: timedelta = _PRUNE_INTERVAL,
         provider_delays: Mapping[Venue, int | None] | None = None,
         calendar: CalendarService | None = None,
+        history_only: bool = False,
     ) -> None:
+        if type(history_only) is not bool:
+            raise ValueError("history_only must be a boolean")
+        if history_only and (lake is None or not lake.read_only or lake.read_unavailable):
+            raise ValueError("historical profile requires a readable read-only replay lake")
+        self._history_only = history_only
         if not (timedelta(0) < lag < stale):
             raise ValueError("require 0 < lag < stale")
         if prune_interval <= timedelta(0):
@@ -300,9 +306,18 @@ class LiveFeed:
         self.capacity_exhausted = bool(lake is not None and lake.read_only)
         self.capacity_stop_error: str | None = None
         self._capacity_stop: asyncio.Event | None = None
-        if self._lake is not None and not self._lake.read_unavailable:
+        if not self.history_only and self._lake is not None and not self._lake.read_unavailable:
             for update in self._lake.latest():
                 self._ingest_cached(update.model_copy(deep=True))
+
+    @property
+    def history_only(self) -> bool:
+        """Explicit saved-history replay profile; never current-cache readiness."""
+        return self._history_only
+
+    def _require_live_profile(self) -> None:
+        if self.history_only:
+            raise RuntimeError("historical replay profile does not provide live operations")
 
     @property
     def replay_buffer(self) -> LiveBuffer | None:
@@ -311,6 +326,7 @@ class LiveFeed:
 
     def prune_if_due(self, now: datetime | None = None) -> int:
         """Run the lake retention sweep at most once per configured interval."""
+        self._require_live_profile()
         if self._lake is None:
             return 0
         budget = self._lake.write_budget
@@ -330,6 +346,7 @@ class LiveFeed:
 
     def attach(self, supervisor: VenueSupervisor) -> None:
         """Register a supervisor; the pump runs it and drains its outbox."""
+        self._require_live_profile()
         with self._lock:
             self._supervisors.append(supervisor)
             if self._lake is not None and not self._lake.read_unavailable:
@@ -342,6 +359,7 @@ class LiveFeed:
 
     def ingest(self, updates: list[MarketUpdate]) -> list[MarketUpdate]:
         """Cache + replay lake; the wall-clock-free path every drill drives."""
+        self._require_live_profile()
         if self._stopped:
             raise RuntimeError("live feed has stopped")
         cached_updates = [update.model_copy(deep=True) for update in updates]
@@ -451,6 +469,7 @@ class LiveFeed:
     async def _publish_owned(
         self, updates: list[MarketUpdate], supervisor: VenueSupervisor | None = None
     ) -> None:
+        self._require_live_profile()
         if not updates:
             return
         if self._stopped:
@@ -560,6 +579,7 @@ class LiveFeed:
     def publish_threadsafe(self, update: MarketUpdate) -> None:
         """Publish from another thread (TestClient drills): ingested
         synchronously, delivered on the server loop once the pump runs."""
+        self._require_live_profile()
         if self._stopped:
             raise RuntimeError("live feed has stopped")
         loop = self._loop
@@ -591,6 +611,7 @@ class LiveFeed:
         caller performs history, account or other potentially blocking work.
         Existing future-time checks still apply to the captured observation.
         """
+        self._require_live_profile()
         with self._lock:
             as_of = clock()
             snapshot = self.snapshot_exact(venue, instrument, kind, as_of=as_of)
@@ -607,6 +628,7 @@ class LiveFeed:
         as_of: datetime,
     ) -> ExactUpdateSnapshot | None:
         """Return a detached snapshot for one venue/instrument/kind key."""
+        self._require_live_profile()
         with self._lock:
             key = (venue.value, instrument, kind.value)
             update = self._latest.get(key)
@@ -715,6 +737,7 @@ class LiveFeed:
         self, venue: Venue, instrument: str, *, now: datetime | None = None
     ) -> SessionFreshness:
         """Read-only exact chart coverage, independent from executable quote evidence."""
+        self._require_live_profile()
         now = now if now is not None else datetime.now(UTC)
         identity = (venue.value, instrument)
         with self._lock:
@@ -735,6 +758,7 @@ class LiveFeed:
         The canonical ``venue:instrument`` key keeps equal symbols from
         different venues independent through the wire and frontend state.
         """
+        self._require_live_profile()
         now = now if now is not None else datetime.now(UTC)
         instruments: dict[str, dict[str, object]] = {}
         with self._lock:
@@ -789,6 +813,7 @@ class LiveFeed:
         """Per-venue connector health: the latest STATUS per source, with
         ``unavailable`` defaults for watchlist instruments that have not
         reported yet (a freshly opened socket is not a status update)."""
+        self._require_live_profile()
         now = now if now is not None else datetime.now(UTC)
         sources: dict[str, dict[str, dict[str, object]]] = {}
         with self._lock:
@@ -888,6 +913,7 @@ class LiveFeed:
         """A bounded per-client queue; overflow drops oldest for that
         client so one slow subscriber never stalls the feed. The
         latest-state endpoint remains the client's reconciliation truth."""
+        self._require_live_profile()
         queue: asyncio.Queue[MarketUpdate] = asyncio.Queue(maxsize=self._queue_size)
         self._subscribers.add(queue)
         return queue
@@ -910,6 +936,7 @@ class LiveFeed:
         lifespan starts this; shutdown cancels it (and with it every
         supervisor pump, whose reconnect loops never exit on their own).
         """
+        self._require_live_profile()
         if self.capacity_exhausted:
             self._stopped = True
             return

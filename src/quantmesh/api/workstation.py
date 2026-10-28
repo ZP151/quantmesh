@@ -1110,7 +1110,7 @@ def create_workstation_app(
     documents: DocumentIndex | None = None,
     hl_posture: HyperliquidRiskLimits | None = None,
     enablement: ApprovalLedger | None = None,
-    history: HistoryService | None = None,
+    history: HistoryService | LiveHistoryService | None = None,
     price_forecasts: PriceForecastRegistry | None = None,
     proposal_ledger: ProposalLedger | None = None,
     account_sink: Callable[[PaperAccount], None] | None = None,
@@ -1168,6 +1168,8 @@ def create_workstation_app(
     renders the cross-venue comparison from the feed's latest state —
     no board without its feed, no fabricated probability.
     """
+    if live_feed is not None and live_feed.history_only:
+        raise WorkstationConfigError("historical replay feed belongs in history, not live_feed")
     if market_data_only:
         from quantmesh.api.market_data_only import build_market_data_app
 
