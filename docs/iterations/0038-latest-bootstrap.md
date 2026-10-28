@@ -149,3 +149,19 @@ Reviewer gate: fresh independent narrow review follows the coherent GREEN
 checkpoint; at most two rounds. Sole publisher updates original PR240/new exact
 head and reruns required CI before normal merge. Prior CI failure remains failed;
 native merged-source reader/feed/API acceptance remains sole server's gate.
+
+Narrow regression R1 READY at committed1b3b6749ac2258010619ca709c32c065a3768795,
+tree5b12dee30e0cdfa187d3729b04086ee997582b6a. Independent reviewer found no
+actionable correctness/spec/standards finding and confirmed the minimal pure-read
+transaction change without test weakening. Reviewer independently ran the new16
+plus unchanged original shutdown case:17passed/8.75s,exit0. Author read the actual
+review-r1-pytest.log. Source/test bytes remain frozen after that checkpoint; only
+these own docs record R1 and publication ownership. Final allowed R2 checks that
+docs-only checkpoint; receipt and exact reviewed HEAD/tree/hash manifest reside
+in output/latest-bootstrap/ci-regression-20261028/. No third regression review.
+
+Author does not push/dispatch duplicate CI: sole publisher receives the exact
+reviewed local branch/commits to update the already-open original PR240 and run
+new required CI. Until that gate passes, previous required CI remains FAILED and
+normal merge is pending. All prior failures/checkpoints and preview18765 remain
+untouched. The root-owned research Goal remains active.

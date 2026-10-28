@@ -94,3 +94,8 @@ must propagate rather than return gathered rows. Relevant existing replay/latest
 snapshot/error and accepted-write lifecycle tests also pass locally. New exact-
 head publisher CI and native acceptance remain separate unfinished gates; see the
 regression checkpoint in ../iterations/0038-latest-bootstrap.md.
+
+Independent narrow-regression R1 READY on1b3b674: no actionable findings; new16
+and unchanged shutdown test17passed in8.75s. Source/test bytes remain unchanged
+through documentation-only final review. This does not convert the old failed CI
+to success or replace publisher's new exact-head gate.

@@ -59,12 +59,13 @@ snapshot COMMIT -> ROLLBACK change if the following actual tests support it.
 - [x] Record exact commands/results and scope checks, Ruff/format/diff. Commit a
   coherent green checkpoint within60minutes. Reuse existing upstream packages;
   no copied external source, new rights/financial/trading authority or dependency.
-- [ ] Independent narrow R1 (correctness/spec, read-only owner/caller semantics,
+- [x] Independent narrow R1 (correctness/spec, read-only owner/caller semantics,
   faults/cancellation/shared replay), at most one aggregate necessary correction
   and final R2. Review does not reopen old structural scope. Update own iteration
   and ADR0037; seal exact reviewed HEAD/tree/hash packet in
   output/latest-bootstrap/ci-regression-20261028/.
-- [ ] Send new exact head to root/sole publisher to update original PR240, rerun
+- [x] Freeze and hand new reviewed exact head/packet to root and sole publisher.
+- [ ] External gate: sole publisher updates original PR240, reruns
   required applicable CI and normally merge. Publisher alone advances publication;
   native merged-source reader/feed/API acceptance remains sole server's gate.
 
