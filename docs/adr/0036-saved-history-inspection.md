@@ -62,3 +62,33 @@ Actual loopback synthetic UI proof, RED/GREEN and review are recorded in
 ../iterations/0038-history-inspection.md; sole publisher owns final locked-runtime
 OpenAPI generation/build/CI/normal merge. Local existing frontend tools can differ
 from the current lock and are reported as a limitation, never a pinned release gate.
+
+## Saved-history construction profile — issue246
+
+Static code inspection after the merged native timeout shows an unnecessary
+dependency: inspection only needs the actual feed replay_buffer, while default
+LiveFeed construction first hydrates unfiltered global latest into a current
+cache. The timeout's inner operation/exception remains UNKNOWN; this decision
+does not identify SQL, decode or cache as its cause.
+
+An explicit LiveFeed(history_only=True,lake=actual_readonly_reader) now provides
+saved-history replay without claiming a current cache. Construction validates a
+readable read-only lake, retains that identical reader, and omits only current-
+cache warm-start in this profile. It rejects providers, pump/fanout, publication/
+ingestion/pruning and current snapshot/status/session operations. Default False
+retains the original complete global warm-start and all live behavior.
+
+Real LiveHistoryService.inspect keeps its manifest-first and bounded real replay
+implementation unchanged. The history-only profile's current history/compare
+methods explicitly refuse rather than expose an uninitialized cache as live.
+The ordinary factory accepts this real history service through its existing
+history injection; its live_feed input rejects a history-only profile. No new
+endpoint, schema, permission, CLI, provider adapter or fixture-only factory.
+
+Both UTC filters, scope/kinds,10000 limits,128-key complete gathering, continuity/
+STATUS/identity/source/receipt/coverage/stale and128MiB/one-thread/zero-spill/RO
+contracts are unchanged. No historical clock enters Paper or decisions. Local
+real-file synthetic tests establish functional composition, not real archive
+performance/data qualification or native success. See the issue246 iteration and
+2026-10-29-historical-bootstrap-fix plan; new source still requires independent
+review, applicable exact-head CI/normal merge before a new root-owned native phase.

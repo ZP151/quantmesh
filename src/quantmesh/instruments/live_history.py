@@ -571,6 +571,8 @@ class LiveHistoryService:
         *,
         as_of: datetime | None = None,
     ) -> HistoricalSeries:
+        if self._feed.history_only:
+            raise HistoryUnavailableError("historical replay profile requires explicit inspection")
         selected_as_of = as_of if as_of is not None else datetime.now(UTC)
         if selected_as_of.tzinfo is None:
             raise HistoryUnavailableError("as_of must be timezone-aware")
@@ -629,6 +631,8 @@ class LiveHistoryService:
         range: HistoryRange,
         as_of: datetime | None = None,
     ) -> ComparisonSeries:
+        if self._feed.history_only:
+            raise HistoryUnavailableError("historical replay profile requires explicit inspection")
         if self._historical is None:
             raise HistoryUnavailableError(
                 "comparison requires manifest-backed history for every instrument"
