@@ -88,7 +88,7 @@ def test_tail_complete_rows_are_fetched_in_fixed_batches(lake):
     assert all(
         parameters[:2] == [min(parameters[2:]), max(parameters[2:])] for _, parameters in wide
     )
-    assert len(recorded.calls) == 8  # Two tx probes, BEGIN, keys, three batches, COMMIT.
+    assert len(recorded.calls) == 8  # Two tx probes, BEGIN, keys, three batches, ROLLBACK.
 
 
 def test_caller_transaction_is_not_committed_or_rolled_back(lake):

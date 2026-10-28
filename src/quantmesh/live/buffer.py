@@ -1141,7 +1141,9 @@ class LiveBuffer:
                 rows.extend(complete)
             rows.sort(key=lambda row: row[0])
             if own_transaction:
-                self._con.execute("COMMIT")
+                # This owned snapshot only reads; end it without emitting a
+                # COMMIT signal reserved by observers for accepted writes.
+                self._con.execute("ROLLBACK")
             return rows
         except BaseException:
             if own_transaction:
@@ -1164,28 +1166,29 @@ class LiveBuffer:
         if instrument is not None:
             clauses.append("instrument = ?")
             params.append(instrument)
-        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-        stream_channel = (
-            "CASE WHEN kind = 'l2_snapshot' "
-            "  THEN json_extract_string(payload_json, '$.side') "
-            "WHEN kind = 'metrics' "
-            "  THEN CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
-            "    THEN 'allMids' ELSE 'activeAssetCtx' END "
-            "ELSE '' END"
+        # Ordinary kinds need no payload JSON to identify their stream. Keeping
+        # them in the same CASE projection can materialize wide payloads before
+        # grouping. Retain the original NULL/ELSE group too: malformed rows must
+        # reach decoding and refuse rather than silently disappearing.
+        groups = (
+            ("kind IS NULL OR kind NOT IN ('l2_snapshot', 'metrics')", ""),
+            ("kind = 'l2_snapshot'", ", json_extract_string(payload_json, '$.side')"),
+            (
+                "kind = 'metrics'",
+                ", CASE WHEN json_extract(payload_json, '$.mid') IS NOT NULL "
+                "THEN 'allMids' ELSE 'activeAssetCtx' END",
+            ),
+        )
+        keys = " UNION ALL ".join(
+            "SELECT MAX(local_seq) AS local_seq FROM market_updates "
+            f"WHERE {' AND '.join([*clauses, f'({predicate})'])} "
+            f"GROUP BY venue, instrument, kind{channel}"
+            for predicate, channel in groups
         )
         with self._connection_lock:
-            # Keep only one scalar sequence per stream while scanning the lake.
-            # A window over every retained row can materialize the whole lake
-            # on the small staging host before it discards all but these rows.
-            rows = self._con.execute(
-                f"WITH latest_seq AS ("
-                f"  SELECT MAX(local_seq) AS local_seq FROM market_updates {where} "
-                f"  GROUP BY venue, instrument, kind, {stream_channel}"
-                f") SELECT {_UPDATE_COLUMNS} FROM market_updates "
-                "WHERE local_seq IN (SELECT local_seq FROM latest_seq) "
-                "ORDER BY local_seq",
-                params,
-            ).fetchall()
+            # One existing snapshot and bounded complete-row gathering, without
+            # any global LIMIT; every winner retains ascending local_seq order.
+            rows = self._tail_rows(keys, params * len(groups))
         return [_row_to_update(row) for row in rows]
 
     def recovery_checkpoints(self, *, venue: str, instruments: list[str]) -> list[MarketUpdate]:
