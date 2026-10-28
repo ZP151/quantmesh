@@ -1153,6 +1153,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research/trend-overlay/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Trend Overlay Trace */
+        get: operations["trend_overlay_trace_api_research_trend_overlay__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/risk": {
         parameters: {
             query?: never;
@@ -4933,6 +4950,178 @@ export interface components {
             /** Version */
             version: string;
         };
+        /** TraceAccount */
+        TraceAccount: {
+            /** Cash */
+            cash: string;
+            /** Receivable */
+            receivable: string;
+            /** Shares */
+            shares: number;
+        };
+        /** TraceAction */
+        TraceAction: {
+            /** Averages */
+            averages: string[];
+            /** Kind */
+            kind: string;
+            /** Reason */
+            reason: string;
+            /** Requested */
+            requested: number | null;
+            /** Session */
+            session: number;
+            /** Signal */
+            signal: string;
+            /** Stages */
+            stages: string[];
+        };
+        /** TraceArms */
+        TraceArms: {
+            /** Overlay Off */
+            overlay_off: components["schemas"]["TraceRow"][];
+            /** Overlay On */
+            overlay_on: components["schemas"]["TraceRow"][];
+        };
+        /** TraceCampaign */
+        TraceCampaign: {
+            /** Consumed */
+            consumed: string[];
+            execution: components["schemas"]["TraceSizing"] | null;
+            full_exit_origin: components["schemas"]["TraceAction"] | null;
+            /** Initial Price */
+            initial_price: string | null;
+            /** Initial Quantity */
+            initial_quantity: number;
+            /** Last Close */
+            last_close: number;
+            /** Last Fill */
+            last_fill: number;
+            pending: components["schemas"]["TraceAction"] | null;
+            /** Pending Full Exit */
+            pending_full_exit: string | null;
+            /** Shares */
+            shares: number;
+            /** Terminal Session */
+            terminal_session: number | null;
+        };
+        /** TraceClose */
+        TraceClose: {
+            /** Available */
+            available: boolean;
+            /** Closes */
+            closes: string[];
+            /** Session */
+            session: number;
+            /** Terminal */
+            terminal: boolean;
+            /** Unsupported Action */
+            unsupported_action: boolean;
+        };
+        /** TraceFill */
+        TraceFill: {
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: number;
+            /** Session */
+            session: number;
+        };
+        /** TraceOpen */
+        TraceOpen: {
+            /** Cost Bps */
+            cost_bps: string;
+            /** Price */
+            price: string;
+            /** Prior Volumes */
+            prior_volumes: string[];
+            /** Session */
+            session: number;
+        };
+        /** TraceRow */
+        TraceRow: {
+            action: components["schemas"]["TraceAction"];
+            campaign_after: components["schemas"]["TraceCampaign"];
+            campaign_before: components["schemas"]["TraceCampaign"];
+            /** Cancelled Remainder */
+            cancelled_remainder?: number | null;
+            close_input: components["schemas"]["TraceClose"];
+            /** Close Session */
+            close_session: number;
+            /** Episode */
+            episode: string;
+            /** Friction For Supplied Fill */
+            friction_for_supplied_fill?: string | null;
+            open_input?: components["schemas"]["TraceOpen"] | null;
+            sizing: components["schemas"]["TraceSizing"] | null;
+            supplied_account: components["schemas"]["TraceAccount"];
+            supplied_fill: components["schemas"]["TraceFill"] | null;
+        };
+        /** TraceSizing */
+        TraceSizing: {
+            action: components["schemas"]["TraceAction"];
+            /** Allowed */
+            allowed: number;
+            /** Constraints */
+            constraints: string[];
+            /** Cost Bps */
+            cost_bps: string;
+            /** Fee At Allowed */
+            fee_at_allowed: string;
+            /** Participation Cap */
+            participation_cap: number;
+            /** Price */
+            price: string;
+            /** Requested */
+            requested: number;
+            /** Session */
+            session: number;
+        };
+        /** TraceSource */
+        TraceSource: {
+            /** Fixture Origin Cli Sha256 */
+            fixture_origin_cli_sha256: string;
+            /** Policy Sha256 */
+            policy_sha256: string;
+            /** Trace Runner Sha256 */
+            trace_runner_sha256: string;
+        };
+        /** TrendOverlayTrace */
+        TrendOverlayTrace: {
+            /**
+             * Account And Fill Inputs
+             * @constant
+             */
+            account_and_fill_inputs: "explicitly_supplied_fixture";
+            arms: components["schemas"]["TraceArms"];
+            /** Assumptions */
+            assumptions: string[];
+            /**
+             * Candidate
+             * @constant
+             */
+            candidate: "doublema_daily_overlay_candidate_v1";
+            /**
+             * Case
+             * @enum {string}
+             */
+            case: "campaign" | "exit-cap" | "cash-cap";
+            /**
+             * Evidence Kind
+             * @constant
+             */
+            evidence_kind: "synthetic_policy_trace";
+            /** Fixture Sha256 */
+            fixture_sha256: string;
+            /**
+             * Schema Version
+             * @constant
+             */
+            schema_version: 1;
+            source_identity: components["schemas"]["TraceSource"];
+            /** Trace Sha256 */
+            trace_sha256: string;
+        };
         /** UnavailableFacts */
         UnavailableFacts: {
             /** Code */
@@ -7179,6 +7368,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReplayJob"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trend_overlay_trace_api_research_trend_overlay__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: "campaign" | "exit-cap" | "cash-cap";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrendOverlayTrace"];
                 };
             };
             /** @description Validation Error */

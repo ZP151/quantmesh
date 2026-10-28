@@ -18,6 +18,7 @@ import { PredictionScreen } from '@/screens/Prediction'
 import { OverviewScreen } from '@/screens/Overview'
 import { ExperimentsScreen, ForecastsScreen, PromotionsScreen } from '@/screens/Research'
 import { ResearchJobsScreen } from '@/screens/ResearchJobs'
+import { TrendOverlayScreen } from '@/screens/TrendOverlay'
 import { RiskScreen } from '@/screens/Risk'
 import { SettingsScreen } from '@/screens/Settings'
 import { OrdersScreen, PnLScreen, PositionsScreen } from '@/screens/Trading'
@@ -64,6 +65,7 @@ export default function App() {
         />
         <Route path="prediction" element={<PredictionScreen />} />
         <Route path="research/jobs" element={<ResearchJobsScreen />} />
+        <Route path="research/trend-overlay" element={<TrendOverlayScreen />} />
         <Route path="research/data-readiness" element={<DataReadinessScreen />} />
         <Route path="research/frozen-experiments" element={<FrozenExperimentsScreen />} />
         <Route path="research/experiments" element={<ExperimentsScreen />} />
