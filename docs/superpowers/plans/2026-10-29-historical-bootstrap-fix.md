@@ -77,7 +77,7 @@ remain disjoint; parent alone implements this slice. Independent review<=2 round
   read-only file hash unchanged. No assertion-only or reject-all shell.
 - [x] Changed Ruff/format/diff, actual results/commands in own iteration. Commit a
   coherent GREEN checkpoint within60minutes. No old19/69/wide/full suite reruns.
-- [ ] Fresh independent R1, at most one aggregate necessary correction then R2;
+- [x] Fresh independent R1, at most one aggregate necessary correction then R2;
   a third structural issue returnsPlanner. Seal exacthead/tree/source+evidence
   manifest for sole publisher to run applicable CI and normally merge. No author
   duplicate CI/source hotpatch; root alone admits a later necessary native phase.
@@ -92,3 +92,7 @@ fixture allocations before any further run. Stop before exceeding the8MiB hold;
 do not delete failures, borrow old native64, or claim future native allocation.
 Existing Python3.13.9/DuckDB1.5.5/FastAPI0.141.1/NumPy2.5.2/pg8000 1.31.5 are
 observed local runtime versions, not a new environment or release certification.
+
+Author source/test freeze: c0209e6, R1 READY/no findings. Final docs-only exacthead
+R2 receipt accompanies output handoff. Sole publisher still owns applicable CI/
+normal merge; native is unadmitted and pending. No further database rerun.
