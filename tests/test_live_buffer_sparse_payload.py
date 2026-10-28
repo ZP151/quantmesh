@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 import duckdb
 import pytest
-from test_live_buffer_batched_tail import RecordedConnection
+from test_live_buffer_batched_tail import RecordedConnection, assert_point_batches
 from test_live_buffer_batched_tail import lake as lake
 
 from quantmesh.live.buffer import _UPDATE_COLUMNS, LiveBuffer, _row_to_update
@@ -150,8 +150,7 @@ def test_sparse_default_tail_complete_raw_rows_avoid_in_materialization():
             ).fetchone()[1]
         )
         assert "HASH_JOIN" not in operators(plan)
-        assert all(0 < len(p[2:]) <= 128 for _, p in payload_calls)
-        assert all(p[:2] == [min(p[2:]), max(p[2:])] for _, p in payload_calls)
+        assert_point_batches(payload_calls)
     finally:
         connection.close()
 
@@ -178,9 +177,7 @@ def test_sparse_payload_exact_keys_limits_and_public_decoding(limit):
         assert [row.source_event_id for row in result] == [oracle_row(k)[10] for k in keys]
         for query, params in trace.calls:
             if query.startswith(f"SELECT {_UPDATE_COLUMNS}"):
-                assert " BETWEEN ? AND ? AND (" in query
-                assert 0 < len(params[2:]) <= 128
-                assert params[:2] == [min(params[2:]), max(params[2:])]
+                assert_point_batches([(query, params)])
     finally:
         connection.close()
 

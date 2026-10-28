@@ -28,6 +28,8 @@ class RecordedConnection:
                     self.connection.execute("SELECT * FROM owned_missing_table")
                 if self.fault == "oom":
                     raise duckdb.OutOfMemoryException("owned batch resource refusal")
+                if self.fault == "cancel":
+                    raise KeyboardInterrupt("owned batch cancellation")
                 raise RuntimeError("owned batch fault")
         if parameters is not None:
             self.connection.execute(sql, parameters)
@@ -43,6 +45,20 @@ class RecordedConnection:
         if self.is_wide and self.mutate:
             rows = self.mutate(rows, self.wide_count)
         return rows
+
+
+def assert_point_batches(calls):
+    for query, parameters in calls:
+        branches = query.split(" UNION ALL ")
+        assert 0 < len(branches) <= 128
+        assert len(parameters) == 3 * len(branches)
+        for index, branch in enumerate(branches):
+            low, high, key = parameters[index * 3 : index * 3 + 3]
+            assert low == high == key
+            assert branch == (
+                f"SELECT {_UPDATE_COLUMNS} FROM market_updates "
+                "WHERE local_seq BETWEEN ? AND ? AND local_seq = ?"
+            )
 
 
 @pytest.fixture
@@ -84,10 +100,8 @@ def test_tail_complete_rows_are_fetched_in_fixed_batches(lake):
         if sql.startswith(f"SELECT {_UPDATE_COLUMNS}")
     ]
     assert len(wide) == 3
-    assert all(0 < len(parameters[2:]) <= 128 for _, parameters in wide)
-    assert all(
-        parameters[:2] == [min(parameters[2:]), max(parameters[2:])] for _, parameters in wide
-    )
+    assert_point_batches(wide)
+    assert [key for _, parameters in wide for key in parameters[2::3]] == list(range(1, 301))
     assert len(recorded.calls) == 8  # Two tx probes, BEGIN, keys, three batches, ROLLBACK.
 
 
@@ -190,6 +204,24 @@ def test_resource_refusal_does_not_return_partial_batches(lake):
     with pytest.raises(duckdb.OutOfMemoryException, match="owned batch resource refusal"):
         value.replay(tail=True, limit=300)
     connection.execute("BEGIN TRANSACTION")
+    connection.execute("ROLLBACK")
+
+
+@pytest.mark.parametrize("caller_owned", [False, True])
+def test_batch_cancellation_preserves_transaction_owner(lake, caller_owned):
+    value, connection = lake
+    if caller_owned:
+        connection.execute("BEGIN TRANSACTION")
+    transaction = connection.execute("SELECT txid_current()").fetchone()[0]
+    recorded = RecordedConnection(connection, fault="cancel")
+    value._con = recorded
+    with pytest.raises(KeyboardInterrupt, match="owned batch cancellation"):
+        value.replay(tail=True, limit=300)
+    if caller_owned:
+        assert not any(sql == "ROLLBACK" for sql, _ in recorded.calls)
+        assert connection.execute("SELECT txid_current()").fetchone()[0] == transaction
+    else:
+        connection.execute("BEGIN TRANSACTION")
     connection.execute("ROLLBACK")
 
 
