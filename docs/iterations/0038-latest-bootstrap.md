@@ -83,3 +83,69 @@ Root receives the immutable branch/HEAD for sole publisher's applicable CI and
 normal merge, followed by sole server's merged-source native/API reacceptance.
 No author PR/merge/host rerun is substituted. Native startup remains pending;
 the complete original QuantMesh research Goal is not declared achieved.
+
+## PR240 required-CI regression — original owner resumed, 2026-10-28
+
+Planner: root's roadmap audit restored this owner under the human's standing
+repair/check/normal-merge authorization. Actual ACK13:41:34UTC (21:41:34Singapore);
+cause due13:56:34UTC, increment15:41:34UTC, reviewed handoff17:41:34UTC. Scope is
+one new narrow CI regression, not a third structural review of the earlier leaf.
+The original sealed d0716c2/earlier HANDOFF are preserved checkpoints. New plan:
+../superpowers/plans/2026-10-28-read-snapshot-ci-regression.md. Same issue239 and
+existing PR240; no duplicate PR. Only _tail_rows, necessary tests and own docs.
+
+Quant: infrastructure transaction closure only. Selection/math/observations,
+costs/rights/qualification/confidence and Paper/live authority do not change.
+Existing128MiB/one thread/zero temp/readonly/budgets remain fixed. No preview18765,
+fixture/helper, host/SDK/provider/archive/dependency or old source operations.
+
+Investigator: actual GitHub PR240 still points to d0716c2. Required CI40612112663
+at that exact head had6282passed/1failed/143skipped in full pytest. Only failing
+test_normal_shutdown_joins_accepted_commit_before_clean_close enters LiveFeed
+constructor -> latest -> _tail_rows:1144 COMMIT; CommitGate blocks before the
+actual accepted-write/shutdown scenario. Original local unchanged reproduction
+also fails at the same stack. COMMIT on a pure read is legal SQL, but exposes a
+write-commit signal at initialization. This is an observable lifecycle regression,
+not new evidence about the native filesystem IOException.
+
+Both production callers of the private helper (latest and tail replay) supply
+SELECT-only key queries; gathering also only SELECTs. Existing RLock covers the
+probes/BEGIN/query batches/end, so no writer can enter the connection between
+ownership detection and closure. Caller-owned transactions never enter that
+closure. Rolling back the owned read-only snapshot discards no writes and leaves
+already fetched complete Python rows valid. Exception cleanup remains unchanged.
+Publisher candidate28be4c2 was inspected as a proposal, not accepted as proof.
+Cause/scope reported to root within the15minute limit.
+
+Implementer: minimally replace successful owned COMMIT with ROLLBACK and explain
+read-only closure. Only an existing small helper test's transaction-close comment
+changes; original shutdown and CommitGate/write-observation files remain byte-
+identical. New tests reuse existing real tiny-DuckDB fixtures and row/observer
+helpers. No fake successful query/transaction or weaker observer is introduced.
+
+Verifier evidence in output/latest-bootstrap/ci-regression-20261028:
+
+- 01-original-red.log/.exit: unchanged original shutdown test,1failed/7.34s,exit1.
+- 02-snapshot-red.log:12failed/4passed against original helper;4 failures were
+  new-test fixture mistakes (Windows denies raw DB reads while RW connection
+  holds it), kept separate from causal read-COMMIT failures. 03-first-green.log
+  actually has4failed/13passed: original shutdown passes with candidate, while
+  those four new fixture cases still fail. The filename is not a GREEN claim.
+- New-test-only correction hashes readonly DB bytes before opening and after
+  closing; RW cases assert actual SELECT-only SQL/full results. No production
+  permission/open/lock behavior or existing lifecycle test was changed.
+- 04-corrected-red.log/.exit: corrected tests plus original shutdown run against
+  the exact d0716c2 helper extracted from Git AST in frozen-red.py;13failed/
+  4passed/10.18s,exit1. All8 owned-read variants emit unwanted COMMIT;4 close-fault
+  cases cannot exercise read rollback; original shutdown fails. Caller cases pass.
+- 05-targeted-green.log/.exit:39passed/1old-wide-deselected/19.77s,exit0. This runs
+  new16 tests, unchanged original failure, small shared-helper file excluding its
+  old wide-resource model, latest snapshot/caller/fault cases, and two relevant
+  accepted-I/O cancellation/stop cases. No broad old suite or host/native rerun.
+- Changed-file Ruff/format and Git diff checks pass. Existing dependency warnings
+  remain. The first real verifiable increment was reported at13:48:54UTC.
+
+Reviewer gate: fresh independent narrow review follows the coherent GREEN
+checkpoint; at most two rounds. Sole publisher updates original PR240/new exact
+head and reruns required CI before normal merge. Prior CI failure remains failed;
+native merged-source reader/feed/API acceptance remains sole server's gate.

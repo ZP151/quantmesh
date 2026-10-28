@@ -1141,7 +1141,9 @@ class LiveBuffer:
                 rows.extend(complete)
             rows.sort(key=lambda row: row[0])
             if own_transaction:
-                self._con.execute("COMMIT")
+                # This owned snapshot only reads; end it without emitting a
+                # COMMIT signal reserved by observers for accepted writes.
+                self._con.execute("ROLLBACK")
             return rows
         except BaseException:
             if own_transaction:

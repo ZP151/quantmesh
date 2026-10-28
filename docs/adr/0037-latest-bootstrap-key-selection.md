@@ -68,3 +68,29 @@ Sole publisher owns applicable CI and normal merge; sole native server owns
 merged-source reacceptance. The running merged preview and its fixture are
 untouched. No new data rights, financial qualification, Paper/live authority or
 completion of the original research Goal follows from this infrastructure leaf.
+
+## PR240 CI follow-up: end owned pure reads without a write-commit signal
+
+Required CI40612112663 on d0716c2 exposed an existing lifecycle observer during
+LiveFeed initialization: latest now uses the shared _tail_rows, whose successful
+owned read transaction ended with COMMIT. The unchanged accepted-I/O shutdown
+test blocks that COMMIT before its append scenario. The original local test
+reproduces the exact failure; it is not a native filesystem diagnostic.
+
+Under the authorized narrow regression plan, successful self-owned snapshots
+now end with ROLLBACK. Both production helper callers supply only SELECTs, and
+complete rows are already fetched before closure. The existing connection lock,
+single snapshot, batching/selection/order and exception cleanup are unchanged.
+No caller-owned transaction is committed or rolled back; its caller still decides
+the outcome of any pending writes. Accepted appends retain their actual COMMIT
+and original observer/cancellation/shutdown behavior. Original observer tests are
+unchanged. This supersedes only the shared helper's successful owned closure,
+not the earlier latest selection or archive/resource/trading contracts.
+
+Dedicated tests cover empty/populated latest/tail on RO/RW connections, full
+results, SELECT-only statements and immutable readonly DB bytes; caller COMMIT/
+ROLLBACK decisions remain independent. End-of-snapshot I/O/cancellation failures
+must propagate rather than return gathered rows. Relevant existing replay/latest
+snapshot/error and accepted-write lifecycle tests also pass locally. New exact-
+head publisher CI and native acceptance remain separate unfinished gates; see the
+regression checkpoint in ../iterations/0038-latest-bootstrap.md.
