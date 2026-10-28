@@ -1,6 +1,6 @@
 # ADR0037 — Latest-state hydration through existing bounded gathering
 
-Date2026-10-28UTC. Status: implemented local RED/GREEN; independent review and
+Date2026-10-28UTC. Status: implemented local RED/GREEN; independent R1 READY;
 publisher/native acceptance pending. Issue239; extends ADR0034.
 
 ## Problem and evidence boundary

@@ -58,5 +58,28 @@ output/latest-bootstrap (ignored execution evidence, not upstream data).
 The same broad research Goal remains active under root ownership. This leaf
 improves ordinary startup hydration; actual archive/native startup and the
 subsequent API/history acceptance remain pending. Preview18765 stays running.
-Reviewer checkpoint follows after coherent green source commit; maximum two
-independent rounds. Sole publisher owns final applicable broad CI and merge.
+Sole publisher owns final applicable broad CI and merge.
+
+## Independent review and author handoff
+
+Green source checkpoint709088a587a199b925075666a559d8df1a108697,
+tree7d7c2a05ea8f1dd31ff99c940f1466adca8ee36c, pushed to
+origin/codex/latest-bootstrap. Independent read-only whole-slice R1 returned
+READY with no actionable spec/correctness/quality findings. Reviewer independently
+ran19 dedicated tests:19passed in16.70s (review-r1-pytest.log; author read the
+actual output). No source or test changes followed that checkpoint.
+
+Scope verification13-scope.log compares baseline/HEAD AST after removing only
+LiveBuffer.latest: all other runtime AST identical; exactly five allowed tracked
+files, clean worktree. Changed Ruff/format and diff checks pass. New-source test
+and source hashes remain fixed through the final review/handoff; only these own
+docs record R1. Final sealed HEAD/tree, file/evidence SHA256 manifest, independent
+review receipts and root handoff are in output/latest-bootstrap/HANDOFF.md and
+manifest.json. Final sealed-head read-only review may confirm that docs-only
+checkpoint without adding source scope; no third review round is permitted.
+
+Author deliverable is the reviewed narrow repair and reproducible local evidence.
+Root receives the immutable branch/HEAD for sole publisher's applicable CI and
+normal merge, followed by sole server's merged-source native/API reacceptance.
+No author PR/merge/host rerun is substituted. Native startup remains pending;
+the complete original QuantMesh research Goal is not declared achieved.
