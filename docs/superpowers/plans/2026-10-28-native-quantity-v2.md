@@ -46,7 +46,7 @@ New module interfaces: engineering_input(case='campaign-v1') -> trusted closed f
 
 - [x] One fresh source review of full slice, maxR2; fix material issues with RED/GREEN. Third structural issue returns to planning with smaller scope.
 - [x] Scoped format, repository Ruff at coherent final boundary, diff/submodule checks; resource snapshot includes failed temp/logs, no cleanup/refund. No author push/CI/tag.
-- [ ] Own iteration records Planner/Quant/Implementer/Reviewer/Verifier, user CLI and actual synthetic results, legacy old SHA and source migration identities. Freeze commit/tree/source/artifact hashes and bounded bundle/HANDOFF for sole publisher.
+- [x] Own iteration records Planner/Quant/Implementer/Reviewer/Verifier, user CLI and actual synthetic results, legacy old SHA and source migration identities. Freeze commit/tree/source/artifact hashes and bounded bundle/HANDOFF for sole publisher.
 - [ ] Publisher performs applicable final CI and normal merge. Consume exact final receipt before completing Goal; source ready alone is not Goal completion.
 
 Self-review: no second cashbook/matcher/cost/metric implementation; core changes, conservative view and retirement are explicit approved behavior.4h is an engineering review target, not real-data qualification. A genuine regression in old immutable records or arithmetic is a stop condition, not a reason to change expected values.

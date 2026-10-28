@@ -39,3 +39,24 @@ Actual offline action: `python -B tools/research/run_native_daily_engineering.py
 Final full src/tests/tools Ruff,14changed-file formatting, whitespace and original submodule pins pass. Precommit WT rounded88,809,472B plus own Git602,112/prior49,152/shared unknown reserve1,048,576 =90,509,312B, leaving10,153,984B of SAME96MiB before final docs/Git/bundle. Resource accounting includes all red/failed/migration temporary evidence; no cleanup/refund. Handoff must remeasure and declare remaining allowance for publisher new metadata/log growth in an already-existing integration checkout; no second58MB checkout or install.
 
 Status: SOURCE_READY_FOR_SOLE_PUBLISHER, not goal complete. Root must allocate the unoccupied ADR identifier and mirror this architecture decision at integration; original approved source locks reserve shared ADR allocation for root. Applicable exact-source CI and normal merge/tree evidence are outstanding. No push, duplicate CI/tag, host/provider, real financial/OOS experiment, trading or dependency installation occurred. Current final source/control/report identities must agree after integration; global8GB/parent4GB decimal caps stay fixed.
+
+## Sole-publisher integration checkpoint — 2026-10-29 Singapore
+
+The publisher acknowledged the frozen source at 2026-10-28 16:44:22 UTC
+(2026-10-29 00:44:22 SGT), with first-increment target 18:44:22 UTC and
+reviewable integration target 20:44:22 UTC. Current `origin/main` is
+`1b6cf75ea4908a4d739a071618619a9eb231a5e3` (merged issue243 workbench).
+The existing clean physical integration worktree was reused; no new checkout or
+dependency installation was made. Both frozen commits were cherry-picked in
+order as `8c155c3` and `b8239e8`. All 17 author-changed path Git blobs exactly
+match frozen author head `103c298da5c9e760a0da5d1f867b580db4b8f719`;
+the issue243 paths remain at merged main. The source handoff's two review rounds
+and final author correction retain their original meaning; this checkpoint
+does not assert a third reviewer approval.
+
+[ADR 0038](../adr/0038-native-daily-quantity-candidate.md) records the
+approved single-ledger, independent closed candidate protocol and legacy
+new-submit retirement. Final integrated CI, review disposition, normal merge
+and merged-tree/source hashes remain publisher release gates. The original
+synthetic result `f1eeae7216e5a943e61c4df17b7c78fb50d3c0225f79ae226838c2f01915ef7c`
+is unchanged; no new financial or native run is implied by this integration.
