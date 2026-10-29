@@ -1,5 +1,15 @@
 # QuantMesh Product Roadmap
 
+## Bounded complete-row acquisition follow-up — issue 251, 2026-10-29
+
+The saved-history reader now has a reviewed source follow-up to issue 249:
+32-key exact payload relations preserve complete selected records in a stored
+wide readonly model while bounding repeated scan work in a separate synthetic
+model. The default 10,000-row tail uses 318 owned statements. Exact-head CI,
+normal merge and the sole Server's later native API/reference/normal-close
+acceptance remain separate gates. See the
+[iteration checkpoint](../iterations/0038-readonly-batch-compat-fix.md).
+
 ## Approved archive-preserving market-data lifecycle — issue218,2026-10-24
 
 The operator selected B: canonical history remains in place read-only, newly

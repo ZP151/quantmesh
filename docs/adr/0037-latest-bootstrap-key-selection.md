@@ -99,3 +99,30 @@ Independent narrow-regression R1 READY on1b3b674: no actionable findings; new16
 and unchanged shutdown test17passed in8.75s. Source/test bytes remain unchanged
 through documentation-only final review. This does not convert the old failed CI
 to success or replace publisher's new exact-head gate.
+
+## Issue 251 follow-up: exact 32-key payload relation
+
+The merged issue-249 repair replaced sparse OR with per-key complete-row UNION
+branches. It retained the readonly wide-row protection, but a new synthetic
+1,048,576-row generated-view model with 128 sparse selected keys measured
+134,217,728 rows scanned across 128 range scans. A single 128-key relation
+reduced that model's scan work but failed a separate stored wide ZSTD readonly
+resource case. This follow-up supersedes the payload gathering shape and batch
+size described earlier in this ADR; it does not change latest's scalar key
+selection or the successful owned-read ROLLBACK decision.
+
+Gather at most 32 sorted keys per statement through an exact bound `VALUES`
+inner join plus the inclusive low/high range. Fetch the same full 17 columns,
+validate count and key-set equality, and keep the shared snapshot, connection
+lock, caller transaction ownership, error propagation, sort and decoder. The
+new 128-key generated-view test uses four relation statements and scans at most
+four source-sized passes. A separate stored 8,192-row/128-key/64 KiB ZSTD
+model returns complete selected records under 128 MiB/one thread/zero temp,
+while an isolated 128-key relation mutant raises an actual engine IOException.
+
+For the default 10,000-row tail, the tradeoff is 313 payload statements plus
+five owned control/key statements, 318 total; caller-owned transactions use
+316. This is bounded scan work and stored-model resource evidence, not proof
+of archive indexing, physical I/O, native API success, arbitrary payload size
+or latency. See the issue-251 checkpoint in
+`../iterations/0038-readonly-batch-compat-fix.md` and its sealed local evidence.

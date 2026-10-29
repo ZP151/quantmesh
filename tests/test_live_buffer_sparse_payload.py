@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 import duckdb
 import pytest
-from test_live_buffer_batched_tail import RecordedConnection, assert_point_batches
+from test_live_buffer_batched_tail import RecordedConnection, assert_key_relation_batches
 from test_live_buffer_batched_tail import lake as lake
 
 from quantmesh.live.buffer import _UPDATE_COLUMNS, LiveBuffer, _row_to_update
@@ -140,8 +140,8 @@ def test_sparse_default_tail_complete_raw_rows_avoid_in_materialization():
         payload_calls = [
             (q, p) for q, p in trace.calls if q.startswith(f"SELECT {_UPDATE_COLUMNS}")
         ]
-        assert len(payload_calls) == 79
-        assert len(trace.calls) == 84
+        assert len(payload_calls) == 313
+        assert len(trace.calls) == 318
         query, params = payload_calls[0]
         plan = json.loads(
             connection.execute(
@@ -149,8 +149,9 @@ def test_sparse_default_tail_complete_raw_rows_avoid_in_materialization():
                 params,
             ).fetchone()[1]
         )
-        assert "HASH_JOIN" not in operators(plan)
-        assert_point_batches(payload_calls)
+        assert "HASH_JOIN" in operators(plan)
+        assert "UNION" not in operators(plan)
+        assert_key_relation_batches(payload_calls)
     finally:
         connection.close()
 
@@ -177,7 +178,7 @@ def test_sparse_payload_exact_keys_limits_and_public_decoding(limit):
         assert [row.source_event_id for row in result] == [oracle_row(k)[10] for k in keys]
         for query, params in trace.calls:
             if query.startswith(f"SELECT {_UPDATE_COLUMNS}"):
-                assert_point_batches([(query, params)])
+                assert_key_relation_batches([(query, params)])
     finally:
         connection.close()
 
@@ -208,7 +209,7 @@ def test_sparse_batches_keep_snapshot_and_transaction_owner(lake, caller_owned):
     value._con = trace
     try:
         assert value.replay(tail=True, limit=10000) == expected
-        assert trace.wide_count == 2
+        assert trace.wide_count == 8
         if caller_owned:
             assert connection.execute("SELECT txid_current()").fetchone()[0] == before
             assert not any(

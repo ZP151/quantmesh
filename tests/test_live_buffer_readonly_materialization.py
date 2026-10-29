@@ -147,7 +147,7 @@ def test_normal_default_tail_keeps_all10000_rows_and128_key_statement_bound():
 
         def execute(self, query, parameters=None):
             if query.startswith(f"SELECT {_UPDATE_COLUMNS}"):
-                self.key_counts.append(len(parameters) // 3)
+                self.key_counts.append(len(parameters) - 2)
             connection.execute(query, parameters) if parameters is not None else connection.execute(
                 query
             )
@@ -174,6 +174,6 @@ def test_normal_default_tail_keeps_all10000_rows_and128_key_statement_bound():
             )
         assert actual == expected
         assert [row[0] for row in actual] == list(range(38, 10038))
-        assert trace.key_counts == [128] * 78 + [16]
+        assert trace.key_counts == [32] * 312 + [16]
     finally:
         connection.close()
