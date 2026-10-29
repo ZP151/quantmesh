@@ -1126,18 +1126,18 @@ class LiveBuffer:
             if len(keys) != len(set(keys)):
                 raise ValueError("tail rows do not match selected keys")
             rows = []
-            for offset in range(0, len(keys), 128):
-                batch = keys[offset : offset + 128]
-                # A sparse OR can remain above the full-column scan, expanding
-                # unselected wide rows before exact membership is applied.
-                # Each UNION branch pushes one key into its complete-row scan.
-                point_query = (
-                    f"SELECT {_UPDATE_COLUMNS} FROM market_updates "
-                    "WHERE local_seq BETWEEN ? AND ? AND local_seq = ?"
-                )
+            for offset in range(0, len(keys), 32):
+                batch = keys[offset : offset + 32]
+                # One bounded key relation avoids a scan plan for every key.
+                # Large relations can fall back to broad min/max payload scans;
+                # small groups permit selective lookup without cloning scans.
+                requested = ",".join("(?)" for _ in batch)
                 complete = self._con.execute(
-                    " UNION ALL ".join(point_query for _ in batch),
-                    [value for key in batch for value in (key, key, key)],
+                    f"SELECT {_UPDATE_COLUMNS} FROM market_updates "
+                    f"INNER JOIN (VALUES {requested}) AS selected(requested_key) "
+                    "ON market_updates.local_seq = selected.requested_key "
+                    "WHERE market_updates.local_seq BETWEEN ? AND ?",
+                    [*batch, batch[0], batch[-1]],
                 ).fetchall()
                 if len(complete) != len(batch) or {row[0] for row in complete} != set(batch):
                     raise ValueError("tail rows do not match selected keys")

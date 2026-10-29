@@ -47,18 +47,15 @@ class RecordedConnection:
         return rows
 
 
-def assert_point_batches(calls):
+def assert_key_relation_batches(calls):
     for query, parameters in calls:
-        branches = query.split(" UNION ALL ")
-        assert 0 < len(branches) <= 128
-        assert len(parameters) == 3 * len(branches)
-        for index, branch in enumerate(branches):
-            low, high, key = parameters[index * 3 : index * 3 + 3]
-            assert low == high == key
-            assert branch == (
-                f"SELECT {_UPDATE_COLUMNS} FROM market_updates "
-                "WHERE local_seq BETWEEN ? AND ? AND local_seq = ?"
-            )
+        keys = parameters[:-2]
+        assert 0 < len(keys) <= 32
+        assert parameters[-2:] == [min(keys), max(keys)]
+        assert query.count("(?)") == len(keys)
+        assert "INNER JOIN (VALUES " in query
+        assert "ON market_updates.local_seq = selected.requested_key " in query
+        assert query.endswith("WHERE market_updates.local_seq BETWEEN ? AND ?")
 
 
 @pytest.fixture
@@ -99,10 +96,10 @@ def test_tail_complete_rows_are_fetched_in_fixed_batches(lake):
         for sql, parameters in recorded.calls
         if sql.startswith(f"SELECT {_UPDATE_COLUMNS}")
     ]
-    assert len(wide) == 3
-    assert_point_batches(wide)
-    assert [key for _, parameters in wide for key in parameters[2::3]] == list(range(1, 301))
-    assert len(recorded.calls) == 8  # Two tx probes, BEGIN, keys, three batches, ROLLBACK.
+    assert len(wide) == 10
+    assert_key_relation_batches(wide)
+    assert [key for _, parameters in wide for key in parameters[:-2]] == list(range(1, 301))
+    assert len(recorded.calls) == 15  # Two tx probes, BEGIN, keys, ten batches, ROLLBACK.
 
 
 def test_caller_transaction_is_not_committed_or_rolled_back(lake):
@@ -138,7 +135,7 @@ def test_writer_between_batches_cannot_change_selected_snapshot(lake):
     recorded = RecordedConnection(connection, mutate=mutate)
     value._con = recorded
     assert value.replay(tail=True, limit=300) == expected
-    assert recorded.wide_count == 3
+    assert recorded.wide_count == 10
     assert other.execute("SELECT count(*) FROM market_updates").fetchone()[0] == 299
     other.close()
 
@@ -329,7 +326,7 @@ def test_wide_default_tail_refusal_and_bounded_full_row_equivalence():
             for row in rows:
                 expected.update(_row_to_update(row).model_dump_json().encode())
         assert observed.hexdigest() == expected.hexdigest()
-        assert recorded.wide_count == 79
-        assert len(recorded.calls) == 84
+        assert recorded.wide_count == 313
+        assert len(recorded.calls) == 318
     finally:
         connection.close()
