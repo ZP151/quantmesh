@@ -1128,6 +1128,7 @@ def create_workstation_app(
     packet_reviews: DecisionReviewStore | None = None,
     research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
     spy_replay_service: ReplayService | None = None,
+    native_daily_service=None,
     research_snapshots_root: Path | None = None,
     frozen_experiments_root: Path | None = None,
     host: str | None = None,
@@ -1210,6 +1211,7 @@ def create_workstation_app(
                     packet_reviews,
                     research_jobs_client,
                     spy_replay_service,
+                    native_daily_service,
                     research_snapshots_root,
                     frozen_experiments_root,
                 )
@@ -1497,6 +1499,15 @@ def create_workstation_app(
     app.include_router(create_spy_replay_router(), prefix="/api")
     if spy_replay_service is not None:
         attach_spy_replay_runtime(app, spy_replay_service)
+    from quantmesh.api.native_daily_real import (
+        attach_native_daily_runtime,
+        create_native_daily_router,
+    )
+
+    app.state.native_daily = None
+    app.include_router(create_native_daily_router(), prefix="/api")
+    if native_daily_service is not None:
+        attach_native_daily_runtime(app, native_daily_service)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
     return app
 
@@ -1916,6 +1927,11 @@ def main(argv: list[str] | None = None) -> None:
         help="opt in to frozen experiment inspection; requires --research-snapshots-root",
     )
     parser.add_argument(
+        "--native-daily-root",
+        type=Path,
+        help="opt in to fixed candidate admission/decision storage; no real input is qualified",
+    )
+    parser.add_argument(
         "--spy-replay-root",
         type=Path,
         help="opt in to bounded historical replay task/report storage",
@@ -1973,6 +1989,7 @@ def main(argv: list[str] | None = None) -> None:
                     args.research_snapshots_root,
                     args.frozen_experiments_root,
                     args.spy_replay_root,
+                    args.native_daily_root,
                     args.spy_replay_input,
                     args.vnpy_python,
                     args.vnpy_fixture,
@@ -2003,6 +2020,18 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     _research_router_factories()
+    if args.native_daily_root is not None:
+        if settings.environment != "local":
+            parser.error("native daily research requires the local environment")
+        if args.demo:
+            demo_root = (args.demo_root or settings.demo_root).resolve()
+            native_root = args.native_daily_root.resolve()
+            if (
+                demo_root == native_root
+                or demo_root in native_root.parents
+                or native_root in demo_root.parents
+            ):
+                parser.error("--native-daily-root must be separate from the resettable demo root")
     if args.spy_replay_input is not None and args.spy_replay_root is None:
         parser.error("--spy-replay-input requires --spy-replay-root")
     if args.spy_replay_root is not None:
@@ -2329,9 +2358,23 @@ def main(argv: list[str] | None = None) -> None:
             attach_spy_replay_runtime(app, spy_service)
         except (OSError, ValueError):
             parser.error("SPY replay input or persistent root unavailable; no input was qualified")
+    native_service = None
+    if args.native_daily_root is not None:
+        from quantmesh.api.native_daily_real import attach_native_daily_runtime
+        from quantmesh.research.native_daily_real import NativeDailyService
+
+        try:
+            native_service = NativeDailyService(args.native_daily_root)
+            attach_native_daily_runtime(app, native_service)
+        except (OSError, ValueError):
+            if spy_service is not None:
+                spy_service.close()
+            parser.error("native daily persistent root unavailable; no input was qualified")
     try:
         uvicorn.run(app, host=host, port=port)
     finally:
+        if native_service is not None:
+            native_service.close()
         if spy_service is not None:
             spy_service.close()
 

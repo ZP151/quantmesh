@@ -1,5 +1,15 @@
 # QuantMesh Product Roadmap
 
+## Fixed candidate ordinary-workstation admission — issue253,2026-10-30
+
+The approved offline slice connects fixed native-daily candidate selection,
+candidate-specific engineering grant, durable submission, same-cost reports,
+Reject/Watch and same-ID original-byte reopening to the ordinary Research jobs
+page. Missing input saves an honest INSUFFICIENT/not_run decision without a
+report or trial. Source review/release and real-data qualification remain separate;
+no engineering profitability is financial evidence. See the
+[active checkpoint](../iterations/0038-native-daily-real-workstation.md).
+
 ## Bounded complete-row acquisition follow-up — issue 251, 2026-10-29
 
 The saved-history reader now has a reviewed source follow-up to issue 249:
