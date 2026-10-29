@@ -21,34 +21,48 @@
 Files: new `src/quantmesh/research/native_daily_real.py`, `src/quantmesh/api/native_daily_real.py`, `tests/test_native_daily_real.py`; compose only `src/quantmesh/api/workstation.py`.
 Interfaces: `NativeDailyService(root, *, registered=())`; `options()`, `submit(NativeRequest,key)->(job,created)`, `read(key)`, `artifact(key,kind)->bytes`, `decide(key,DecisionRequest,key)`, `close()`. `NativeRequest` holds optional package/grant/scope refs and the fixed candidate protocol identity. API under `/api/research/native-daily`: options, jobs submit/read, artifact and decision.
 
-- [ ] RED: `test_missing_input_persists_insufficient_and_cold_reopens_without_compute` asserts terminal not_run/admission INSUFFICIENT/report null, same UUID same original bytes after service restart with calculation disabled.
-- [ ] RED: changed request at same UUID conflicts; untrusted/missing refs never invoke calculator; tampered admission/decision fails closed.
-- [ ] Implement typed records, bounded safe ObjectStore reads/writes, single WriterLease + JsonlStore intent/state and immutable admission/decision artifacts. Persist intent before any calculation; reader verifies identity, never recomputes.
-- [ ] GREEN: `python -B -m pytest -q tests/test_native_daily_real.py --basetemp=<owned task1>`; then API roundtrip tests through ordinary workstation composition.
-- [ ] Commit coherent green checkpoint; update iteration with exact commands, exit and user action.
+- [x] RED: `test_missing_input_persists_insufficient_and_cold_reopens_without_compute` asserts terminal not_run/admission INSUFFICIENT/report null, same UUID same original bytes after service restart with calculation disabled.
+- [x] RED: changed request at same UUID conflicts; untrusted/missing refs never invoke calculator; tampered admission/decision fails closed.
+- [x] Implement typed records, bounded safe ObjectStore reads/writes, single WriterLease + JsonlStore intent/state and immutable admission/decision artifacts. Persist intent before any calculation; reader verifies identity, never recomputes.
+- [x] GREEN: `python -B -m pytest -q tests/test_native_daily_real.py --basetemp=<owned task1>`; then API roundtrip tests through ordinary workstation composition.
+- [x] Commit coherent green checkpoint; update iteration with exact commands, exit and user action.
 
 ## Task 2 — registered engineering substitute, grant and common calculation
 
 Files: same backend tests/service; `src/quantmesh/research/native_daily_candidate.py` only extracts the existing calculation loop as `_calculate_matrix(frame, distributions, protocol_digest)`; engineering guard/protocol/cold reader unchanged. No engine/policy or old once edits.
 
-- [ ] RED: trusted test registration computes exactly once for the entire same-cost matrix; compare shared calculation with hand-derived existing fixture expectations without rerunning old sample CLI/suite.
-- [ ] RED: candidate/data/window/use mismatched grant, second UUID same one-use grant, overlapping submit and interrupted reservation cannot cause a second computation. Failed/insufficient admission does not reserve a trial.
-- [ ] Implement registered `RealInput`/candidate grant binding from trusted ObjectRefs, strict package facts; default real execution remains unavailable. Engineering registration is labeled engineering and cannot claim actual permission. Valid reservation stored with intent under the sole lease before computing; one active call; close waits, restart interrupts without rerun.
-- [ ] Store input-bound real envelope, complete ten-arm report and immutable admission. Record phase running/succeeded/failed/interrupted; no fabricated percentage. Reject/Watch binds original request/admission/report refs.
-- [ ] GREEN new targeted backend/API tests, bounded type/size/complete-matrix cold verification and negative controls, no old broad native run. Commit/checkpoint.
+- [x] RED: trusted test registration computes exactly once for the entire same-cost matrix; compare shared calculation with hand-derived existing fixture expectations without rerunning old sample CLI/suite.
+- [x] RED: candidate/data/window/use mismatched grant, second UUID same one-use grant, overlapping submit and interrupted reservation cannot cause a second computation. Failed/insufficient admission does not reserve a trial.
+- [x] Implement registered `RealInput`/candidate grant binding from trusted ObjectRefs, strict package facts; default real execution remains unavailable. Engineering registration is labeled engineering and cannot claim actual permission. Valid reservation stored with intent under the sole lease before computing; one active call; close waits, restart interrupts without rerun.
+- [x] Store input-bound real envelope, complete ten-arm report and immutable admission. Record phase running/succeeded/failed/interrupted; no fabricated percentage. Reject/Watch binds original request/admission/report refs.
+- [x] GREEN new targeted backend/API tests, bounded type/size/complete-matrix cold verification and negative controls, no old broad native run. Commit/checkpoint.
 
 ## Task 3 — ordinary UI and startup integration
 
 Files: new `frontend/src/screens/NativeDailyPanel.tsx`, `frontend/src/lib/native-daily-api.ts`, `frontend/src/screens/NativeDailyPanel.test.tsx`; modify `ResearchJobs.tsx` selector and generated `frontend/src/api/client.ts`. Workstation only adds optional service/root startup composition, preserving normal loopback entry and lifecycle.
 
-- [ ] RED component: choose fixed candidate, missing package visible, submit decision, retain UUID before POST, see actual state/INSUFFICIENT/report null, Reject/Watch and original download, same ID reopen. Alternate trusted substitute displays five-arm/two-cost report and engineering disclaimer.
-- [ ] Implement incumbent Operate steps, saved UUID, safe errors, tamper/ref mismatch refusal, keyboard and375px layout. Explicit root config allows saving missing-input decisions; without configured storage show unavailable, never ephemeral success. Do not change old SPY panel.
-- [ ] GREEN targeted Vitest file, regenerate client, typecheck/build. Use existing dependencies only; bound logs/temp/build within forecast.
-- [ ] Actual browser on ordinary page: missing-input save/cold reopen and one owned trusted-engineering study; download original admission/report/decision hashes, desktop+375px screenshots. No real data or trading action.
+- [x] RED component: choose fixed candidate, missing package visible, submit decision, retain UUID before POST, see actual state/INSUFFICIENT/report null, Reject/Watch and original download, same ID reopen. Alternate trusted substitute displays five-arm/two-cost report and engineering disclaimer.
+- [x] Implement incumbent Operate steps, saved UUID, safe errors, tamper/ref mismatch refusal, keyboard and375px layout. Explicit root config allows saving missing-input decisions; without configured storage show unavailable, never ephemeral success. Do not change old SPY panel.
+- [x] GREEN targeted Vitest file, regenerate client, typecheck/build. Use existing dependencies only; bound logs/temp/build within forecast.
+- [x] Actual browser on ordinary page: missing-input save/cold reopen and one owned trusted-engineering study; download original admission/report/decision hashes, desktop+375px screenshots. No real data or trading action.
 
 ## Task 4 — review, tracking and publisher
 
-- [ ] Add accepted ADR for the new entry/envelope boundaries, iteration/roadmap/REUSE_MATRIX and archived approved spec. Track issue253, active progress and all resource failures. ADR number must be unoccupied locally and coordinated with publisher.
-- [ ] Fresh independent whole-slice correctness/safety review, at most two rounds, read-only reviewer; fix substantive issues with targeted RED/GREEN.
-- [ ] Verify changed formatting/lint, targeted tests and generated contract/build once coherent; `git diff --check`, source/fixture pins, per-study/full-hold usage and clean close. Relevant broad gate belongs to publisher final CI, not duplicate local old suites.
-- [ ] Freeze reviewed commit/artifacts and hand off to sole publisher for applicable CI/ordinary PR. Do not claim real-data or financial Goal complete. No push/merge/watch duplication.
+- [x] Add accepted ADR for the new entry/envelope boundaries, iteration/roadmap/REUSE_MATRIX and archived approved spec. Track issue253, active progress and all resource failures. ADR number must be unoccupied locally and coordinated with publisher.
+- [x] Fresh independent whole-slice correctness/safety review, at most two rounds, read-only reviewer; fix substantive issues with targeted RED/GREEN.
+- [x] Verify changed formatting/lint, targeted tests and generated contract/build once coherent; `git diff --check`, source/fixture pins, per-study/full-hold usage and clean close. Relevant broad gate belongs to publisher final CI, not duplicate local old suites.
+- [x] Freeze reviewed commit/artifacts and hand off to sole publisher for applicable CI/ordinary PR. Do not claim real-data or financial Goal complete. No push/merge/watch duplication.
+
+## Source checkpoint and release boundary
+
+Source implementation checkpoint97c66aff and final evidence are recorded in
+[iteration0038](../../iterations/0038-native-daily-real-workstation.md). The two
+independent reviews were NEEDS_FIX at their snapshots; author fixes and targeted
+verification follow them. No third structural review or new READY is claimed.
+Final ordinary-page protocol.v3/cold-reopen receipts are in
+`output/v2-real-offline-implementation-20261030-0057/browser-study/`.
+
+The checked final task means Source freeze/handoff readiness, not publication.
+Root dispatches the existing sole Publisher for the narrow runtime correction
+verification, generated SPA and applicable CI/PR gates. Real-input qualification
+and overall financial/independent-research acceptance remain UNMET.

@@ -283,12 +283,15 @@ def test_standard_launcher_enables_storage_and_refuses_resettable_demo_root(tmp_
     assert len(seen) == 1
 
 
-def bound_input_fixture(m, root, *, evidence_kind="engineering_fixture", **changes):
+def bound_input_fixture(
+    m, root, *, study_root=None, evidence_kind="engineering_fixture", **changes
+):
     """Author supplied substitute for the real-shaped adapter; no actual source/grant."""
     from quantmesh.data.objects import ObjectStore
 
+    output_root = root / "study" if study_root is None else study_root
     store = ObjectStore(root / "inputs")
-    legacy = m.engineering_registration(store, output_root=root / "study")
+    legacy = m.engineering_registration(store, output_root=output_root)
     old = json.loads(store.get_bytes(legacy.package_ref))
     schedule = json.loads(store.get_bytes(m.ObjectRef.model_validate(old["inputs"]["schedule"])))
     # A distinct authored price tape proves this adapter is not locked to _V1_INPUTS.
@@ -364,7 +367,7 @@ def bound_input_fixture(m, root, *, evidence_kind="engineering_fixture", **chang
         "sample_role": manifest.sample_role,
         "exposure_ref": exposure.model_dump(),
         "trial_ledger_ref": ledger.model_dump(),
-        "output_root_digest": m._root_pin(root / "study"),
+        "output_root_digest": m._root_pin(output_root),
     }
     scope_ref = put(scope)
     authority = put(

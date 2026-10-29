@@ -8,7 +8,7 @@ Quant researcher: real-input admission and financial effectiveness remain UNMET.
 
 Implementer: ACK2026-10-29T16:57:34Z, first increment due18:57:09Z, slice20:57:09Z. Reused clean linked worktree latest-bootstrap, new branch codex/v2-real-research-offline from origin/main4ed4d64. Existing Python3.13.9/pandas2.3.3/NumPy2.5.2/FastAPI0.141.1 and shared node_modules reused, no installs/copies. Single Product writer, Server independent. Full new hold32MiB includes each8MiB study and failures; forecast in ignored output. Existing app Goal remains same identity; historical blocked tool state is recorded, not replaced with duplicate.
 
-Reviewer: pending fresh whole-slice review; no independent success claim.
+Reviewer at start: fresh whole-slice review pending; subsequent rounds and corrections are recorded below. No independent READY after round2 is claimed.
 
 Verifier: baseline tracked tree was clean, current source native candidate1f103f00/kernel e03c40d6 matched original approved synthetic identities. RED/GREEN, actual ordinary page,375px and original-byte evidence pending. No old broad suite, external data or host operation executed.
 
@@ -61,3 +61,51 @@ evaluate, and exact moved matrix AST after only protocol-digest parameter bindin
 engine e03c40d6 and policy e2b3c018 remain unchanged. No old financial/native suite
 was rerun. The same app Goal identity is reused; actual real/financial gates remain
 UNMET. All raw/evidence is under output/v2-real-offline-implementation-20261030-0057.
+
+## Source freeze and publisher handoff
+
+Implementer: coherent source checkpoint97c66aff5c20b28bd038644282ec9374d9c620ac
+was committed at17:52:15Z, within60 minutes of ACK. The final follow-up changes
+only the engineering test factory's optional study root and these progress
+records; production source and frontend match that checkpoint. The sole Source
+writer is released at handoff. Root dispatches the existing Publisher chat;
+Source does not push, open another PR or watch CI.
+
+Verifier: final typed adapter/protocol.v3 ordinary-page UUID
+2e9adcb9-2a17-4c0a-b6ae-3edbeaa94fe4 used a distinct authored price tape, produced
+the ten-arm matrix and saved Watch. Report166877B SHA256
+93119555910c31a8bbdec5c45288df83d8144637394061dce236808b0573030f.
+Owned PID33524 was replaced with PID64908, with no package/grant registration.
+Same-ID page reopen and original admission/report/decision were byte-identical;
+browser cold report/decision downloads matched too. Cumulative calculations2->2
+and consumed grants2->2 cover one legacy engineering control and one bound
+engineering control, not real/financial trials. BOUND-WARM-RECEIPT.json and
+BOUND-COLD-RECEIPT.json retain protocol/runtime/source pins and hashes. Desktop,
+375px and cold-identity screenshots are retained; temporary viewport restored.
+
+Owned PID64908 then stopped via its exact stop file: exec exit0,
+closed-cold.json records lease_closed=true/inflight=null and18953 has no listener.
+Earlier CTRL-C exit1/no warm-finally marker remains disclosed. No unrelated
+process, host, provider or tunnel was touched.
+
+Targeted verification retained: FINAL-BACKEND31 passed/6 warnings;
+FINAL-UI11 passed; generated contract current; TypeScript exit0; frontend build
+exit0 with existing chunk-size warning. After the test-factory root override,
+FINAL-HELPER-TESTS5 passed/26 deselected/5 warnings. Ruff src/tests/tools and
+changed-file formatting pass; final whitespace/resource checks accompany the
+handoff. Existing environment reused; installed Vitest3.2.7 differs from the
+declared4.1.11 lock qualification, which belongs to applicable Publisher CI.
+
+Reviewer boundary: both independent reviews remain NEEDS_FIX at their reviewed
+snapshots. Round1 defects have RED/GREEN fixes and round2 confirmation. Round2's
+sole runtime-identity defect has author RED/GREEN and v2-read-only controls;
+Publisher verifies that narrow final correction and source hashes, with no third
+structural review. No new independent READY is implied.
+
+Release boundary: the acceptance app served current frontend/dist through the
+ordinary workstation composition. The committed SPA bundle is unchanged;
+Publisher owns standard generated SPA build/copy and applicable release gates.
+The offline slice is ready for that handoff, not merged or released. Qualified
+real input, actual real trial, out-of-sample/paper evidence and the overall
+independent-research Goal remain UNMET. No actual source/window/sample/exposure
+has been selected or acquired.
