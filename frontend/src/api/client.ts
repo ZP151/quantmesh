@@ -1068,6 +1068,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/research/native-daily/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit */
+        post: operations["submit_api_research_native_daily_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/native-daily/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["read_api_research_native_daily_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/native-daily/jobs/{job_id}/artifact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Artifact */
+        get: operations["artifact_api_research_native_daily_jobs__job_id__artifact_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/native-daily/jobs/{job_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide */
+        post: operations["decide_api_research_native_daily_jobs__job_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/research/native-daily/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Options */
+        get: operations["options_api_research_native_daily_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/research/spy-replay": {
         parameters: {
             query?: never;
@@ -3951,6 +4036,79 @@ export interface components {
              * @enum {string}
              */
             status: "not_applicable" | "not_monitored" | "coverage_incomplete" | "no_trigger_recorded" | "triggered";
+        };
+        /** NativeDecisionRequest */
+        NativeDecisionRequest: {
+            /** Admission Digest */
+            admission_digest: string;
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "reject" | "watch";
+            /** Reason */
+            reason: string;
+            /** Report Digest */
+            report_digest?: string | null;
+            /** Request Digest */
+            request_digest: string;
+        };
+        /** NativeJobView */
+        NativeJobView: {
+            admission: components["schemas"]["ObjectRef"];
+            /** Admission Reasons */
+            admission_reasons: string[];
+            /**
+             * Admission Status
+             * @enum {string}
+             */
+            admission_status: "INSUFFICIENT" | "REJECT" | "ACCEPTED_ENGINEERING";
+            /** Completed At */
+            completed_at: string | null;
+            /** Created At */
+            created_at: string;
+            decision: components["schemas"]["ObjectRef"] | null;
+            /**
+             * Financial Qualification
+             * @constant
+             */
+            financial_qualification: "INSUFFICIENT";
+            /** Job Id */
+            job_id: string;
+            /**
+             * Live Allowed
+             * @constant
+             */
+            live_allowed: false;
+            /**
+             * Paper Allowed
+             * @constant
+             */
+            paper_allowed: false;
+            report: components["schemas"]["ObjectRef"] | null;
+            request: components["schemas"]["NativeRequest"];
+            /** Request Digest */
+            request_digest: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "not_run" | "running" | "succeeded" | "failed" | "interrupted";
+            /** Trial Consumed */
+            trial_consumed: boolean;
+        };
+        /** NativeRequest */
+        NativeRequest: {
+            approved_scope_ref?: components["schemas"]["ObjectRef"] | null;
+            /**
+             * Candidate
+             * @default doublema_daily_overlay_candidate_v1
+             * @constant
+             */
+            candidate: "doublema_daily_overlay_candidate_v1";
+            grant_ref?: components["schemas"]["ObjectRef"] | null;
+            package_ref?: components["schemas"]["ObjectRef"] | null;
+            protocol_ref?: components["schemas"]["ObjectRef"] | null;
         };
         /**
          * ObjectRef
@@ -7221,6 +7379,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_api_research_native_daily_jobs_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NativeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeJobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_api_research_native_daily_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeJobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    artifact_api_research_native_daily_jobs__job_id__artifact_get: {
+        parameters: {
+            query: {
+                kind: "admission" | "report" | "decision";
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_api_research_native_daily_jobs__job_id__decision_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "idempotency-key": string;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NativeDecisionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeJobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    options_api_research_native_daily_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
         };

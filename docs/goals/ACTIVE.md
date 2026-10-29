@@ -1,5 +1,18 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Approved fixed-candidate offline loop —2026-10-30, in progress
+
+Human approved [issue253](https://github.com/ZP151/quantmesh/issues/253)'s short
+design for offline implementation only. Source owns the
+[tracked plan](../superpowers/plans/2026-10-30-native-daily-real-workstation.md)
+and [iteration](../iterations/0038-native-daily-real-workstation.md).
+The ordinary page has now saved and reopened a no-input INSUFFICIENT decision;
+a separate owned engineering study completed the ten-arm report/Reject flow and
+survived an owned preview process restart with identical originals and zero new
+computation/trial. Independent review and publisher release remain pending.
+Real package/grant/window/sample/exposure/trial admission and the financial
+research Goal remain UNMET. Do not infer new real-data or trading permission.
+
 ## Operable workstation slice verified — 2026-10-18
 
 The operator cleared the historical app Goal and requested its replacement. The

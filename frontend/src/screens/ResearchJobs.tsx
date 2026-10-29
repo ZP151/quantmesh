@@ -7,6 +7,7 @@ import { api, type ResearchJobOptions, type ResearchJobRecord, type ResearchJobR
 import { LocalCsvPlanning } from './LocalCsvPlanning'
 import { VnpyFixturePanel } from './VnpyFixturePanel'
 import { SpyReplayPanel } from './SpyReplayPanel'
+import { NativeDailyPanel } from './NativeDailyPanel'
 
 // Operate: extend the incumbent black/green workstation. One configuration column,
 // one durable status/report column. Fixture truth, nonzero costs and lineage stay
@@ -78,6 +79,7 @@ const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3
 export function ResearchJobsScreen() {
   const [engine, setEngine] = useState(() => {
     const query = new URLSearchParams(globalThis.location?.search)
+    if (query.get('engine') === 'native-daily-v2' || query.has('native_job')) return 'native-daily-v2'
     return query.get('engine') === 'spy-replay' || query.has('spy_job') ? 'spy-replay' : 'baseline'
   })
   const snapshotId = new URLSearchParams(globalThis.location?.search).get('snapshot')
@@ -92,9 +94,10 @@ export function ResearchJobsScreen() {
         <option value="baseline">QuantMesh registered baselines</option>
         <option value="vnpy">vn.py official strategies · fixture experiment</option>
         <option value="spy-replay">SPY · SMA100 historical replay</option>
+        <option value="native-daily-v2">Native daily · fixed DoubleMA research</option>
       </select>
     </div>
-    {engine === 'spy-replay' ? <SpyReplayPanel /> : engine === 'vnpy' ? <VnpyFixturePanel /> : <BaselineResearchJobsScreen />}
+    {engine === 'native-daily-v2' ? <NativeDailyPanel /> : engine === 'spy-replay' ? <SpyReplayPanel /> : engine === 'vnpy' ? <VnpyFixturePanel /> : <BaselineResearchJobsScreen />}
   </>
 }
 

@@ -634,13 +634,8 @@ def _check_matrix(result, schedule):
                     raise ValueError("fill_ledger_binding")
 
 
-def evaluate(value, protocol_bytes):
-    _checked(value)
-    protocol = _json(protocol_bytes)
-    if protocol_bytes != canonical(_protocol(value)):
-        raise CandidateError("protocol_not_qualified")
-    frame = pd.read_csv(io.BytesIO(value.bars_csv), dtype={"date": str}).set_index("date")
-    distributions = _json(value.distributions_json)
+def _calculate_matrix(frame, distributions, protocol_digest):
+    """Internal common calculation; each caller retains its own admission guard."""
     calculation = {}
     for name, bps in (("base5", 5), ("stress10", 10)):
         calculation[name] = {}
@@ -664,7 +659,7 @@ def evaluate(value, protocol_bytes):
                 and t.get("quantity_policy", {}).get("action", {}).get("kind") == "entry"
                 for t in trades
             )
-            binding = _child_binding(_sha(protocol_bytes), arm_name, bps)
+            binding = _child_binding(protocol_digest, arm_name, bps)
             calculation[name][arm_name] = {
                 "binding": binding,
                 "child_id": _sha(canonical(binding)),
@@ -673,6 +668,17 @@ def evaluate(value, protocol_bytes):
                 "trades": trades,
                 "trace": arm.trace,
             }
+    return calculation
+
+
+def evaluate(value, protocol_bytes):
+    _checked(value)
+    protocol = _json(protocol_bytes)
+    if protocol_bytes != canonical(_protocol(value)):
+        raise CandidateError("protocol_not_qualified")
+    frame = pd.read_csv(io.BytesIO(value.bars_csv), dtype={"date": str}).set_index("date")
+    distributions = _json(value.distributions_json)
+    calculation = _calculate_matrix(frame, distributions, _sha(protocol_bytes))
     report = {
         "schema_id": REPORT,
         "candidate": CANDIDATE,

@@ -1,5 +1,15 @@
 # QuantMesh Reuse Matrix
 
+## Fixed candidate offline workstation — issue253,2026-10-30
+
+Reuse ObjectStore, JsonlStore, WriterLease and the incumbent Research jobs/UI
+patterns. Extract the existing native_daily_candidate ten-arm calculation so
+both admitted engineering adapters use the same native-daily-v2 cashbook/policy;
+no mathematical expression or third-party source is introduced. New candidate
+admission/grant/request/report/decision envelopes do not reopen the closed v1
+fixture adapter or transfer old SPY/once permission. Real data remains separately
+unqualified. See [ADR0039](adr/0039-fixed-candidate-workstation-admission.md).
+
 ## Guarded local paper controls P3 — issue196, 2026-10-20
 
 P3 reuses PaperAccountStore/File, existing journal reconstruction, PaperAccount
