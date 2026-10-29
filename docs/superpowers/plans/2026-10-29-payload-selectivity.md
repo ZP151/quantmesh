@@ -37,3 +37,13 @@ The new targeted tests are `tests/test_live_buffer_selective_gather.py` and
 is the repository PR CI release gate; do not infer it from the local 16 cases.
 The final publisher receipt records the exact run, checks, merge commit and
 source catalog for the Server handoff.
+
+## Exact-head CI correction checkpoint
+
+The first PR 252 release run 40815733685 failed only on an unchanged older
+snapshot test's hardcoded three-batch expectation for 300 rows. The reviewed
+32-key implementation correctly uses ten batches. The publisher changed that
+test assertion alone, verified the single formerly failing test, and retained
+the failed run receipt. The six reviewed source/test blobs remain identical to
+their frozen author versions. A fresh CI run on the corrected head is required;
+the failed run is never relabeled as passing.

@@ -147,3 +147,21 @@ no third source review. Publisher owns exact-head CI and normal merge. Sole
 Server owns the later original API, independent reference and normal-close
 acceptance on merged source. Host, real archive, SDK, model and trading work
 remain outside this leaf.
+
+## PR 252 CI assertion follow-up
+
+Exact-head CI run 40815733685 on publisher head 27d2032 and merge ref b5de0ce
+ended with one full-suite failure: the unchanged latest-bootstrap snapshot test
+expected three payload batches for 300 selected keys, an assertion for the old
+128-key batch size. Actual count was ten under the reviewed 32-key bound.
+The same test's full result and concurrent-writer snapshot checks passed before
+that stale count assertion. Release reported 6,394 passed, one failed and 143
+skipped; the aggregate Python check failed because release failed. Classify,
+research_service and fast passed. The failed run remains in the publisher's
+ignored `CI-FAILURE-40815733685.json` receipt.
+
+Publisher corrected only `tests/test_live_buffer_latest_bootstrap.py` to assert
+ten batches. The single formerly failing test passed locally on the existing
+DuckDB 1.5.5 runtime (1 passed, 1 warning, 1.47s); no old successful suite was
+rerun. All six independently reviewed production/test Git blobs remain frozen.
+A new exact-head CI run, not this failed run, is required before normal merge.

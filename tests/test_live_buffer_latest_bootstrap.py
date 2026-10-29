@@ -333,7 +333,7 @@ def test_one_snapshot_survives_writer_between_complete_batches(tmp_path):
         observer = Observe(reader._con, after_first=mutate)
         reader._con = observer
         assert reader.latest() == [_row_to_update(row) for row in rows]
-        assert observer.count == 3
+        assert observer.count == 10  # 300 selected keys in batches of at most 32.
         assert writer.execute("SELECT COUNT(*) FROM market_updates").fetchone()[0] == 299
 
 
