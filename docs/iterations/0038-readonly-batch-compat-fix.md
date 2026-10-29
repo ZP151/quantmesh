@@ -101,3 +101,49 @@ sole operator reaccept the original API, with fresh source pins (payload execute
 now buffer.py1138), unchanged resource/safety contracts and normal reader/server
 closure. Real default-temp IOException, archive latency, financial qualification
 and the complete research Goal remain unresolved until their actual acceptance.
+
+## Follow-up acquisition work bound — issue 251
+
+Planner: [issue 251](https://github.com/ZP151/quantmesh/issues/251) follows the
+merged issue-249 repair. The user action remains saved-history inspection. The
+measurable engineering outcome is complete selected records with at most four
+source-sized scans for 128 sparse keys in the new 1,048,576-row model, while a
+stored wide readonly model still succeeds at 128 MiB/one thread/zero temp.
+The tracked follow-up plan is
+../superpowers/plans/2026-10-29-payload-selectivity.md. No native or financial
+acceptance is inferred.
+
+Quant researcher: preserve every selected key, all 17 fields, both inclusive
+UTC endpoints, scope/kinds, NULL/STATUS handling, one snapshot, caller-owned
+transactions, owned rollback, duplicate/missing refusal and final ordering.
+The earlier per-key point UNION scanned 134,217,728 rows for 128 selected keys
+over 1,048,576 generated rows. A 128-key join reduces that model's work but
+fails a separate stored ZSTD readonly resource case. The chosen bound is 32
+keys per exact VALUES join with an inclusive min/max range. A normal 10,000-row
+tail uses 313 payload statements and five owned control/key statements (318
+total); this is a measured statement budget, not a latency guarantee.
+
+Implementer: frozen source commit 5de5fc09af685b19029c7c4fe74369fa870ee41f
+on base 38c1fce4ecc6e0716a0769367decba707b67b2c9 changes only
+`src/quantmesh/live/buffer.py` and five focused test files. The runtime SHA-256
+is 1a6de08f5576b25c2decd8d88f9cd946ef66f727cab02135bb50fd15b76a7b57.
+AST comparison isolates the acquisition loop bound/slice and query/parameter
+assignments; key selection, transactions, validation, sorting and decoding
+remain the merged implementation.
+
+Verifier: the new real-engine scan-work test first failed at 134,217,728 >
+4,194,304 scanned rows, then passed under the 32-key relation. A new stored
+8,192-row/128-selected/64 KiB ZSTD model returned all 128 complete records;
+14 new boundary cases also passed, for 16 new passing cases total. Three
+isolated mutants were killed. The initial new fixture build timed out before
+query entry and remains recorded; its optimized build and query passed. Six
+changed Python files passed Ruff, format and whitespace checks. Full applicable
+CI is the publisher's pending gate; prior suites were not rerun. Evidence and
+sealed hashes are in `output/payload-acquisition-20261029-031519/`.
+
+Reviewer: fresh R1 and final R2 independently marked the frozen whole source
+READY with no actionable findings. Both matched the six source pins; there is
+no third source review. Publisher owns exact-head CI and normal merge. Sole
+Server owns the later original API, independent reference and normal-close
+acceptance on merged source. Host, real archive, SDK, model and trading work
+remain outside this leaf.
