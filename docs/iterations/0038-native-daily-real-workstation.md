@@ -109,3 +109,23 @@ The offline slice is ready for that handoff, not merged or released. Qualified
 real input, actual real trial, out-of-sample/paper evidence and the overall
 independent-research Goal remain UNMET. No actual source/window/sample/exposure
 has been selected or acquired.
+
+## Publisher source and package-asset checkpoint
+
+The sole Publisher took the frozen final source commit3e0707fc0d67a944e53b4c9caf3d45d412994b72/tree41d893204d365aa9ddd59e11f69f5cbe3cbb2e6d and independently
+matched all18 tracked handoff file hashes. The R1/R2 NEEDS_FIX records remain
+as reviewed. A narrow check of R2's final protocol-runtime correction found
+the v3 Python/pandas/NumPy/calendar pins, execution-drift refusal before trial
+reservation, archived-runtime cold preservation and runtime-unknown v2 draft
+read-only refusal. This is Publisher verification of the known correction, not
+a third whole-slice review or an invented independent READY.
+
+With `PYTHONPATH` bound to this checkout's `src`, the imported adapter SHA256
+was b836299af886a591feab24468df557c5ca37e14df5cfb0c45ee7f7b43ef5d69d.
+The standard `tools/build_frontend.py` completed and copied 11 current
+`frontend/dist` files (1,397,281 bytes) byte-for-byte into the package-served
+`src/quantmesh/api/static/app` bundle. The build retained its existing large
+chunk warning. Installed local Vitest3.2.7 still differs from declared4.1.11;
+normal applicable CI must qualify the lockfile and generated bundle. Publisher
+output records the source/bundle hash check and included8MiB forecast. No
+actual real data, financial trial, provider, Paper/live or host effect occurred.
