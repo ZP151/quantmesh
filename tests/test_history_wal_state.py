@@ -618,42 +618,125 @@ def test_present_producer_has_no_absence_transport_or_downgrade(tmp_path):
         ram._Admission.model_validate(value)
 
 
-def test_revocation_does_not_hold_capability_lock_while_closing_reader(
-    absent_capability, monkeypatch
-):
+def test_concurrent_revoked_replay_closes_before_exception_boundary(absent_capability, monkeypatch):
+    import errno
+    import os
     import threading
 
+    import duckdb
+
     from quantmesh.live.buffer import LiveBuffer
+    from tests.test_history_inspection import AT
 
-    root, cap, _, paths, _, _ = absent_capability
+    root, cap, _, paths, callers, _ = absent_capability
     reader = LiveBuffer._open_history_ram_aux(root, cap)
-    normal_close = reader.close
-    done = threading.Event()
-    failures = []
+    owned = [cap._fd, *cap._evidence.owned, cap._evidence.parent_fd]
+    normal_close, tail = reader.close, reader._tail_rows
+    rows_ready = threading.Event()
+    allow_postcheck = threading.Event()
+    monitor_pending = threading.Event()
+    allow_monitor_close = threading.Event()
+    observations, errors = {}, []
 
-    def concurrent_check():
+    def delayed_close():
+        if threading.current_thread().name == "owned-monitor":
+            monitor_pending.set()
+            assert allow_monitor_close.wait(5), "test did not release monitor"
+        normal_close()
+
+    def paused_rows(*args):
+        rows = tail(*args)
+        assert len(rows) == 3
+        rows_ready.set()
+        assert allow_postcheck.wait(5), "test did not release replay"
+        return rows
+
+    def replay():
+        from datetime import timedelta
+
+        try:
+            result = reader.replay(
+                venue="hyperliquid",
+                instrument="BTC",
+                kinds={"candle", "status"},
+                start=AT - timedelta(days=1),
+                end=AT,
+                data_time_start=AT - timedelta(days=1),
+                data_time_end=AT,
+                limit=10000,
+                tail=True,
+            )
+            observations["payload"] = result
+        except ram.HistoryRamAuxRejected:
+            observations["rejected"] = True
+            observations["reader_closed_at_exception"] = getattr(reader, "_closed", False)
+            try:
+                reader._con.execute("SELECT 1")
+                observations["connection_closed_at_exception"] = False
+            except duckdb.ConnectionException:
+                observations["connection_closed_at_exception"] = True
+            fd_closed = []
+            for fd in owned:
+                try:
+                    os.fstat(fd)
+                    fd_closed.append(False)
+                except OSError as exc:
+                    fd_closed.append(exc.errno == errno.EBADF)
+            observations["owned_closed_at_exception"] = fd_closed
+        except BaseException as exc:
+            errors.append(type(exc).__name__)
+
+    def monitor():
         try:
             cap.check()
         except ram.HistoryRamAuxRejected:
-            failures.append("revoked")
-        finally:
-            done.set()
+            observations["monitor_rejected"] = True
+        except BaseException as exc:
+            errors.append(type(exc).__name__)
 
-    def close_with_concurrent_monitor():
-        thread = threading.Thread(target=concurrent_check, daemon=True)
-        thread.start()
-        # Another monitor must be able to observe revocation while reader close
-        # waits on its own lock. Otherwise reader->cap/cap->reader can deadlock.
-        assert done.wait(2), "reader close held capability lock and blocked monitor"
-        thread.join()
-        normal_close()
-
-    monkeypatch.setattr(reader, "close", close_with_concurrent_monitor)
-    paths["revoke_epoch"]()
+    monkeypatch.setattr(reader, "close", delayed_close)
+    monkeypatch.setattr(reader, "_tail_rows", paused_rows)
+    worker = threading.Thread(target=replay, name="owned-replay", daemon=True)
+    observer = threading.Thread(target=monitor, name="owned-monitor", daemon=True)
     try:
-        with pytest.raises(ram.HistoryRamAuxRejected):
-            cap.check()
+        worker.start()
+        assert rows_ready.wait(5)
+        paths["revoke_epoch"]()
+        observer.start()
+        assert monitor_pending.wait(5)
+        allow_postcheck.set()
+        worker.join(5)
+        assert not worker.is_alive(), "replay waited for monitor holding its reader lock"
+        # The monitor is still paused. A rejected replay must finish normal close itself.
+        record = {k: v for k, v in observations.items() if k != "payload"}
+        record.update(payload_escaped="payload" in observations, actual_OS_proof=False)
+        (paths["admission"].parent / "concurrent-close-at-boundary.json").write_text(
+            json.dumps(record, indent=2), encoding="utf-8"
+        )
+        assert observations.get("rejected") is True
+        assert "payload" not in observations
+        assert observations["reader_closed_at_exception"] is True
+        assert observations["connection_closed_at_exception"] is True
+        assert observations["owned_closed_at_exception"] == [True] * 5
     finally:
+        allow_postcheck.set()
+        allow_monitor_close.set()
+        worker.join(5)
+        if observer.ident is not None:
+            observer.join(5)
         normal_close()
-    assert failures == ["revoked"]
-    assert reader._closed and cap._fd is None
+    assert not worker.is_alive() and not observer.is_alive() and not errors
+    assert observations["monitor_rejected"] is True
+    for fd in callers.values():
+        assert os.lseek(fd, 0, os.SEEK_CUR) == 7
+
+
+@pytest.mark.parametrize("text", ["x" * 33000, chr(233) * 6000], ids=["ascii", "escaped"])
+def test_producer_rejects_oversized_admission_bytes_including_escaping(tmp_path, text):
+    from quantmesh.live.history_wal_state import encode_history_wal_state_bundle
+
+    value, _ = vector(tmp_path / "archive", "PRESENT")
+    value["snapshot"]["root"] = text
+    assert len(encoded(value)) > 32768
+    with pytest.raises(ram.HistoryRamAuxRejected):
+        encode_history_wal_state_bundle(value)

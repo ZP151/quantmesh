@@ -625,11 +625,20 @@ class _HistoryRamAuxCapability:
         try:
             with self._lock:
                 self._closed = True
-                reader, self._reader = self._reader, None
+                reader = self._reader
                 self._close_evidence()
         finally:
-            if reader is not None and not getattr(reader, "_closed", False):
-                reader.close()
+            try:
+                if reader is not None and not getattr(reader, "_closed", False):
+                    reader.close()
+            finally:
+                # Detachment is not completion. A replay already holding the
+                # reentrant reader lock must be able to finish close itself
+                # while a monitor's close is waiting outside our lock.
+                if reader is not None:
+                    with self._lock:
+                        if self._reader is reader and getattr(reader, "_closed", False):
+                            self._reader = None
 
     def _close_evidence(self):
         try:
@@ -902,9 +911,10 @@ def encode_history_wal_state_bundle(admission, *, checkpoint=None, absence=None,
             if any(x is not None for x in parts):
                 raise ValueError()
             raws = (None, None, None)
-        return dict(
-            admission=_canonical(admission), checkpoint=raws[0], absence=raws[1], epoch=raws[2]
-        )
+        admission_raw = _canonical(admission)
+        if len(admission_raw) > MAX_ADMISSION:
+            raise ValueError()
+        return dict(admission=admission_raw, checkpoint=raws[0], absence=raws[1], epoch=raws[2])
     except (ValidationError, ValueError, TypeError, KeyError, RecursionError):
         raise HistoryRamAuxRejected() from None
 
