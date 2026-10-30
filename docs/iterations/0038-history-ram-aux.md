@@ -35,3 +35,23 @@ now share one tiny authored archive per invocation to retain failures within the
 same32MiB hold. FORECAST-REVISED reallocates unused temporary allowance, no new
 hold/refund/old budget borrowing. First typed interface DRAFT emitted before20min;
 actual operational and source review gates remain open.
+
+## Focused R1 correction, runtime bytes unchanged
+
+Independent R1 at0a8f14ad NEEDS_FIX: one P2 regression-coverage gap, no concrete
+runtime/spec defect. Existing lost-guard case only refused before admitted SQL.
+Added exact original-filter tests revoking synthetic guard after real tiny SQL
+and during row decoding; both require no returned payload, normal reader/cap close,
+caller FD ownership and DB bytes unchanged. Isolated in-memory unit mutant removes
+both post-read checks: RED2fail/DIDNOTRAISE; current production source GREEN41pass.
+The mutation process asserts tracked runtime bytes unchanged; no actual runtime
+or host is monkeypatched. Original runtime/profile source remains identical to
+0a8f14ad. Tests optionally reuse only this cohort's bounded SHA-checked tiny authored
+archive to avoid new fixture copies; no private/archive data or old hold borrowed.
+Raw RED-POST-GUARD-MUTANT and GREEN-POST-GUARD retain commands/exits/warnings.
+
+R1 source/operational trust divide remains: authenticated controller proof refs
+are not actual proof merely because hashes exist. Actual host/source release/
+original111x17/API/math gates remain UNPROVEN. Known-fix R2 is the final allowed
+review; no third structural review. Interface software FROZENv1/schema762ddbb3
+has Server field-feasibility ACK only, not actual admission.

@@ -333,8 +333,23 @@ def test_public_constructor_and_missing_capability_remain_closed(tmp_path):
 
 @pytest.fixture(scope="module")
 def shared_engineering_archive(tmp_path_factory):
+    import os
+    from pathlib import Path
+
     from tests.test_historical_feed_profile import saved_archive
 
+    reuse = os.environ.get("QM_TEST_RAM_AUX_ARCHIVE")
+    if reuse:
+        root = Path(reuse).resolve(strict=True)
+        owned = (
+            Path(__file__).resolve().parents[1] / "output/history-ram-aux-implementation-20261030"
+        )
+        assert root.is_relative_to(owned.resolve())
+        raw = (root / "live/updates.duckdb").read_bytes()
+        assert len(raw) <= 2 * 1024**2
+        assert hashlib.sha256(raw).hexdigest() == os.environ["QM_TEST_RAM_AUX_ARCHIVE_SHA"]
+        assert (root / "live/updates.duckdb.wal").read_bytes() == b""
+        return root
     root = saved_archive.__wrapped__(tmp_path_factory)
     (root / "live/updates.duckdb.wal").write_bytes(b"")  # authored empty WAL
     return root
@@ -515,3 +530,58 @@ def test_mount_parser_rejects_substitute_storage(change):
         line = line.replace("262144k", "524288k")
     with pytest.raises(m.HistoryRamAuxRejected):
         m._mount_entry(line, "/owned/aux")
+
+
+@pytest.mark.parametrize("phase", ["after_sql", "during_decode"])
+def test_guard_revoked_during_admitted_read_discards_rows_and_closes(
+    synthetic_capability, monkeypatch, phase
+):
+    import os
+    from datetime import UTC, datetime, timedelta
+
+    import quantmesh.live.buffer as buffer
+
+    root, cap, kernel, _, caller_fd = synthetic_capability
+    before = hashlib.sha256((root / "live/updates.duckdb").read_bytes()).hexdigest()
+    lake = buffer.LiveBuffer._open_history_ram_aux(root, cap)
+    fetched = []
+    if phase == "after_sql":
+        original = lake._tail_rows
+
+        def fetch(*args):
+            rows = original(*args)
+            fetched.extend(rows)
+            kernel.lock = lambda *_: False
+            return rows
+
+        monkeypatch.setattr(lake, "_tail_rows", fetch)
+    else:
+        original = buffer._row_to_update
+
+        def decode(row):
+            result = original(row)
+            fetched.append(row)
+            kernel.lock = lambda *_: False
+            return result
+
+        monkeypatch.setattr(buffer, "_row_to_update", decode)
+    cut = datetime(2026, 10, 23, 23, 44, 1, tzinfo=UTC)
+    try:
+        with pytest.raises(module().HistoryRamAuxRejected):
+            lake.replay(
+                venue="hyperliquid",
+                instrument="BTC",
+                kinds={"candle", "status"},
+                start=cut - timedelta(days=1),
+                end=cut,
+                data_time_start=cut - timedelta(days=1),
+                data_time_end=cut,
+                limit=10000,
+                tail=True,
+            )
+        assert len(fetched) == 3
+    finally:
+        lake.close()
+    assert cap._fd is None and lake._closed
+    os.fstat(caller_fd)  # Source never closes the startup caller's original descriptor.
+    assert hashlib.sha256((root / "live/updates.duckdb").read_bytes()).hexdigest() == before
