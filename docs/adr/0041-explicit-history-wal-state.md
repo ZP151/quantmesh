@@ -1,6 +1,6 @@
 # ADR0041 — Explicit checkpointed WAL state behind the private reader
 
-Date2026-10-30. Status: approved offline design; implementation/verification, not actual host admission.
+Date2026-10-30. Status: offline software implemented and independently reviewed R2; release/actual host admission remain separate.
 Issue [257](https://github.com/ZP151/quantmesh/issues/257). Actual human approved offline implementation/verification of design e46450c6 through receipt1462eae7; execution281575d1. The copied design pending header is historical, superseded by this receipt. No repeated approval.
 
 Frozen v1 requires a real WAL. Genuine checkpoint/normal close can remove it; pretending absence is an empty present file changes the evidence contract. Retain v1 and introduce explicit v2 PRESENT/ABSENT, never optional/autodetected state. v2 uses its new actual approval/design/authority. Original cut/111keys/full17/NULL/rawJSON/SQL/_tail_rows/math, OSRO, 256MiB aux/shared2GiB and normal128MiB/temp0/public API remain unchanged.

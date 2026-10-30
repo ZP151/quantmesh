@@ -37,10 +37,15 @@ Version downgrade; false checkpoint/absence lineage; appearing-then-disappearing
 ### Task3: bounded review and handoff
 
 - [x] Targeted new+affected v1 controls, Ruff changed/runtime appropriate check, format/diff/submodule metadata and original SQL/AST comparison. No unrelated old full suite (execution authority overrides generic full-suite skill).
-- [ ] Independent Reviewer + Quant semantics; fix only concrete findings with RED/GREEN, one known-fix R2 maximum.
-- [ ] Update iteration/ADR/plan; commit green checkpoints, preserve all evidence and exact HEAD/tree/source/test hashes in HANDOFF<=16KiB; stop tracked edits and transfer to unique Publisher. Software completion is not original111x17/financial/host acceptance.
+- [x] Independent Reviewer + Quant semantics; fix only concrete findings with RED/GREEN, one known-fix R2 maximum.
+- [x] Update iteration/ADR/plan; commit green checkpoints, preserve all evidence and exact HEAD/tree/source/test hashes in HANDOFF<=16KiB; stop tracked edits and transfer to unique Publisher. Software completion is not original111x17/financial/host acceptance.
 
 
 Ruling: keep all runtime v2 validation/models/OS helpers in history_ram_aux.py so the existing actual profile_source_sha256 covers the complete admission guard. history_wal_state.py is only an offline producer export; runtime never imports it. This avoids a new unbound guard module or changing frozen runtime field semantics/schema after Server ACK. Cost: larger private profile file, no new behavior. Four exported schema JSON objects must remain identical.
 
 Ruling: RED close-green tests demonstrated a necessary one-line private buffer opener binding. Only ABSENT capability ownership closes its bound reader on revocation; v1/PRESENT remain unchanged and all original SQL methods stay protected.
+
+
+Task1 complete: schema/producer RED3 then GREEN9/10, one frozen Server final ACK, no new schema round. Task2 complete: genuine checkpointed tiny API+FD lifecycle and concurrency RED/GREEN, exact-runtime bounded mutants. Task3 Source complete: affected79/2 existing warnings, Ruff/format/diff/submodule metadata, independent R1 + known-fix R2 READY; actual release belongs to Publisher. No Source push or third review.
+
+Final rulings: the five declined actual OS/provenance/continuous exclusion/D-E-restore/original111x17/publication classes stay outside this approved software slice, explicitly UNMET; accepting this Source handoff cannot certify them. Cost of that scope limit is a separate real admission decision, not a software waiver. No deferred software minors remain.
