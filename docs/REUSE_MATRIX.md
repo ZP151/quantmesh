@@ -1,3 +1,7 @@
+## Approved one-shot IVV admission — issue259
+
+Reuse current native-daily-v2 cashbook/matrix and ordinary workstation; scoped original-content/input-set checks and one durable scope-trial key surround them. Existing object/grant/authority/protocol-v3 formats remain; only real admission/report/labels differ. Official installed SDK is wrapped by the Server's reviewed two-file helper, never forked/copied into core. Reuse current owned-process primitives without claiming Windows commit quotas prove Linux swap0; actual policy/controls remain a separate gate. No new dependencies or provider rights. See [iteration](iterations/0038-ivv-real-admission.md).
+
 # QuantMesh Reuse Matrix
 
 ## Guarded history RAM auxiliary profile — issue255,2026-10-30

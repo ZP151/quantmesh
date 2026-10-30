@@ -158,6 +158,44 @@ it('shows all five same-cost arms at both costs for a registered engineering sub
   expect(JSON.parse(String(posts()[0][1].body))).toEqual(registered)
 })
 
+it('uses the designated identity and shows declared real evidence with its internal-use limitation', async () => {
+  const reference = objectRef('{}')
+  const registered = { candidate: request.candidate, package_ref: reference, grant_ref: reference, approved_scope_ref: reference, protocol_ref: reference }
+  const basis = { scope_id: sha('scripted-ui-scope'), scope_trial_key: sha('scripted-ui-trial'), job_id: key, output_root_digest: sha('scripted-root'),
+    proofs: { scope_ref: reference, effect_ref: reference, execution_ref: reference, go_ref: reference, acceptance_ref: reference, expected_go_sha256: reference.digest, expected_acceptance_sha256: reference.digest },
+    source_facts_ref: reference, capture_ref: reference, source_use: 'private_diagnostic_internal_once_external_retention_unknown', provider_permission_verified: false, external_API_retention_applicability: 'UNKNOWN' }
+  options = { ...options, real_input_enabled: true,
+    packages: [{ label: 'Scripted declared input', evidence_kind: 'reviewed_real', package_ref: reference, approved_scope_ref: reference, protocol_ref: reference, job_id: key }],
+    grants: [{ label: 'Internal once only', package_digest: reference.digest, grant_ref: reference }] }
+  current = { ...makeJob(registered, true), state: 'succeeded', admission_status: 'ACCEPTED_DECLARED_RESEARCH', trial_consumed: true }
+  artifacts.admission = JSON.stringify({ ...JSON.parse(artifacts.admission), schema_id: 'qm.native-daily.admission.v2', status: 'ACCEPTED_DECLARED_RESEARCH', reasons: [], use_basis: basis })
+  current = { ...current, admission: objectRef(artifacts.admission), admission_reasons: [] }
+  const scenario = (bps: number) => Object.fromEntries(['T', 'TO', 'B50', 'B100', 'C'].map(arm => {
+    const binding = { schema_id: 'qm.native-daily.candidate.arm.v1', request_digest: reference.digest, arm, cost_bps: bps }
+    return [arm, { binding, child_id: sha(canonical(binding)), metrics: { sessions: 21, terminal_equity: 100000, total_return: 0, max_drawdown: 0, friction_usd: bps, fills: 0 }, daily: [], trades: [], trace: [] }]
+  }))
+  artifacts.report = JSON.stringify({ schema_id: 'qm.native-daily.real-report.v2', job_id: key, request_digest: current.request_digest, protocol_ref: reference, package_ref: reference, grant_ref: reference,
+    evidence_kind: 'reviewed_real', use_basis: basis, calculation: { base5: scenario(5), stress10: scenario(10) }, ...safety })
+  current = { ...current, report: objectRef(artifacts.report) }
+  await mount()
+  fireEvent.change(await screen.findByLabelText('Registered package'), { target: { value: reference.digest } })
+  fireEvent.change(screen.getByLabelText('Candidate grant'), { target: { value: reference.digest } })
+  fireEvent.click(screen.getByRole('button', { name: 'Submit fixed study' }))
+  expect(await screen.findByText('Report ready · retrospective research')).toBeVisible()
+  expect(await screen.findByRole('table', { name: 'Same-cost comparison' })).toBeVisible()
+  expect(screen.getByText(/Private diagnostic once; external API retention applicability UNKNOWN/)).toBeVisible()
+  expect(posts()[0][1].headers['Idempotency-Key']).toBe(key)
+  expect(crypto.randomUUID).not.toHaveBeenCalled()
+})
+
+it('rejects real options without the fixed submission identity instead of relaxing input guards', async () => {
+  const reference = objectRef('{}')
+  options = { ...options, real_input_enabled: true,
+    packages: [{ label: 'Bad real option', evidence_kind: 'reviewed_real', package_ref: reference, approved_scope_ref: reference, protocol_ref: reference }] }
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  await expect(api.options()).rejects.toMatchObject({ code: 'invalid_response' })
+})
+
 it('reads the known ID while submission acknowledgement is unresolved', async () => {
   const original = fetcher.getMockImplementation()!
   fetcher.mockImplementation((url: string, init?: RequestInit) => url.endsWith('/jobs') && init?.method === 'POST' ? new Promise(() => {}) : original(url, init))

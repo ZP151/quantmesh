@@ -222,12 +222,16 @@ class NativeJob(Contract):
     request: NativeRequest
     request_digest: Digest
     state: Literal["not_run", "running", "succeeded", "failed", "interrupted"]
-    admission_status: Literal["INSUFFICIENT", "REJECT", "ACCEPTED_ENGINEERING"]
+    admission_status: Literal[
+        "INSUFFICIENT", "REJECT", "ACCEPTED_ENGINEERING", "ACCEPTED_DECLARED_RESEARCH"
+    ]
     admission: ObjectRef
     report: ObjectRef | None = None
     decision: ObjectRef | None = None
     decision_key: str | None = None
     consumed_grant: Digest | None = None
+    scope_trial_key: Digest | None = None
+    real_binding: ObjectRef | None = None
     created_at: str
     completed_at: str | None = None
     financial_qualification: Literal["INSUFFICIENT"] = "INSUFFICIENT"
@@ -250,6 +254,7 @@ class RegisteredInput:
     protocol_ref: ObjectRef
     _authority: object = field(default=None, repr=False, compare=False)
     authority_ref: ObjectRef | None = None
+    real_binding: ObjectRef | None = None
 
     @property
     def request(self):
@@ -388,7 +393,7 @@ def engineering_registration(store: ObjectStore, *, output_root):
 class NativeDailyService:
     """One durable writer, fixed candidate, explicit missing-input decisions."""
 
-    def __init__(self, root: Path, *, registered=()):
+    def __init__(self, root: Path, *, registered=(), real_runtime_factory=None):
         self.root = Path(root).absolute()
         for path in (self.root, *self.root.parents):
             if is_reparse_point(path):
@@ -398,6 +403,8 @@ class NativeDailyService:
         self._closing = False
         self._inflight = None
         self._registered = tuple(registered)
+        self._real_runtime_factory = real_runtime_factory
+        self._real_runtimes = {}
         self.objects = ObjectStore(self.root)
         self._lease = WriterLease(self.root / ".writer.lock")
         self._store = JsonlStore(
@@ -407,7 +414,10 @@ class NativeDailyService:
             label="native daily",
             id_label="job",
             key=lambda job: job.job_id,
-            secondary_keys=(("consumed grant", lambda job: job.consumed_grant),),
+            secondary_keys=(
+                ("consumed grant", lambda job: job.consumed_grant),
+                ("scope trial", lambda job: job.scope_trial_key),
+            ),
         )
         try:
             jobs = self._records()
@@ -719,7 +729,9 @@ class NativeDailyService:
         contents = [(reference, self._from_store(store, reference)) for reference in references]
         return package, contents
 
-    def _admit(self, request, jobs):
+    def _admit(self, request, jobs, *, key):
+        from quantmesh.research import ivv_admission as ivv
+
         missing = []
         if request.package_ref is None:
             missing.append("package_missing")
@@ -728,12 +740,48 @@ class NativeDailyService:
         if missing:
             return None, missing
         registration = next((item for item in self._registered if item.request == request), None)
-        if registration is None or registration._authority is not _ENGINEERING_AUTHORITY:
+        if registration is None or registration._authority not in (
+            _ENGINEERING_AUTHORITY,
+            ivv._REAL_AUTHORITY,
+        ):
             return None, ["candidate_grant_not_qualified"]
         try:
             package, _ = self._binding(request, registration.store, executing=True)
             if package["evidence_kind"] == "reviewed_real":
-                return None, ["real_execution_not_enabled"]
+                if (
+                    registration._authority is not ivv._REAL_AUTHORITY
+                    or registration.real_binding is None
+                ):
+                    return None, ["real_execution_not_enabled"]
+                checked = ivv.verify_saved_binding(
+                    registration.store,
+                    request.package_ref,
+                    registration.real_binding,
+                    executing=True,
+                )
+                if checked["output_root_digest"] != _root_pin(self.root):
+                    return None, ["candidate_grant_not_qualified"]
+                if any(job.scope_trial_key == checked["scope_trial_key"] for job in jobs):
+                    return None, ["scope_trial_already_reserved"]
+                if key != checked["job_id"]:
+                    return None, ["request_identity_not_authorized"]
+                try:
+                    owner = self._real_runtimes.get(registration.real_binding.digest)
+                    if owner is None:
+                        factory = self._real_runtime_factory or ivv.prepare_runtime
+                        owner = factory(self.root, checked, registration.store)
+                        self._real_runtimes[registration.real_binding.digest] = owner
+                    if owner.check() is not True:
+                        raise ValueError("runtime")
+                except (ValueError, OSError, RuntimeError):
+                    if owner is not None:
+                        owner.close()
+                    return None, ["study_runtime_not_admitted"]
+            elif (
+                registration.real_binding is not None
+                or registration._authority is ivv._REAL_AUTHORITY
+            ):
+                return None, ["candidate_grant_not_qualified"]
             if package.get("schema_id") == "qm.native-daily.real-input.v1":
                 grant = _loads(self._from_store(registration.store, request.grant_ref))
                 if registration.authority_ref != ObjectRef.model_validate(grant["authority_ref"]):
@@ -754,7 +802,14 @@ class NativeDailyService:
         package, _ = self._binding(job.request, self.objects)
         bars = self._object(ObjectRef.model_validate(package["inputs"]["bars"]))
         events = _loads(self._object(ObjectRef.model_validate(package["inputs"]["distributions"])))
-        frame = pd.read_csv(io.BytesIO(bars), dtype={"date": str}).set_index("date")
+        receipt = None
+        if job.real_binding is not None:
+            calculation, receipt = self._real_runtimes[job.real_binding.digest].calculate(
+                bars, events, job.request.protocol_ref.digest, native._code()
+            )
+        else:
+            frame = pd.read_csv(io.BytesIO(bars), dtype={"date": str}).set_index("date")
+            calculation = native._calculate_matrix(frame, events, job.request.protocol_ref.digest)
         result = {
             "schema_id": "qm.native-daily.real-report.v1",
             "job_id": job.job_id,
@@ -763,14 +818,33 @@ class NativeDailyService:
             "package_ref": job.request.package_ref.model_dump(),
             "grant_ref": job.request.grant_ref.model_dump(),
             "evidence_kind": "engineering_fixture",
-            "calculation": native._calculate_matrix(frame, events, job.request.protocol_ref.digest),
+            "calculation": calculation,
             "financial_qualification": "INSUFFICIENT",
             "paper_allowed": False,
             "live_allowed": False,
         }
         if package.get("schema_id") == "qm.native-daily.real-input.v1":
             result["input_facts"] = package
+        if job.real_binding is not None:
+            result.update(
+                schema_id="qm.native-daily.real-report.v2",
+                evidence_kind="reviewed_real",
+                use_basis=self._ivv_binding(job, executing=False),
+                runtime_receipt=receipt,
+            )
         return canonical(native.engine._plain(result))
+
+    def _ivv_binding(self, job, *, executing):
+        from quantmesh.research import ivv_admission as ivv
+
+        if job.real_binding is None or job.scope_trial_key is None:
+            raise NativeError("artifact_invalid")
+        checked = ivv.verify_saved_binding(
+            self.objects, job.request.package_ref, job.real_binding, executing=executing
+        )
+        if checked["scope_trial_key"] != job.scope_trial_key or checked["job_id"] != job.job_id:
+            raise NativeError("artifact_invalid")
+        return checked
 
     def _records(self):
         try:
@@ -794,8 +868,14 @@ class NativeDailyService:
             ):
                 raise ValueError
             admission = _loads(self._object(job.admission))
+            is_real = job.admission_status == "ACCEPTED_DECLARED_RESEARCH"
+            basis = self._ivv_binding(job, executing=False) if is_real else None
+            if not is_real and (job.real_binding is not None or job.scope_trial_key is not None):
+                raise ValueError
             expected = {
-                "schema_id": "qm.native-daily.admission.v1",
+                "schema_id": "qm.native-daily.admission.v2"
+                if is_real
+                else "qm.native-daily.admission.v1",
                 "job_id": job.job_id,
                 "request_digest": job.request_digest,
                 "request": job.request.model_dump(mode="json"),
@@ -804,6 +884,8 @@ class NativeDailyService:
                 "paper_allowed": False,
                 "live_allowed": False,
             }
+            if is_real:
+                expected["use_basis"] = basis
             if any(admission.get(key) != value for key, value in expected.items()):
                 raise ValueError
             if job.state == "not_run" and (
@@ -812,7 +894,7 @@ class NativeDailyService:
                 raise ValueError
             if (job.state == "succeeded") != (job.report is not None):
                 raise ValueError
-            if job.admission_status == "ACCEPTED_ENGINEERING":
+            if job.admission_status in ("ACCEPTED_ENGINEERING", "ACCEPTED_DECLARED_RESEARCH"):
                 if (
                     job.request.grant_ref is None
                     or job.consumed_grant != job.request.grant_ref.digest
@@ -824,19 +906,30 @@ class NativeDailyService:
 
                     report = _loads(self._object(job.report))
                     expected_report = {
-                        "schema_id": "qm.native-daily.real-report.v1",
+                        "schema_id": "qm.native-daily.real-report.v2"
+                        if is_real
+                        else "qm.native-daily.real-report.v1",
                         "job_id": job.job_id,
                         "request_digest": job.request_digest,
                         "protocol_ref": job.request.protocol_ref.model_dump(),
                         "package_ref": job.request.package_ref.model_dump(),
                         "grant_ref": job.request.grant_ref.model_dump(),
-                        "evidence_kind": "engineering_fixture",
+                        "evidence_kind": "reviewed_real" if is_real else "engineering_fixture",
                         "financial_qualification": "INSUFFICIENT",
                         "paper_allowed": False,
                         "live_allowed": False,
                     }
                     if package.get("schema_id") == "qm.native-daily.real-input.v1":
                         expected_report["input_facts"] = package
+                    if is_real:
+                        from quantmesh.research.ivv_runtime import validate_close_receipt
+
+                        expected_report["use_basis"] = basis
+                        saved_go = _loads(
+                            self._object(ObjectRef.model_validate(basis["proofs"]["go_ref"]))
+                        )
+                        validate_close_receipt(report.get("runtime_receipt"), saved_go["code"])
+                        expected_report["runtime_receipt"] = report["runtime_receipt"]
                     if set(report) != set(expected_report) | {"calculation"} or any(
                         report.get(key) != value for key, value in expected_report.items()
                     ):
@@ -869,7 +962,10 @@ class NativeDailyService:
             raise NativeError("artifact_invalid") from None
 
     def _public(self, job):
-        result = job.model_dump(mode="json", exclude={"consumed_grant", "decision_key"})
+        result = job.model_dump(
+            mode="json",
+            exclude={"consumed_grant", "decision_key", "scope_trial_key", "real_binding"},
+        )
         result["trial_consumed"] = job.consumed_grant is not None
         result["admission_reasons"] = _loads(self._object(job.admission))["reasons"]
         return result
@@ -882,26 +978,48 @@ class NativeDailyService:
         return job
 
     def options(self):
+        from quantmesh.research import ivv_admission as ivv
+
         packages, grants = [], []
         for registration in self._registered:
             try:
                 package, _ = self._binding(registration.request, registration.store, executing=True)
-                if package["evidence_kind"] != "engineering_fixture":
-                    continue
+                real = package["evidence_kind"] == "reviewed_real"
+                checked = None
+                if real:
+                    if (
+                        registration._authority is not ivv._REAL_AUTHORITY
+                        or registration.real_binding is None
+                    ):
+                        continue
+                    checked = ivv.verify_saved_binding(
+                        registration.store,
+                        registration.package_ref,
+                        registration.real_binding,
+                        executing=True,
+                    )
+                    if checked["output_root_digest"] != _root_pin(self.root):
+                        continue
             except (KeyError, TypeError, ValueError, OSError):
                 continue
             packages.append(
                 {
-                    "label": "Trusted engineering substitute · not real data",
-                    "evidence_kind": "engineering_fixture",
+                    "label": "IVV · declared retrospective research"
+                    if real
+                    else "Trusted engineering substitute · not real data",
+                    "evidence_kind": "reviewed_real" if real else "engineering_fixture",
                     "package_ref": registration.package_ref.model_dump(),
                     "approved_scope_ref": registration.approved_scope_ref.model_dump(),
                     "protocol_ref": registration.protocol_ref.model_dump(),
                 }
             )
+            if checked is not None:
+                packages[-1]["job_id"] = checked["job_id"]
             grants.append(
                 {
-                    "label": "One engineering trial · no provider permission",
+                    "label": "One private diagnostic · external retention UNKNOWN"
+                    if real
+                    else "One engineering trial · no provider permission",
                     "package_digest": registration.package_ref.digest,
                     "grant_ref": registration.grant_ref.model_dump(),
                 }
@@ -912,7 +1030,7 @@ class NativeDailyService:
             "kernel": KERNEL,
             "packages": packages,
             "grants": grants,
-            "real_input_enabled": False,
+            "real_input_enabled": any(p["evidence_kind"] == "reviewed_real" for p in packages),
             "financial_qualification": "INSUFFICIENT",
             "paper_allowed": False,
             "live_allowed": False,
@@ -933,16 +1051,35 @@ class NativeDailyService:
                 return self._public(existing), False
             if len(jobs) >= MAX_JOBS:
                 raise NativeError("capacity_exceeded")
-            registration, reasons = self._admit(request, jobs)
+            registration, reasons = self._admit(request, jobs, key=key)
             status = "INSUFFICIENT" if registration is None else "ACCEPTED_ENGINEERING"
+            real_binding = None
+            scope_trial_key = None
+            basis = None
             if registration is not None:
                 _, contents = self._binding(request, registration.store, executing=True)
                 for reference, raw in contents:
                     if self._put(raw, reference.media_type) != reference:
                         raise NativeError("artifact_invalid")
+                if registration.real_binding is not None:
+                    from quantmesh.research import ivv_admission as ivv
+
+                    for reference, raw in ivv.binding_objects(
+                        registration.store, registration.real_binding
+                    ):
+                        if self._put(raw, reference.media_type) != reference:
+                            raise NativeError("artifact_invalid")
+                    real_binding = registration.real_binding
+                    basis = ivv.verify_saved_binding(
+                        self.objects, request.package_ref, real_binding, executing=True
+                    )
+                    scope_trial_key = basis["scope_trial_key"]
+                    status = "ACCEPTED_DECLARED_RESEARCH"
             now = _now()
             admission = {
-                "schema_id": "qm.native-daily.admission.v1",
+                "schema_id": "qm.native-daily.admission.v2"
+                if basis
+                else "qm.native-daily.admission.v1",
                 "job_id": key,
                 "request_digest": identity,
                 "request": request.model_dump(mode="json"),
@@ -953,6 +1090,8 @@ class NativeDailyService:
                 "paper_allowed": False,
                 "live_allowed": False,
             }
+            if basis:
+                admission["use_basis"] = basis
             reference = self._put(canonical(admission))
             job = NativeJob(
                 job_id=key,
@@ -964,6 +1103,8 @@ class NativeDailyService:
                 created_at=now,
                 completed_at=now if registration is None else None,
                 consumed_grant=request.grant_ref.digest if registration is not None else None,
+                scope_trial_key=scope_trial_key,
+                real_binding=real_binding,
             )
             self._store.write([*jobs, job])
             if registration is None:
@@ -1049,5 +1190,7 @@ class NativeDailyService:
             while self._inflight is not None:
                 self._condition.wait()
             if not self._closed:
+                for owner in self._real_runtimes.values():
+                    owner.close()
                 self._lease.close()
                 self._closed = True

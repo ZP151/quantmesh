@@ -54,7 +54,9 @@ class NativeJobView(Contract):
     request: NativeRequest
     request_digest: Digest
     state: Literal["not_run", "running", "succeeded", "failed", "interrupted"]
-    admission_status: Literal["INSUFFICIENT", "REJECT", "ACCEPTED_ENGINEERING"]
+    admission_status: Literal[
+        "INSUFFICIENT", "REJECT", "ACCEPTED_ENGINEERING", "ACCEPTED_DECLARED_RESEARCH"
+    ]
     admission: ObjectRef
     admission_reasons: list[str]
     report: ObjectRef | None

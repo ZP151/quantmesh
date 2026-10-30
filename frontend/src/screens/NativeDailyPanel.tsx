@@ -3,7 +3,7 @@ import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePreferences } from '@/lib/preferences'
-import { NATIVE_CANDIDATE, NativeDailyError, nativeArms, nativeDailyApi, nativeRequest, nativeUuid, type NativeArtifact, type NativeDecisionRequest, type NativeJob, type NativeOptions, type NativeReport, type NativeRequest } from '@/lib/native-daily-api'
+import { NATIVE_CANDIDATE, NativeDailyError, nativeArms, nativeDailyApi, nativeRequest, nativeUuid, sameNativeUseBasis, type NativeArtifact, type NativeDecisionRequest, type NativeJob, type NativeOptions, type NativeReport, type NativeRequest } from '@/lib/native-daily-api'
 
 const STORAGE = 'quantmesh.native-daily.v1'
 type Intent = { key: string; request: NativeRequest; decision?: { key: string; body: NativeDecisionRequest } }
@@ -44,6 +44,8 @@ const copy = {
     input: 'Study input', candidate: 'Candidate', candidateLabel: 'DoubleMA daily overlay · candidate v1', package: 'Registered package', noPackage: 'No package selected', grant: 'Candidate grant', noGrant: 'No grant selected',
     fixed: 'native-daily-v2 · Quantity A · T / TO / B50 / B100 / C · 5 and 10 bps one way', safety: 'INSUFFICIENT financial evidence · Paper and live unavailable',
     engineering: 'Engineering fixture only. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
+    real: 'Declared retrospective research. Private diagnostic once; external API retention applicability UNKNOWN. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
+    realRunning: 'Running · retrospective research', realSucceeded: 'Report ready · retrospective research',
     missing: 'No registered package and candidate grant are selected. Save the admission reasons without calculating a report.',
     unavailable: 'Durable research storage is unavailable. Existing IDs can still be reopened.', loading: 'Reading registered configuration…', retryOptions: 'Read configuration again',
     submit: 'Submit fixed study', insufficient: 'Save insufficient evidence', waiting: 'Waiting for acknowledgement…', retry: 'Retry saved submission', read: 'Read saved study', retained: 'The ID and exact request were saved before submission. Read this ID after an uncertain response.',
@@ -60,6 +62,8 @@ const copy = {
     input: '研究输入', candidate: '候选', candidateLabel: 'DoubleMA 日线叠加 · 候选 v1', package: '已注册输入包', noPackage: '未选择输入包', grant: '候选授权', noGrant: '未选择授权',
     fixed: 'native-daily-v2 · 数量方案 A · T / TO / B50 / B100 / C · 单边 5 和 10 bps', safety: '金融证据 INSUFFICIENT · Paper 与实盘不可用',
     engineering: '仅工程样本。金融证据仍为 INSUFFICIENT，不能授权 Paper 或实盘交易。',
+    real: '已声明的真实回溯研究，仅一次私人开发诊断；外部 API 留存适用性 UNKNOWN。金融证据仍为 INSUFFICIENT，Paper 与实盘不可用。',
+    realRunning: '运行中 · 回溯研究', realSucceeded: '报告就绪 · 回溯研究',
     missing: '未同时选择已注册输入包与候选授权。可保存准入不足原因，不计算报告。',
     unavailable: '持久化研究存储未配置，仍可重开已有 ID。', loading: '正在读取已注册配置…', retryOptions: '重新读取配置',
     submit: '提交固定研究', insufficient: '保存证据不足记录', waiting: '等待服务端确认…', retry: '重试已保存提交', read: '读取已保存研究', retained: '提交前已保存 ID 与完整请求。响应不确定时请读取原 ID。',
@@ -136,6 +140,7 @@ export function NativeDailyPanel() {
     void (async () => {
       try {
         const [admission, report, decision] = await Promise.all([nativeDailyApi.artifact(saved, 'admission'), saved.report ? nativeDailyApi.artifact(saved, 'report') : null, saved.decision ? nativeDailyApi.artifact(saved, 'decision') : null])
+        if (report && !sameNativeUseBasis(admission, report)) throw new NativeDailyError('artifact_invalid')
         const pending = currentIntent.current?.key === saved.job_id ? currentIntent.current.decision : undefined
         if (decision && pending && (decision.value.decision_key !== pending.key || Object.entries(pending.body).some(([key, value]) => decision.value[key] !== value))) throw new NativeDailyError('artifact_invalid')
         if (!cancelled) setEvidence({ jobId: saved.job_id, admission, report, decision })
@@ -150,7 +155,7 @@ export function NativeDailyPanel() {
     const pack = options?.packages.find(p => p.package_ref.digest === packageId)
     const grant = options?.grants.find(g => g.grant_ref.digest === grantId && g.package_digest === packageId)
     if (!existing && !options?.configured) return
-    const saved = existing ?? { key: crypto.randomUUID(), request: { candidate: NATIVE_CANDIDATE, package_ref: pack?.package_ref ?? null, grant_ref: grant?.grant_ref ?? null, approved_scope_ref: pack?.approved_scope_ref ?? null, protocol_ref: pack?.protocol_ref ?? null } }
+    const saved = existing ?? { key: pack?.job_id ?? crypto.randomUUID(), request: { candidate: NATIVE_CANDIDATE, package_ref: pack?.package_ref ?? null, grant_ref: grant?.grant_ref ?? null, approved_scope_ref: pack?.approved_scope_ref ?? null, protocol_ref: pack?.protocol_ref ?? null } }
     if (!keep(saved)) return
     identify(saved.key); setOpenId(saved.key); setError(null); setPaused(false); setSubmitting(true); posting.current = true
     const token = generation.current
@@ -176,7 +181,9 @@ export function NativeDailyPanel() {
     const url = new URL(location.href); url.searchParams.delete('native_job'); history.replaceState(null, '', url)
   }
   const complete = !!packageId && !!grantId
-  const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? w.running : job?.state === 'succeeded' ? w.succeeded : job?.state === 'failed' ? w.failed : w.interrupted
+  const real = job ? job.admission_status === 'ACCEPTED_DECLARED_RESEARCH' : options?.packages.some(p => p.package_ref.digest === packageId && p.evidence_kind === 'reviewed_real')
+  const evidenceNote = real ? w.real : w.engineering
+  const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? (real ? w.realRunning : w.running) : job?.state === 'succeeded' ? (real ? w.realSucceeded : w.succeeded) : job?.state === 'failed' ? w.failed : w.interrupted
   const verified = evidence?.jobId === job?.job_id ? evidence : null
   const pendingDecision = intent?.decision
   const usd = (v: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(v)
@@ -194,7 +201,7 @@ export function NativeDailyPanel() {
             <label className="block min-w-0 space-y-1 text-sm"><span>{w.package}</span><select className={control} value={packageId} onChange={event => { setPackageId(event.target.value); setGrantId('') }}><option value="">{w.noPackage}</option>{options.packages.map(p => <option key={p.package_ref.digest} value={p.package_ref.digest}>{p.label}</option>)}</select></label>
             <label className="block min-w-0 space-y-1 text-sm"><span>{w.grant}</span><select className={control} value={grantId} onChange={event => setGrantId(event.target.value)}><option value="">{w.noGrant}</option>{options.grants.filter(g => g.package_digest === packageId).map(g => <option key={g.grant_ref.digest} value={g.grant_ref.digest}>{g.label}</option>)}</select></label>
           </div>
-          <p className="text-sm text-muted-foreground">{complete ? w.engineering : w.missing}</p>
+          <p className="text-sm text-muted-foreground">{complete ? evidenceNote : w.missing}</p>
           <Button className="min-h-11" onClick={() => void submit()}>{complete ? w.submit : w.insufficient}</Button>
         </>}
       </section>}
@@ -215,7 +222,7 @@ export function NativeDailyPanel() {
           {job.state === 'not_run' && <p className="text-sm">{w.noReport}</p>}
           {['failed', 'interrupted'].includes(job.state) && <p className="text-sm">{w.noResult}</p>}
           {verified.report && <>
-            <p className="text-sm text-muted-foreground">{w.engineering}</p>
+            <p className="text-sm text-muted-foreground">{evidenceNote}</p>
             <div className="flex flex-wrap gap-1" aria-label={zh ? '成本场景' : 'Cost scenario'}>{(['base5', 'stress10'] as const).map(value => <Button key={value} className="min-h-11" variant={scenario === value ? 'secondary' : 'ghost'} aria-pressed={scenario === value} onClick={() => setScenario(value)}>{value === 'base5' ? w.base : w.stress}</Button>)}</div>
             <div className="max-w-full overflow-x-auto"><table className="w-full text-left text-sm tabular-nums"><caption className="sr-only">{w.comparison}</caption><thead className="text-xs text-muted-foreground"><tr>{[w.arm, w.net, w.equity, w.drawdown, w.friction, w.fills].map(label => <th key={label} className="px-2 py-2 font-normal first:pl-0">{label}</th>)}</tr></thead><tbody>{nativeArms.map(arm => { const m = (verified.report!.value as unknown as NativeReport).calculation[scenario][arm].metrics; return <tr key={arm} className="border-t"><th scope="row" className="py-2 pr-2 font-normal">{arm}</th>{[percent(m.total_return), usd(m.terminal_equity), percent(m.max_drawdown), usd(m.friction_usd), String(m.fills)].map((value, index) => <td key={index} className="whitespace-nowrap px-2 py-2">{value}</td>)}</tr> })}</tbody></table></div>
             <p className="text-xs text-muted-foreground">{w.arms}</p><p className="text-xs text-muted-foreground">{w.costs}</p>
