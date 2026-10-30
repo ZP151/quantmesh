@@ -139,7 +139,7 @@ def test_native_readback_checks_kernel_facts_not_declared_booleans(monkeypatch, 
             system._obj.value = 255
             return 1
 
-    monkeypatch.setattr(module.ctypes, "windll", SimpleNamespace(kernel32=Kernel()))
+    monkeypatch.setattr(module.ctypes, "windll", SimpleNamespace(kernel32=Kernel()), raising=False)
     child = SimpleNamespace(job_handle=7, process=SimpleNamespace(_handle=8))
     with pytest.raises(ValueError):
         module._readback(child)
