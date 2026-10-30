@@ -158,12 +158,12 @@ it('shows all five same-cost arms at both costs for a registered engineering sub
   expect(JSON.parse(String(posts()[0][1].body))).toEqual(registered)
 })
 
-it('uses the designated identity and shows declared real evidence with its internal-use limitation', async () => {
+it.each([false, true])('requires normal numerical closure and designated real identity (forced=%s)', async (forced) => {
   const reference = objectRef('{}')
   const registered = { candidate: request.candidate, package_ref: reference, grant_ref: reference, approved_scope_ref: reference, protocol_ref: reference }
   const basis = { scope_id: sha('scripted-ui-scope'), scope_trial_key: sha('scripted-ui-trial'), job_id: key, output_root_digest: sha('scripted-root'),
-    proofs: { scope_ref: reference, effect_ref: reference, execution_ref: reference, go_ref: reference, acceptance_ref: reference, expected_go_sha256: reference.digest, expected_acceptance_sha256: reference.digest },
-    source_facts_ref: reference, capture_ref: reference, source_use: 'private_diagnostic_internal_once_external_retention_unknown', provider_permission_verified: false, external_API_retention_applicability: 'UNKNOWN' }
+    proofs: { scope_ref: reference, effect_ref: reference, execution_ref: reference, windows_policy_ref: reference, go_ref: reference, acceptance_ref: reference, expected_go_sha256: reference.digest, expected_acceptance_sha256: reference.digest },
+    source_facts_ref: reference, capture_ref: reference, parent_close_ref: reference, source_use: 'private_diagnostic_internal_once_external_retention_unknown', provider_permission_verified: false, external_API_retention_applicability: 'UNKNOWN' }
   options = { ...options, real_input_enabled: true,
     packages: [{ label: 'Scripted declared input', evidence_kind: 'reviewed_real', package_ref: reference, approved_scope_ref: reference, protocol_ref: reference, job_id: key }],
     grants: [{ label: 'Internal once only', package_digest: reference.digest, grant_ref: reference }] }
@@ -175,8 +175,15 @@ it('uses the designated identity and shows declared real evidence with its inter
     return [arm, { binding, child_id: sha(canonical(binding)), metrics: { sessions: 21, terminal_equity: 100000, total_return: 0, max_drawdown: 0, friction_usd: bps, fills: 0 }, daily: [], trades: [], trace: [] }]
   }))
   artifacts.report = JSON.stringify({ schema_id: 'qm.native-daily.real-report.v2', job_id: key, request_digest: current.request_digest, protocol_ref: reference, package_ref: reference, grant_ref: reference,
-    evidence_kind: 'reviewed_real', use_basis: basis, calculation: { base5: scenario(5), stress10: scenario(10) }, ...safety })
+    evidence_kind: 'reviewed_real', use_basis: basis,
+    runtime_receipt: { schema_id: 'qm.ivv.numeric-close.v1', job_commit_bytes: 536870912, affinity: 1, process_affinity: 1, kernel_flags: 0x2210, child_membership_verified: true, returncode: forced ? 1 : 0, active_processes: 0, owned_fds_closed: true, wall_seconds: 0.1, code: { test: reference.digest } },
+    calculation: { base5: scenario(5), stress10: scenario(10) }, ...safety })
   current = { ...current, report: objectRef(artifacts.report) }
+  if (forced) {
+    const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+    await expect(api.artifact(await api.get(key), 'report')).rejects.toMatchObject({ code: 'artifact_invalid' })
+    return
+  }
   await mount()
   fireEvent.change(await screen.findByLabelText('Registered package'), { target: { value: reference.digest } })
   fireEvent.change(screen.getByLabelText('Candidate grant'), { target: { value: reference.digest } })

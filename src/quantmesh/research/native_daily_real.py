@@ -746,7 +746,7 @@ class NativeDailyService:
         ):
             return None, ["candidate_grant_not_qualified"]
         try:
-            package, _ = self._binding(request, registration.store, executing=True)
+            package, contents = self._binding(request, registration.store, executing=True)
             if package["evidence_kind"] == "reviewed_real":
                 if (
                     registration._authority is not ivv._REAL_AUTHORITY
@@ -771,7 +771,14 @@ class NativeDailyService:
                         factory = self._real_runtime_factory or ivv.prepare_runtime
                         owner = factory(self.root, checked, registration.store)
                         self._real_runtimes[registration.real_binding.digest] = owner
-                    if owner.check() is not True:
+                    pending = {
+                        ref.digest: len(raw)
+                        for ref, raw in [
+                            *contents,
+                            *ivv.binding_objects(registration.store, registration.real_binding),
+                        ]
+                    }
+                    if owner.check(pending_bytes=sum(pending.values())) is not True:
                         raise ValueError("runtime")
                 except (ValueError, OSError, RuntimeError):
                     if owner is not None:

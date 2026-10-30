@@ -17,7 +17,7 @@ def implementation():
         pytest.fail("scoped IVV admission is not implemented")
 
 
-def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
+def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, parent_change=None):
     """Fictional authority pins/IDs; no production e285 scope can be reserved."""
     v = implementation()
     from quantmesh.data.calendars import CalendarService, SessionPolicy
@@ -33,7 +33,7 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
     class ScriptedRuntime:
         """No native claims: fictional proofs and output stay in tmp_path only."""
 
-        def check(self):
+        def check(self, *, pending_bytes=0):
             return True
 
         def calculate(self, bars, events, protocol_digest, code):
@@ -44,6 +44,9 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
                 "schema_id": "qm.ivv.numeric-close.v1",
                 "job_commit_bytes": 536870912,
                 "affinity": 1,
+                "process_affinity": 1,
+                "kernel_flags": 0x2210,
+                "child_membership_verified": True,
                 "returncode": 0,
                 "active_processes": 0,
                 "owned_fds_closed": True,
@@ -100,16 +103,9 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
             "basis": "constructed test evidence; no market or provider assertion",
         }
     )
-    raw = put(
-        {
-            "status": "CAPTURED_UNREVIEWED",
-            "scope_id": scope_id,
-            "normal_close": True,
-            "originals_complete": True,
-            "presence_preserved": True,
-            "test_control": True,
-        }
-    )
+    # A contractual authored capture; never actual SDK bytes or production IDs.
+    original = put({"authored_software_original": True})
+    local_ref = {"path": "authored.json", "sha256": original.digest, "bytes": original.byte_length}
     exposure = put(
         {
             "scope_id": scope_id,
@@ -170,7 +166,7 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
         "pit_status": "unknown",
         "revision_note": "scripted values; no provider/PIT assertion",
         "review_refs": [],
-        "source_asset_refs": [raw.model_dump()],
+        "source_asset_refs": [],
         "window": window,
         "sample_role": "development_only_retrospective",
         "exposure_ref": exposure.model_dump(),
@@ -198,6 +194,9 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
             "output_root_digest": m._root_pin(study),
             "job_id": job_id,
             "windows_policy_sha256": policy_ref.digest,
+            "catalog_sha256": "c" * 64,
+            "capture_helper_sha256": "d" * 64,
+            "capture_effect_id": "scripted-effect",
             "max_capture_intents": 1,
             "max_trials": 1,
             "code": importlib.import_module("quantmesh.research.native_daily_candidate")._code(),
@@ -212,6 +211,73 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
             "test_control": True,
         }
     )
+    actor = {"pid": 123, "uid": 1000, "start_ticks": 456, "cgroup": "/scripted"}
+    raw = put(
+        {
+            "schema_id": "qm.ivv.capture.v1",
+            "state": "CAPTURED_UNREVIEWED",
+            "scope_id": scope_id,
+            "symbol": "US.IVV",
+            "effect_id": "scripted-effect",
+            "window_digest": m.digest(m.canonical(window)),
+            "full_window_sha256": v.WINDOW_SHA,
+            "requires_parent_close_receipt": True,
+            "synthetic": False,
+            "normal_close": {
+                "context_closed": True,
+                "callbacks_stopped": True,
+                "data_socket_closed": True,
+            },
+            "primary_failure": None,
+            "close_failure": None,
+            "intent_ref": local_ref,
+            "metadata_ref": local_ref,
+            "plain_ref": local_ref,
+            "request_ref": local_ref,
+            "responses": {
+                name: {
+                    "sdk_ref": local_ref,
+                    "fields_ref": local_ref,
+                    "encoding": "SDK_PROTOBUF_REENCODING_NOT_NETWORK_FRAME",
+                }
+                for name in ("rehab", "dividends", "splits", "history")
+            },
+            "source_binding": {
+                "actor": actor,
+                "root_go_sha256": go.digest,
+                "catalog_sha256": "c" * 64,
+                "capture_helper_sha256": "d" * 64,
+                "root_permit_sha256": "f" * 64,
+                "approval_sha256": effect_original.digest,
+                "execution_sha256": execution_original.digest,
+            },
+        }
+    )
+    package["source_asset_refs"] = [raw.model_dump()]
+    parent = {
+        "schema_id": "qm.ivv.capture-parent-close.v1",
+        "scope_id": scope_id,
+        "state": "NORMAL_EXIT",
+        "termination": "NORMAL",
+        "effect_id": "scripted-effect",
+        "capture_manifest_sha256": raw.digest,
+        "intent_sha256": original.digest,
+        "catalog_sha256": "c" * 64,
+        "helper_sha256": "d" * 64,
+        "root_permit_sha256": "f" * 64,
+        "capture_actor": actor,
+        "executor_actor": {"fixture": "independent software control"},
+        "helper_exit_code": 0,
+        "active_owned_processes": 0,
+        "owned_fds_closed": True,
+        "force_killed": False,
+        "resource_limit_event": False,
+        "elapsed_seconds": 1,
+        "evidence_refs": [{"path": "/scripted/parent.json", "sha256": original.digest}],
+    }
+    if parent_change:
+        parent_change(parent)
+    parent_ref = put(parent)
     accepted = {
         "schema_id": "qm.ivv.input-acceptance.v1",
         "decision": "ACCEPT_FOR_ONE_DECLARED_RETROSPECTIVE_RESEARCH",
@@ -220,6 +286,8 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None):
         "input_set_digest": v.input_set_digest(package),
         "capture_ref": raw.model_dump(),
         "source_facts_ref": source_fact.model_dump(),
+        "parent_close_ref": parent_ref.model_dump(),
+        "parent_evidence_refs": [original.model_dump()],
         "checks": {key: True for key in v.INPUT_CHECKS},
         "financial_qualification": "INSUFFICIENT",
         "paper_allowed": False,
@@ -563,3 +631,148 @@ def test_go_booleans_cannot_replace_real_runtime_admission(tmp_path, monkeypatch
         assert job["admission_reasons"] == ["study_runtime_not_admitted"]
     finally:
         service.close()
+
+
+def test_private_startup_checks_independent_config_pin_before_writes(tmp_path):
+    import runpy
+
+    namespace = runpy.run_path(
+        str(Path(__file__).parents[1] / "tools/research/open_ivv_workstation.py")
+    )
+    config = tmp_path / "config.json"
+    config.write_text('{"schema_id":"qm.ivv.startup.v1"}', encoding="utf-8")
+    with pytest.raises(ValueError, match="startup"):
+        namespace["service_from_config"](config, "0" * 64)
+    assert list(tmp_path.iterdir()) == [config]
+
+
+def test_frozen_helper_output_stages_through_product_without_authority(tmp_path):
+    """Reuse the frozen helper's authored public-contract vector, not its internals."""
+    import runpy
+    import sys
+
+    from quantmesh.data.objects import ObjectStore
+    from quantmesh.research import native_daily_real as m
+
+    fixture = runpy.run_path(str(Path(__file__).with_name("test_ivv_capture_contract.py")))
+    helper, plain = fixture["leaf"](), fixture["originals"]()
+    facts = fixture["facts"](helper, plain)
+    normalized = helper.normalize_capture(plain, schedule=fixture["SCHEDULE"], source_facts=facts)
+    store = ObjectStore(tmp_path / "bridge-software-only")
+    marker = store.put_bytes("application/json", b'{"authored_unreviewed_software_control":true}')
+    staged_ref = implementation().stage_ivv_input_set(
+        store,
+        normalized=normalized,
+        source_facts={
+            "currency": facts["price_currency"],
+            "volume_unit": facts["volume_unit"],
+            "historical_trade_venues": facts["volume_venue"],
+            "action_coverage": "complete_cash_ex_pay_no_splits",
+            "pit_status": "unknown",
+            "revision_note": "authored helper public-contract vector; not provider evidence",
+        },
+        capture_ref=marker,
+        exposure_ref=marker,
+        trial_ledger_ref=marker,
+    )
+    staged = json.loads(store.get_bytes(staged_ref))
+    assert staged["schema_id"] == "qm.ivv.unreviewed-input-set.v1"
+    assert "review_refs" not in staged["facts"] and "grant_ref" not in staged
+    bars = store.get_bytes(m.ObjectRef.model_validate(staged["facts"]["inputs"]["bars"]))
+    rows = list(csv.DictReader(io.StringIO(bars.decode())))
+    assert len(rows) == 121 and rows[0]["date"] == "2026-05-08" and rows[-1]["date"] == "2026-10-29"
+    assert rows[0]["volume"] == "1000" and rows[0]["close"] == "11.0"
+    assert "moomoo" not in sys.modules
+
+
+def test_private_startup_composes_ordinary_workstation_api_and_cold_originals(
+    tmp_path, monkeypatch
+):
+    import runpy
+
+    from fastapi.testclient import TestClient
+
+    from quantmesh.api.watchlist import WatchlistStore
+    from quantmesh.api.workstation import create_workstation_app
+    from quantmesh.execution.accounting import PaperAccount
+
+    v, m, store, study, job_id, kwargs = scripted_registration(tmp_path, monkeypatch)
+    package = json.loads(store.get_bytes(kwargs["package_ref"]))
+    facts = {k: x for k, x in package.items() if k != "review_refs"}
+    staged = store.put_bytes(
+        "application/json",
+        m.canonical(
+            {
+                "schema_id": "qm.ivv.unreviewed-input-set.v1",
+                "facts": facts,
+                "input_set_digest": v.input_set_digest(facts),
+            }
+        ),
+    )
+    config = {
+        "schema_id": "qm.ivv.startup.v1",
+        "scope_id": v.SCOPE_ID,
+        "inputs_root": str(tmp_path / "scripted-inputs"),
+        "study_root": str(study),
+        "input_set_ref": staged.model_dump(),
+        "proofs": kwargs["proofs"].model_dump(),
+    }
+    path = tmp_path / "startup.json"
+    raw = m.canonical(config)
+    path.write_bytes(raw)
+    namespace = runpy.run_path(
+        str(Path(__file__).parents[1] / "tools/research/open_ivv_workstation.py")
+    )
+    service = namespace["service_from_config"](path, m.digest(raw))
+    app = create_workstation_app(
+        account=PaperAccount(cash=0),
+        watchlist=WatchlistStore(tmp_path / "watchlists"),
+        native_daily_service=service,
+        host="127.0.0.1",
+    )
+    prefix = "/api/research/native-daily"
+    with TestClient(app) as client:
+        options = client.get(prefix + "/options").json()
+        assert options["real_input_enabled"] and options["packages"][0]["job_id"] == job_id
+        response = client.post(
+            prefix + "/jobs",
+            json=service._registered[0].request.model_dump(),
+            headers={"Idempotency-Key": job_id},
+        )
+        assert response.status_code == 201
+        job = response.json()
+        assert (
+            job["state"] == "succeeded" and job["admission_status"] == "ACCEPTED_DECLARED_RESEARCH"
+        )
+        originals = {
+            kind: client.get(prefix + f"/jobs/{job_id}/artifact?kind={kind}").content
+            for kind in ("admission", "report")
+        }
+    cold = m.NativeDailyService(study)
+    try:
+        assert cold.read(job_id)["trial_consumed"]
+        assert {kind: cold.artifact(job_id, kind) for kind in originals} == originals
+    finally:
+        cold.close()
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        lambda p: p.update(helper_exit_code=1),
+        lambda p: p.update(force_killed=True),
+        lambda p: p.update(active_owned_processes=1),
+        lambda p: p.update(owned_fds_closed=False),
+        lambda p: p.update(capture_actor={"wrong": "actor"}),
+        lambda p: p.update(capture_manifest_sha256="0" * 64),
+        lambda p: p.update(elapsed_seconds=481),
+        lambda p: p.update(resource_limit_event=True),
+    ],
+)
+def test_child_close_cannot_replace_independent_parent_normal_exit(tmp_path, monkeypatch, change):
+    v, m, store, study, _, kwargs = scripted_registration(
+        tmp_path, monkeypatch, parent_change=change
+    )
+    with pytest.raises(m.NativeError, match="ivv_not_admitted"):
+        v.register_ivv_input(store, **kwargs)
+    assert not study.exists()

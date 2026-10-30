@@ -18,7 +18,14 @@ from quantmesh.research.job_runner import _ExtendedLimits, _OwnedChild
 from quantmesh.research.jobs import RunBudget
 
 COMMIT_BYTES = 536870912
+ARTIFACT_BYTES = 8388608
 WINDOWS_POLICY_SHA = "eba49b57044c1883c185fd3d844a8f645cfd64dc058104c63b820d34c65abb63"
+
+
+def ensure_capacity(root, reserved):
+    used = sum(p.stat().st_size for p in Path(root).rglob("*") if p.is_file())
+    if reserved < 0 or used + reserved > ARTIFACT_BYTES:
+        raise ValueError("numeric_artifact_capacity")
 
 
 def _readback(child):
@@ -55,7 +62,13 @@ def _readback(child):
         or affinity & (affinity - 1)
     ):
         raise ValueError("job_limits")
-    return affinity
+    return {
+        "affinity": affinity,
+        "process_affinity": actual.value,
+        "kernel_flags": limits.basic.flags,
+        "job_commit_bytes": limits.job_memory,
+        "child_membership_verified": True,
+    }
 
 
 class _Accounting(ctypes.Structure):
@@ -78,6 +91,7 @@ def validate_close_receipt(value, code):
         raise ValueError("numeric_close")
     affinity = value.get("affinity")
     elapsed = value.get("wall_seconds")
+    flags = value.get("kernel_flags")
     if (
         value.get("schema_id") != "qm.ivv.numeric-close.v1"
         or type(value.get("job_commit_bytes")) is not int
@@ -85,6 +99,12 @@ def validate_close_receipt(value, code):
         or type(affinity) is not int
         or affinity <= 0
         or affinity & (affinity - 1)
+        or type(flags) is not int
+        or flags & 0x2210 != 0x2210
+        or flags & 0x1800
+        or type(value.get("process_affinity")) is not int
+        or value["process_affinity"] != affinity
+        or value.get("child_membership_verified") is not True
         or type(value.get("returncode")) is not int
         or value["returncode"] != 0
         or type(value.get("active_processes")) is not int
@@ -130,17 +150,21 @@ class IVVRuntime:
         self.closed = False
         self._lock = threading.RLock()
 
-    def check(self):
+    def check(self, *, pending_bytes=0):
         if self.closed:
             return False
+        # Four MiB cover bounded command/result/report, decision, atomic staging,
+        # ledger and metadata. Existing originals are additional, never deleted.
+        ensure_capacity(self.directory.parent, pending_bytes + 4 * 1024 * 1024)
         if self.child is not None:
             return self.child.poll() is None and time.monotonic() - self.started < 60
         self.directory.mkdir(exist_ok=False)
         self.started = time.monotonic()
         boot = (
-            "import sys\nif sys.stdin.readline() != "
+            "import os,sys\nif sys.stdin.readline() != "
             + repr("go\n")
             + ": raise SystemExit(3)\n"
+            + "null=os.open(os.devnull,os.O_WRONLY); os.dup2(null,2); os.close(null)\n"
             + "from quantmesh.research.ivv_runtime import _child_main; _child_main(sys.argv[1])"
         )
         try:
@@ -155,7 +179,7 @@ class IVVRuntime:
                 ),
                 self.directory,
             )
-            self.affinity = _readback(self.child)
+            self.native_limits = _readback(self.child)
             # Absolute deadline includes parked/pre-reservation time and cleanup.
             self.timer = threading.Timer(max(0, 70 - (time.monotonic() - self.started)), self.close)
             self.timer.daemon = True
@@ -209,8 +233,7 @@ class IVVRuntime:
                 self.timer.cancel()
                 receipt = {
                     "schema_id": "qm.ivv.numeric-close.v1",
-                    "job_commit_bytes": COMMIT_BYTES,
-                    "affinity": self.affinity,
+                    **self.native_limits,
                     "returncode": 0,
                     "active_processes": 0,
                     "owned_fds_closed": True,

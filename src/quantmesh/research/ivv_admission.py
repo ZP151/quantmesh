@@ -6,6 +6,7 @@ not browser request fields. Content-addressed data is never its own authority.
 
 import csv
 import io
+import math
 from dataclasses import replace
 from pathlib import Path
 
@@ -38,6 +39,7 @@ INPUT_CHECKS = (
     "normal_close",
     "originals_complete",
     "source_provenance",
+    "parent_seal_verified",
 )
 _REAL_AUTHORITY = object()
 
@@ -81,6 +83,96 @@ def _load(store, ref):
 def _require(condition):
     if not condition:
         raise ValueError("ivv_proof")
+
+
+def _capture_refs(raw):
+    """Read original bytes by hash, never follow paths named by a remote child."""
+    refs = []
+
+    def local(value, media="application/json"):
+        name = value["path"]
+        _require(
+            isinstance(name, str)
+            and name not in (".", "..")
+            and Path(name).name == name
+            and "/" not in name
+            and "\\" not in name
+        )
+        ref = daily.ObjectRef(digest=value["sha256"], byte_length=value["bytes"], media_type=media)
+        _require(1 <= ref.byte_length <= daily.MAX_OBJECT)
+        refs.append(ref)
+        return ref
+
+    for key in ("intent_ref", "metadata_ref", "plain_ref", "request_ref"):
+        local(raw[key])
+    _require(set(raw["responses"]) == {"rehab", "dividends", "splits", "history"})
+    for response in raw["responses"].values():
+        _require(response["encoding"] == "SDK_PROTOBUF_REENCODING_NOT_NETWORK_FRAME")
+        sdk = local(response["sdk_ref"], "application/octet-stream")
+        fields = local(response["fields_ref"])
+        _require(sdk.byte_length + fields.byte_length <= daily.MAX_OBJECT)
+    return refs
+
+
+def _capture_close(store, raw_ref, acceptance, go, proofs):
+    raw = _load(store, raw_ref)
+    _require(raw["schema_id"] == "qm.ivv.capture.v1" and raw["state"] == "CAPTURED_UNREVIEWED")
+    _require(raw["scope_id"] == SCOPE_ID and raw["symbol"] == "US.IVV")
+    _require(
+        raw["window_digest"] == go["input_window_digest"]
+        and raw["full_window_sha256"] == WINDOW_SHA
+    )
+    _require(raw["requires_parent_close_receipt"] is True and raw["synthetic"] is False)
+    _require(raw["primary_failure"] is None and raw["close_failure"] is None)
+    _require(
+        all(
+            raw["normal_close"].get(k) is True
+            for k in ("context_closed", "callbacks_stopped", "data_socket_closed")
+        )
+    )
+    binding = raw["source_binding"]
+    _require(binding["root_go_sha256"] == proofs.go_ref.digest)
+    _require(
+        binding["approval_sha256"] == proofs.effect_ref.digest
+        and binding["execution_sha256"] == proofs.execution_ref.digest
+    )
+    _require(
+        binding["catalog_sha256"] == go["catalog_sha256"]
+        and binding["capture_helper_sha256"] == go["capture_helper_sha256"]
+    )
+    parent_ref = daily.ObjectRef.model_validate(acceptance["parent_close_ref"])
+    parent = _load(store, parent_ref)
+    _require(parent["schema_id"] == "qm.ivv.capture-parent-close.v1")
+    _require(parent["state"] == "NORMAL_EXIT" and parent["termination"] == "NORMAL")
+    expected = {
+        "scope_id": SCOPE_ID,
+        "effect_id": raw["effect_id"],
+        "capture_manifest_sha256": raw_ref.digest,
+        "intent_sha256": raw["intent_ref"]["sha256"],
+        "catalog_sha256": binding["catalog_sha256"],
+        "helper_sha256": binding["capture_helper_sha256"],
+        "root_permit_sha256": binding["root_permit_sha256"],
+        "capture_actor": binding["actor"],
+    }
+    _require(all(parent.get(k) == value for k, value in expected.items()))
+    _require(raw["effect_id"] == go["capture_effect_id"])
+    for key in ("helper_exit_code", "active_owned_processes"):
+        _require(type(parent[key]) is int and parent[key] == 0)
+    _require(
+        parent["owned_fds_closed"] is True
+        and parent["force_killed"] is False
+        and parent["resource_limit_event"] is False
+    )
+    elapsed = parent["elapsed_seconds"]
+    _require(type(elapsed) in (int, float) and math.isfinite(elapsed) and 0 <= elapsed <= 480)
+    _require(isinstance(parent["executor_actor"], dict) and bool(parent["executor_actor"]))
+    evidence = [daily.ObjectRef.model_validate(r) for r in acceptance["parent_evidence_refs"]]
+    _require(1 <= len(evidence) <= 8 and len(evidence) == len(parent["evidence_refs"]))
+    _require([r.digest for r in evidence] == [r["sha256"] for r in parent["evidence_refs"]])
+    refs = [parent_ref, *evidence, *_capture_refs(raw)]
+    for ref in refs:
+        daily.NativeDailyService._from_store(store, ref)
+    return parent_ref, refs
 
 
 def _verify(store, package_ref, proofs, *, executing):
@@ -160,14 +252,7 @@ def _verify(store, package_ref, proofs, *, executing):
     _require(acceptance["paper_allowed"] is False and acceptance["live_allowed"] is False)
     raw_ref = daily.ObjectRef.model_validate(acceptance["capture_ref"])
     _require(raw_ref in manifest.source_asset_refs)
-    raw = _load(store, raw_ref)
-    _require(raw["status"] == "CAPTURED_UNREVIEWED" and raw["scope_id"] == SCOPE_ID)
-    _require(
-        all(
-            raw.get(key) is True
-            for key in ("normal_close", "originals_complete", "presence_preserved")
-        )
-    )
+    parent_ref, _ = _capture_close(store, raw_ref, acceptance, go, proofs)
     source = _load(store, acceptance["source_facts_ref"])
     _require(source["schema_id"] == "qm.ivv.source-facts.v1")
     _require(
@@ -198,6 +283,7 @@ def _verify(store, package_ref, proofs, *, executing):
         "proofs": proofs.model_dump(mode="json"),
         "source_facts_ref": acceptance["source_facts_ref"],
         "capture_ref": raw_ref.model_dump(),
+        "parent_close_ref": parent_ref.model_dump(),
         "source_use": SOURCE_USE,
         "provider_permission_verified": False,
         "external_API_retention_applicability": "UNKNOWN",
@@ -236,6 +322,13 @@ def verify_saved_binding(store, package_ref, binding_ref, *, executing):
 def binding_objects(store, binding_ref):
     record = _load(store, binding_ref)
     proofs = TrustedIVVProofs.model_validate(record["proofs"])
+    _, capture_refs = _capture_close(
+        store,
+        daily.ObjectRef.model_validate(record["capture_ref"]),
+        _load(store, proofs.acceptance_ref),
+        _load(store, proofs.go_ref),
+        proofs,
+    )
     refs = [
         binding_ref,
         *[
@@ -250,6 +343,7 @@ def binding_objects(store, binding_ref):
             )
         ],
         daily.ObjectRef.model_validate(record["source_facts_ref"]),
+        *capture_refs,
     ]
     return [(ref, daily.NativeDailyService._from_store(store, ref)) for ref in refs]
 

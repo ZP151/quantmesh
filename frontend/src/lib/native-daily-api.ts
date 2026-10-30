@@ -80,18 +80,29 @@ function requireId(id: string) { if (!nativeUuid(id)) throw new NativeDailyError
 function post(body: unknown, key: string): RequestInit { requireId(key); return { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key }, body: JSON.stringify(body) } }
 function realUseBasis(v: unknown, id: string): boolean {
   if (!object(v) || !hash(v.scope_id) || !hash(v.scope_trial_key) || v.job_id !== id || !hash(v.output_root_digest)
-    || !nativeRef(v.source_facts_ref) || !nativeRef(v.capture_ref)
+    || !nativeRef(v.source_facts_ref) || !nativeRef(v.capture_ref) || !nativeRef(v.parent_close_ref)
     || v.source_use !== 'private_diagnostic_internal_once_external_retention_unknown'
     || v.provider_permission_verified !== false || v.external_API_retention_applicability !== 'UNKNOWN' || !object(v.proofs)) return false
   const proof = v.proofs
-  return ['scope_ref', 'effect_ref', 'execution_ref', 'go_ref', 'acceptance_ref'].every(key => nativeRef(proof[key]))
+  return ['scope_ref', 'effect_ref', 'execution_ref', 'go_ref', 'acceptance_ref', 'windows_policy_ref'].every(key => nativeRef(proof[key]))
     && nativeRef(proof.go_ref) && proof.expected_go_sha256 === proof.go_ref.digest
     && nativeRef(proof.acceptance_ref) && proof.expected_acceptance_sha256 === proof.acceptance_ref.digest
+}
+function numericClose(v: unknown): boolean {
+  if (!object(v) || v.schema_id !== 'qm.ivv.numeric-close.v1' || v.job_commit_bytes !== 536870912
+    || !Number.isSafeInteger(v.affinity) || Number(v.affinity) <= 0 || !Number.isInteger(Math.log2(Number(v.affinity)))
+    || !Number.isSafeInteger(v.kernel_flags) || (Number(v.kernel_flags) & 0x2210) !== 0x2210 || (Number(v.kernel_flags) & 0x1800) !== 0
+    || v.process_affinity !== v.affinity || v.child_membership_verified !== true
+    || v.returncode !== 0 || v.active_processes !== 0 || v.owned_fds_closed !== true
+    || typeof v.wall_seconds !== 'number' || !Number.isFinite(v.wall_seconds) || v.wall_seconds < 0 || v.wall_seconds > 80
+    || !object(v.code) || Object.keys(v.code).length === 0) return false
+  return true
 }
 async function verifyReport(v: Record<string, unknown>, saved: NativeJob) {
   const real = saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH'
   if (v.schema_id !== (real ? 'qm.native-daily.real-report.v2' : 'qm.native-daily.real-report.v1') || v.evidence_kind !== (real ? 'reviewed_real' : 'engineering_fixture')
     || (real ? !realUseBasis(v.use_basis, saved.job_id) : v.use_basis !== undefined)
+    || (real ? !numericClose(v.runtime_receipt) : v.runtime_receipt !== undefined)
     || !['package_ref', 'grant_ref', 'protocol_ref'].every(key => sameRef(v[key], saved.request[key as keyof NativeRequest]))
     || !object(v.calculation) || Object.keys(v.calculation).length !== 2 || !saved.request.protocol_ref) return artifactInvalid()
   for (const [scenario, bps] of [['base5', 5], ['stress10', 10]] as const) {
