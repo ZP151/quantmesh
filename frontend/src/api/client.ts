@@ -4062,7 +4062,7 @@ export interface components {
              * Admission Status
              * @enum {string}
              */
-            admission_status: "INSUFFICIENT" | "REJECT" | "ACCEPTED_ENGINEERING";
+            admission_status: "INSUFFICIENT" | "REJECT" | "ACCEPTED_ENGINEERING" | "ACCEPTED_DECLARED_RESEARCH";
             /** Completed At */
             completed_at: string | null;
             /** Created At */

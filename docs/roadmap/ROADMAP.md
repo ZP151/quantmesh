@@ -1,5 +1,9 @@
 # QuantMesh Product Roadmap
 
+## Approved IVV one-shot declared-research slice — issue259
+
+Source software is reviewed and frozen for the selected IVV/OpenD121-session retrospective input, trusted original-content/input-set admission, irreversible once scope-trial reservation and actual packaged workstation UI. The sole app R1 poisoning finding is closed by known-fix R2; typed pre-admission refusal leaves the authorized UUID available. Targeted software controls do not qualify actual data; normal publication/catalog, resource/provider bounds and independent input acceptance still precede one real job. Existing engine/math and old SPY/once evidence remain frozen. Issue259/long Goal remain open until actual loop acceptance. See [checkpoint](../iterations/0038-ivv-real-admission.md).
+
 ## Approved private RAM auxiliary history profile — issue255,2026-10-30
 
 Human approved one guarded256MiB noswap private tmpfs within the shared2GiB group, canonical data readonly and normal128MiB/temp0 unchanged. Source implementation/targeted review precede Publisher release and Server actual API/full-oracle/normal-close gates. Local synthetic controls do not qualify the original real history. See [checkpoint](../iterations/0038-history-ram-aux.md).

@@ -54,7 +54,9 @@ class NativeJobView(Contract):
     request: NativeRequest
     request_digest: Digest
     state: Literal["not_run", "running", "succeeded", "failed", "interrupted"]
-    admission_status: Literal["INSUFFICIENT", "REJECT", "ACCEPTED_ENGINEERING"]
+    admission_status: Literal[
+        "INSUFFICIENT", "REJECT", "ACCEPTED_ENGINEERING", "ACCEPTED_DECLARED_RESEARCH"
+    ]
     admission: ObjectRef
     admission_reasons: list[str]
     report: ObjectRef | None
@@ -85,6 +87,7 @@ def create_native_daily_router():
                 "not_found": 404,
                 "invalid_request": 422,
                 "idempotency_conflict": 409,
+                "study_not_admitted": 409,
                 "decision_conflict": 409,
                 "capacity_exceeded": 409,
                 "artifact_invalid": 409,

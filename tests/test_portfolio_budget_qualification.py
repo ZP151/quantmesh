@@ -310,10 +310,28 @@ def test_failed_owned_child_is_reaped_without_touching_sibling(verifier, tmp_pat
 def test_stdout_stderr_and_nonzero_exit_are_retained(verifier, tmp_path):
     tmp_path.chmod(0o700)
     runner = verifier.Commands(tmp_path, tmp_path)
-    with pytest.raises(ValueError, match="command failed"):
-        runner.python(
-            ["-c", "import sys;print('raw-out');print('raw-err',file=sys.stderr);sys.exit(7)"]
+    release = tmp_path / "release-after-registration"
+    code = (
+        "import sys,time;from pathlib import Path;"
+        "print('raw-out');print('raw-err',file=sys.stderr);"
+        "\nwhile not Path(sys.argv[1]).exists():"
+        "\n time.sleep(0.005)"
+        "\nsys.exit(7)"
+    )
+    try:
+        handle = runner.spawn(
+            [sys.executable, "-B", "-c", code, str(release)],
+            verifier.environment(tmp_path),
+            tmp_path,
         )
+        release.touch()
+        with pytest.raises(ValueError, match="command failed"):
+            runner.collect(handle, "python")
+    finally:
+        release.touch()
+        for child in runner.command_processes:
+            child.process.wait(timeout=3)
+            child.close()
     receipt = runner.receipts[-1]
     assert receipt["exit"] == 7
     assert (tmp_path / receipt["stdout"]).read_bytes() == b"raw-out\n"

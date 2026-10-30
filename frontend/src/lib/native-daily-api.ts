@@ -4,8 +4,8 @@ export const NATIVE_CANDIDATE = 'doublema_daily_overlay_candidate_v1' as const
 export const nativeUuid = (v: unknown): v is string => typeof v === 'string' && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(v)
 export type NativeRef = { algorithm: 'sha256'; digest: string; byte_length: number; media_type: string }
 export type NativeRequest = { candidate: typeof NATIVE_CANDIDATE; package_ref: NativeRef | null; grant_ref: NativeRef | null; approved_scope_ref: NativeRef | null; protocol_ref: NativeRef | null }
-export type NativeOptions = { configured: boolean; candidate: typeof NATIVE_CANDIDATE; kernel: 'native-daily-v2'; packages: { label: string; evidence_kind: 'engineering_fixture'; package_ref: NativeRef; approved_scope_ref: NativeRef; protocol_ref: NativeRef }[]; grants: { label: string; package_digest: string; grant_ref: NativeRef }[]; real_input_enabled: false }
-export type NativeJob = { job_id: string; request: NativeRequest; request_digest: string; state: 'not_run' | 'running' | 'succeeded' | 'failed' | 'interrupted'; admission_status: 'INSUFFICIENT' | 'REJECT' | 'ACCEPTED_ENGINEERING'; admission_reasons: string[]; admission: NativeRef; report: NativeRef | null; decision: NativeRef | null; trial_consumed: boolean; created_at: string; completed_at: string | null }
+export type NativeOptions = { configured: boolean; candidate: typeof NATIVE_CANDIDATE; kernel: 'native-daily-v2'; packages: { label: string; evidence_kind: 'engineering_fixture' | 'reviewed_real'; package_ref: NativeRef; approved_scope_ref: NativeRef; protocol_ref: NativeRef; job_id?: string }[]; grants: { label: string; package_digest: string; grant_ref: NativeRef }[]; real_input_enabled: boolean }
+export type NativeJob = { job_id: string; request: NativeRequest; request_digest: string; state: 'not_run' | 'running' | 'succeeded' | 'failed' | 'interrupted'; admission_status: 'INSUFFICIENT' | 'REJECT' | 'ACCEPTED_ENGINEERING' | 'ACCEPTED_DECLARED_RESEARCH'; admission_reasons: string[]; admission: NativeRef; report: NativeRef | null; decision: NativeRef | null; trial_consumed: boolean; created_at: string; completed_at: string | null }
 export type NativeDecisionRequest = { request_digest: string; admission_digest: string; report_digest: string | null; disposition: 'reject' | 'watch'; reason: string }
 export type NativeArtifact = { bytes: Uint8Array<ArrayBuffer>; value: Record<string, unknown>; digest: string }
 export const nativeArms = ['T', 'TO', 'B50', 'B100', 'C'] as const
@@ -43,25 +43,27 @@ export function nativeRequest(v: unknown): v is NativeRequest {
 }
 const sameRef = (a: unknown, b: unknown) => a === null || b === null ? a === b : nativeRef(a) && nativeRef(b) && canonical(a) === canonical(b)
 function options(v: unknown): NativeOptions {
-  if (!object(v) || !safe(v) || typeof v.configured !== 'boolean' || v.candidate !== NATIVE_CANDIDATE || v.kernel !== 'native-daily-v2' || v.real_input_enabled !== false
+  if (!object(v) || !safe(v) || typeof v.configured !== 'boolean' || v.candidate !== NATIVE_CANDIDATE || v.kernel !== 'native-daily-v2' || typeof v.real_input_enabled !== 'boolean'
     || !Array.isArray(v.packages) || v.packages.length > 32 || !Array.isArray(v.grants) || v.grants.length > 32
-    || !v.packages.every(p => object(p) && bounded(p.label, 160) && p.evidence_kind === 'engineering_fixture' && nativeRef(p.package_ref) && nativeRef(p.approved_scope_ref) && nativeRef(p.protocol_ref))
+    || !v.packages.every(p => object(p) && bounded(p.label, 160) && (p.evidence_kind === 'engineering_fixture' || (p.evidence_kind === 'reviewed_real' && nativeUuid(p.job_id))) && nativeRef(p.package_ref) && nativeRef(p.approved_scope_ref) && nativeRef(p.protocol_ref))
+    || v.real_input_enabled !== v.packages.some(p => object(p) && p.evidence_kind === 'reviewed_real')
     || !v.grants.every(g => object(g) && bounded(g.label, 160) && hash(g.package_digest) && nativeRef(g.grant_ref))) return invalid()
   return v as unknown as NativeOptions
 }
 async function job(v: unknown, id: string, expected?: NativeRequest): Promise<NativeJob> {
   if (!object(v) || !safe(v) || v.job_id !== id || !nativeUuid(id) || !nativeRequest(v.request) || !hash(v.request_digest)
     || (expected && canonical(v.request) !== canonical(expected)) || await digest(new TextEncoder().encode(canonical(v.request))) !== v.request_digest
-    || !['not_run', 'running', 'succeeded', 'failed', 'interrupted'].includes(String(v.state)) || !['INSUFFICIENT', 'REJECT', 'ACCEPTED_ENGINEERING'].includes(String(v.admission_status))
+    || !['not_run', 'running', 'succeeded', 'failed', 'interrupted'].includes(String(v.state)) || !['INSUFFICIENT', 'REJECT', 'ACCEPTED_ENGINEERING', 'ACCEPTED_DECLARED_RESEARCH'].includes(String(v.admission_status))
     || !Array.isArray(v.admission_reasons) || !v.admission_reasons.every(r => bounded(r, 160)) || !nativeRef(v.admission) || v.admission.media_type !== 'application/json'
     || !(v.report === null || nativeRef(v.report)) || !(v.decision === null || nativeRef(v.decision)) || typeof v.trial_consumed !== 'boolean'
     || !date(v.created_at) || !(v.completed_at === null || date(v.completed_at))
     || (v.state === 'succeeded') !== (v.report !== null) || (v.state === 'running' && (v.completed_at !== null || v.decision !== null))
     || (v.state === 'not_run' && v.trial_consumed !== false)
-    || (v.state !== 'not_run' && (v.admission_status !== 'ACCEPTED_ENGINEERING' || v.trial_consumed !== true))) return invalid()
+    || (v.state !== 'not_run' && (!['ACCEPTED_ENGINEERING', 'ACCEPTED_DECLARED_RESEARCH'].includes(String(v.admission_status)) || v.trial_consumed !== true))
+    || (v.state === 'not_run' && ['ACCEPTED_ENGINEERING', 'ACCEPTED_DECLARED_RESEARCH'].includes(String(v.admission_status)))) return invalid()
   return v as unknown as NativeJob
 }
-const codes = ['not_found', 'invalid_request', 'idempotency_conflict', 'decision_conflict', 'capacity_exceeded', 'artifact_invalid', 'artifact_unavailable', 'service_closed', 'service_unavailable']
+const codes = ['not_found', 'invalid_request', 'idempotency_conflict', 'study_not_admitted', 'decision_conflict', 'capacity_exceeded', 'artifact_invalid', 'artifact_unavailable', 'service_closed', 'service_unavailable']
 async function request(path: string, init?: RequestInit) {
   try {
     const response = await fetch(prefix + path, { ...init, mode: 'same-origin', credentials: 'same-origin', redirect: 'error', signal: AbortSignal.timeout(15000) })
@@ -76,8 +78,31 @@ async function request(path: string, init?: RequestInit) {
 async function json(response: Response): Promise<unknown> { try { return await response.json() } catch { return invalid() } }
 function requireId(id: string) { if (!nativeUuid(id)) throw new NativeDailyError('invalid_request') }
 function post(body: unknown, key: string): RequestInit { requireId(key); return { method: 'POST', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': key }, body: JSON.stringify(body) } }
+function realUseBasis(v: unknown, id: string): boolean {
+  if (!object(v) || !hash(v.scope_id) || !hash(v.scope_trial_key) || v.job_id !== id || !hash(v.output_root_digest)
+    || !nativeRef(v.source_facts_ref) || !nativeRef(v.capture_ref) || !nativeRef(v.parent_close_ref)
+    || v.source_use !== 'private_diagnostic_internal_once_external_retention_unknown'
+    || v.provider_permission_verified !== false || v.external_API_retention_applicability !== 'UNKNOWN' || !object(v.proofs)) return false
+  const proof = v.proofs
+  return ['scope_ref', 'effect_ref', 'execution_ref', 'go_ref', 'acceptance_ref', 'windows_policy_ref'].every(key => nativeRef(proof[key]))
+    && nativeRef(proof.go_ref) && proof.expected_go_sha256 === proof.go_ref.digest
+    && nativeRef(proof.acceptance_ref) && proof.expected_acceptance_sha256 === proof.acceptance_ref.digest
+}
+function numericClose(v: unknown): boolean {
+  if (!object(v) || v.schema_id !== 'qm.ivv.numeric-close.v1' || v.job_commit_bytes !== 536870912
+    || !Number.isSafeInteger(v.affinity) || Number(v.affinity) <= 0 || !Number.isInteger(Math.log2(Number(v.affinity)))
+    || !Number.isSafeInteger(v.kernel_flags) || (Number(v.kernel_flags) & 0x2210) !== 0x2210 || (Number(v.kernel_flags) & 0x1800) !== 0
+    || v.process_affinity !== v.affinity || v.child_membership_verified !== true
+    || v.returncode !== 0 || v.active_processes !== 0 || v.owned_fds_closed !== true
+    || typeof v.wall_seconds !== 'number' || !Number.isFinite(v.wall_seconds) || v.wall_seconds < 0 || v.wall_seconds > 80
+    || !object(v.code) || Object.keys(v.code).length === 0) return false
+  return true
+}
 async function verifyReport(v: Record<string, unknown>, saved: NativeJob) {
-  if (v.schema_id !== 'qm.native-daily.real-report.v1' || v.evidence_kind !== 'engineering_fixture'
+  const real = saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH'
+  if (v.schema_id !== (real ? 'qm.native-daily.real-report.v2' : 'qm.native-daily.real-report.v1') || v.evidence_kind !== (real ? 'reviewed_real' : 'engineering_fixture')
+    || (real ? !realUseBasis(v.use_basis, saved.job_id) : v.use_basis !== undefined)
+    || (real ? !numericClose(v.runtime_receipt) : v.runtime_receipt !== undefined)
     || !['package_ref', 'grant_ref', 'protocol_ref'].every(key => sameRef(v[key], saved.request[key as keyof NativeRequest]))
     || !object(v.calculation) || Object.keys(v.calculation).length !== 2 || !saved.request.protocol_ref) return artifactInvalid()
   for (const [scenario, bps] of [['base5', 5], ['stress10', 10]] as const) {
@@ -121,7 +146,11 @@ async function artifact(saved: NativeJob, kind: 'admission' | 'report' | 'decisi
   let v: unknown
   try { v = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) } catch { return artifactInvalid() }
   if (!object(v) || !safe(v) || v.job_id !== saved.job_id || v.request_digest !== saved.request_digest) return artifactInvalid()
-  if (kind === 'admission' && (v.schema_id !== 'qm.native-daily.admission.v1' || !nativeRequest(v.request) || canonical(v.request) !== canonical(saved.request) || v.status !== saved.admission_status || canonical(v.reasons) !== canonical(saved.admission_reasons))) return artifactInvalid()
+  if (kind === 'admission') {
+    const real = saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH'
+    if (v.schema_id !== (real ? 'qm.native-daily.admission.v2' : 'qm.native-daily.admission.v1') || !nativeRequest(v.request) || canonical(v.request) !== canonical(saved.request) || v.status !== saved.admission_status || canonical(v.reasons) !== canonical(saved.admission_reasons)
+      || (real ? !realUseBasis(v.use_basis, saved.job_id) : v.use_basis !== undefined)) return artifactInvalid()
+  }
   if (kind === 'report') await verifyReport(v, saved)
   if (kind === 'decision' && (v.schema_id !== 'qm.native-daily.research-decision.v1' || !nativeUuid(v.decision_key) || v.admission_digest !== saved.admission.digest || v.report_digest !== (saved.report?.digest ?? null) || !['reject', 'watch'].includes(String(v.disposition)) || !bounded(v.reason, 1000) || !v.reason.trim())) return artifactInvalid()
   return { bytes, value: v, digest: actual }
@@ -133,3 +162,5 @@ export const nativeDailyApi = {
   decide: async (saved: NativeJob, body: NativeDecisionRequest, key: string) => job(await json(await request(`/jobs/${saved.job_id}/decision`, post(body, key))), saved.job_id, saved.request),
   artifact,
 }
+export const sameNativeUseBasis = (a: NativeArtifact, b: NativeArtifact) => a.value.use_basis === undefined || b.value.use_basis === undefined
+  ? a.value.use_basis === undefined && b.value.use_basis === undefined : canonical(a.value.use_basis) === canonical(b.value.use_basis)

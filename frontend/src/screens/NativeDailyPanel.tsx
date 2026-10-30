@@ -3,7 +3,7 @@ import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePreferences } from '@/lib/preferences'
-import { NATIVE_CANDIDATE, NativeDailyError, nativeArms, nativeDailyApi, nativeRequest, nativeUuid, type NativeArtifact, type NativeDecisionRequest, type NativeJob, type NativeOptions, type NativeReport, type NativeRequest } from '@/lib/native-daily-api'
+import { NATIVE_CANDIDATE, NativeDailyError, nativeArms, nativeDailyApi, nativeRequest, nativeUuid, sameNativeUseBasis, type NativeArtifact, type NativeDecisionRequest, type NativeJob, type NativeOptions, type NativeReport, type NativeRequest } from '@/lib/native-daily-api'
 
 const STORAGE = 'quantmesh.native-daily.v1'
 type Intent = { key: string; request: NativeRequest; decision?: { key: string; body: NativeDecisionRequest } }
@@ -44,6 +44,8 @@ const copy = {
     input: 'Study input', candidate: 'Candidate', candidateLabel: 'DoubleMA daily overlay · candidate v1', package: 'Registered package', noPackage: 'No package selected', grant: 'Candidate grant', noGrant: 'No grant selected',
     fixed: 'native-daily-v2 · Quantity A · T / TO / B50 / B100 / C · 5 and 10 bps one way', safety: 'INSUFFICIENT financial evidence · Paper and live unavailable',
     engineering: 'Engineering fixture only. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
+    real: 'Declared retrospective research. Private diagnostic once; external API retention applicability UNKNOWN. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
+    realRunning: 'Running · retrospective research', realSucceeded: 'Report ready · retrospective research',
     missing: 'No registered package and candidate grant are selected. Save the admission reasons without calculating a report.',
     unavailable: 'Durable research storage is unavailable. Existing IDs can still be reopened.', loading: 'Reading registered configuration…', retryOptions: 'Read configuration again',
     submit: 'Submit fixed study', insufficient: 'Save insufficient evidence', waiting: 'Waiting for acknowledgement…', retry: 'Retry saved submission', read: 'Read saved study', retained: 'The ID and exact request were saved before submission. Read this ID after an uncertain response.',
@@ -52,7 +54,7 @@ const copy = {
     decision: 'Research decision', decisionHelp: 'Save one immutable Reject or Watch decision bound to the original admission and report, if present.', reject: 'Reject', watch: 'Watch', reason: 'Reason', saveDecision: 'Save research decision', retryDecision: 'Retry saved decision', pendingDecision: 'Decision acknowledgement is uncertain. Read this ID or retry the saved decision key.',
     admissionDownload: 'Download admission', reportDownload: 'Download report', decisionDownload: 'Download decision',
     reopen: 'Reopen an existing study', id: 'Saved study ID', open: 'Open study', newStudy: 'Start another study', identity: 'Original identity and timestamps', created: 'Created', completed: 'Completed', request: 'Request SHA-256', protocol: 'Protocol SHA-256', packageHash: 'Package SHA-256', grantHash: 'Grant SHA-256',
-    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
+    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', notAdmitted: 'Study was not admitted. No trial was consumed; resolve admission checks and retry this saved request.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
     comparison: 'Same-cost comparison', base: '5 bps · base', stress: '10 bps · stress', arm: 'Arm', net: 'Net return', equity: 'Terminal equity', drawdown: 'Max drawdown', friction: 'Friction', fills: 'Fills', costs: 'Uncalibrated combined cost proxy. Fee, spread and slippage components are unknown. Fills are not independent opportunities.', arms: 'T: trend · TO: trend with overlay · B50/B100: 50%/100% buy-and-hold · C: cash, 0% interest.',
   },
   'zh-CN': {
@@ -60,6 +62,8 @@ const copy = {
     input: '研究输入', candidate: '候选', candidateLabel: 'DoubleMA 日线叠加 · 候选 v1', package: '已注册输入包', noPackage: '未选择输入包', grant: '候选授权', noGrant: '未选择授权',
     fixed: 'native-daily-v2 · 数量方案 A · T / TO / B50 / B100 / C · 单边 5 和 10 bps', safety: '金融证据 INSUFFICIENT · Paper 与实盘不可用',
     engineering: '仅工程样本。金融证据仍为 INSUFFICIENT，不能授权 Paper 或实盘交易。',
+    real: '已声明的真实回溯研究，仅一次私人开发诊断；外部 API 留存适用性 UNKNOWN。金融证据仍为 INSUFFICIENT，Paper 与实盘不可用。',
+    realRunning: '运行中 · 回溯研究', realSucceeded: '报告就绪 · 回溯研究',
     missing: '未同时选择已注册输入包与候选授权。可保存准入不足原因，不计算报告。',
     unavailable: '持久化研究存储未配置，仍可重开已有 ID。', loading: '正在读取已注册配置…', retryOptions: '重新读取配置',
     submit: '提交固定研究', insufficient: '保存证据不足记录', waiting: '等待服务端确认…', retry: '重试已保存提交', read: '读取已保存研究', retained: '提交前已保存 ID 与完整请求。响应不确定时请读取原 ID。',
@@ -68,7 +72,7 @@ const copy = {
     decision: '研究决定', decisionHelp: '保存一条不可编辑的拒绝或观察决定，绑定原始准入记录与报告（如有）。', reject: '拒绝', watch: '观察', reason: '理由', saveDecision: '保存研究决定', retryDecision: '重试已保存决定', pendingDecision: '决定尚未确认，请读取原 ID 或按原决定键重试。',
     admissionDownload: '下载准入原件', reportDownload: '下载报告原件', decisionDownload: '下载决定原件',
     reopen: '重开已有研究', id: '已保存研究 ID', open: '打开研究', newStudy: '开始另一项研究', identity: '原始标识与时间', created: '创建时间', completed: '完成时间', request: '请求 SHA-256', protocol: '协议 SHA-256', packageHash: '输入包 SHA-256', grantHash: '授权 SHA-256',
-    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
+    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', notAdmitted: '研究尚未获准，未消耗试验额度。请处理准入检查后重试已保存请求。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
     comparison: '同成本基准比较', base: '5 bps · 基准', stress: '10 bps · 压力', arm: '比较臂', net: '净收益率', equity: '期末资金', drawdown: '最大回撤', friction: '综合摩擦', fills: '成交笔数', costs: '未校准综合成本代理。费用、价差与滑点拆分未知，成交笔数不代表独立机会数。', arms: 'T：趋势 · TO：趋势叠加 · B50/B100：50%/100% 买入持有 · C：现金，利息 0%。',
   },
 }
@@ -91,7 +95,7 @@ export function NativeDailyPanel() {
   const alive = useRef(true); const generation = useRef(0); const currentIntent = useRef(intent); const currentJob = useRef(job); const posting = useRef(false); const deciding = useRef(false)
   function issue(cause: unknown) {
     const code = cause instanceof NativeDailyError ? cause.code : ''
-    setError(code === 'artifact_invalid' ? 'artifact' : code === 'not_found' ? 'notFound' : code === 'invalid_response' ? 'invalid' : ['idempotency_conflict', 'decision_conflict'].includes(code) ? 'conflict' : 'error')
+    setError(code === 'artifact_invalid' ? 'artifact' : code === 'study_not_admitted' ? 'notAdmitted' : code === 'not_found' ? 'notFound' : code === 'invalid_response' ? 'invalid' : ['idempotency_conflict', 'decision_conflict'].includes(code) ? 'conflict' : 'error')
   }
   function keep(value: Intent) { if (!persist(value)) { setError('storage'); return false }; currentIntent.current = value; setIntent(value); return true }
   function accept(value: NativeJob, token: number) {
@@ -136,6 +140,7 @@ export function NativeDailyPanel() {
     void (async () => {
       try {
         const [admission, report, decision] = await Promise.all([nativeDailyApi.artifact(saved, 'admission'), saved.report ? nativeDailyApi.artifact(saved, 'report') : null, saved.decision ? nativeDailyApi.artifact(saved, 'decision') : null])
+        if (report && !sameNativeUseBasis(admission, report)) throw new NativeDailyError('artifact_invalid')
         const pending = currentIntent.current?.key === saved.job_id ? currentIntent.current.decision : undefined
         if (decision && pending && (decision.value.decision_key !== pending.key || Object.entries(pending.body).some(([key, value]) => decision.value[key] !== value))) throw new NativeDailyError('artifact_invalid')
         if (!cancelled) setEvidence({ jobId: saved.job_id, admission, report, decision })
@@ -150,7 +155,7 @@ export function NativeDailyPanel() {
     const pack = options?.packages.find(p => p.package_ref.digest === packageId)
     const grant = options?.grants.find(g => g.grant_ref.digest === grantId && g.package_digest === packageId)
     if (!existing && !options?.configured) return
-    const saved = existing ?? { key: crypto.randomUUID(), request: { candidate: NATIVE_CANDIDATE, package_ref: pack?.package_ref ?? null, grant_ref: grant?.grant_ref ?? null, approved_scope_ref: pack?.approved_scope_ref ?? null, protocol_ref: pack?.protocol_ref ?? null } }
+    const saved = existing ?? { key: pack && grant && pack.job_id ? pack.job_id : crypto.randomUUID(), request: { candidate: NATIVE_CANDIDATE, package_ref: pack?.package_ref ?? null, grant_ref: grant?.grant_ref ?? null, approved_scope_ref: pack?.approved_scope_ref ?? null, protocol_ref: pack?.protocol_ref ?? null } }
     if (!keep(saved)) return
     identify(saved.key); setOpenId(saved.key); setError(null); setPaused(false); setSubmitting(true); posting.current = true
     const token = generation.current
@@ -176,7 +181,9 @@ export function NativeDailyPanel() {
     const url = new URL(location.href); url.searchParams.delete('native_job'); history.replaceState(null, '', url)
   }
   const complete = !!packageId && !!grantId
-  const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? w.running : job?.state === 'succeeded' ? w.succeeded : job?.state === 'failed' ? w.failed : w.interrupted
+  const real = job ? job.admission_status === 'ACCEPTED_DECLARED_RESEARCH' : options?.packages.some(p => p.package_ref.digest === packageId && p.evidence_kind === 'reviewed_real')
+  const evidenceNote = real ? w.real : w.engineering
+  const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? (real ? w.realRunning : w.running) : job?.state === 'succeeded' ? (real ? w.realSucceeded : w.succeeded) : job?.state === 'failed' ? w.failed : w.interrupted
   const verified = evidence?.jobId === job?.job_id ? evidence : null
   const pendingDecision = intent?.decision
   const usd = (v: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(v)
@@ -194,7 +201,7 @@ export function NativeDailyPanel() {
             <label className="block min-w-0 space-y-1 text-sm"><span>{w.package}</span><select className={control} value={packageId} onChange={event => { setPackageId(event.target.value); setGrantId('') }}><option value="">{w.noPackage}</option>{options.packages.map(p => <option key={p.package_ref.digest} value={p.package_ref.digest}>{p.label}</option>)}</select></label>
             <label className="block min-w-0 space-y-1 text-sm"><span>{w.grant}</span><select className={control} value={grantId} onChange={event => setGrantId(event.target.value)}><option value="">{w.noGrant}</option>{options.grants.filter(g => g.package_digest === packageId).map(g => <option key={g.grant_ref.digest} value={g.grant_ref.digest}>{g.label}</option>)}</select></label>
           </div>
-          <p className="text-sm text-muted-foreground">{complete ? w.engineering : w.missing}</p>
+          <p className="text-sm text-muted-foreground">{complete ? evidenceNote : w.missing}</p>
           <Button className="min-h-11" onClick={() => void submit()}>{complete ? w.submit : w.insufficient}</Button>
         </>}
       </section>}
@@ -215,7 +222,7 @@ export function NativeDailyPanel() {
           {job.state === 'not_run' && <p className="text-sm">{w.noReport}</p>}
           {['failed', 'interrupted'].includes(job.state) && <p className="text-sm">{w.noResult}</p>}
           {verified.report && <>
-            <p className="text-sm text-muted-foreground">{w.engineering}</p>
+            <p className="text-sm text-muted-foreground">{evidenceNote}</p>
             <div className="flex flex-wrap gap-1" aria-label={zh ? '成本场景' : 'Cost scenario'}>{(['base5', 'stress10'] as const).map(value => <Button key={value} className="min-h-11" variant={scenario === value ? 'secondary' : 'ghost'} aria-pressed={scenario === value} onClick={() => setScenario(value)}>{value === 'base5' ? w.base : w.stress}</Button>)}</div>
             <div className="max-w-full overflow-x-auto"><table className="w-full text-left text-sm tabular-nums"><caption className="sr-only">{w.comparison}</caption><thead className="text-xs text-muted-foreground"><tr>{[w.arm, w.net, w.equity, w.drawdown, w.friction, w.fills].map(label => <th key={label} className="px-2 py-2 font-normal first:pl-0">{label}</th>)}</tr></thead><tbody>{nativeArms.map(arm => { const m = (verified.report!.value as unknown as NativeReport).calculation[scenario][arm].metrics; return <tr key={arm} className="border-t"><th scope="row" className="py-2 pr-2 font-normal">{arm}</th>{[percent(m.total_return), usd(m.terminal_equity), percent(m.max_drawdown), usd(m.friction_usd), String(m.fills)].map((value, index) => <td key={index} className="whitespace-nowrap px-2 py-2">{value}</td>)}</tr> })}</tbody></table></div>
             <p className="text-xs text-muted-foreground">{w.arms}</p><p className="text-xs text-muted-foreground">{w.costs}</p>
