@@ -158,7 +158,7 @@ it('shows all five same-cost arms at both costs for a registered engineering sub
   expect(JSON.parse(String(posts()[0][1].body))).toEqual(registered)
 })
 
-it.each([false, true])('requires normal numerical closure and designated real identity (forced=%s)', async (forced) => {
+it.each([{ forced: false, incompleteFirst: false, refusedFirst: false }, { forced: true, incompleteFirst: false, refusedFirst: false }, { forced: false, incompleteFirst: true, refusedFirst: false }, { forced: false, incompleteFirst: false, refusedFirst: true }])('requires normal closure and keeps designated identity for complete admission (%j)', async ({ forced, incompleteFirst, refusedFirst }) => {
   const reference = objectRef('{}')
   const registered = { candidate: request.candidate, package_ref: reference, grant_ref: reference, approved_scope_ref: reference, protocol_ref: reference }
   const basis = { scope_id: sha('scripted-ui-scope'), scope_trial_key: sha('scripted-ui-trial'), job_id: key, output_root_digest: sha('scripted-root'),
@@ -184,15 +184,55 @@ it.each([false, true])('requires normal numerical closure and designated real id
     await expect(api.artifact(await api.get(key), 'report')).rejects.toMatchObject({ code: 'artifact_invalid' })
     return
   }
+  const ordinaryId = '33333333-3333-4333-8333-333333333333'
+  const completeJob = current; const completeAdmission = artifacts.admission
+  if (refusedFirst) {
+    const original = fetcher.getMockImplementation()!; let first = true
+    fetcher.mockImplementation((url: string, init?: RequestInit) => {
+      if (url.endsWith('/jobs') && init?.method === 'POST' && first) {
+        first = false; return Promise.resolve(response({ detail: 'study_not_admitted' }, 409))
+      }
+      return original(url, init)
+    })
+  }
+  if (incompleteFirst) {
+    vi.mocked(crypto.randomUUID).mockReset().mockReturnValue(ordinaryId)
+    const original = fetcher.getMockImplementation()!
+    fetcher.mockImplementation((url: string, init?: RequestInit) => {
+      if (url.endsWith('/jobs') && init?.method === 'POST') {
+        const body = JSON.parse(String(init.body))
+        if (body.grant_ref === null) {
+          current = { ...makeJob(body), job_id: ordinaryId }
+          artifacts.admission = JSON.stringify({ ...JSON.parse(artifacts.admission), job_id: ordinaryId })
+          current = { ...current, admission: objectRef(artifacts.admission) }
+        }
+      }
+      return original(url, init)
+    })
+  }
   await mount()
   fireEvent.change(await screen.findByLabelText('Registered package'), { target: { value: reference.digest } })
+  if (incompleteFirst) {
+    fireEvent.click(screen.getByRole('button', { name: 'Save insufficient evidence' }))
+    await waitFor(() => expect(posts()).toHaveLength(1))
+    expect(posts()[0][1].headers['Idempotency-Key']).toBe(ordinaryId)
+    await screen.findByText('Not run · evidence insufficient')
+    fireEvent.click(screen.getByRole('button', { name: 'Start another study' }))
+    current = completeJob; artifacts.admission = completeAdmission
+    fireEvent.change(await screen.findByLabelText('Registered package'), { target: { value: reference.digest } })
+  }
   fireEvent.change(screen.getByLabelText('Candidate grant'), { target: { value: reference.digest } })
   fireEvent.click(screen.getByRole('button', { name: 'Submit fixed study' }))
+  if (refusedFirst) {
+    expect(await screen.findByRole('alert')).toHaveTextContent('Study was not admitted. No trial was consumed; resolve admission checks and retry this saved request.')
+    fireEvent.click(screen.getByRole('button', { name: 'Retry saved submission' }))
+  }
   expect(await screen.findByText('Report ready · retrospective research')).toBeVisible()
   expect(await screen.findByRole('table', { name: 'Same-cost comparison' })).toBeVisible()
   expect(screen.getByText(/Private diagnostic once; external API retention applicability UNKNOWN/)).toBeVisible()
-  expect(posts()[0][1].headers['Idempotency-Key']).toBe(key)
-  expect(crypto.randomUUID).not.toHaveBeenCalled()
+  expect(posts().at(-1)![1].headers['Idempotency-Key']).toBe(key)
+  if (refusedFirst) expect(posts().map(([, init]) => init.headers['Idempotency-Key'])).toEqual([key, key])
+  expect(crypto.randomUUID).toHaveBeenCalledTimes(incompleteFirst ? 1 : 0)
 })
 
 it('rejects real options without the fixed submission identity instead of relaxing input guards', async () => {

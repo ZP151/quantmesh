@@ -63,7 +63,7 @@ async function job(v: unknown, id: string, expected?: NativeRequest): Promise<Na
     || (v.state === 'not_run' && ['ACCEPTED_ENGINEERING', 'ACCEPTED_DECLARED_RESEARCH'].includes(String(v.admission_status)))) return invalid()
   return v as unknown as NativeJob
 }
-const codes = ['not_found', 'invalid_request', 'idempotency_conflict', 'decision_conflict', 'capacity_exceeded', 'artifact_invalid', 'artifact_unavailable', 'service_closed', 'service_unavailable']
+const codes = ['not_found', 'invalid_request', 'idempotency_conflict', 'study_not_admitted', 'decision_conflict', 'capacity_exceeded', 'artifact_invalid', 'artifact_unavailable', 'service_closed', 'service_unavailable']
 async function request(path: string, init?: RequestInit) {
   try {
     const response = await fetch(prefix + path, { ...init, mode: 'same-origin', credentials: 'same-origin', redirect: 'error', signal: AbortSignal.timeout(15000) })

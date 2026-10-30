@@ -54,7 +54,7 @@ const copy = {
     decision: 'Research decision', decisionHelp: 'Save one immutable Reject or Watch decision bound to the original admission and report, if present.', reject: 'Reject', watch: 'Watch', reason: 'Reason', saveDecision: 'Save research decision', retryDecision: 'Retry saved decision', pendingDecision: 'Decision acknowledgement is uncertain. Read this ID or retry the saved decision key.',
     admissionDownload: 'Download admission', reportDownload: 'Download report', decisionDownload: 'Download decision',
     reopen: 'Reopen an existing study', id: 'Saved study ID', open: 'Open study', newStudy: 'Start another study', identity: 'Original identity and timestamps', created: 'Created', completed: 'Completed', request: 'Request SHA-256', protocol: 'Protocol SHA-256', packageHash: 'Package SHA-256', grantHash: 'Grant SHA-256',
-    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
+    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', notAdmitted: 'Study was not admitted. No trial was consumed; resolve admission checks and retry this saved request.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
     comparison: 'Same-cost comparison', base: '5 bps · base', stress: '10 bps · stress', arm: 'Arm', net: 'Net return', equity: 'Terminal equity', drawdown: 'Max drawdown', friction: 'Friction', fills: 'Fills', costs: 'Uncalibrated combined cost proxy. Fee, spread and slippage components are unknown. Fills are not independent opportunities.', arms: 'T: trend · TO: trend with overlay · B50/B100: 50%/100% buy-and-hold · C: cash, 0% interest.',
   },
   'zh-CN': {
@@ -72,7 +72,7 @@ const copy = {
     decision: '研究决定', decisionHelp: '保存一条不可编辑的拒绝或观察决定，绑定原始准入记录与报告（如有）。', reject: '拒绝', watch: '观察', reason: '理由', saveDecision: '保存研究决定', retryDecision: '重试已保存决定', pendingDecision: '决定尚未确认，请读取原 ID 或按原决定键重试。',
     admissionDownload: '下载准入原件', reportDownload: '下载报告原件', decisionDownload: '下载决定原件',
     reopen: '重开已有研究', id: '已保存研究 ID', open: '打开研究', newStudy: '开始另一项研究', identity: '原始标识与时间', created: '创建时间', completed: '完成时间', request: '请求 SHA-256', protocol: '协议 SHA-256', packageHash: '输入包 SHA-256', grantHash: '授权 SHA-256',
-    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
+    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', notAdmitted: '研究尚未获准，未消耗试验额度。请处理准入检查后重试已保存请求。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
     comparison: '同成本基准比较', base: '5 bps · 基准', stress: '10 bps · 压力', arm: '比较臂', net: '净收益率', equity: '期末资金', drawdown: '最大回撤', friction: '综合摩擦', fills: '成交笔数', costs: '未校准综合成本代理。费用、价差与滑点拆分未知，成交笔数不代表独立机会数。', arms: 'T：趋势 · TO：趋势叠加 · B50/B100：50%/100% 买入持有 · C：现金，利息 0%。',
   },
 }
@@ -95,7 +95,7 @@ export function NativeDailyPanel() {
   const alive = useRef(true); const generation = useRef(0); const currentIntent = useRef(intent); const currentJob = useRef(job); const posting = useRef(false); const deciding = useRef(false)
   function issue(cause: unknown) {
     const code = cause instanceof NativeDailyError ? cause.code : ''
-    setError(code === 'artifact_invalid' ? 'artifact' : code === 'not_found' ? 'notFound' : code === 'invalid_response' ? 'invalid' : ['idempotency_conflict', 'decision_conflict'].includes(code) ? 'conflict' : 'error')
+    setError(code === 'artifact_invalid' ? 'artifact' : code === 'study_not_admitted' ? 'notAdmitted' : code === 'not_found' ? 'notFound' : code === 'invalid_response' ? 'invalid' : ['idempotency_conflict', 'decision_conflict'].includes(code) ? 'conflict' : 'error')
   }
   function keep(value: Intent) { if (!persist(value)) { setError('storage'); return false }; currentIntent.current = value; setIntent(value); return true }
   function accept(value: NativeJob, token: number) {
@@ -155,7 +155,7 @@ export function NativeDailyPanel() {
     const pack = options?.packages.find(p => p.package_ref.digest === packageId)
     const grant = options?.grants.find(g => g.grant_ref.digest === grantId && g.package_digest === packageId)
     if (!existing && !options?.configured) return
-    const saved = existing ?? { key: pack?.job_id ?? crypto.randomUUID(), request: { candidate: NATIVE_CANDIDATE, package_ref: pack?.package_ref ?? null, grant_ref: grant?.grant_ref ?? null, approved_scope_ref: pack?.approved_scope_ref ?? null, protocol_ref: pack?.protocol_ref ?? null } }
+    const saved = existing ?? { key: pack && grant && pack.job_id ? pack.job_id : crypto.randomUUID(), request: { candidate: NATIVE_CANDIDATE, package_ref: pack?.package_ref ?? null, grant_ref: grant?.grant_ref ?? null, approved_scope_ref: pack?.approved_scope_ref ?? null, protocol_ref: pack?.protocol_ref ?? null } }
     if (!keep(saved)) return
     identify(saved.key); setOpenId(saved.key); setError(null); setPaused(false); setSubmitting(true); posting.current = true
     const token = generation.current

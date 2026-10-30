@@ -158,7 +158,18 @@ class IVVRuntime:
         ensure_capacity(self.directory.parent, pending_bytes + 4 * 1024 * 1024)
         if self.child is not None:
             return self.child.poll() is None and time.monotonic() - self.started < 60
-        self.directory.mkdir(exist_ok=False)
+        # Explicit caller retry after a pre-trial refusal uses a new bounded
+        # directory. Never truncate the failed owner's log or reuse its child.
+        for attempt in range(4):
+            directory = self.directory.with_name(f"numeric-{attempt}")
+            try:
+                directory.mkdir(exist_ok=False)
+            except FileExistsError:
+                continue
+            self.directory = directory
+            break
+        else:
+            raise ValueError("numeric_preflight_capacity")
         self.started = time.monotonic()
         boot = (
             "import os,sys\nif sys.stdin.readline() != "

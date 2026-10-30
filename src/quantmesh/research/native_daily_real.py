@@ -781,6 +781,7 @@ class NativeDailyService:
                     if owner.check(pending_bytes=sum(pending.values())) is not True:
                         raise ValueError("runtime")
                 except (ValueError, OSError, RuntimeError):
+                    self._real_runtimes.pop(registration.real_binding.digest, None)
                     if owner is not None:
                         owner.close()
                     return None, ["study_runtime_not_admitted"]
@@ -1059,6 +1060,20 @@ class NativeDailyService:
             if len(jobs) >= MAX_JOBS:
                 raise NativeError("capacity_exceeded")
             registration, reasons = self._admit(request, jobs, key=key)
+            if registration is None:
+                from quantmesh.research import ivv_admission as ivv
+
+                for item in self._registered:
+                    if item._authority is ivv._REAL_AUTHORITY and item.real_binding is not None:
+                        checked = ivv.verify_saved_binding(
+                            item.store, item.package_ref, item.real_binding, executing=False
+                        )
+                        if checked["job_id"] == key and checked["output_root_digest"] == _root_pin(
+                            self.root
+                        ):
+                            # A refusal is not a durable trial reservation. Diagnostic
+                            # records use another ID; preserve the authorized ID intact.
+                            raise NativeError("study_not_admitted")
             status = "INSUFFICIENT" if registration is None else "ACCEPTED_ENGINEERING"
             real_binding = None
             scope_trial_key = None

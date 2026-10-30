@@ -615,20 +615,59 @@ def test_object_binding_after_review_checks_input_set_before_grant(tmp_path, mon
         )
 
 
-def test_go_booleans_cannot_replace_real_runtime_admission(tmp_path, monkeypatch):
+@pytest.mark.parametrize("refusal", ["factory", "readback"])
+def test_go_booleans_cannot_replace_real_runtime_admission(tmp_path, monkeypatch, refusal):
     v, m, store, study, job_id, kwargs = scripted_registration(tmp_path, monkeypatch)
     registration = v.register_ivv_input(store, **kwargs)
 
     def unsupported(*_):
+        if refusal == "readback":
+
+            class RefusedOwner:
+                def check(self, **kwargs):
+                    return False
+
+                def close(self):
+                    pass
+
+            return RefusedOwner()
         raise m.NativeError("study_runtime_not_admitted")
 
     service = m.NativeDailyService(
         study, registered=(registration,), real_runtime_factory=unsupported
     )
     try:
+        with pytest.raises(m.NativeError, match="study_not_admitted"):
+            service.submit(registration.request, job_id)
+        assert service._records() == []
+        service._real_runtime_factory = v.prepare_runtime
         job, _ = service.submit(registration.request, job_id)
-        assert job["state"] == "not_run" and not job["trial_consumed"]
-        assert job["admission_reasons"] == ["study_runtime_not_admitted"]
+        assert job["state"] == "succeeded" and job["trial_consumed"]
+        assert len(service._records()) == 1
+    finally:
+        service.close()
+
+
+def test_incomplete_request_cannot_occupy_reserved_real_identity(tmp_path, monkeypatch):
+    v, m, store, study, job_id, kwargs = scripted_registration(tmp_path, monkeypatch)
+    registration = v.register_ivv_input(store, **kwargs)
+    service = m.NativeDailyService(study, registered=(registration,))
+    try:
+        partial = registration.request.model_copy(update={"grant_ref": None})
+        with pytest.raises(m.NativeError, match="study_not_admitted"):
+            service.submit(partial, job_id)
+        assert service._records() == []
+        diagnostic_id = str(uuid4())
+        diagnostic, _ = service.submit(partial, diagnostic_id)
+        assert diagnostic["state"] == "not_run" and not diagnostic["trial_consumed"]
+        original = service.artifact(diagnostic_id, "admission")
+        accepted, _ = service.submit(registration.request, job_id)
+        assert accepted["state"] == "succeeded" and accepted["trial_consumed"]
+        assert service.artifact(diagnostic_id, "admission") == original
+        repeated, fresh = service.submit(registration.request, job_id)
+        assert not fresh and repeated == accepted
+        with pytest.raises(m.NativeError, match="idempotency_conflict"):
+            service.submit(partial, job_id)
     finally:
         service.close()
 
@@ -734,6 +773,9 @@ def test_private_startup_composes_ordinary_workstation_api_and_cold_originals(
     with TestClient(app) as client:
         options = client.get(prefix + "/options").json()
         assert options["real_input_enabled"] and options["packages"][0]["job_id"] == job_id
+        refused = client.post(prefix + "/jobs", json={}, headers={"Idempotency-Key": job_id})
+        assert refused.status_code == 409 and refused.json()["detail"] == "study_not_admitted"
+        assert client.get(prefix + f"/jobs/{job_id}").status_code == 404
         response = client.post(
             prefix + "/jobs",
             json=service._registered[0].request.model_dump(),

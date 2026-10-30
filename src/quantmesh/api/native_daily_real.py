@@ -87,6 +87,7 @@ def create_native_daily_router():
                 "not_found": 404,
                 "invalid_request": 422,
                 "idempotency_conflict": 409,
+                "study_not_admitted": 409,
                 "decision_conflict": 409,
                 "capacity_exceeded": 409,
                 "artifact_invalid": 409,

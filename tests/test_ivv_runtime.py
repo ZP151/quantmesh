@@ -72,6 +72,50 @@ def test_readback_failure_closes_owned_process_before_work(tmp_path, monkeypatch
     assert not (tmp_path / "command.json").exists()
 
 
+def test_manual_preflight_recovery_preserves_refused_attempt(tmp_path, monkeypatch):
+    import threading
+
+    module = importlib.import_module("quantmesh.research.ivv_runtime")
+    seen = []
+
+    class Child:
+        def __init__(self, command, budget, directory):
+            seen.append(directory)
+            (directory / "authored-original").write_bytes(b"retained")
+
+        def poll(self):
+            return None
+
+        def close(self):
+            pass
+
+    def readback(child):
+        if len(seen) == 1:
+            raise ValueError("scripted_native_refusal")
+        return {"affinity": 1}
+
+    monkeypatch.setattr(module, "_OwnedChild", Child)
+    monkeypatch.setattr(module, "_readback", readback)
+
+    def owner():
+        value = module.IVVRuntime.__new__(module.IVVRuntime)
+        value.directory = tmp_path / "numeric"
+        value.child = value.started = value.timer = None
+        value.closed = False
+        value._lock = threading.RLock()
+        return value
+
+    with pytest.raises(ValueError, match="scripted_native_refusal"):
+        owner().check()
+    recovered = owner()
+    try:
+        assert recovered.check()
+        assert len(seen) == 2 and seen[0] != seen[1]
+        assert (seen[0] / "authored-original").read_bytes() == b"retained"
+    finally:
+        recovered.close()
+
+
 @pytest.mark.parametrize("bad", ["flags", "memory", "membership", "affinity", "query"])
 def test_native_readback_checks_kernel_facts_not_declared_booleans(monkeypatch, bad):
     from types import SimpleNamespace
