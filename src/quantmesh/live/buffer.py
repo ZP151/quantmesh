@@ -491,6 +491,39 @@ class LiveBuffer:
     """Append-only DuckDB lake for replayable live updates."""
 
     @classmethod
+    def _open_history_ram_aux(cls, root: Path, capability) -> LiveBuffer:
+        """Private trusted-startup profile; public/default construction is unchanged."""
+        from quantmesh.live.history_ram_aux import (
+            HistoryRamAuxRejected,
+            _HistoryRamAuxCapability,
+        )
+
+        if type(capability) is not _HistoryRamAuxCapability:
+            raise HistoryRamAuxRejected()
+        reader = cls.__new__(cls)
+        reader.root = Path(root)
+        reader.path = reader.root / "live/updates.duckdb"
+        reader.read_only, reader.read_unavailable, reader.write_budget = True, False, None
+        reader.retention = timedelta(0)
+        reader._connection_lock = threading.RLock()
+        reader._history_ram_aux = None
+        reader._con = None
+        try:
+            config = capability._claim(reader.root)
+            reader._history_ram_aux = capability
+            reader._con = duckdb.connect(str(reader.path), read_only=True, config=config)
+            capability.check()
+            reader._con.execute("SET TimeZone = 'UTC'")
+            reader._assert_supported_schema()
+            if not set(_UPDATE_COLUMNS.split(", ")).issubset(reader._market_update_columns()):
+                raise HistoryRamAuxRejected()
+            capability.check()
+            return reader
+        except BaseException:
+            reader.close()
+            raise
+
+    @classmethod
     def from_bounded_config(cls, root: Path, budget_file: Path) -> LiveBuffer:
         try:
             return cls.open_bounded_hot(root, HotCacheBudget.from_file(root, budget_file))
@@ -998,9 +1031,14 @@ class LiveBuffer:
 
     # -- reads ------------------------------------------------------------
 
-    def _require_readable(self) -> None:
+    def _require_readable(self, *, history_replay: bool = False) -> None:
         if self.read_unavailable:
             raise ValueError("persisted hot replay unavailable")
+        capability = getattr(self, "_history_ram_aux", None)
+        if capability is not None:
+            if not history_replay:
+                raise ValueError("private history profile only supports admitted replay")
+            capability.check()
 
     def price_trail(
         self, identities: list[tuple[str, str]], limit: int = 20
@@ -1055,7 +1093,21 @@ class LiveBuffer:
         even when several updates share the same timestamp. Corrupt or
         invalid rows raise instead of being silently skipped.
         """
-        self._require_readable()
+        self._require_readable(history_replay=True)
+        capability = getattr(self, "_history_ram_aux", None)
+        if capability is not None:
+            capability._scope(
+                venue=venue,
+                instrument=instrument,
+                kinds=kinds,
+                start=start,
+                end=end,
+                data_time_start=data_time_start,
+                data_time_end=data_time_end,
+                through_local_seq=through_local_seq,
+                limit=limit,
+                tail=tail,
+            )
         clauses: list[str] = []
         params: list[object] = []
         if venue is not None:
@@ -1096,11 +1148,18 @@ class LiveBuffer:
                 f"SELECT {_UPDATE_COLUMNS} FROM market_updates {where} ORDER BY local_seq LIMIT ?"
             )
         with self._connection_lock:
+            if capability is not None:
+                capability.check()
             if tail:
                 rows = self._tail_rows(query, [*params, limit])
             else:
                 rows = self._con.execute(query, [*params, limit]).fetchall()
-        return [_row_to_update(row) for row in rows]
+            if capability is not None:
+                capability.check()
+        result = [_row_to_update(row) for row in rows]
+        if capability is not None:
+            capability.check()
+        return result
 
     def _tail_rows(self, key_query: str, params: list[object]) -> list[tuple]:
         """Fetch complete rows in small batches under the caller-held lock.
@@ -1315,6 +1374,10 @@ class LiveBuffer:
                 if self.write_budget is not None:
                     self.write_budget.fail_session()
                 raise
+            finally:
+                capability = getattr(self, "_history_ram_aux", None)
+                if capability is not None:
+                    capability.close()
 
     def __enter__(self) -> LiveBuffer:
         return self

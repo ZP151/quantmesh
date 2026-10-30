@@ -28,11 +28,17 @@ it('offers the dedicated fixed SPY historical replay alongside existing engines'
   expect(screen.getByRole('option', { name: 'SPY · SMA100 historical replay' })).toBeInTheDocument()
 })
 it('persists exact intent before POST, recovers a lost response with GET, and never auto-resubmits', async () => {
+  let resolveOptions!: (value: ReplayOptions) => void
+  vi.mocked(spyReplayApi.options).mockImplementation(() => new Promise(resolve => { resolveOptions = resolve }))
   vi.mocked(spyReplayApi.submit).mockImplementation(async (key, body) => {
     expect(JSON.parse(localStorage.getItem(storage)!)).toEqual({ key, request: body }); throw new SpyReplayError('request_failed')
   })
   const view = render(<SpyReplayPanel />)
-  fireEvent.click(await screen.findByRole('button', { name: 'Start fixed replay' }))
+  const start = await screen.findByRole('button', { name: 'Start fixed replay' })
+  expect(start).toBeDisabled()
+  resolveOptions(options())
+  await waitFor(() => expect(start).toBeEnabled())
+  fireEvent.click(start)
   await screen.findByRole('alert'); const saved = JSON.parse(localStorage.getItem(storage)!)
   expect(saved.request).toEqual(pins); expect(spyReplayApi.submit).toHaveBeenCalledTimes(1)
   view.unmount(); vi.mocked(spyReplayApi.get).mockResolvedValue({ ...job(), job_id: saved.key }); render(<SpyReplayPanel />)
