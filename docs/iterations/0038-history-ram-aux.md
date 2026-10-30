@@ -55,3 +55,34 @@ are not actual proof merely because hashes exist. Actual host/source release/
 original111x17/API/math gates remain UNPROVEN. Known-fix R2 is the final allowed
 review; no third structural review. Interface software FROZENv1/schema762ddbb3
 has Server field-feasibility ACK only, not actual admission.
+
+## Final permitted review and Source handoff
+
+Independent known-fix R2 at4ef27811 is READY for Source handoff: R1 P2 closed,
+zero remaining P1/P2 in the correction. Reviewer inspected raw mutant RED2 and
+current GREEN41, current Ruff/format evidence and zero runtime diff, without
+rerunning tests/SQL/native or broad audit. REVIEW-R2.md SHA256
+24be612b868c53338aef1fb25cb536562669342153ec561c6c83751a53952db5.
+No third review. Both actual reviewed statuses remain retained.
+
+Source/runtime and interface are frozen. Sole Source writer is released with
+handoff; Root dispatches the existing Publisher for exact-head applicable CI,
+normal ready/matching-head merge and merged-source/catalog. Source does not
+push/CIwatch/deploy. Server continues its own ignored composition and actual
+admission only after that release chain; no actual OS/input/API111x17/oracle/math
+or financial success is implied by Source41 unit controls or R2.
+
+Line-ending ruling: Windows working bytes for the new profile and archived
+approved spec differ from Git's canonical LF bytes only by CRLF normalization.
+Handoff records BOTH SHA sets. Original approved bytes a2119e83 remain retained
+in the authorized artifact; tracked canonical representation is7f17b529. This
+changes no approved content and requires no repeated approval. Runtime admission
+must pin the ACTUAL merged/catalog bytes (profile canonical a1c01481...), not
+blindly reuse the Windows review-file hash adf14a4a. Existing buffer SHA8dfba626
+is already identical in both representations. No runtime edit followed review.
+
+Full local footprint with conservative Git/cache/directory/final-close reserve,
+all raw failures/fixture roots, final exact commit/tree/source-test/receipt hashes
+and remaining Server/Publisher gates are in output/.../HANDOFF.json and
+FINAL-FOOTPRINT.json. Scope/Goal remains UNMET until actual full original user
+loop and all required admission/normal-close evidence agree.

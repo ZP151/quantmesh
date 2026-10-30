@@ -35,7 +35,15 @@ Modify only buffer private construction/read-boundary seam; no _tail_rows/query 
 
 ## Task3 — review, source freeze, publisher handoff
 
-- [ ] ADR/iteration/roadmap/reuse and approved spec/plan agree with observed code/tests; real admission remains UNMET.
-- [ ] Fresh focused independent R1 and necessary known-fix R2 only, no third whole audit; substantive corrections RED/GREEN.
-- [ ] Exact commit/tree/base/source-test/evidence hashes, full local hold/per-test footprint and source writer release. Normal Git commit; Source does not push/CIwatch/deploy.
-- [ ] Root hands frozen source to sole Publisher; Server only after actual merged CI/catalog plus all gates can attempt original API once and independent a355 full111x17/math/normal close. This is not Source test PASS or financial qualification.
+- [x] ADR/iteration/roadmap/reuse and approved spec/plan agree with observed code/tests; real admission remains UNMET.
+- [x] Fresh focused independent R1 and necessary known-fix R2 only, no third whole audit; substantive corrections RED/GREEN.
+- [x] Exact commit/tree/base/source-test/evidence hashes, full local hold/per-test footprint and source writer release. Normal Git commit; Source does not push/CIwatch/deploy.
+- [x] Root hands frozen source to sole Publisher; Server only after actual merged CI/catalog plus all gates can attempt original API once and independent a355 full111x17/math/normal close. This is not Source test PASS or financial qualification.
+
+## Source release boundary
+
+Checked tasks denote Source completion and handoff, not actual release/admission.
+Source0a8f14ad plus test correction4ef27811 received R1 NEEDS_FIX(one P2 coverage)
+and final known-fix R2 READY. Actual APIs/OS111x17/math still require Publisher
+merge/catalog and Server gates.41 new controls plus earlier affected default case
+pass; no third audit/old broad tests. See iteration and frozen interface evidence.
