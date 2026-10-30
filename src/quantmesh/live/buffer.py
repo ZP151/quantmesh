@@ -512,6 +512,7 @@ class LiveBuffer:
             config = capability._claim(reader.root)
             reader._history_ram_aux = capability
             reader._con = duckdb.connect(str(reader.path), read_only=True, config=config)
+            capability._bind_reader(reader)
             capability.check()
             reader._con.execute("SET TimeZone = 'UTC'")
             reader._assert_supported_schema()
