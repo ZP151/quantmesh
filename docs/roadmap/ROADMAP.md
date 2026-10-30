@@ -1,5 +1,9 @@
 # QuantMesh Product Roadmap
 
+## Approved private RAM auxiliary history profile — issue255,2026-10-30
+
+Human approved one guarded256MiB noswap private tmpfs within the shared2GiB group, canonical data readonly and normal128MiB/temp0 unchanged. Source implementation/targeted review precede Publisher release and Server actual API/full-oracle/normal-close gates. Local synthetic controls do not qualify the original real history. See [checkpoint](../iterations/0038-history-ram-aux.md).
+
 ## Fixed candidate ordinary-workstation admission — issue253,2026-10-30
 
 The approved offline slice connects fixed native-daily candidate selection,

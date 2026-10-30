@@ -1,5 +1,9 @@
 # QuantMesh Reuse Matrix
 
+## Guarded history RAM auxiliary profile — issue255,2026-10-30
+
+Reuse existing DuckDB readonly engine, history-only feed/service/factory and root-owned FD admission discipline. New private capability checks actual Linux metadata and strict typed receipts; no upstream C++ is copied, installed or vendored. Existing DuckDB package/license boundary stays. See [ADR0040](adr/0040-guarded-history-ram-aux.md).
+
 ## Fixed candidate offline workstation — issue253,2026-10-30
 
 Reuse ObjectStore, JsonlStore, WriterLease and the incumbent Research jobs/UI
