@@ -1,4 +1,4 @@
-# Iteration0038 â€” fixed c8 OpenD private storage
+# Iteration0038 — fixed c8 OpenD private storage
 
 Issue [263](https://github.com/ZP151/quantmesh/issues/263), directly blocking the
 remaining original OpenD recovery/login path and later259 data gate.
@@ -115,7 +115,7 @@ OverlayFS work metadata after filling the filesystem. Physical marker inode,
 image identity, fsid and runtime inode persist; OverlayFS view inode is not used
 as the physical remount identity. Only synthetic lower bytes are hashed.
 
-Verifier: RED12â€“18 cover missing fixture/lifecycle/namespace/aggregate/marker/
+Verifier: RED12–18 cover missing fixture/lifecycle/namespace/aggregate/marker/
 embedded-code/owned cleanup behavior. RED20 adds controlled-stop cleanup; RED21b
 exposes and closes raw machine-id byte-hash drift. AFFECTED22:299 passed/70 Windows
 platform skips. Fixed proof deadline195s and cleanup reserve25s remain below the
@@ -205,7 +205,7 @@ required exact-head CI is pending. This final documentation checkpoint changes
 no reviewed runtime/test bytes. Original complete-tree/catalog publication,
 synthetic native proof and the original login window remain pending.
 
-## Nearest visible pathname ancestor follow-up â€”2026-10-31
+## Nearest visible pathname ancestor follow-up —2026-10-31
 
 Planner: issue263 remains the original console recovery/login action. Root cee66f50 selects only the visibility invariant, direct tests and two mechanical guard pins. New isolated sparse branch codex/opend-visible-mount-nearest-ancestor starts from actual origin/main5ce6d458; prior checkout/head66 and all native/failed evidence stay unchanged. Dedicated ignored purpose output/opend-visible-mount-nearest-ancestor-20261031 has a complete8MiB hold; no host effects or new environment. [Follow-up spec](../superpowers/specs/2026-10-31-opend-visible-mount-nearest-ancestor.md) and [plan](../superpowers/plans/2026-10-31-opend-visible-mount-nearest-ancestor.md).
 
@@ -229,11 +229,11 @@ Quant: no data/model/fees/math/financial evidence changed. Reviewer: fresh Paren
 
 Fresh independent R1 on90e552b found one P2 coverage blocker, no runtime defect: the foreign-root /dev replacement removed mount23 but left /dev/shm parent23, so mount_parent masked the intended canonical-root rejection. R1 report SHA84f7ea2979256cfcf240819f6ba846902de4466a38e16e1527768918f96b6648 is retained in the dedicated purpose/review/R1.md.
 
-Implementer/Verifier: adding exact writable_escape assertions first produced the expected1failed/6passed RED (mount_parent versus writable_escape). The minimal fixture reparent20:23â†’40 then passes all7 selected cases. A bounded RAM-only removal of canonical_kernel_mount's root==/ predicate makes the actual final foreign-root test fail with pytest's DID NOT RAISE outcome, proving the intended safety check is reached. The real guard still rejects writable_escape. Runtime guard/launcher/fixture remain byte-identical to90e552b (d2addaa9/3b7666b3/a46265e7). Changed test Ruff/format and diff checks pass; no broader152 replay, host/native/Source/SDK/UI or push/PR. Exact raw R1-REASON-RED, R1-REPARENT-GREEN and R1-ACTUAL-TEST-MUTATION evidence is retained.
+Implementer/Verifier: adding exact writable_escape assertions first produced the expected1failed/6passed RED (mount_parent versus writable_escape). The minimal fixture reparent20:23→40 then passes all7 selected cases. A bounded RAM-only removal of canonical_kernel_mount's root==/ predicate makes the actual final foreign-root test fail with pytest's DID NOT RAISE outcome, proving the intended safety check is reached. The real guard still rejects writable_escape. Runtime guard/launcher/fixture remain byte-identical to90e552b (d2addaa9/3b7666b3/a46265e7). Changed test Ruff/format and diff checks pass; no broader152 replay, host/native/Source/SDK/UI or push/PR. Exact raw R1-REASON-RED, R1-REPARENT-GREEN and R1-ACTUAL-TEST-MUTATION evidence is retained.
 
 Only this direct test and plan/iteration status changed. Same fresh reviewer known-fix R2 is pending; this is not an independent READY or a third structural review. Earlier HANDOFF.json/90e evidence stays immutable; HANDOFF-R2.json carries the new exact candidate.
 
-## Source-review closure â€” awaiting normal publication
+## Source-review closure — awaiting normal publication
 
 Same fresh reviewer R2 is READY on5c12344254e5137dfd5af10ad8878fa2adffc1f3; report4467B SHA945b726d0de433cb4a43a1d324ede3445f91cde551ad535cbcc689128aa68576 under output/opend-visible-mount-nearest-ancestor-20261031/review/R2.md. R1's sole P2 test coverage blocker is closed; no remaining Critical/Important/Minor findings. The two-round source review stops, no R3. This final closure changes only this iteration and the tracked plan; runtime guard/launcher/fixture and direct test bytes remain exactly the reviewed5c123442 version.
 
@@ -250,3 +250,11 @@ Probe-only Root-authorized input omission: IMAGE->ALIAS readonly bind was omitte
 Quant: no market data/model/fees/metric/leakage or trading authority changes. Implementer/Verifier: tests first on unchanged production files now give6failed/9passed, including absent dropin readonly and five actual manager drift controls. Raw RED-OLD-CONFIG-COMPLETE evidence is under output/opend-visible-mount-nearest-ancestor-20261031/pool-readonly-config-01. The earlier runner omitted the basetemp parent and yielded1failure/14setup errors; that failed invocation is retained and is not counted as the complete RED.
 
 Existing isolated checkout is reused on codex/0038-opend-pool-readonly from fresh origin/main559; old b5 source branch, all failures and local main divergence are preserved. Fresh complete software forecast5556208B<existing8388608B hold; no new charge. Tracked spec/plan: 2026-10-31-opend-pool-readonly.md. Minimal production change, GREEN, fresh independent review and normal exact-head CI/publication remain pending.
+
+## Declarative pool readonly software GREEN
+
+Implementer: c8 dropin adds only the exact POOL ReadOnlyPaths line; resulting1320B SHA325cdfbf8424ac95b9d21a1a6929a886e1572c524078f785f462cf28438e83b9. Launcher updates that literal pin and adds the c8 recovery-only exact effective ReadOnlyPaths scalar. Formal IMAGE->ALIAS/claim binds and six writes/binds are unchanged. The private-storage guard, recovery helper, fixture and base template remain byte-identical to merged559; every other launcher definition is AST-identical. Test-first checkpoint e7673bf preserves old production bytes.
+
+Verifier: genuine complete RED6failed/9passed becomes GREEN15passed/0.73s. The directly affected storage/fixture/recovery files pass238tests/6.16s; the15 targeted cases are included, not added twice. Changed3-file Ruff check/format, Python3.12 syntax plus in-memory compile, whitespace and submodule metadata checks pass. An initial Ruff line-length failure was corrected by formatting only. Raw commands, RC/stdout/stderr and minimal AST/byte delta proof are retained under the software purpose. No package/environment, old native qualification or host operation occurred in this software phase. An initial documentation writer used the Windows default decoding and stopped before updating this ledger; the corrected writer explicitly uses UTF8. Production tested checkpoint2e8daab is unchanged.
+
+Reviewer: independent fresh dual Spec/Quality review remains pending, capped at R1/known-fix R2; this is not a third review of PR265. Normal exact-final-head CI, publication and later merged Source/runtime/backend/private window remain pending.
