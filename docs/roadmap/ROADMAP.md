@@ -9,11 +9,24 @@ controls precede normal source publication and one separate synthetic native
 proof; actual original-unit login and SDK/IVV qualification remain open. See the
 [checkpoint](../iterations/0038-opend-private-storage.md).
 
-The propagation follow-up corrects shared bind-list reset ordering, retaining all
+The earlier propagation follow-up corrected shared bind-list reset ordering, retaining all
 six writable/two readonly mappings, and selects final MountFlags=slave with an exact c8
 manager contract, preserving the complete finite-storage safety model. Local
 software GREEN and review/publication are separate from the still-unmet original
 backend/private-window endpoint. No fourth start or SDK action follows from tests.
+
+The complete-boundary amendment supersedes slave with private propagation,
+pressure notification off and readonly `/run /dev/hugepages` appended to POOL.
+An unchanged-Source same-actor candidate admitted with all six writes and zero
+escapes, then closed normally; original backend/window remains UNMET. Software
+requires exact matching c8 manager properties/pin and preserves guard/resources.
+Private isolation makes service stop plus recursive-cgroup-empty before host
+unmount essential. See the [current contract](../superpowers/specs/2026-11-01-opend-private-boundary.md).
+
+Fresh whole-slice R1 on the private-boundary software is Spec PASS/Quality READY
+with no findings; runtime/tests stay reviewed and no R2 is needed. Exact-final-head
+CI/normal publication/catalog and original backend/private-window acceptance
+remain pending, with no Source/SDK or fourth-start claim from review.
 
 ## Same-unit OpenD recovery — issue261
 

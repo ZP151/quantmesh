@@ -943,14 +943,22 @@ def test_original_c8_check_requires_the_bound_live_private_storage(
         "MountFlags_missing",
         "MountFlags_empty",
         "MountFlags_shared",
-        "MountFlags_private",
+        "MountFlags_slave",
         "MountFlags_unknown",
+        "MemoryPressureWatch_missing",
+        "MemoryPressureWatch_empty",
+        "MemoryPressureWatch_on",
+        "MemoryPressureWatch_auto",
+        "MemoryPressureWatch_unknown",
         "PrivateTmp",
         "StateDirectory",
         "RuntimeDirectoryPreserve",
         "ReadOnlyPaths_missing",
         "ReadOnlyPaths_empty",
         "ReadOnlyPaths_wrong",
+        "ReadOnlyPaths_without_pool",
+        "ReadOnlyPaths_without_run",
+        "ReadOnlyPaths_without_hugepages",
         "ReadOnlyPaths_extra",
         "ReadOnlyPaths_duplicate",
         "ReadWritePaths",
@@ -977,16 +985,19 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(
         Id=unit,
         MainPID="7",
         ActiveState="active",
-        ControlGroup="/system.slice/" + unit,
+        ControlGroup=r"/system.slice/system-quantmesh-opend-console.slice/" + unit,
         RuntimeDirectory=runtime,
         DropInPaths=dropin,
         PrivateMounts="yes",
-        MountFlags="slave",
+        MountFlags="private",
+        MemoryPressureWatch="off",
         PrivateTmp="no",
         StateDirectory="",
         RuntimeDirectoryPreserve="yes",
         ProtectSystem="strict",
-        ReadOnlyPaths="/run/quantmesh-opend-storage-c8f0d0de4ca641a491fca6df24c66ceb",
+        ReadOnlyPaths=(
+            "/run/quantmesh-opend-storage-c8f0d0de4ca641a491fca6df24c66ceb /run /dev/hugepages"
+        ),
         ReadWritePaths=(
             "/var/lib/quantmesh-opend /var/lib/quantmesh-opend-stage "
             f"/run/{runtime} /tmp /var/tmp /dev/shm"
@@ -1008,8 +1019,17 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(
         properties["MountFlags"] = {
             "MountFlags_empty": "",
             "MountFlags_shared": "shared",
-            "MountFlags_private": "private",
+            "MountFlags_slave": "slave",
             "MountFlags_unknown": "unrecognized",
+        }[change]
+    elif change == "MemoryPressureWatch_missing":
+        del properties["MemoryPressureWatch"]
+    elif change and change.startswith("MemoryPressureWatch_"):
+        properties["MemoryPressureWatch"] = {
+            "MemoryPressureWatch_empty": "",
+            "MemoryPressureWatch_on": "on",
+            "MemoryPressureWatch_auto": "auto",
+            "MemoryPressureWatch_unknown": "unrecognized",
         }[change]
     elif change == "ReadOnlyPaths_missing":
         del properties["ReadOnlyPaths"]
@@ -1017,6 +1037,13 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(
         properties["ReadOnlyPaths"] = {
             "ReadOnlyPaths_empty": "",
             "ReadOnlyPaths_wrong": "/run/foreign-storage",
+            "ReadOnlyPaths_without_pool": "/run /dev/hugepages",
+            "ReadOnlyPaths_without_run": (
+                "/run/quantmesh-opend-storage-c8f0d0de4ca641a491fca6df24c66ceb /dev/hugepages"
+            ),
+            "ReadOnlyPaths_without_hugepages": (
+                "/run/quantmesh-opend-storage-c8f0d0de4ca641a491fca6df24c66ceb /run"
+            ),
             "ReadOnlyPaths_extra": properties["ReadOnlyPaths"] + " /host-extra",
             "ReadOnlyPaths_duplicate": properties["ReadOnlyPaths"]
             + " "
@@ -1081,7 +1108,11 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(
     else:
         observed = stage._manager(window)
         assert observed["DropInPaths"] == dropin
-        assert observed["MountFlags"] == "slave"
+        assert observed["MountFlags"] == "private"
+        assert observed["MemoryPressureWatch"] == "off"
+        assert observed["ControlGroup"].startswith(
+            r"/system.slice/system-quantmesh-opend-console.slice/"
+        )
 
 
 @pytest.mark.parametrize("late_drift", [False, True])
@@ -1159,3 +1190,4 @@ def test_storage_dropin_exemption_is_not_available_to_initial_or_other_recovery(
         assert contract["DropInPaths"] == ""
         assert "PrivateMounts" not in contract
         assert "MountFlags" not in contract
+        assert "MemoryPressureWatch" not in contract

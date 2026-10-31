@@ -49,7 +49,7 @@ PRIVATE_STORAGE_DROPIN = Path(
     + PRIVATE_STORAGE_NONCE
     + ".service.d/30-private-storage.conf"
 )
-PRIVATE_STORAGE_DROPIN_SHA = "b3073bdc16fb65e7bd4a1c771bc84a00621140419a1d70051ddd419a8f64176e"
+PRIVATE_STORAGE_DROPIN_SHA = "c8a5b6517e2861cb5f20f6bc610f259a3d8964dcd62f7409d17d84a007f06c68"
 PRIVATE_STORAGE_SHA = "d2addaa991a5b22eff531ccb5891add5c4849ca1357f1c7ba83455b4dc907e30"
 RECOVERY_SHA = "761f5078f906d734d17bdeab6369bffd09578be5602d161682cb10470d0aee9d"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
@@ -513,12 +513,15 @@ def _manager_contract(window):
         contract.update(
             DropInPaths=PRIVATE_STORAGE_DROPIN.as_posix(),
             PrivateMounts="yes",
-            MountFlags="slave",
+            MountFlags="private",
+            MemoryPressureWatch="off",
             PrivateTmp="no",
             StateDirectory="",
             RuntimeDirectoryPreserve="yes",
             ProtectSystem="strict",
-            ReadOnlyPaths="/run/quantmesh-opend-storage-" + PRIVATE_STORAGE_NONCE,
+            ReadOnlyPaths=(
+                "/run/quantmesh-opend-storage-" + PRIVATE_STORAGE_NONCE + " /run /dev/hugepages"
+            ),
             ReadWritePaths=(
                 "/var/lib/quantmesh-opend /var/lib/quantmesh-opend-stage "
                 "/run/quantmesh-opend-console-" + PRIVATE_STORAGE_NONCE + " /tmp /var/tmp /dev/shm"
