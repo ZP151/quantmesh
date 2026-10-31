@@ -719,6 +719,8 @@ def _prepare(window):
     properties = _manager(window, preparing=True)
     if _cgroup("self") != properties["ControlGroup"]:
         raise StageDenied("backend_denied")
+    if _witness_enabled(window, window.claims):
+        _witness_open(pane=False)
     with _owned_dir(_paths(window)) as directory:
         fd = os.open(
             "tmux.conf",
@@ -824,6 +826,7 @@ def start_staging_console(window):
         window.claims["max_seconds"], (window.expires - datetime.now(UTC)).total_seconds()
     )
     try:
+        _witness_event("PANE_CONTEXT_OK")
         _unclaimed(window)
         if not isinstance(window, RecoveryWindow):
             with _owned_dir(STATE) as directory:
@@ -888,7 +891,9 @@ def start_staging_console(window):
                 with window.control.release_lease() as recovery_lease:
 
                     def release_recovery():
+                        _witness_event("CONSUME_ENTER")
                         recovery_lease.consume()
+                        _witness_event("CONSUME_RETURNED")
                         # Persistence may block: revalidate current source/host
                         # and then live authority again before the gate clocks.
                         _admit(window)
@@ -942,7 +947,7 @@ def start_staging_console(window):
 
 def _stop_backend(handle):
     if not select.select([handle], [], [], 0)[0]:
-        signal.pidfd_send_signal(handle, signal.SIGTERM)
+        _witness_signal(handle, signal.SIGTERM, 0, 0, backend=True)
 
 
 def _finish_backend(handle):
@@ -966,6 +971,574 @@ def _identity(pid, handle):
     if info.st_uid != os.getuid() or int(fields[1]) != os.getpid():
         raise StageDenied("identity_denied")
     return dict(pid=pid, start_ticks=int(fields[19]), uid=info.st_uid)
+
+
+# c8/schema4 diagnostic metadata only; never release authority.
+_WITNESS = None
+_WITNESS_STAGES = frozenset(
+    (
+        "HEADER",
+        "PREPARED",
+        "PANE_ENTER",
+        "WINDOW_ADMIT_OK",
+        "WINDOW_ADMIT_FAIL",
+        "PANE_CONTEXT_OK",
+        "PANE_CONTEXT_FAIL",
+        "CHILD_REGISTERED",
+        "FINAL_ADMIT_OK",
+        "FINAL_ADMIT_FAIL",
+        "CONSUME_ENTER",
+        "CONSUME_RETURNED",
+        "GATE_WRITE_ENTER",
+        "GATE_WRITE_RETURNED",
+        "GATE_ACK",
+        "CHILD_REPORT",
+        "OWNED_VENDOR_EXE_OBSERVED",
+        "CHILD_REAPED",
+        "CLEANUP_SIGNAL",
+        "BACKEND_FINISH",
+        "PANE_FAILED",
+        "PANE_RETURNED",
+        "TERMINAL",
+    )
+)
+_CHILD_FAILURES = ("PARENT", "TIMEOUT", "GATE", "SETUP", "CHDIR", "EXEC", "OTHER")
+_WITNESS_TYPES = frozenset(("StageDenied", "OSError", "ValueError", "KeyboardInterrupt", "OTHER"))
+_WITNESS_ERRNOS = frozenset(
+    (0, 1, 2, 5, 7, 8, 9, 11, 12, 13, 14, 20, 22, 23, 24, 26, 28, 30, 32, 36, 40, 80)
+)
+
+
+def _witness_enabled(window, claims):
+    return (
+        window.persistent
+        and window.nonce == PRIVATE_STORAGE_NONCE
+        and claims.get("schema_version") == 4
+    )
+
+
+def _witness_reserve(fd):
+    os.posix_fallocate(fd, 0, 32768)
+    info = os.fstat(fd)
+    if info.st_size != 32768 or info.st_blocks * 512 < 32768:
+        raise StageDenied("context_denied")
+    os.fsync(fd)
+
+
+def _witness_hash(binding):
+    return hashlib.sha256(
+        json.dumps(binding, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _witness_read(raw, binding):
+    result = dict(
+        content_valid=False,
+        stream_complete=False,
+        durability="UNKNOWN_NOT_PROVEN_BY_READ",
+        events=[],
+    )
+    if len(raw) != 32768:
+        return result
+    expected = _witness_hash(binding)
+    zero = False
+    for index in range(64):
+        slot = raw[index * 512 : (index + 1) * 512]
+        if slot == bytes(512):
+            zero = True
+            continue
+        if zero or hashlib.sha256(slot[64:]).hexdigest().encode() != slot[:64]:
+            return result
+        try:
+            obj = json.loads(slot[64:].rstrip(b"\0"))
+        except (ValueError, UnicodeError):
+            return result
+        if (
+            type(obj) is not dict
+            or set(obj) != {"binding", "seq", "event"}
+            or obj["binding"] != expected
+            or type(obj["seq"]) is not int
+            or obj["seq"] != index
+            or type(obj["event"]) is not dict
+            or obj["event"].get("stage") not in _WITNESS_STAGES
+        ):
+            return result
+        event = obj["event"]
+        allowed = {
+            "stage",
+            "monotonic_ns",
+            "pid",
+            "start",
+            "parent_pid",
+            "parent_start",
+            "returncode",
+            "signal",
+            "errno",
+            "requested",
+            "result",
+            "kind",
+            "category",
+            "error_type",
+            "errno_known",
+            "child_monotonic_ns",
+        }
+        if index == 0:
+            allowed = {"stage", "monotonic_ns", "identity"}
+        if (
+            index >= 48
+            or set(event) - allowed
+            or type(event.get("monotonic_ns")) is not int
+            or any(
+                type(v) not in (int, bool)
+                for k, v in event.items()
+                if k not in {"stage", "identity", "kind", "category", "error_type"}
+            )
+            or ("kind" in event and event["kind"] not in _CHILD_FAILURES)
+            or ("category" in event and event["category"] not in CODES)
+            or ("error_type" in event and event["error_type"] not in _WITNESS_TYPES)
+        ):
+            return result
+        if index > 0 and (
+            event["stage"] == "HEADER" or result["events"][-1]["stage"] == "TERMINAL"
+        ):
+            return result
+        if index == 0 and obj["event"].get("identity") != binding:
+            return result
+        result["events"].append(obj["event"])
+    result["content_valid"] = bool(result["events"])
+    result["stream_complete"] = bool(
+        result["events"] and result["events"][-1]["stage"] == "TERMINAL"
+    )
+    return result
+
+
+class _Witness:
+    def __init__(self, fd, binding, previous=None, guard=None):
+        self.guard = guard
+        self.fd, self.binding = fd, binding
+        self.attempts = self.bytes_attempted = self.persisted = 0
+        self.buffer = []
+        self.failed = self.hold = False
+        self.closed = self.close_attempted = False
+        if previous is None:
+            self.buffer.append(
+                dict(stage="HEADER", identity=binding, monotonic_ns=time.monotonic_ns())
+            )
+            self.flush()
+        else:
+            parsed = _witness_read(previous, binding)
+            if not parsed["content_valid"] or parsed["stream_complete"]:
+                raise StageDenied("context_denied")
+            self.persisted = self.attempts = len(parsed["events"])
+            self.bytes_attempted = self.attempts * 512
+
+    def event(self, stage, **values):
+        allowed = {
+            "pid",
+            "start",
+            "parent_pid",
+            "parent_start",
+            "returncode",
+            "signal",
+            "errno",
+            "requested",
+            "result",
+            "kind",
+            "category",
+            "error_type",
+            "errno_known",
+            "child_monotonic_ns",
+        }
+        if (
+            stage not in _WITNESS_STAGES
+            or set(values) - allowed
+            or any(type(v) not in (int, bool, str) for v in values.values())
+            or any(
+                type(v) is str and v not in CODES | set(_CHILD_FAILURES) | _WITNESS_TYPES
+                for v in values.values()
+            )
+        ):
+            raise StageDenied("context_denied")
+        if self.failed or self.attempts + len(self.buffer) >= 48:
+            self.failed = True
+            raise StageDenied("context_denied")
+        self.buffer.append(dict(stage=stage, monotonic_ns=time.monotonic_ns(), **values))
+        if not self.hold:
+            self.flush()
+
+    def flush(self):
+        if self.hold or self.failed:
+            raise StageDenied("context_denied")
+        try:
+            while self.buffer:
+                event = self.buffer.pop(0)
+                seq = self.attempts
+                if seq >= 48:
+                    raise StageDenied("context_denied")
+                body = json.dumps(
+                    dict(binding=_witness_hash(self.binding), seq=seq, event=event),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ).encode()
+                if len(body) > 448:
+                    raise StageDenied("context_denied")
+                body = body.ljust(448, b"\0")
+                slot = hashlib.sha256(body).hexdigest().encode() + body
+                self.attempts += 1
+                self.bytes_attempted += 512
+                if self.guard is not None:
+                    self.guard()
+                if os.pwrite(self.fd, slot, seq * 512) != 512:
+                    raise StageDenied("context_denied")
+                if self.guard is not None:
+                    self.guard()
+                self.persisted += 1
+        except BaseException:
+            self.failed = True
+            raise
+
+    def finish(self, primary=None, terminal=True):
+        failure = None
+        try:
+            if self.hold or self.failed:
+                raise StageDenied("context_denied")
+            if terminal:
+                self.event("TERMINAL")
+            self.flush()
+            os.fsync(self.fd)
+        except BaseException as error:
+            self.failed = True
+            failure = error
+        finally:
+            close_failed = False
+            self.close_attempted = True
+            for fd in (self.fd, getattr(self, "directory_fd", None)):
+                if fd is not None:
+                    try:
+                        os.close(fd)
+                    except BaseException as error:
+                        self.failed = close_failed = True
+                        if failure is None:
+                            failure = error
+            self.closed = not close_failed
+        if failure is not None and primary is None:
+            raise failure
+
+
+def _child_failure_frame(kind, number, monotonic):
+    code = _CHILD_FAILURES.index(kind) + 1
+    number = number if type(number) is int and number in _WITNESS_ERRNOS else 0
+    return b"F" + bytes((code,)) + number.to_bytes(4, "big") + monotonic.to_bytes(8, "big")
+
+
+def _decode_child_frames(raw):
+    if len(raw) > 28 or len(raw) % 14:
+        return None
+    result = []
+    for offset in range(0, len(raw), 14):
+        frame = raw[offset : offset + 14]
+        if frame[0:1] != b"F" or not 1 <= frame[1] <= len(_CHILD_FAILURES):
+            return None
+        number = int.from_bytes(frame[2:6], "big")
+        if number not in _WITNESS_ERRNOS:
+            return None
+        result.append(
+            dict(
+                kind=_CHILD_FAILURES[frame[1] - 1],
+                errno=number,
+                monotonic_ns=int.from_bytes(frame[6:], "big"),
+            )
+        )
+    return result
+
+
+def _witness_outcome(ack, frames, returncode, observed):
+    return dict(
+        ack=ack,
+        preexec=_decode_child_frames(frames) or "UNKNOWN",
+        returncode=returncode,
+        exec_observed=observed,
+    )
+
+
+def _witness_event(stage, **values):
+    if _WITNESS is not None:
+        _WITNESS.event(stage, **values)
+
+
+def _witness_identity():
+    fields = Path("/proc/self/stat").read_text().rpartition(")")[2].split()
+    return dict(pid=os.getpid(), start=int(fields[19]))
+
+
+def _witness_binding(*, pane):
+    try:
+        raw = _bytes(RECOVERY_PERMIT, maximum=4096)
+    except StageDenied:
+        try:
+            RECOVERY_PERMIT.lstat()
+        except FileNotFoundError:
+            return None
+        raise
+    claims = _json(raw)
+    if claims.get("schema_version") != 4:
+        return None
+    if claims.get("nonce") != PRIVATE_STORAGE_NONCE:
+        raise StageDenied("context_denied")
+    with _protected_fd(LAUNCHER) as fd:
+        source = _digest_fd(fd)
+    if claims.get("launcher_sha256") != source:
+        raise StageDenied("pin_drift")
+    unit = "quantmesh-opend-console@" + PRIVATE_STORAGE_NONCE + ".service"
+    fields = dict(
+        line.split("=", 1)
+        for line in _command(
+            [
+                "/usr/bin/systemctl",
+                "show",
+                unit,
+                "--all",
+                "--property=Id,InvocationID,ControlGroup,MainPID",
+            ]
+        ).splitlines()
+    )
+    invocation = fields.get("InvocationID", "")
+    if (
+        fields.get("Id") != unit
+        or re.fullmatch("[a-f0-9]{32}", invocation) is None
+        or os.environ.get("INVOCATION_ID") != invocation
+        or fields.get("ControlGroup") != _cgroup("self")
+        or (pane and str(os.getppid()) != fields.get("MainPID"))
+    ):
+        raise StageDenied("backend_denied")
+    if pane:
+        # Fixed retained parent metadata only; normal _admit/_backend_context still follows.
+        handle = os.pidfd_open(os.getppid())
+        try:
+            if select.select([handle], [], [], 0)[0]:
+                raise StageDenied("backend_denied")
+        finally:
+            os.close(handle)
+    return dict(
+        invocation=invocation,
+        source=source,
+        control=hashlib.sha256(raw).hexdigest(),
+        nonce=PRIVATE_STORAGE_NONCE,
+        pid=0,
+        start=0,
+    )
+
+
+def _witness_open(*, pane):
+    global _WITNESS
+    binding = _witness_binding(pane=pane)
+    if binding is None:
+        return
+    if os.getuid() != 997 or os.geteuid() != 997 or os.getgid() != 987 or os.getegid() != 987:
+        raise StageDenied("identity_denied")
+    current = _witness_identity()
+    parent_pid = os.getppid()
+    parent = os.pidfd_open(parent_pid) if pane else None
+    try:
+        parent_start = (
+            int(Path(f"/proc/{parent_pid}/stat").read_text().rpartition(")")[2].split()[19])
+            if pane
+            else 0
+        )
+        directory = Path("/run/quantmesh-opend-console-" + PRIVATE_STORAGE_NONCE)
+        with _owned_dir(directory) as directory_fd:
+            flags = os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC
+            fd = os.open(
+                "invocation-witness",
+                flags | (0 if pane else os.O_CREAT | os.O_EXCL),
+                0o600,
+                dir_fd=directory_fd,
+            )
+            try:
+                info = os.fstat(fd)
+                if (
+                    not stat.S_ISREG(info.st_mode)
+                    or info.st_uid != 997
+                    or info.st_gid != 987
+                    or stat.S_IMODE(info.st_mode) != 0o600
+                    or info.st_nlink != 1
+                    or os.get_inheritable(fd)
+                ):
+                    raise StageDenied("protected_path")
+                if not pane:
+                    _witness_reserve(fd)
+
+                def guard():
+                    held = os.fstat(fd)
+                    named = os.stat(
+                        "invocation-witness", dir_fd=directory_fd, follow_symlinks=False
+                    )
+                    keys = (
+                        "st_dev",
+                        "st_ino",
+                        "st_uid",
+                        "st_gid",
+                        "st_mode",
+                        "st_nlink",
+                        "st_size",
+                    )
+                    if (
+                        any(getattr(held, k) != getattr(named, k) for k in keys)
+                        or held.st_ino != info.st_ino
+                        or held.st_dev != info.st_dev
+                        or held.st_size != 32768
+                        or held.st_nlink != 1
+                        or held.st_uid != 997
+                        or held.st_gid != 987
+                        or stat.S_IMODE(held.st_mode) != 0o600
+                    ):
+                        raise StageDenied("protected_path")
+
+                # Retain a separate directory FD because _owned_dir's context will close its own.
+                retained = os.dup(directory_fd)
+                directory_fd = retained
+                try:
+                    writer = _Witness(fd, binding, os.pread(fd, 32769, 0) if pane else None, guard)
+                    if _witness_identity() != current or (
+                        pane
+                        and (
+                            os.getppid() != parent_pid
+                            or select.select([parent], [], [], 0)[0]
+                            or int(
+                                Path(f"/proc/{parent_pid}/stat")
+                                .read_text()
+                                .rpartition(")")[2]
+                                .split()[19]
+                            )
+                            != parent_start
+                        )
+                    ):
+                        raise StageDenied("identity_denied")
+                    writer.directory_fd = retained
+                    writer.parent_identity = (parent_pid, parent_start) if pane else None
+                    _WITNESS = writer
+                except BaseException:
+                    os.close(retained)
+                    raise
+            except BaseException:
+                os.close(fd)
+                raise
+        _witness_event(
+            "PANE_ENTER" if pane else "PREPARED",
+            **current,
+            parent_pid=parent_pid,
+            parent_start=parent_start,
+        )
+    finally:
+        if parent is not None:
+            os.close(parent)
+
+
+def _witness_close(primary=None, *, terminal=True):
+    global _WITNESS
+    writer, _WITNESS = _WITNESS, None
+    if writer is not None:
+        writer.finish(primary, terminal=terminal)
+
+
+def _witness_safe_event(stage, **values):
+    try:
+        _witness_event(stage, **values)
+    except BaseException:
+        if _WITNESS is not None:
+            _WITNESS.failed = True
+
+
+def _witness_failure(stage, error):
+    category = error.code if isinstance(error, StageDenied) else "context_denied"
+    number = error.errno if isinstance(error, OSError) else None
+    known = type(number) is int and number in _WITNESS_ERRNOS and number != 0
+    kind = (
+        "OSError"
+        if isinstance(error, OSError)
+        else (type(error).__name__ if type(error).__name__ in _WITNESS_TYPES else "OTHER")
+    )
+    _witness_safe_event(
+        stage, category=category, errno=number if known else 0, errno_known=known, error_type=kind
+    )
+
+
+def _witness_signal(handle, signum, pid, start, *, backend=False):
+    stage = "BACKEND_FINISH" if backend else "CLEANUP_SIGNAL"
+    if backend and _WITNESS is not None and getattr(_WITNESS, "parent_identity", None) is not None:
+        pid, start = _WITNESS.parent_identity
+    _witness_safe_event(stage, signal=int(signum), pid=pid, start=start, requested=True)
+    try:
+        signal.pidfd_send_signal(handle, signum)
+    except BaseException as error:
+        _witness_safe_event(stage, signal=int(signum), pid=pid, start=start, result=False)
+        _witness_failure(stage, error)
+        raise
+    _witness_safe_event(stage, signal=int(signum), pid=pid, start=start, result=True)
+
+
+def _child_fail(report, kind, error, enabled):
+    if enabled:
+        try:
+            number = error.errno if isinstance(error, OSError) else 0
+            os.write(report, _child_failure_frame(kind, number, time.monotonic_ns()))
+        except BaseException:
+            pass  # Original child exit/cleanup remains authoritative, report is UNKNOWN.
+
+
+def _witness_reaped(child):
+    if _WITNESS is None:
+        return
+    _WITNESS.hold = False
+    try:
+        os.set_blocking(child.report, False)
+        try:
+            raw = child.report_prefix + os.read(child.report, 29)
+        except BlockingIOError:
+            raw = child.report_prefix
+        frames = _decode_child_frames(raw)
+        child.witness_outcome = _witness_outcome(
+            getattr(child, "acknowledged", False),
+            raw,
+            child.returncode,
+            getattr(child, "exec_observed", False),
+        )
+        if frames is not None:
+            for frame in frames:
+                _witness_safe_event(
+                    "CHILD_REPORT",
+                    kind=frame["kind"],
+                    errno=frame["errno"],
+                    errno_known=frame["errno"] != 0,
+                    child_monotonic_ns=frame["monotonic_ns"],
+                )
+        values = dict(returncode=child.returncode)
+        if hasattr(child, "pid"):
+            values["pid"] = child.pid
+        _witness_safe_event("CHILD_REAPED", **values)
+    except BaseException:
+        _WITNESS.failed = True
+
+
+def _witness_vendor_identity(child):
+    # One nonwaiting owned-PID observation; short-lived or not-yet-exec remains UNKNOWN.
+    try:
+        if _identity(child.pid, child.pidfd) != child.identity:
+            return
+        actual = os.open(f"/proc/{child.pid}/exe", os.O_RDONLY)
+        try:
+            with _protected_fd(VENDOR) as pinned:
+                a, b = os.fstat(actual), os.fstat(pinned)
+                observed = (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino)
+        finally:
+            os.close(actual)
+        if observed and _identity(child.pid, child.pidfd) == child.identity:
+            child.exec_observed = True
+            _witness_event(
+                "OWNED_VENDOR_EXE_OBSERVED", pid=child.pid, start=child.identity["start_ticks"]
+            )
+    except (OSError, StageDenied):
+        pass  # No positive observation is UNKNOWN, never a fabricated exec failure/success.
 
 
 def _report(fd, count, seconds=2):
@@ -993,12 +1566,17 @@ class _Owned:
     terminal: bool = False
     closed: bool = False
     returncode: int | None = None
+    acknowledged: bool = False
+    exec_observed: bool = False
+    report_prefix: bytes = b""
+    witness_outcome: dict | None = None
 
     def alive(self):
         return not self.terminal and not select.select([self.pidfd], [], [], 0)[0]
 
     def release(self, admission=lambda: None, *, deadline=None, expires=None, before_gate=None):
         admission()
+        _witness_event("FINAL_ADMIT_OK")
         if not self.alive() or _identity(self.pid, self.pidfd) != self.identity:
             raise StageDenied("missing_handle")
         if (deadline is not None and time.monotonic() >= deadline) or (
@@ -1013,10 +1591,20 @@ class _Owned:
                 expires is not None and datetime.now(UTC) >= expires
             ):
                 raise StageDenied("deadline")
-        os.write(self.gate, b"R")
-        self.released = True
-        if _report(self.report, 1) != b"R":
+        _witness_event("GATE_WRITE_ENTER")
+        if os.write(self.gate, b"R") != 1:
             raise StageDenied("fixture_failed")
+        _witness_event("GATE_WRITE_RETURNED")
+        self.released = True
+        ack = _report(self.report, 1)
+        if ack != b"R":
+            self.report_prefix = ack
+            raise StageDenied("fixture_failed")
+        self.acknowledged = True
+        if _WITNESS is not None:
+            _WITNESS.hold = False
+            _witness_event("GATE_ACK")
+            _witness_vendor_identity(self)
 
     def wait(self, seconds=4):
         if not self.terminal:
@@ -1025,15 +1613,16 @@ class _Owned:
             pid, status = os.waitpid(self.pid, 0)
             self.terminal = pid == self.pid
             self.returncode = os.waitstatus_to_exitcode(status)
+            _witness_reaped(self)
         return self.returncode
 
     def close(self):
         if self.closed:
             return
         if self.alive():
-            signal.pidfd_send_signal(self.pidfd, signal.SIGTERM)
+            _witness_signal(self.pidfd, signal.SIGTERM, self.pid, self.identity["start_ticks"])
             if not select.select([self.pidfd], [], [], 1)[0]:
-                signal.pidfd_send_signal(self.pidfd, signal.SIGKILL)
+                _witness_signal(self.pidfd, signal.SIGKILL, self.pid, self.identity["start_ticks"])
         self.wait()
         for fd in (self.gate, self.report, self.pidfd):
             os.close(fd)
@@ -1053,11 +1642,14 @@ def _child(
     persistent=False,
 ):
     """Gated child; terminal descriptors pass directly, with no relay or capture."""
+    phase = "SETUP"
+    diagnostic = _WITNESS is not None
     try:
         for signum in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGALRM):
             signal.signal(signum, signal.SIG_DFL)
         _prctl(1, signal.SIGKILL)  # PR_SET_PDEATHSIG, preserved by ordinary exec.
         if os.getppid() != parent:
+            _child_fail(report, "PARENT", None, diagnostic)
             os._exit(40)
         signal.pthread_sigmask(signal.SIG_SETMASK, [])
         if terminal_fds is None:
@@ -1077,7 +1669,11 @@ def _child(
                     os.close(fd)
                 except OSError:
                     pass
-        if not select.select([gate], [], [], 2)[0] or os.read(gate, 1) != b"R":
+        if not select.select([gate], [], [], 2)[0]:
+            _child_fail(report, "TIMEOUT", None, diagnostic)
+            os._exit(40)
+        if os.read(gate, 1) != b"R":
+            _child_fail(report, "GATE", None, diagnostic)
             os._exit(40)
         if fixture and terminal_fds is not None:
             import fcntl
@@ -1089,8 +1685,11 @@ def _child(
         os.write(report, b"R")
         if not fixture:
             os.close(gate)
-            os.close(report)
+            if not diagnostic:
+                os.close(report)
+            phase = "CHDIR"
             os.chdir(BASE / "10.10.7008")
+            phase = "EXEC"
             os.execve(
                 executable,
                 [str(VENDOR), *vendor_argv],
@@ -1111,7 +1710,8 @@ def _child(
             # Synthetic blocked child uses no terminal byte reads or writes.
             select.select([], [], [], 60 if persistent else seconds + 1)
         os._exit(0)
-    except BaseException:
+    except BaseException as error:
+        _child_fail(report, phase if phase in _CHILD_FAILURES else "OTHER", error, diagnostic)
         os._exit(41)
 
 
@@ -1127,6 +1727,7 @@ def _spawn_gated(
     registry=None,
     persistent=False,
 ):
+    global _WITNESS
     _native()
     if terminal_fds is not None and type(terminal_fds) is int:
         terminal_fds = (terminal_fds,) * 3
@@ -1149,8 +1750,21 @@ def _spawn_gated(
             signal.SIG_BLOCK, {signal.SIGINT, signal.SIGTERM, signal.SIGHUP}
         )
         parent = os.getpid()
+        if _WITNESS is not None:
+            if any(os.get_inheritable(fd) for fd in (gate_r, gate_w, report_r, report_w)):
+                raise StageDenied("context_denied")
+            _WITNESS.hold = True
         pid = os.fork()
         if pid == 0:
+            # Child closes inherited witness immediately; it reports only on existing pipe.
+            if _WITNESS is not None:
+                try:
+                    os.close(_WITNESS.fd)
+                    if hasattr(_WITNESS, "directory_fd"):
+                        os.close(_WITNESS.directory_fd)
+                except BaseException as error:
+                    _child_fail(report_w, "SETUP", error, True)
+                    os._exit(41)
             _child(
                 gate_r,
                 report_w,
@@ -1172,6 +1786,7 @@ def _spawn_gated(
             signal.raise_signal(signal.SIGINT)
         handle = os.pidfd_open(pid, 1 if failure == "missing_handle" else 0)
         identity = _identity(pid, handle)
+        _witness_event("CHILD_REGISTERED", pid=identity["pid"], start=identity["start_ticks"])
         owned = _Owned(pid, handle, gate_w, report_r, identity)
         if registry is not None:
             registry.append(owned)
@@ -1181,8 +1796,10 @@ def _spawn_gated(
         signal.pthread_sigmask(signal.SIG_SETMASK, previous)
         return owned
     except BaseException as error:
+        retained_report = report_r if _WITNESS is not None and pid not in (None, 0) else None
         for fd in descriptors:
-            os.close(fd)
+            if fd != retained_report:
+                os.close(fd)
         # Gate EOF/timeout makes an unregistered child exit independently; never signal by PID.
         terminal = pid is None
         code = None
@@ -1194,6 +1811,27 @@ def _spawn_gated(
                 terminal = True
                 break
             select.select([], [], [], 0.01)
+        if _WITNESS is not None and terminal:
+            _WITNESS.hold = False
+            if pid is not None and code is not None:
+                if retained_report is not None:
+                    _witness_reaped(
+                        types.SimpleNamespace(
+                            report=retained_report,
+                            report_prefix=b"",
+                            pid=pid,
+                            acknowledged=False,
+                            exec_observed=False,
+                            returncode=code,
+                        )
+                    )
+                else:
+                    _witness_safe_event("CHILD_REAPED", pid=pid, returncode=code)
+        if retained_report is not None:
+            try:
+                os.close(retained_report)
+            except OSError as diagnostic_error:
+                _witness_failure("PANE_FAILED", diagnostic_error)
         if handle is not None:
             os.close(handle)
         if owned is not None and registry is not None:
@@ -1367,10 +2005,13 @@ def main(argv=None):
         if args.owned_fixture:
             receipt = run_owned_fixture()
         elif args.start or args.check_window or args.prepare or args.create_pane or args.pane:
+            if args.pane and args.persistent and args.nonce == PRIVATE_STORAGE_NONCE:
+                _witness_open(pane=True)
             window = select_console_window(args.nonce, persistent=args.persistent)
             if window.persistent != args.persistent:
                 raise StageDenied()
             _admit(window)
+            _witness_event("WINDOW_ADMIT_OK")
             if args.nonce != window.nonce:
                 raise StageDenied()
             if args.check_window:
@@ -1396,12 +2037,22 @@ def main(argv=None):
                     attrs[3] &= ~(termios.ECHO | termios.ECHONL)
                     termios.tcsetattr(0, termios.TCSANOW, attrs)
                 receipt = start_staging_console(window)
+                _witness_event("PANE_RETURNED")
     except (Exception, KeyboardInterrupt) as error:
+        _witness_failure("PANE_FAILED", error)
         receipt = dict(
             status="pending",
             scope="STAGING_DENIED",
             **FALSE_FLAGS,
             error_code=error.code if isinstance(error, StageDenied) else "context_denied",
+        )
+    try:
+        _witness_close(
+            primary=StageDenied() if receipt["status"] == "pending" else None, terminal=args.pane
+        )
+    except (Exception, KeyboardInterrupt):
+        receipt = dict(
+            status="pending", scope="STAGING_DENIED", **FALSE_FLAGS, error_code="context_denied"
         )
     if not args.pane:
         print(json.dumps(receipt, sort_keys=True))

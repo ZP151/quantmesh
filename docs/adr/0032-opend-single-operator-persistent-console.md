@@ -137,3 +137,29 @@ resource limit. Fresh software review, exact-head CI/normal merge/catalog and a
 separately bounded formal transaction still precede original-unit backend/socket
 and visible-window acceptance. The original three starts remain historical;
 Source/manager GREEN does not release a fourth start or a trading action.
+
+
+## Invocation-bound diagnostic witness amendment — 2026-11-01
+
+After PR268 publication, the fourth original start passed full Source/Condition/
+Pre/Post, then exited before a backend was accepted. A later readonly metadata
+slice observed both current complete ATTEMPTED markers bound to that control,
+not gate release or vendor exec; old cgroup counters and exit fields were gone.
+Do not attribute this to TTL, gate timeout, disk exhaustion or a vendor exit.
+
+The selected diagnostic-only slice inlines a c8/schema4 witness in the existing
+pinned launcher/runtime write destination. One physically reserved32768-byte file,
+write-once checksummed slots and closed fixed metadata record pane/child stages
+and owned reaped status. Existing report pipe carries fixed pre-exec failure
+frames with CLOEXEC preserved; ACK/EOF/40/41 do not prove exec. No extra filesystem
+writes/fsync/waits occur between fork and ACK/reap, and diagnostic failure cannot
+mask primary errors or prevent mandatory owned cleanup. Records distinguish valid
+content, terminal framing and unknown durability, not a new release authority.
+
+Guard/recovery/base/drop-in/resources/permissions/2s gate/consume remain unchanged.
+No new module/dependency/observer, terminal or credential data, market/SDK grant
+or fifth start. The existing fixed-nonce marker is already consumed: new control
+alone cannot admit another invocation. An independent protocol disposition is
+required before a future diagnostic execution; this software does not reset or
+extend recovery generations. See the invocation-witness design/plan and active
+storage iteration for tests, review and publication boundaries.

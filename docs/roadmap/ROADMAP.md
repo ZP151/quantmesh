@@ -727,3 +727,11 @@ See [the iteration checkpoint](../iterations/0038-worker-restart-recovery.md).
 # Original OpenD readonly configuration checkpoint —2026-10-31
 
 Issue263's isolated systemd255 trial now proves the internal finite storage pool readonly while all six intended external destinations permit own synthetic write/fsync/close. The narrow c8 declarative configuration and exact manager scalar pass targeted and238affected software tests; fresh independent Spec/Quality review is READY, with exact-final-head CI and normal publication pending. The trial omitted one readonly input-artifact bind solely to avoid creating a missing global target; production retains it. Original Source/backend/private login and SDK acceptance are still separate unresolved endpoints. See [the iteration checkpoint](../iterations/0038-opend-private-storage.md).
+
+## Invocation-bound exit diagnostic — issue263
+
+The fourth original start exited without an accepted backend; exact cause remains
+unknown despite a complete current ATTEMPTED marker. A bounded c8/schema4-only
+launcher witness is an independent diagnostic software slice, not a cause fix or
+new execution grant. Existing consumed-marker protocol blocks another start;
+backend/private window/SDK remain unmet. See the invocation-witness design/plan.

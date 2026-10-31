@@ -481,3 +481,57 @@ newsource24MiB, G10240999514/P4297298958, guardG10266837082/P4323136526.
 Actual growth consumes a fixed remaining future envelope for R1/R2/CI/catalog
 and known-fix evidence; it never renews the supplement. N24MiB/remote72/ops8
 and all failures remain retained, no deletion/refund/borrowing or new test run.
+
+
+## Invocation-bound diagnostic witness design — 2026-11-01
+
+Refs #263; [design](../superpowers/specs/2026-11-01-opend-invocation-witness.md) and [plan](../superpowers/plans/2026-11-01-opend-invocation-witness.md), design review pending, no production changes. Planner: one invocation-bound last-stage/owned-child-exit diagnostic, not an inferred root-cause repair. Quant: no data/math/SDK/order/confidence change, eight qualification flags remain false. Implementer: fresh origin/main e2eab51/tree9e04 branch codex/0038-opend-invocation-witness, existing checkout; old branches/localmain retained. Reviewer: Parent's independent targeted design check precedes TDD; fresh softwareR1/maxknownfixR2 later, no self-review approval. Verifier: existing actual fourth-start/readonly postmortem only; two current complete ATTEMPTED marker views bind original control but do not prove release/exec, oldCG counters unavailable, current storage not exhausted. No new test/Source/host/CI/auth/UI/SDK executed. Existing schema4 fixednonce marker is spent: fresh control cannot authorize a fifth start; an independent protocol disposition is required and is not implemented here. Software32MiB forecast includes old checkout/history/admin/shared Git and fixed future; no hold recharge/refund/deletion.
+
+
+### Diagnostic design ruling and implementation checkpoint
+
+Planner: independent targeted design was NOT_READY on four concrete gaps;
+Parent resolved c8/schema4 early binding, memory-only fork-to-ACK/reap, complete
+existing-pipe child frames/inherited witness FD closure, and write-once bounded
+slots/limited durability/primary-error cleanup. Original design/plan and ruling
+remain in invocation-witness-01; current tracked design incorporates one final
+contract. This is a diagnostic witness, not a fix for an identified runtime cause.
+
+Quant: no dataset/math/provider/SDK/order/confidence effect; existing eight
+qualification flags remain false. Original backend/login/financial loop is UNMET.
+
+Implementer: fresh e2eab51 origin/main on codex/0038-opend-invocation-witness;
+only launcher runtime changes, one focused test file and tracked design/plan/
+ADR/iteration/roadmap. Recovery/guard/base/drop-in/fixture remain byte-frozen.
+Header binds actual invocation/source/control; early failures never substitute
+for normal admission. Writer and child protocol stay within existing c8 runtime
+and pipe/FD/reap ownership. No new write destination or generation/marker change.
+
+Verifier: old source actual RED14failed/9errors are absent new API definitions
+(the9 fixtures could not construct the absent _Witness), not native/setup or
+credential effects. Privacy integration RED1failed/28passed exposed checksum-valid
+unknown-field acceptance; fixed closed projection. Outcome RED2failed exposed
+incorrect gate-write-as-ACK and absent numeric error metadata; both fixed. Earlier
+GREEN38/215 overlapping results and Windows POSIX skips are interim, not current
+final verification; exact final commands/results are indexed in ignored evidence.
+Initial Node orchestration missing process/W names and initial E501/static failures
+are local harness/static issues, never product/runtime diagnoses. No original
+Source CLI, native fixture/host/auth/UI/SDK/CI was run in this software phase.
+
+Reviewer: fresh independent implementation Spec/Quality R1 follows coherent GREEN,
+maximum one known-fixR2; Parent owns publication/CI/catalog. Target19:22Z first
+software result is retained; no reset. A future diagnostic run is currently
+BLOCKED by the existing consumed fixed-nonce marker; no fifth start is implied.
+All old images/claims/controls/history and root holds remain retained.
+
+Verifier coherent software boundary: COMMIT-AFFECTED234passed/42skipped in5.60s
+(four directly affected files;48new witness passes/6new POSIX skips overlap).
+All42 are platform-dependent skips on Windows, not Linux/native acceptance.
+Scoped Ruff/format/Python3.12 syntax/diff/submodule pass on final code. Gate write
+attempt/return/ACK, requested/sent cleanup signals, pre-fork no-child no-reap0,
+registration-failure reap->nonblocking report drain->close, original prepare
+cgroup denial before new file creation, close-attempt versus confirmed-close,
+checksum-valid private extras and primary-error precedence have direct controls.
+Every RED/harness/static failure remains retained. No unknown report/EOF/ACK is
+promoted into exec; content/stream/durability remain separate. Fresh implementation
+R1 remains pending; no production/root-cause/login completion follows.
