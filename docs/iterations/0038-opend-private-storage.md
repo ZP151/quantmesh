@@ -204,3 +204,13 @@ PR [264](https://github.com/ZP151/quantmesh/pull/264) carries this source slice;
 required exact-head CI is pending. This final documentation checkpoint changes
 no reviewed runtime/test bytes. Original complete-tree/catalog publication,
 synthetic native proof and the original login window remain pending.
+
+## Nearest visible pathname ancestor follow-up —2026-10-31
+
+Planner: issue263 remains the original console recovery/login action. Root cee66f50 selects only the visibility invariant, direct tests and two mechanical guard pins. New isolated sparse branch codex/opend-visible-mount-nearest-ancestor starts from actual origin/main5ce6d458; prior checkout/head66 and all native/failed evidence stay unchanged. Dedicated ignored purpose output/opend-visible-mount-nearest-ancestor-20261031 has a complete8MiB hold; no host effects or new environment. [Follow-up spec](../superpowers/specs/2026-10-31-opend-visible-mount-nearest-ancestor.md) and [plan](../superpowers/plans/2026-10-31-opend-visible-mount-nearest-ancestor.md).
+
+Quant: this is namespace admission only; data lineage, strategy/math, fees/leakage, SDK permissions and paper/live invariants remain unchanged. Kernel graph evidence identifies two candidate leaves beneath visible PROC/PROC_SYS parents; the actual private target is UNKNOWN and the original-unit cause is not established. Tests use /proc/sys/opaque-fixture.
+
+Implementer/Verifier RED checkpoint: unchanged guard6e8177e5 with new independently expected topology controls gives9 failed/83 passed (pytest0.86s). Six captured-topology ID/order variants expose mount_ambiguity, hidden-only old child remains incorrectly visible, and two missing-parent cases incorrectly admit. True sibling ambiguity, valid stacks, path-component boundary, cycle/invalid ancestor, root outside-parent and visible writable-child refusal controls pass. Raw RED-OLD-SOURCE.{stdout,stderr,json} retained under the ignored purpose. Source behavior has not changed at this checkpoint; tests/docs are committed before implementation.
+
+Reviewer: fresh Parent-assigned Spec/Quality review is pending, capped at R1/known-fixR2. Parent owns later exact-head CI/normal publication; implementation stops before push/PR. Native fixed Source/backend/window are not claimed.
