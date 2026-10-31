@@ -312,12 +312,12 @@ def test_hidden_child_without_replacement_is_absent_not_a_writable_escape():
 def test_visible_prefix_filter_preserves_true_sibling_ambiguity():
     guard = module()
     raw = (
-        "1 99 259:1 / / ro - ext4 root rw\n"
-        "2 1 0:2 / /proc rw - proc proc rw\n"
-        "3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
-        "4 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
-        "5 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
-    ).encode()
+        b"1 99 259:1 / / ro - ext4 root rw\n"
+        b"2 1 0:2 / /proc rw - proc proc rw\n"
+        b"3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"4 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+        b"5 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+    )
     with pytest.raises(guard.StorageDenied, match="^mount_ambiguity$"):
         guard._visible_mounts(guard.parse_mountinfo(raw))
 
@@ -325,12 +325,12 @@ def test_visible_prefix_filter_preserves_true_sibling_ambiguity():
 def test_nearer_prefix_preserves_legitimate_same_target_stack():
     guard = module()
     raw = (
-        "1 99 259:1 / / ro - ext4 root rw\n"
-        "2 1 0:2 / /proc rw - proc proc rw\n"
-        "3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
-        "40 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
-        "4 40 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
-    ).encode()
+        b"1 99 259:1 / / ro - ext4 root rw\n"
+        b"2 1 0:2 / /proc rw - proc proc rw\n"
+        b"3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"40 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+        b"4 40 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+    )
     visible = guard._visible_mounts(guard.parse_mountinfo(raw))
     assert visible["/proc/sys/opaque-fixture"].identifier == 4
 
@@ -338,11 +338,11 @@ def test_nearer_prefix_preserves_legitimate_same_target_stack():
 def test_nearest_prefix_uses_path_components_not_string_prefixes():
     guard = module()
     raw = (
-        "1 99 259:1 / / ro - ext4 root rw\n"
-        "2 1 0:2 / /proc rw - proc proc rw\n"
-        "3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
-        "4 2 0:99 / /proc/sysctl/opaque-fixture ro - tmpfs tmpfs rw\n"
-    ).encode()
+        b"1 99 259:1 / / ro - ext4 root rw\n"
+        b"2 1 0:2 / /proc rw - proc proc rw\n"
+        b"3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"4 2 0:99 / /proc/sysctl/opaque-fixture ro - tmpfs tmpfs rw\n"
+    )
     visible = guard._visible_mounts(guard.parse_mountinfo(raw))
     assert visible["/proc/sysctl/opaque-fixture"].identifier == 4
 
@@ -355,11 +355,15 @@ def test_nearest_prefix_uses_path_components_not_string_prefixes():
             "mount_parent",
         ),
         (
-            "1 99 259:1 / / ro - ext4 root rw\n2 3 0:99 / /escape ro - tmpfs tmpfs rw\n3 2 0:99 / /escape ro - tmpfs tmpfs rw\n",
+            "1 99 259:1 / / ro - ext4 root rw\n"
+            "2 3 0:99 / /escape ro - tmpfs tmpfs rw\n"
+            "3 2 0:99 / /escape ro - tmpfs tmpfs rw\n",
             "mount_cycle",
         ),
         (
-            "1 99 259:1 / / ro - ext4 root rw\n2 1 0:99 / /other ro - tmpfs tmpfs rw\n3 2 0:99 / /escape ro - tmpfs tmpfs rw\n",
+            "1 99 259:1 / / ro - ext4 root rw\n"
+            "2 1 0:99 / /other ro - tmpfs tmpfs rw\n"
+            "3 2 0:99 / /escape ro - tmpfs tmpfs rw\n",
             "mount_parent",
         ),
         ("2 99 0:99 / /escape rw - tmpfs tmpfs rw\n", "mount_parent"),
@@ -383,9 +387,9 @@ def test_visible_writable_child_under_new_prefix_is_still_denied():
     raw = (
         snapshot["mountinfo"]
         + (
-            "40 22 0:2 /sys /proc/sys ro - proc proc rw\n"
-            "41 40 0:99 / /proc/sys/opaque-fixture rw - tmpfs tmpfs rw\n"
-        ).encode()
+            b"40 22 0:2 /sys /proc/sys ro - proc proc rw\n"
+            b"41 40 0:99 / /proc/sys/opaque-fixture rw - tmpfs tmpfs rw\n"
+        )
     )
     visible = guard._visible_mounts(guard.parse_mountinfo(raw))
     assert visible["/proc/sys/opaque-fixture"].identifier == 41
