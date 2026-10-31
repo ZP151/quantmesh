@@ -32,4 +32,5 @@ No shared task interfaces; unchanged public function signatures. Operator accept
 - [x] Reproduce foreign-root masking with exact writable_escape assertion:1failed/6passed on unchanged fixture.
 - [x] Reparent /dev/shm to replacement /dev, run selected7GREEN and actual-test RAM canonical-root mutation check; runtime3 files remain exact90e bytes.
 - [x] Run changed-test Ruff/format/diff and record R1 status in iteration; retain old handoff.
-- [ ] Parent obtains the same fresh reviewer's known-fix R2 on the resulting exact head, then owns publication/CI. No broader suite or host action is implied.
+- [x] Same fresh reviewer R2 is READY on5c12344254e5137dfd5af10ad8878fa2adffc1f3, report4467B SHA945b726d0de433cb4a43a1d324ede3445f91cde551ad535cbcc689128aa68576. Sole P2 closed; no remaining findings, no R3.
+- [ ] Parent owns final exact-head required CI, Draft PR/normal publication, merged complete-tree/catalog checks and later operational disposition. No broader test or host action follows from source-review READY.
