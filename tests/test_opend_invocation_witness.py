@@ -6,6 +6,8 @@ import os
 from types import SimpleNamespace
 
 import pytest
+from test_opend_same_unit_recovery import lifecycle as lifecycle
+from test_opend_same_unit_recovery import recovery as recovery
 from test_opend_staging_window import stage
 
 BIND = {
@@ -525,3 +527,84 @@ def test_prepare_original_cgroup_denial_precedes_any_witness_creation(monkeypatc
     )
     with pytest.raises(stage.StageDenied, match="^backend_denied$"):
         stage._prepare(window)
+
+
+@pytest.mark.parametrize("failure", ["ENOSPC", "EIO", "short", "guard"])
+def test_actual_observed_record_error_exits_persistent_caller(
+    recovery, lifecycle, monkeypatch, capsys, failure
+):
+    """Actual observation/release/main; admission and kernel metadata are synthetic."""
+    slots = bytearray(32768)
+
+    def pwrite(fd, raw, offset):
+        event = json.loads(raw[64:].rstrip(b"\0"))["event"]
+        if event["stage"] == "OWNED_VENDOR_EXE_OBSERVED":
+            if failure == "short":
+                return 5
+            if failure in ("ENOSPC", "EIO"):
+                raise OSError(28 if failure == "ENOSPC" else 5, "synthetic")
+        slots[offset : offset + len(raw)] = raw
+        return len(raw)
+
+    monkeypatch.setattr(recovery.files, "pwrite", pwrite, raising=False)
+    writer = stage._Witness(-9, BIND)
+    monkeypatch.setattr(stage, "_WITNESS", writer)
+    original_close = recovery.files.close
+    monkeypatch.setattr(
+        recovery.files, "close", lambda fd: None if fd == -9 else original_close(fd)
+    )
+    original_open = recovery.files.open
+
+    def opened(path, flags, mode=0o777, **kwargs):
+        if str(path) == "/proc/11/exe":
+            path = stage.VENDOR
+        return original_open(path, flags, mode, **kwargs)
+
+    monkeypatch.setattr(recovery.files, "open", opened)
+
+    def spawned():
+        child = lifecycle.children[-1]
+        child.identity = {"pid": 11, "start_ticks": 789, "uid": 1001}
+        child.alive = lambda: not child.closed
+        writer.hold = True
+
+    lifecycle.on_spawn = spawned
+    monkeypatch.setattr(stage, "_identity", lambda *a: lifecycle.children[-1].identity)
+    if failure == "guard":
+
+        def guard():
+            if lifecycle.children and getattr(lifecycle.children[-1], "exec_observed", False):
+                raise stage.StageDenied("protected_path")
+
+        writer.guard = guard
+    loop = []
+
+    def select_guard(*args):
+        loop.append(True)
+        raise AssertionError("record failure was swallowed into persistent loop")
+
+    monkeypatch.setattr(stage.select, "select", select_guard)
+    before = recovery.claim.read_bytes(), recovery.prior.read_bytes()
+    assert stage.main(["--start", "--persistent", "--nonce", "a" * 32]) == 2
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["scope"] == "STAGING_DENIED" and receipt["status"] == "pending"
+    assert not loop
+    child = lifecycle.children[0]
+    assert child.released and child.acknowledged and child.exec_observed
+    assert child.closed and child.terminal and lifecycle.closed_handles
+    assert writer.failed and lifecycle.releases == 1
+    assert before == (recovery.claim.read_bytes(), recovery.prior.read_bytes())
+    assert (recovery.state / ("a" * 32 + ".recovery")).exists()
+
+
+def test_actual_benign_executable_probe_is_unknown_without_record_failure(monkeypatch):
+    child = SimpleNamespace(
+        pid=123, pidfd=8, identity={"pid": 123, "start_ticks": 789}, exec_observed=False
+    )
+    monkeypatch.setattr(stage, "_identity", lambda *a: child.identity)
+    monkeypatch.setattr(
+        stage.os, "open", lambda *a, **k: (_ for _ in ()).throw(FileNotFoundError(2, "synthetic"))
+    )
+    monkeypatch.setattr(stage, "_witness_event", lambda *a, **k: pytest.fail("unobserved record"))
+    stage._witness_vendor_identity(child)
+    assert not child.exec_observed

@@ -535,3 +535,37 @@ checksum-valid private extras and primary-error precedence have direct controls.
 Every RED/harness/static failure remains retained. No unknown report/EOF/ACK is
 promoted into exec; content/stream/durability remain separate. Fresh implementation
 R1 remains pending; no production/root-cause/login completion follows.
+
+
+### Witness R1 and one known-fix wave
+
+Reviewer: fresh R1 on4859d8 is Spec FAIL/Quality NOT_READY, sole Important issue,
+no Critical finding. Immutable report SHA256
+1e61247fcdcc099f2f9c25493abfb669b5d4f8e875d591ab97a3ff441ca0c804.
+Actual executable observation succeeded, then its event persistence failure was
+caught as benign UNKNOWN. A released persistent child could continue despite
+failed instrumentation. This is a diagnostic software defect, not evidence of
+the earlier fourth-start exit cause.
+
+Implementer: only that observation function changes: keep benign probe failures
+UNKNOWN, emit the observed event outside its catch so real record errors reach
+existing owned/backend cleanup. Never deny release already occurred. Verifier:
+actual observation plus actual release/persistent main, with synthetic admission/
+metadata, RED4failed/1passed for ENOSPC/EIO/shortwrite/guard, thenGREEN5passed;
+assert released/ack/executable observation true, cleanup attempted, no success
+receipt and no loop continuation. Benign unobserved probe is separately UNKNOWN.
+The original failure, all interim results and ACL issue remain retained. Windows
+Python-created temp directories had two explicit foreign grant classes; normal
+DACL-only direct icacls removed them. The first PowerShell native-pipeline refusal
+is preserved; no escalation or SACL change, final private check must be0bad.
+
+Planner/Quant scope is unchanged: no root-cause fix, schema/marker/claim/gate or
+resource change, no host/Source CLI/native/SDK/UI/fifth start. Same fresh reviewer
+gets one scoped R2 after the known-fix commit; no self-READY/third round. Parent's
+parallel future diagnostic proposal is a separate unapproved protocol disposition,
+not implemented or executed by this software wave.
+
+Known-fix final verification:174passed/6POSIXskipped/5.55s, witness+direct recovery
+lifecycle only; scoped Ruff/format/Python3.12/diff/submodule pass. This overlaps
+prior results and does not replace the original R1FAIL or claim Linux/native.
+Same-reviewer scoped R2 remains pending; no push/CI or operational action.

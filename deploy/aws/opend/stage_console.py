@@ -1532,13 +1532,13 @@ def _witness_vendor_identity(child):
                 observed = (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino)
         finally:
             os.close(actual)
-        if observed and _identity(child.pid, child.pidfd) == child.identity:
-            child.exec_observed = True
-            _witness_event(
-                "OWNED_VENDOR_EXE_OBSERVED", pid=child.pid, start=child.identity["start_ticks"]
-            )
+        if not observed or _identity(child.pid, child.pidfd) != child.identity:
+            return
     except (OSError, StageDenied):
-        pass  # No positive observation is UNKNOWN, never a fabricated exec failure/success.
+        return  # Benign probe failure is UNKNOWN; it is not a record failure.
+    child.exec_observed = True
+    # Release already happened. Record failure must reach the existing owned cleanup.
+    _witness_event("OWNED_VENDOR_EXE_OBSERVED", pid=child.pid, start=child.identity["start_ticks"])
 
 
 def _report(fd, count, seconds=2):
