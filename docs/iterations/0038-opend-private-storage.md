@@ -204,3 +204,37 @@ PR [264](https://github.com/ZP151/quantmesh/pull/264) carries this source slice;
 required exact-head CI is pending. This final documentation checkpoint changes
 no reviewed runtime/test bytes. Original complete-tree/catalog publication,
 synthetic native proof and the original login window remain pending.
+
+## Nearest visible pathname ancestor follow-up —2026-10-31
+
+Planner: issue263 remains the original console recovery/login action. Root cee66f50 selects only the visibility invariant, direct tests and two mechanical guard pins. New isolated sparse branch codex/opend-visible-mount-nearest-ancestor starts from actual origin/main5ce6d458; prior checkout/head66 and all native/failed evidence stay unchanged. Dedicated ignored purpose output/opend-visible-mount-nearest-ancestor-20261031 has a complete8MiB hold; no host effects or new environment. [Follow-up spec](../superpowers/specs/2026-10-31-opend-visible-mount-nearest-ancestor.md) and [plan](../superpowers/plans/2026-10-31-opend-visible-mount-nearest-ancestor.md).
+
+Quant: this is namespace admission only; data lineage, strategy/math, fees/leakage, SDK permissions and paper/live invariants remain unchanged. Kernel graph evidence identifies two candidate leaves beneath visible PROC/PROC_SYS parents; the actual private target is UNKNOWN and the original-unit cause is not established. Tests use /proc/sys/opaque-fixture.
+
+Implementer/Verifier RED checkpoint: unchanged guard6e8177e5 with new independently expected topology controls gives9 failed/83 passed (pytest0.86s). Six captured-topology ID/order variants expose mount_ambiguity, hidden-only old child remains incorrectly visible, and two missing-parent cases incorrectly admit. True sibling ambiguity, valid stacks, path-component boundary, cycle/invalid ancestor, root outside-parent and visible writable-child refusal controls pass. Raw RED-OLD-SOURCE.{stdout,stderr,json} retained under the ignored purpose. Source behavior has not changed at this checkpoint; tests/docs are committed before implementation.
+
+Reviewer: fresh Parent-assigned Spec/Quality review is pending, capped at R1/known-fixR2. Parent owns later exact-head CI/normal publication; implementation stops before push/PR. Native fixed Source/backend/window are not claimed.
+
+## Nearest-ancestor software correction checkpoint
+
+Existing PR264 is merged as5ce6d458/tree159feb54 with exact CI41166733317 success (5pass/2skip); its separate synthetic native fixture was subsequently accepted. Those historical checkpoints are not pending again. Actual original-unit start requests total3, most recent held-Ref transaction recorded ExecCondition exit2 before prepare. A later real nonstarting systemd Source check returned storage_denied; kernel-only metadata then found two candidate leaves with different visible PROC/PROC_SYS ancestors. The precise private target remains UNKNOWN; the same original-unit cause is not yet proved. No new start/native/SDK/UI occurred in this software follow-up.
+
+Implementer: `_visible_mounts` now finds the deepest already-selected proper pathname prefix once per target group and excludes candidate chains attached to another ancestor. Same-target stacks, cycle and sibling-ambiguity checks remain; unknown nonroot parent or missing namespace root denies, while an unlisted outside parent for namespace root remains valid. Only this function changes behavior. Launcher PRIVATE_STORAGE_SHA and fixture GUARD_SHA mechanically bind new guard d2addaa991a5b22eff531ccb5891add5c4849ca1357f1c7ba83455b4dc907e30; other source functions/template/profile/claim/resource contracts are unchanged.
+
+Verifier: test-first checkpoints98acd167 and24f29ec retain unchanged old guard with9 genuine failures/83passes. The first post-change attempt exposed15 failures because old synthetic layout attached /dev/shm and added /dev/pts to ROOT despite a visible /dev. Correcting only those direct test parent IDs gives92passed. Six existing positive tests with the corrected fixture also pass the unchanged old guard, so this fixture correction does not weaken acceptance. Final directly affected storage+fixture130passed and recovery-pin22passed (152distinct selected cases); direct92 is included in130 and is not added twice. Changed4-file Ruff/format and diff checks pass. Raw commands/RC/stdout/stderr are retained in output/opend-visible-mount-nearest-ancestor-20261031. Initial test-style errors, sparse test-helper import failures and failed first GREEN remain recorded separately from product RED; no dependencies or environment were added.
+
+Quant: no data/model/fees/math/financial evidence changed. Reviewer: fresh Parent-assigned R1 is pending; implementation is committed for review only and stops before push/PR. Later publication should use Refs issue263, not close the issue: actual merged/native/original backend/private login remain separate unresolved endpoints.
+
+## Nearest-ancestor R1 test-only correction
+
+Fresh independent R1 on90e552b found one P2 coverage blocker, no runtime defect: the foreign-root /dev replacement removed mount23 but left /dev/shm parent23, so mount_parent masked the intended canonical-root rejection. R1 report SHA84f7ea2979256cfcf240819f6ba846902de4466a38e16e1527768918f96b6648 is retained in the dedicated purpose/review/R1.md.
+
+Implementer/Verifier: adding exact writable_escape assertions first produced the expected1failed/6passed RED (mount_parent versus writable_escape). The minimal fixture reparent20:23→40 then passes all7 selected cases. A bounded RAM-only removal of canonical_kernel_mount's root==/ predicate makes the actual final foreign-root test fail with pytest's DID NOT RAISE outcome, proving the intended safety check is reached. The real guard still rejects writable_escape. Runtime guard/launcher/fixture remain byte-identical to90e552b (d2addaa9/3b7666b3/a46265e7). Changed test Ruff/format and diff checks pass; no broader152 replay, host/native/Source/SDK/UI or push/PR. Exact raw R1-REASON-RED, R1-REPARENT-GREEN and R1-ACTUAL-TEST-MUTATION evidence is retained.
+
+Only this direct test and plan/iteration status changed. Same fresh reviewer known-fix R2 is pending; this is not an independent READY or a third structural review. Earlier HANDOFF.json/90e evidence stays immutable; HANDOFF-R2.json carries the new exact candidate.
+
+## Source-review closure — awaiting normal publication
+
+Same fresh reviewer R2 is READY on5c12344254e5137dfd5af10ad8878fa2adffc1f3; report4467B SHA945b726d0de433cb4a43a1d324ede3445f91cde551ad535cbcc689128aa68576 under output/opend-visible-mount-nearest-ancestor-20261031/review/R2.md. R1's sole P2 test coverage blocker is closed; no remaining Critical/Important/Minor findings. The two-round source review stops, no R3. This final closure changes only this iteration and the tracked plan; runtime guard/launcher/fixture and direct test bytes remain exactly the reviewed5c123442 version.
+
+The implementation handoff is now for Parent-owned push/Draft PR, required exact-final-head CI, normal merge and merged tree/catalog. These outcomes are pending and not inferred from local software checks or review READY. Use Refs #263; original-unit cause, fixed-source native/systemd admission, real backend/private login and financial Goal remain unresolved. No new tests, Source behavior, host/main/start, SDK/UI or control/image operations occurred in this documentation closure.

@@ -212,6 +212,12 @@ def _visible_mounts(mounts):
         groups.setdefault(mount.target, []).append(mount)
     visible = {}
     for target in sorted(groups, key=lambda p: len(PurePosixPath(p).parts)):
+        # A deeper visible pathname prefix covers children of older mount-tree ancestors.
+        nearest = next(
+            (visible[str(p)] for p in PurePosixPath(target).parents if str(p) in visible),
+            None,
+        )
+        _need(target == "/" or nearest is not None, "mount_parent")
         candidates = []
         for mount in groups[target]:
             ancestor, visited, hidden = by_id.get(mount.parent), {mount.identifier}, False
@@ -220,15 +226,13 @@ def _visible_mounts(mounts):
                 visited.add(ancestor.identifier)
                 if ancestor.target != target:
                     _need(PurePosixPath(target).is_relative_to(ancestor.target), "mount_parent")
-                    if (
-                        ancestor.target not in visible
-                        or visible[ancestor.target].identifier != ancestor.identifier
-                    ):
+                    if ancestor != nearest:
                         hidden = True
                     # The selected ancestor already established its own ancestry.
                     # Older covered mounts above it must not hide its new children.
                     break
                 ancestor = by_id.get(ancestor.parent)
+            _need(ancestor is not None or target == "/", "mount_parent")
             if not hidden:
                 candidates.append(mount)
         if not candidates:

@@ -68,7 +68,7 @@ def layout():
         f"17 10 7:8 /runtime {RUNTIME} rw - ext4 /dev/loop8 rw\n"
         "18 10 7:8 /tmp /tmp rw - ext4 /dev/loop8 rw\n"
         "19 10 7:8 /vartmp /var/tmp rw - ext4 /dev/loop8 rw\n"
-        "20 10 7:8 /shm /dev/shm rw - ext4 /dev/loop8 rw\n"
+        "20 23 7:8 /shm /dev/shm rw - ext4 /dev/loop8 rw\n"
         f"21 10 259:1 {IMAGE} {ALIAS} ro - ext4 /dev/root rw\n"
         "22 10 0:2 / /proc rw - proc proc rw\n"
         "23 10 0:3 / /dev rw - devtmpfs udev rw\n"
@@ -270,6 +270,131 @@ def test_covered_old_root_children_do_not_create_a_false_writable_escape():
     assert guard.validate_snapshot(profile, snapshot) is None
 
 
+@pytest.mark.parametrize("old_id,new_id,prefix_id", [(672, 720, 719), (720, 672, 719), (5, 900, 9)])
+@pytest.mark.parametrize("reverse_rows", [False, True])
+def test_nearer_visible_prefix_hides_old_child_without_mount_id_heuristics(
+    old_id, new_id, prefix_id, reverse_rows
+):
+    guard = module()
+    profile, snapshot = layout()
+    # Public synthetic path: the observed private target was never retained.
+    target = "/proc/sys/opaque-fixture"
+    rows = [
+        f"{old_id} 22 0:99 / {target} rw - tmpfs tmpfs rw\n",
+        f"{prefix_id} 22 0:2 /sys /proc/sys ro - proc proc rw\n",
+        f"{new_id} {prefix_id} 0:99 / {target} ro - tmpfs tmpfs rw\n",
+    ]
+    raw = snapshot["mountinfo"] + "".join(reversed(rows) if reverse_rows else rows).encode()
+    visible = guard._visible_mounts(guard.parse_mountinfo(raw))
+    assert visible[target].identifier == new_id
+    assert "ro" in visible[target].options
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    assert guard.validate_snapshot(profile, snapshot) is None
+
+
+def test_hidden_child_without_replacement_is_absent_not_a_writable_escape():
+    guard = module()
+    profile, snapshot = layout()
+    target = "/proc/sys/opaque-fixture"
+    raw = (
+        snapshot["mountinfo"]
+        + (
+            f"40 22 0:99 / {target} rw - tmpfs tmpfs rw\n"
+            "41 22 0:2 /sys /proc/sys ro - proc proc rw\n"
+        ).encode()
+    )
+    visible = guard._visible_mounts(guard.parse_mountinfo(raw))
+    assert target not in visible
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    assert guard.validate_snapshot(profile, snapshot) is None
+
+
+def test_visible_prefix_filter_preserves_true_sibling_ambiguity():
+    guard = module()
+    raw = (
+        b"1 99 259:1 / / ro - ext4 root rw\n"
+        b"2 1 0:2 / /proc rw - proc proc rw\n"
+        b"3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"4 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+        b"5 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+    )
+    with pytest.raises(guard.StorageDenied, match="^mount_ambiguity$"):
+        guard._visible_mounts(guard.parse_mountinfo(raw))
+
+
+def test_nearer_prefix_preserves_legitimate_same_target_stack():
+    guard = module()
+    raw = (
+        b"1 99 259:1 / / ro - ext4 root rw\n"
+        b"2 1 0:2 / /proc rw - proc proc rw\n"
+        b"3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"40 3 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+        b"4 40 0:99 / /proc/sys/opaque-fixture ro - tmpfs tmpfs rw\n"
+    )
+    visible = guard._visible_mounts(guard.parse_mountinfo(raw))
+    assert visible["/proc/sys/opaque-fixture"].identifier == 4
+
+
+def test_nearest_prefix_uses_path_components_not_string_prefixes():
+    guard = module()
+    raw = (
+        b"1 99 259:1 / / ro - ext4 root rw\n"
+        b"2 1 0:2 / /proc rw - proc proc rw\n"
+        b"3 2 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"4 2 0:99 / /proc/sysctl/opaque-fixture ro - tmpfs tmpfs rw\n"
+    )
+    visible = guard._visible_mounts(guard.parse_mountinfo(raw))
+    assert visible["/proc/sysctl/opaque-fixture"].identifier == 4
+
+
+@pytest.mark.parametrize(
+    "raw,reason",
+    [
+        (
+            "1 99 259:1 / / ro - ext4 root rw\n2 9 0:99 / /escape rw - tmpfs tmpfs rw\n",
+            "mount_parent",
+        ),
+        (
+            "1 99 259:1 / / ro - ext4 root rw\n"
+            "2 3 0:99 / /escape ro - tmpfs tmpfs rw\n"
+            "3 2 0:99 / /escape ro - tmpfs tmpfs rw\n",
+            "mount_cycle",
+        ),
+        (
+            "1 99 259:1 / / ro - ext4 root rw\n"
+            "2 1 0:99 / /other ro - tmpfs tmpfs rw\n"
+            "3 2 0:99 / /escape ro - tmpfs tmpfs rw\n",
+            "mount_parent",
+        ),
+        ("2 99 0:99 / /escape rw - tmpfs tmpfs rw\n", "mount_parent"),
+    ],
+)
+def test_visible_mount_graph_parent_and_cycle_fail_closed(raw, reason):
+    guard = module()
+    with pytest.raises(guard.StorageDenied, match="^" + reason + "$"):
+        guard._visible_mounts(guard.parse_mountinfo(raw.encode()))
+
+
+def test_mount_namespace_root_may_have_an_unlisted_external_parent():
+    guard = module()
+    visible = guard._visible_mounts(guard.parse_mountinfo(b"1 99 259:1 / / ro - ext4 root rw\n"))
+    assert visible["/"].identifier == 1
+
+
+def test_visible_writable_child_under_new_prefix_is_still_denied():
+    guard = module()
+    profile, snapshot = layout()
+    raw = snapshot["mountinfo"] + (
+        b"40 22 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"41 40 0:99 / /proc/sys/opaque-fixture rw - tmpfs tmpfs rw\n"
+    )
+    visible = guard._visible_mounts(guard.parse_mountinfo(raw))
+    assert visible["/proc/sys/opaque-fixture"].identifier == 41
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
+        guard.validate_snapshot(profile, snapshot)
+
+
 @pytest.mark.parametrize(
     "raw",
     [
@@ -453,18 +578,24 @@ def test_writable_kernel_exceptions_are_bound_to_canonical_targets_and_roots(
 ):
     guard = module()
     profile, snapshot = layout()
-    parent = 14 if target.startswith(HOME + "/") else 10
+    parent = 10
+    if target.startswith(HOME + "/"):
+        parent = 14
+    elif target == "/dev/pts":
+        parent = 23
     raw = (
         snapshot["mountinfo"]
         + f"40 {parent} 0:99 {root} {target} rw - {filesystem} kernel rw\n".encode()
     )
     if target == "/dev":
         raw = raw.replace(b"23 10 0:3 / /dev rw - devtmpfs udev rw\n", b"")
+        # Keep the child attached to the replacement /dev mount.
+        raw = raw.replace(b"20 23 7:8 /shm", b"20 40 7:8 /shm")
     snapshot.update(mountinfo=raw, mountinfo_after=raw)
     if allowed:
         assert guard.validate_snapshot(profile, snapshot) is None
     else:
-        with pytest.raises(guard.StorageDenied):
+        with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
             guard.validate_snapshot(profile, snapshot)
 
 
