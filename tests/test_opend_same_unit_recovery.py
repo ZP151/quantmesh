@@ -943,6 +943,11 @@ def test_original_c8_check_requires_the_bound_live_private_storage(
         "PrivateTmp",
         "StateDirectory",
         "RuntimeDirectoryPreserve",
+        "ReadOnlyPaths_missing",
+        "ReadOnlyPaths_empty",
+        "ReadOnlyPaths_wrong",
+        "ReadOnlyPaths_extra",
+        "ReadOnlyPaths_duplicate",
         "ReadWritePaths",
         "ProtectSystem",
         "dropin_bytes",
@@ -973,6 +978,7 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
         StateDirectory="",
         RuntimeDirectoryPreserve="yes",
         ProtectSystem="strict",
+        ReadOnlyPaths="/run/quantmesh-opend-storage-c8f0d0de4ca641a491fca6df24c66ceb",
         ReadWritePaths=(
             "/var/lib/quantmesh-opend /var/lib/quantmesh-opend-stage "
             f"/run/{runtime} /tmp /var/tmp /dev/shm"
@@ -988,6 +994,17 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
     }
     if change == "dropin_bytes":
         values[dropin] += b"# drift\n"
+    elif change == "ReadOnlyPaths_missing":
+        del properties["ReadOnlyPaths"]
+    elif change and change.startswith("ReadOnlyPaths_"):
+        properties["ReadOnlyPaths"] = {
+            "ReadOnlyPaths_empty": "",
+            "ReadOnlyPaths_wrong": "/run/foreign-storage",
+            "ReadOnlyPaths_extra": properties["ReadOnlyPaths"] + " /host-extra",
+            "ReadOnlyPaths_duplicate": properties["ReadOnlyPaths"]
+            + " "
+            + properties["ReadOnlyPaths"],
+        }[change]
     elif change:
         properties[change] = {
             "DropInPaths": dropin + " /foreign.conf",
@@ -1008,7 +1025,7 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
     def manager_output(argv):
         assert argv[0] == "/usr/bin/systemctl" and argv[-1] == unit
         names = next(x.split("=", 1)[1] for x in argv if x.startswith("--property=")).split(",")
-        return "\n".join(key + "=" + properties[key] for key in names)
+        return "\n".join(key + "=" + properties[key] for key in names if key in properties)
 
     monkeypatch.setattr(stage, "_bytes", public_bytes)
     monkeypatch.setattr(stage, "_command", manager_output)
