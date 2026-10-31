@@ -940,6 +940,11 @@ def test_original_c8_check_requires_the_bound_live_private_storage(
         None,
         "DropInPaths",
         "PrivateMounts",
+        "MountFlags_missing",
+        "MountFlags_empty",
+        "MountFlags_shared",
+        "MountFlags_private",
+        "MountFlags_unknown",
         "PrivateTmp",
         "StateDirectory",
         "RuntimeDirectoryPreserve",
@@ -953,7 +958,9 @@ def test_original_c8_check_requires_the_bound_live_private_storage(
         "dropin_bytes",
     ],
 )
-def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, monkeypatch, change):
+def test_c8_manager_requires_only_its_exact_storage_dropin(
+    private_recovery, lifecycle, monkeypatch, change
+):
     nonce = private_recovery.nonce
     unit = "quantmesh-opend-console@" + nonce + ".service"
     dropin = "/etc/systemd/system/" + unit + ".d/30-private-storage.conf"
@@ -974,6 +981,7 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
         RuntimeDirectory=runtime,
         DropInPaths=dropin,
         PrivateMounts="yes",
+        MountFlags="slave",
         PrivateTmp="no",
         StateDirectory="",
         RuntimeDirectoryPreserve="yes",
@@ -994,6 +1002,15 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
     }
     if change == "dropin_bytes":
         values[dropin] += b"# drift\n"
+    elif change == "MountFlags_missing":
+        del properties["MountFlags"]
+    elif change and change.startswith("MountFlags_"):
+        properties["MountFlags"] = {
+            "MountFlags_empty": "",
+            "MountFlags_shared": "shared",
+            "MountFlags_private": "private",
+            "MountFlags_unknown": "unrecognized",
+        }[change]
     elif change == "ReadOnlyPaths_missing":
         del properties["ReadOnlyPaths"]
     elif change and change.startswith("ReadOnlyPaths_"):
@@ -1016,7 +1033,11 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
             "ProtectSystem": "no",
         }[change]
 
+    admitted_bytes = stage._bytes
+
     def public_bytes(path, digest=None):
+        if path.as_posix() not in values:
+            return admitted_bytes(path, digest)
         raw = values[path.as_posix()]
         if hashlib.sha256(raw).hexdigest() != digest:
             raise stage.StageDenied("pin_drift")
@@ -1031,10 +1052,36 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, mon
     monkeypatch.setattr(stage, "_command", manager_output)
     window = stage.select_console_window(nonce, persistent=True)
     if change:
-        with pytest.raises(stage.StageDenied):
-            stage._manager(window)
+        # Exercise the actual start boundary before child creation and marker consumption.
+        # The external terminal/backend inspection seam still calls the real manager gate.
+        before = (
+            private_recovery.claim.read_bytes(),
+            identity(private_recovery.recovery.files, private_recovery.claim),
+            private_recovery.recovery.prior.read_bytes(),
+            private_recovery.recovery.path.read_bytes(),
+        )
+        backend_context = stage.inspect_staging_context
+
+        def checked_context(w):
+            stage._manager(w)
+            return backend_context(w)
+
+        monkeypatch.setattr(stage, "inspect_staging_context", checked_context)
+        with pytest.raises(stage.StageDenied, match="^backend_denied$|^pin_drift$"):
+            stage.start_staging_console(window)
+        assert lifecycle.children == []
+        assert lifecycle.releases == 0
+        assert not (private_recovery.recovery.state / (nonce + ".recovery")).exists()
+        assert before == (
+            private_recovery.claim.read_bytes(),
+            identity(private_recovery.recovery.files, private_recovery.claim),
+            private_recovery.recovery.prior.read_bytes(),
+            private_recovery.recovery.path.read_bytes(),
+        )
     else:
-        assert stage._manager(window)["DropInPaths"] == dropin
+        observed = stage._manager(window)
+        assert observed["DropInPaths"] == dropin
+        assert observed["MountFlags"] == "slave"
 
 
 @pytest.mark.parametrize("late_drift", [False, True])
@@ -1111,3 +1158,4 @@ def test_storage_dropin_exemption_is_not_available_to_initial_or_other_recovery(
         contract = stage._manager_contract(window)
         assert contract["DropInPaths"] == ""
         assert "PrivateMounts" not in contract
+        assert "MountFlags" not in contract

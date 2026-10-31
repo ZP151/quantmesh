@@ -107,3 +107,89 @@ fixture32+provider32+operations8MiB. Latest G10126569562/P4297163790, caps10.5/4
 and50GiB free floor. Source/Git/tests/docs/review/CI/catalog all count. Fresh source
 review max2 rounds; a third structural failure returns to Planner, not patching.
 Original first increment04:19:13Z/reviewable06:19:13Z targets are not reset.
+
+
+## Final namespace propagation contract — issue263, 2026-10-31
+
+The operator action remains the original private OpenD login window followed by
+an explicitly persistent owned session. Software admission is a prerequisite;
+local tests do not complete that user action. PR266 published17c82e1/tree0e72da7
+with the readonly POOL configuration. Its latest real formal Source check
+returned storage_denied at _mapping:262 via _validate_mounts:271 (POOL/fs), after
+the preceding mode predicate. Raw optional propagation tags and effective
+MountFlags were not captured, so their values remain UNKNOWN. No fourth original
+start occurred; original requests total3, with no accepted backend/window/SDK.
+
+Selected change: add only MountFlags=slave to the c8 drop-in, require that exact
+effective manager scalar for c8 recovery, and refresh the drop-in pin. Preserve
+PrivateMounts=yes and the complete base/reset/append vector, exact POOL readonly,
+six external writes, formal IMAGE->ALIAS and physical original-claim readonly
+binds. The guard, recovery helper, base template and observer remain unchanged.
+Initial permits and other recovery nonces gain no new property exemption.
+
+Namespace isolation and final propagation differ. The reviewed systemd255
+contract selects final slave propagation rather than default shared: master tags
+remain valid, shared tags deny. Slave retains host-to-unit unmount propagation
+without reverse propagation; private is deliberately not selected. This does not
+change per-mount RO/RW or the writable backing superblock. Reuse systemd/Linux
+behavior; no upstream implementation, package or dependency is copied.
+[systemd255 execution settings](https://www.freedesktop.org/software/systemd/man/255/systemd.exec.html#MountFlags=),
+[Linux shared subtrees](https://docs.kernel.org/filesystems/sharedsubtree.html).
+
+The complete contract below is retained, including predicates after the last
+actual failure. A software positive is not an actual formal/backend pass.
+
+| Contract | Preserved implementation and required evidence |
+| --- | --- |
+| Machine/c8/UID997/GID987/groups987/caps0/NNP | Original unit, NSS and fresh Source identity gates; no actor replacement. |
+| Closed protected profile/held FD/digest | Existing profile validation and final reread; no new schema field. |
+| Same finite image physical identity | Existing33554432-byte provider, root0600/single link; no payload read, format or replacement. |
+| Loop backing/offset0/limit32MiB/sectors/read_only0 | Existing bounded metadata capture and repeat; no alternate loop. |
+| Runtime device/fsid/inode/owner0700/geometry | Existing profile/runtime gates; disk cap is not a RAM guarantee. |
+| Stable mountinfo/parent graph/visibility | Frozen nearest-visible-ancestor classifier, drift and ambiguity denial. |
+| POOL/fs correct ext4/device/root/RO | Exact ReadOnlyPaths=POOL, writable backing superblock retained. |
+| Each required mapping has no shared tag | New final slave setting; all11 mapping classes independently reject shared, accept master-only metadata. |
+| Original readonly lower HOME/STATE | Same sources/devices/roots and readonly mounts. |
+| HOME/STATE writable overlays | Same precise lower/upper/work, no volatile option or different backing. |
+| Original spent claim | Exact physical readonly bind, original identity9 and prior history; no copy-up/reset. |
+| Formal image alias | Exact original file/device/root/readonly identity; synthetic A omission never enters production. |
+| Six external writable targets | HOME, STATE, RUNTIME, /tmp, /var/tmp, /dev/shm remain finite and exact. |
+| No foreign visible writable escape | Frozen strict protection/pseudo-filesystem target/root rules and hidden-mount handling. |
+| Exact manager source/base/drop-in/resources | Literal pin plus c8 effective MountFlags=slave, not merely configuration text. |
+| Per-Exec namespace contract | Declarative original unit/drop-in, not an ExecStartPre remount or manual clone substitute. |
+| Complete Source admission | Real unchanged main/admit/unclaimed, admitted and all8 qualification flags false before start. |
+| One short-lived recovery authority | Existing schema4, fresh TTL299/max_seconds180, old claim/prior permit preserved; checking never consumes. |
+| Resources/Slice/cgroup/same-sender Ref | Original1GiB/high768MiB/swap0/CPU50/tasks128/noRestart; actual ownership and durable facts. |
+| Normal owned rollback and live retention | Terminal/cgroup-empty proof before normal cleanup; unknown-live retains source/mappings/loop/history. |
+| Actual backend/outside socket/private window | Same host runtime and image socket identity, clean fresh backend before separately authorized visible-window step. |
+| SDK/data/research/trading separation | SDK/market/math/order effects remain0; paper/live and qualification semantics unchanged. |
+
+Test-first acceptance requires full literal merged Service vector with reset and
+append semantics, manager missing/empty/shared/private/unknown denial through the
+existing lifecycle before marker consumption or child release, per-mapping kernel
+metadata controls and unchanged mode/identity/claim/hidden escape checks. Models
+reuse KernelWorld and real recovery file/lease IO; they do not qualify systemd.
+
+Normal independent Spec/Quality review (at most R1 and one known-fix R2), exact-head
+selected CI, expected-head merge/full-tree/catalog precede any operational use.
+Root's later single formal transaction must check the complete contract, then
+conditionally one original fourth start and separate fresh private window. It
+must stop on any denial/partial/unknown; cumulative remote packing exceptions
+USED2/remaining0 do not reset. No extra observer or fifth start is implied.
+
+
+### Shared bind-list reset rule — R1 correction
+
+The previously assumed effective six-plus-two vector was not valid for the old
+declaration order. systemd255 treats either empty bind directive as clearing BOTH
+writable and readonly entries in its common list; nonempty entries append with
+their readonly attribute. BOTH empty resets must precede ALL nonempty bindings.
+Only order changes: retain exact six writable/two readonly pairs, flags, slave,
+POOL RO, original alias/claim and all immutable source/resource contracts. Tests
+must characterize cross-reset in both directions and nonempty mixed append, then
+check the complete original base/drop-in vector. The public operational deriver
+must use identical reset semantics before asserting original/actor equivalence.
+Old separately keyed derivations/READY claims are superseded and retained.
+[systemd255 BindPaths](https://www.freedesktop.org/software/systemd/man/255/systemd.exec.html#BindPaths=),
+[versioned parser](https://github.com/systemd/systemd/blob/v255/src/core/load-fragment.c#L4801-L4806).
+This static fix grants no actual Source/backend/window qualification.

@@ -264,3 +264,132 @@ Reviewer: independent fresh dual Spec/Quality review remains pending, capped at 
 Fresh independent agent R1 is READY on exact19fa9173305b30d2ac638aa1aade904d660ee8c4, zero actionable Spec/Quality findings. Report8598B SHA12b7965d69500dda9e16a297d8145ea479425b256371c85e14e88de2665e8b74 is retained in the software purpose/review/R1.md. Reviewer independently checked the actual diff, pins, tests-first production freeze, raw software evidence and actual limited native probe; no tests or host operations were repeated. It is agent technical review, not a fabricated human-review fact. No fix or R2 is required.
 
 This closure changes only the plan/iteration/roadmap status; reviewed runtime and tests remain exact19fa917 bytes. Parent now owns normal PR, exact-final-head selected CI plus aggregate success and expected-head merge/full actual catalog. These are still pending. Issue263 remains open for full merged Source/runtime/original backend/private login; no fourth start or SDK/UI claim follows from software READY.
+
+
+## Final propagation repair — local software checkpoint, Refs #263
+
+Planner: the operator still needs the original visible private OpenD login window
+and persistent session. PR266 published17c82e1/tree0e72da7 after selected CI41196548212
+success; its latest real full Source check refused storage_denied at
+_mapping:262 -> _validate_mounts:271 (POOL/fs), after the mode predicate. Raw
+optional tags and effective MountFlags remain UNKNOWN; this is not a captured
+shared-tag value. The original ordinary start requests remain3; no fourth start,
+accepted backend/window or SDK occurred. The earlier mode261 refusal and isolated
+A readonly/synthetic-write proof remain distinct, with formal alias retained.
+
+Select one complete-contract correction: final MountFlags=slave in the c8 drop-in,
+exact effective c8 manager scalar and updated drop-in SHA. Namespace isolation and
+final propagation are different; slave rejects shared peers while retaining
+host-to-unit unmount propagation, unlike private. The storage spec now enumerates
+all22 retained contract rows, including still-unreached predicates after POOL/fs.
+No A/flag probe or extra observer precedes the later single full formal transaction.
+
+Quant: no market data, SDK, costs/leakage, math/model/metric, order or paper/live
+semantics change. No financial research evidence is inferred from these tests.
+
+Implementer: reuse the isolated sparse checkout on new
+codex/0038-opend-mount-propagation from fresh origin/main17c82; relevant drift is
+zero. Old local main/branches/history remain. Before production edits, independent
+merged-vector/config controls failed for missing MountFlags. The clean existing
+manager lifecycle RED is6failed/13passed: five invalid modes were not denied by
+the old gate, and the positive did not return the newly required queried field.
+Earlier harness attempts omitted the admission machine-id seam and then supplied
+an incomplete backend context; those retained errors are not product RED. The
+final test uses the existing complete lifecycle, actual manager and real modeled
+recovery lease/files. All invalid modes now deny before child creation/release,
+marker creation, claim identity or prior/control bytes change.
+
+Only two production files change: add MountFlags=slave (drop-in1337B
+SHA8ba096a3557da9b0c6c9f39c67bf01276b677c4a7dc74a3b461e2cd8b9e652f4),
+and add the exact c8 manager scalar plus mechanical drop-in pin in stage_console.
+Guard d2add, recovery761f, baseb23d, fixturea462, all six bindings/writes, readonly
+alias/physical claim, resource controls and observer remain frozen. Initial and
+other-nonce admission modes gain no MountFlags exemption.
+
+Verifier: targeted twofiles235passed; complete directly affected threefiles
+(storage/recovery/software fixture)273passed/5.13s, not added together. New tests
+cover all11 mapping targets with independent shared denial/master-only acceptance,
+and preserve RO/RW, alias identity, claim readonly, hidden shared-stack selection
+and visible writable-child denial through KernelWorld metadata capture. The
+complete literal effective Service vector verifies base plus drop-in resets,
+append rules, commands, groups/environment and all protection/resource/bind fields.
+Scoped Ruff/format, Python3.12 in-memory syntax, whitespace/submodule and minimal
+AST/byte delta evidence are recorded in the same ignored Source purpose. The
+first Ruff line-length check failure is retained as a formatting error, not a
+behavior failure. Root selects these directly affected gates; no unrelated
+full-local/frontend suite, old native/CI or dependency/environment operation ran.
+
+Reviewer: Parent will assign a fresh independent Spec/Quality review on the
+coherent green commit, max R1/one known-fixR2; no READY is inferred here. Parent
+owns push/PR Refs263, exact-head CI/normal merge/full-tree/catalog. Current software
+hold12MiB includes retained old evidence, sparse checkout/admin/shared Git objects
+and future review/CI/catalog margin, without recharging it. This implementer stops
+before push/PR/host. Later runtime must rebind actual merge and use the existing
+one full Source actor, normal closure/fresh gates, at most original fourth start,
+then fresh backend/socket/private-window acceptance. Any real deny/partial/unknown
+stops; cumulative transport exceptions USED2/remaining0 remain. Backend/window and
+the user goal are still UNMET.
+
+### Propagation slice independent review — 2026-10-31 13:43Z
+
+Reviewer: fresh independent Spec/Quality R1 reviewed implementation
+`d66ff31ba5e240838f14a3c2c03c90f544780376` against actual base17c82;
+READY with zero actionable findings, no R2. Report10065B,
+SHA256c67d6041d6d1918801384c13aacb5e44ba878d104d022906d689fe8a32905c30,
+under `output/opend-visible-mount-nearest-ancestor-20261031/propagation-repair-01/review/R1.md`.
+Parent matched27 source/evidence pins and the real235/273 overlapping results;
+reviewer independently matched18 evidence members and nine changed Git blobs.
+This checkpoint adds only the observed review fact; runtime/tests remain identical
+to the reviewed implementation. Exact-final-head CI/publication/catalog and actual
+Source/backend/window acceptance remain pending, not inferred from technical READY.
+
+
+## R1 addendum: shared bind-list reset correction — 2026-10-31
+
+The earlier full-vector/READY checkpoint is superseded by the immutable fresh
+reviewer R1 addendum (7378B SHA b0c578264526b3248faccf7d45259f1be6343c86c48d55d9c6a061d908f64a6e).
+The review missed an Important/P1 configuration ordering defect: in systemd255,
+either empty BindPaths or empty BindReadOnlyPaths clears the same common bind
+list. The old drop-in put the second reset after the six writable pairs, erasing
+all six before appending the two readonly pairs. The test and public formal
+property deriver modeled separate resets, falsely claiming original/transient
+mapping equivalence. This static defect was found before any new native run; it
+does not establish the exact cause/code of earlier runtime denials or a guard
+bypass. Original starts remain3 and the backend/window goal remains UNMET.
+
+Implementer/Verifier: correct the controlled test model first; both cross-reset
+cases pass and the unchanged old configuration fails the literal required-six
+vector (1failed/2passed, R1-BIND-RESET-RED). The order-only fix puts BOTH empty
+resets before ANY nonempty bind, then appends the identical six writable and two
+readonly source/destination pairs with unchanged flags. New drop-in1337B
+SHAb3073bdc16fb65e7bd4a1c771bc84a00621140419a1d70051ddd419a8f64176e;
+launcher changes only that pin relative to12ad1f5. MountFlags=slave, guard/recovery/
+base/fixture/observer, six destinations, alias/claim identities and resources stay
+unchanged. Reset-both-directions and alternating nonempty append controls are
+independent literals, not expectations from a production builder. Targeted24
+pass; complete affected threefiles276pass/5.13s, counts overlap.
+
+The old derivers, model, source/test bytes, raw results and R1 READY are retained.
+A new disabled candidate public deriver in propagation-repair-01 uses the shared
+reset semantics, exact current public pins and all formal inputs, emits6RW+2RO
+and no extra /etc/opt mirrors. It does not produce an operational grant or invent
+a merged SHA. Future formal derivation must use this corrected revision; the old
+separately keyed builder is superseded, never silently reused. No Source function,
+observer, schema, host/auth/UI/SDK, native fixture or fourth start changed/ran.
+
+Same fresh reviewer known-fix R2 is next, limited to this P1 boundary; no R3. Parent
+owns the existing PR267/new exact-head CI and normal publication. The old CI run
+and historical review remain retained; their outcomes do not release this new
+candidate. No new ordinary approval or hash-by-hash Root gate is required.
+
+### Bind-reset known-fix R2 — 2026-10-31
+
+Same independent reviewer R2 reviewed `ca4acfc540f0c29f144d5de05def498232e6abc0`: READY,
+the Important/P1 blocker closed, zero remaining actionable Spec/Quality findings.
+Report9728B/SHA256fe87f3ef8934ab0bc60dfb295417cc30eebfe3ca8d71ec99b3545fc7064e15b7
+is retained beside the unchanged originalR1 and its superseding addendum. No R3.
+Parent matched28 current source/evidence pins and actual276-pass stdout; reviewer
+independently matched20 evidence members and eight known-fix Git blobs. This
+review-fact checkpoint changes no runtime/test bytes. PR267 needs new exact-head
+CI and normal publication; old-head CI518 cannot qualify this candidate. Actual
+formal Source, fourth start, backend/window and SDK acceptance remain separate.
