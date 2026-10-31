@@ -60,3 +60,28 @@ excluded because consumption legitimately changes them. GREEN12:177 passed,
 70 platform skips, including late authority change during post-persistence
 admission; owned cleanup and spent failure semantics remain intact. One known-fix
 R2 and exact-head CI/normal publication remain; no third structural round.
+
+## Known-fix R2 complete; publication gate
+
+Reviewer: R2 on cb0f5bbcf2b07354daf6d99f58fa8e6cee327042/treec7f6ccc6
+closed both R1 findings with no actionable direct regressions; independently
+ran11 focused regressions successfully. Immutable report4620B SHA256
+9a19d4e315a37bf0530077abaff39dc6123255e7b858993c4a2c91d0c7d18f6c
+is retained in the software purpose/review/R2.md. This closes the allowed
+R1/known-fixR2 software review; no third structural review or human review is
+asserted. This final checkpoint changes documentation only.
+
+Verifier: recovery module11639B SHAac28d474f9bfcb58d20b3e9c10a85b7e7506d960e14b674707f7b82cc7dbc39a
+matches its launcher pin. Launcher49528B SHA5dfcd41572ab79ce0719586540cfbf89c92ff63ed9432bb6925ea01d550d1db2
+is the new candidate, never the old789b runtime hash. Affected177pass/70skips,
+focused Ruff/format/in-memory compile/whitespace and submodule pin inspection
+pass; submodules remain uninitialized in this sparse checkout. Native owned
+allocation7791568B includes current purpose, new worktree Git metadata and
+exact new reachable loose objects, below32MiB with forecast margin retained;
+all historical holds/failures remain. Actual controls/start/SDK/capture/trial0.
+
+[PR262](https://github.com/ZP151/quantmesh/pull/262) is the normal publication
+vehicle. Final matching-head CI, unresolved-thread/ready checks, ordinary squash
+and complete tree equality are release gates, recorded in the purpose's final
+publication receipt once observed. Deployment/source/native/provider/storage
+and login remain separate; software review does not claim that a window opened.

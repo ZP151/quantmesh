@@ -49,8 +49,8 @@ Interfaces: existing start_staging_console(window) retains the gated child/backe
 
 ## Task3: independent review and normal publication
 
-- [ ] One fresh reviewer checks spec+quality on exact code/tree/plan and new test evidence; R1 plus one known-fix R2 only. If third structural failure, return a concrete reduced-scope alternative; no patch loop.
-- [ ] Necessary known-fix RED/GREEN and affected gates only. Preserve failed logs and all prior consumed markers/control bytes. Update short iteration with Planner/Quant/Implementer/Reviewer/Verifier results; verify final source/module SHA.
+- [x] One fresh reviewer checks spec+quality on exact code/tree/plan and new test evidence; R1 plus one known-fix R2 only. If third structural failure, return a concrete reduced-scope alternative; no patch loop.
+- [x] Necessary known-fix RED/GREEN and affected gates only. Preserve failed logs and all prior consumed markers/control bytes. Update short iteration with Planner/Quant/Implementer/Reviewer/Verifier results; verify final source/module SHA.
 - [ ] Push normal branch, open/attach PR for261, exact reviewed-head required CI (skip not pass), normal ready+match-head squash, no force/admin. Operator-specific software/agent-review/merge authorization23cca13f is recorded honestly; no invented independent human review or broad policy rewrite.
 - [ ] Verify actual merge/tree equality and canonical changed-source/full-tree catalog, within32MiB including all Git and retained artifacts. Handoff new actual source/module pins to original executor for separate deployment/startup gates; no real recovery control or startup here.
 
