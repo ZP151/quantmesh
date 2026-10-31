@@ -1,5 +1,13 @@
 # QuantMesh Product Roadmap
 
+## Same-unit OpenD recovery — issue261
+
+One separately consumed recovery control can reopen the existing persistent
+console while retaining its spent initial claim and all prior permit bytes.
+Synthetic software evidence precedes independent review, exact-head CI and
+normal publication; actual deployment/login/SDK and IVV input qualification
+remain separate. See the [checkpoint](../iterations/0038-opend-same-unit-recovery.md).
+
 ## Approved IVV one-shot declared-research slice — issue259
 
 Source software is reviewed and frozen for the selected IVV/OpenD121-session retrospective input, trusted original-content/input-set admission, irreversible once scope-trial reservation and actual packaged workstation UI. The sole app R1 poisoning finding is closed by known-fix R2; typed pre-admission refusal leaves the authorized UUID available. Targeted software controls do not qualify actual data; normal publication/catalog, resource/provider bounds and independent input acceptance still precede one real job. Existing engine/math and old SPY/once evidence remain frozen. Issue259/long Goal remain open until actual loop acceptance. See [checkpoint](../iterations/0038-ivv-real-admission.md).

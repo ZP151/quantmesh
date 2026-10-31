@@ -31,3 +31,21 @@ session validity or reauthentication after process/host exit. Keep exact host,
 source/vendor/unit/config pins, loopback11112, original11111 rollback route and
 paper/live invariants. A launched login pane grants no SDK/market qualification
 and does not switch application endpoints.
+
+## Same-unit recovery amendment — 2026-10-31
+
+Issue [261](https://github.com/ZP151/quantmesh/issues/261) adds one separate,
+short-lived schema3 recovery control for the existing persistent unit. Preserve
+the spent initial claim and prior public permit; bind their actual identities
+along with source/vendor/host/service identity. Fixed check/prepare/pane commands
+select a present recovery control and fail closed if it is invalid. One private
+O_EXCL marker is consumed at the final owned-child gate; checks do not consume,
+and any failure after consumption remains spent. No automatic restart, nonce
+reset, new unit, credential transport or market qualification follows.
+
+The existing operator repair/start/login and standard agent-review/normal-merge
+authorization selects this bounded implementation. It is not a new independent
+human review fact or a global change to repository review policy. Actual merged
+deployment, resource/native/source/provider gates and login remain separate.
+See the [specification](../superpowers/specs/2026-10-31-opend-same-unit-recovery.md)
+and [checkpoint](../iterations/0038-opend-same-unit-recovery.md).
