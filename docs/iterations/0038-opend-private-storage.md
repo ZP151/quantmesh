@@ -342,3 +342,42 @@ reviewer independently matched18 evidence members and nine changed Git blobs.
 This checkpoint adds only the observed review fact; runtime/tests remain identical
 to the reviewed implementation. Exact-final-head CI/publication/catalog and actual
 Source/backend/window acceptance remain pending, not inferred from technical READY.
+
+
+## R1 addendum: shared bind-list reset correction — 2026-10-31
+
+The earlier full-vector/READY checkpoint is superseded by the immutable fresh
+reviewer R1 addendum (7378B SHA b0c578264526b3248faccf7d45259f1be6343c86c48d55d9c6a061d908f64a6e).
+The review missed an Important/P1 configuration ordering defect: in systemd255,
+either empty BindPaths or empty BindReadOnlyPaths clears the same common bind
+list. The old drop-in put the second reset after the six writable pairs, erasing
+all six before appending the two readonly pairs. The test and public formal
+property deriver modeled separate resets, falsely claiming original/transient
+mapping equivalence. This static defect was found before any new native run; it
+does not establish the exact cause/code of earlier runtime denials or a guard
+bypass. Original starts remain3 and the backend/window goal remains UNMET.
+
+Implementer/Verifier: correct the controlled test model first; both cross-reset
+cases pass and the unchanged old configuration fails the literal required-six
+vector (1failed/2passed, R1-BIND-RESET-RED). The order-only fix puts BOTH empty
+resets before ANY nonempty bind, then appends the identical six writable and two
+readonly source/destination pairs with unchanged flags. New drop-in1337B
+SHAb3073bdc16fb65e7bd4a1c771bc84a00621140419a1d70051ddd419a8f64176e;
+launcher changes only that pin relative to12ad1f5. MountFlags=slave, guard/recovery/
+base/fixture/observer, six destinations, alias/claim identities and resources stay
+unchanged. Reset-both-directions and alternating nonempty append controls are
+independent literals, not expectations from a production builder. Targeted24
+pass; complete affected threefiles276pass/5.13s, counts overlap.
+
+The old derivers, model, source/test bytes, raw results and R1 READY are retained.
+A new disabled candidate public deriver in propagation-repair-01 uses the shared
+reset semantics, exact current public pins and all formal inputs, emits6RW+2RO
+and no extra /etc/opt mirrors. It does not produce an operational grant or invent
+a merged SHA. Future formal derivation must use this corrected revision; the old
+separately keyed builder is superseded, never silently reused. No Source function,
+observer, schema, host/auth/UI/SDK, native fixture or fourth start changed/ran.
+
+Same fresh reviewer known-fix R2 is next, limited to this P1 boundary; no R3. Parent
+owns the existing PR267/new exact-head CI and normal publication. The old CI run
+and historical review remain retained; their outcomes do not release this new
+candidate. No new ordinary approval or hash-by-hash Root gate is required.

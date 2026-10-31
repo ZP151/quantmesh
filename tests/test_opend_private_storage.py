@@ -862,28 +862,55 @@ def test_slave_tags_preserve_modes_identity_claim_and_visible_escape_checks(
         assert guard.validate_snapshot(profile, captured) is None
 
 
-def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_slave_propagation():
-    # Independently specified effective vector, including systemd reset/append semantics.
+def _merged_service_settings(texts):
+    # v255 config_parse_bind_paths uses ONE bind_mounts list for both directives.
+    # This is a narrow public config model, not a systemd/native qualification.
     list_keys = {"Environment", "ReadOnlyPaths", "ReadWritePaths", "BindPaths", "BindReadOnlyPaths"}
     effective = {}
-    for name in (
-        "quantmesh-opend-console@.service",
-        "quantmesh-opend-console-c8-private-storage.conf",
-    ):
+    for text in texts:
         section = None
-        for line in (ROOT / "deploy/aws/opend" / name).read_text(encoding="utf-8").splitlines():
+        for line in text.splitlines():
             if line.startswith("["):
                 section = line
             elif section == "[Service]" and line and not line.startswith("#"):
                 key, value = line.split("=", 1)
                 value = value.replace("%i", NONCE)
-                if key in list_keys:
+                if key in {"BindPaths", "BindReadOnlyPaths"} and not value:
+                    effective["BindPaths"] = []
+                    effective["BindReadOnlyPaths"] = []
+                elif key in list_keys:
                     if value:
                         effective.setdefault(key, []).extend(value.split())
                     else:
                         effective[key] = []
                 else:
                     effective[key] = value
+    return effective
+
+
+@pytest.mark.parametrize("reset", ["BindPaths", "BindReadOnlyPaths"])
+def test_either_empty_bind_directive_clears_both_accumulated_bind_kinds(reset):
+    settings = _merged_service_settings(
+        [
+            "[Service]\n"
+            "BindPaths=/synthetic/write:/synthetic/target\n"
+            "BindReadOnlyPaths=/synthetic/readonly:/synthetic/ro\n" + reset + "=\n"
+        ]
+    )
+    assert settings == {"BindPaths": [], "BindReadOnlyPaths": []}
+
+
+def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_slave_propagation():
+    # Independently specified effective vector, including shared-list reset semantics.
+    effective = _merged_service_settings(
+        [
+            (ROOT / "deploy/aws/opend" / name).read_text(encoding="utf-8")
+            for name in (
+                "quantmesh-opend-console@.service",
+                "quantmesh-opend-console-c8-private-storage.conf",
+            )
+        ]
+    )
     assert effective == {
         "Type": "exec",
         "User": "quantmesh-opend",
@@ -948,4 +975,19 @@ def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_slave_propagatio
         "TimeoutStopSec": "15",
         "KillMode": "control-group",
         "Restart": "no",
+    }
+
+
+def test_nonempty_bind_directives_append_without_erasing_the_other_kind():
+    settings = _merged_service_settings(
+        [
+            "[Service]\n"
+            "BindPaths=/synthetic/first:/synthetic/a\n"
+            "BindReadOnlyPaths=/synthetic/readonly:/synthetic/b\n"
+            "BindPaths=/synthetic/last:/synthetic/c\n"
+        ]
+    )
+    assert settings == {
+        "BindPaths": ["/synthetic/first:/synthetic/a", "/synthetic/last:/synthetic/c"],
+        "BindReadOnlyPaths": ["/synthetic/readonly:/synthetic/b"],
     }

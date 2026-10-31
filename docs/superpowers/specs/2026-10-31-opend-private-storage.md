@@ -176,3 +176,20 @@ Root's later single formal transaction must check the complete contract, then
 conditionally one original fourth start and separate fresh private window. It
 must stop on any denial/partial/unknown; cumulative remote packing exceptions
 USED2/remaining0 do not reset. No extra observer or fifth start is implied.
+
+
+### Shared bind-list reset rule — R1 correction
+
+The previously assumed effective six-plus-two vector was not valid for the old
+declaration order. systemd255 treats either empty bind directive as clearing BOTH
+writable and readonly entries in its common list; nonempty entries append with
+their readonly attribute. BOTH empty resets must precede ALL nonempty bindings.
+Only order changes: retain exact six writable/two readonly pairs, flags, slave,
+POOL RO, original alias/claim and all immutable source/resource contracts. Tests
+must characterize cross-reset in both directions and nonempty mixed append, then
+check the complete original base/drop-in vector. The public operational deriver
+must use identical reset semantics before asserting original/actor equivalence.
+Old separately keyed derivations/READY claims are superseded and retained.
+[systemd255 BindPaths](https://www.freedesktop.org/software/systemd/man/255/systemd.exec.html#BindPaths=),
+[versioned parser](https://github.com/systemd/systemd/blob/v255/src/core/load-fragment.c#L4801-L4806).
+This static fix grants no actual Source/backend/window qualification.

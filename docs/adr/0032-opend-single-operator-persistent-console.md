@@ -92,3 +92,11 @@ or proof of a future pass. Source/config tests and publication precede one full
 formal transaction, conditional original fourth start and separate private window.
 The single-operator/agent-review/normal-merge authorization above remains bounded
 to this OpenD flow; no fabricated human review, SDK or trading authority follows.
+
+
+The c8 bind declaration also places both empty bind resets before every nonempty
+pair. systemd255 uses one bind list for BindPaths and BindReadOnlyPaths, so either
+empty assignment clears both kinds; interleaving a reset after six writable pairs
+erased them. Preserve all eight pairs/flags and the final slave contract. The
+original separate-key test/derivation assumption is superseded; this order-only
+correction neither relaxes the guard nor proves actual manager/backend acceptance.

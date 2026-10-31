@@ -9,7 +9,8 @@ controls precede normal source publication and one separate synthetic native
 proof; actual original-unit login and SDK/IVV qualification remain open. See the
 [checkpoint](../iterations/0038-opend-private-storage.md).
 
-The propagation follow-up now selects final MountFlags=slave and an exact c8
+The propagation follow-up corrects shared bind-list reset ordering, retaining all
+six writable/two readonly mappings, and selects final MountFlags=slave with an exact c8
 manager contract, preserving the complete finite-storage safety model. Local
 software GREEN and review/publication are separate from the still-unmet original
 backend/private-window endpoint. No fourth start or SDK action follows from tests.

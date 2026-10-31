@@ -155,3 +155,17 @@ with unique retained basetemp in propagation-repair-01, for
 and at the final affected boundary also tests/test_opend_private_storage_fixture.py.
 No environment/dependency, host/auth/UI/SDK, Source CLI/native fixture or CI run
 is part of this local implementation checkpoint. Parent owns later CI once.
+
+
+### Known-fix R1 addendum checkpoint
+
+R1 READY on d66/12ad is superseded by R1-ADDENDUM.md: its full-vector model missed
+the shared bind reset. The historical checked box above is not current acceptance.
+- [x] Preserve old model/source/derivers and R1; correct test model first.
+- [x] Observe actual old-config RED:1failed2passed, zero effective writable binds.
+- [x] Move both empty resets before all nonempty pairs; mechanically refresh pin.
+  No guard/helper/base/fixture/observer/resource or pair/flag changes.
+- [x] Add reset-both-directions/mixed-append literals;24 targeted and276 affected
+  tests pass. New disabled candidate formal deriver yields the exact6RW+2RO.
+- [ ] Same fresh reviewer known-fix R2 only, then Parent-owned new-head CI and
+  normal expected-head merge/catalog. No third structural review/host retries.
