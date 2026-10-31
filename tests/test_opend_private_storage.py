@@ -460,6 +460,7 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
     ]
     for key, value in {
         "PrivateMounts": "yes",
+        "MountFlags": "slave",
         "PrivateTmp": "no",
         "StateDirectory": "",
         "RuntimeDirectoryPreserve": "yes",
@@ -467,6 +468,7 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
         assert settings[key] == [value]
     assert set(settings) == {
         "PrivateMounts",
+        "MountFlags",
         "PrivateTmp",
         "StateDirectory",
         "RuntimeDirectoryPreserve",
@@ -770,3 +772,180 @@ def test_production_guard_binds_protected_profile_and_closes_all_owned_fds(monke
         "duplicate_key",
     }:
         assert not world.reads, "bad authority must deny before observing the kernel layout"
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        POOL + "/fs",
+        POOL + "/lower-home",
+        POOL + "/lower-state",
+        HOME,
+        STATE,
+        STATE + "/" + NONCE,
+        ALIAS,
+        RUNTIME,
+        "/tmp",
+        "/var/tmp",
+        "/dev/shm",
+    ],
+)
+@pytest.mark.parametrize("propagation", ["master:7", "shared:7"])
+def test_each_required_mapping_rejects_shared_but_accepts_slave_metadata(
+    monkeypatch, target, propagation
+):
+    guard = module()
+    profile, snapshot = layout()
+    lines = snapshot["mountinfo"].decode().splitlines()
+    changed = 0
+    for i, line in enumerate(lines):
+        if line.split()[4] == target:
+            lines[i] = line.replace(" - ", " " + propagation + " - ", 1)
+            changed += 1
+    assert changed == 1
+    raw = ("\n".join(lines) + "\n").encode()
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    world = KernelWorld(snapshot)
+    monkeypatch.setattr(guard, "os", world.os)
+    monkeypatch.setattr(guard, "open", world.open_file, raising=False)
+    captured = guard.capture_live(profile)
+    if propagation == "shared:7":
+        with pytest.raises(guard.StorageDenied, match="^shared_mount$"):
+            guard.validate_snapshot(profile, captured)
+    else:
+        assert guard.validate_snapshot(profile, captured) is None
+    assert IMAGE not in world.reads
+
+
+@pytest.mark.parametrize(
+    "change,reason",
+    [
+        (None, None),
+        ("pool_writable", "mount_mode"),
+        ("runtime_readonly", "mount_mode"),
+        ("alias_replaced", "image_identity"),
+        ("claim_writable", "mount_mode"),
+        ("visible_child", "writable_escape"),
+        ("covered_shared", None),
+    ],
+)
+def test_slave_tags_preserve_modes_identity_claim_and_visible_escape_checks(
+    monkeypatch, change, reason
+):
+    guard = module()
+    profile, snapshot = layout()
+    raw = snapshot["mountinfo"].replace(b" - ", b" master:7 - ")
+    if change == "pool_writable":
+        raw = raw.replace((POOL + "/fs ro").encode(), (POOL + "/fs rw").encode())
+    elif change == "runtime_readonly":
+        raw = raw.replace((RUNTIME + " rw").encode(), (RUNTIME + " ro").encode())
+    elif change == "alias_replaced":
+        snapshot["image_identity"]["inode"] += 1
+    elif change == "claim_writable":
+        raw = raw.replace(
+            (STATE + "/" + NONCE + " ro").encode(), (STATE + "/" + NONCE + " rw").encode()
+        )
+    elif change == "visible_child":
+        raw += (f"40 14 259:1 / {HOME}/escape rw master:7 - ext4 /dev/root rw\n").encode()
+    elif change == "covered_shared":
+        raw = raw.replace((RUNTIME + " rw master:7").encode(), (RUNTIME + " rw shared:9").encode())
+        raw += (f"40 17 7:8 /runtime {RUNTIME} rw master:7 - ext4 /dev/loop8 rw\n").encode()
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    world = KernelWorld(snapshot)
+    monkeypatch.setattr(guard, "os", world.os)
+    monkeypatch.setattr(guard, "open", world.open_file, raising=False)
+    captured = guard.capture_live(profile)
+    if reason:
+        with pytest.raises(guard.StorageDenied, match="^" + reason + "$"):
+            guard.validate_snapshot(profile, captured)
+    else:
+        assert guard.validate_snapshot(profile, captured) is None
+
+
+def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_slave_propagation():
+    # Independently specified effective vector, including systemd reset/append semantics.
+    list_keys = {"Environment", "ReadOnlyPaths", "ReadWritePaths", "BindPaths", "BindReadOnlyPaths"}
+    effective = {}
+    for name in (
+        "quantmesh-opend-console@.service",
+        "quantmesh-opend-console-c8-private-storage.conf",
+    ):
+        section = None
+        for line in (ROOT / "deploy/aws/opend" / name).read_text(encoding="utf-8").splitlines():
+            if line.startswith("["):
+                section = line
+            elif section == "[Service]" and line and not line.startswith("#"):
+                key, value = line.split("=", 1)
+                value = value.replace("%i", NONCE)
+                if key in list_keys:
+                    if value:
+                        effective.setdefault(key, []).extend(value.split())
+                    else:
+                        effective[key] = []
+                else:
+                    effective[key] = value
+    assert effective == {
+        "Type": "exec",
+        "User": "quantmesh-opend",
+        "Group": "quantmesh-opend",
+        "WorkingDirectory": "/opt/quantmesh/opend/10.10.7008",
+        "Environment": ["HOME=/var/lib/quantmesh-opend", "PATH=/usr/bin:/bin", "LANG=C.UTF-8"],
+        "ExecCondition": (
+            "/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py "
+            "--check-window --nonce "
+        )
+        + NONCE
+        + " --persistent",
+        "ExecStartPre": (
+            "/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --prepare --nonce "
+        )
+        + NONCE
+        + " --persistent",
+        "ExecStart": f"/usr/bin/tmux -D -f {RUNTIME}/tmux.conf -S {RUNTIME}/socket",
+        "ExecStartPost": (
+            "/usr/bin/python3 -I -S -B /opt/quantmesh/opend/stage_console.py --create-pane --nonce "
+        )
+        + NONCE
+        + " --persistent",
+        "StandardInput": "null",
+        "StandardOutput": "null",
+        "StandardError": "null",
+        "RuntimeDirectory": "quantmesh-opend-console-" + NONCE,
+        "RuntimeDirectoryMode": "0700",
+        "StateDirectory": "",
+        "StateDirectoryMode": "0700",
+        "UMask": "0077",
+        "NoNewPrivileges": "true",
+        "ProtectSystem": "strict",
+        "ProtectHome": "true",
+        "PrivateTmp": "no",
+        "PrivateMounts": "yes",
+        "MountFlags": "slave",
+        "ProtectKernelTunables": "true",
+        "ProtectKernelModules": "true",
+        "ProtectControlGroups": "true",
+        "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6",
+        "CapabilityBoundingSet": "",
+        "ReadOnlyPaths": [POOL],
+        "ReadWritePaths": [HOME, STATE, RUNTIME, "/tmp", "/var/tmp", "/dev/shm"],
+        "BindPaths": [
+            f"{POOL}/view-home:{HOME}",
+            f"{POOL}/view-state:{STATE}",
+            f"{POOL}/fs/runtime:{RUNTIME}",
+            f"{POOL}/fs/tmp:/tmp",
+            f"{POOL}/fs/vartmp:/var/tmp",
+            f"{POOL}/fs/shm:/dev/shm",
+        ],
+        "BindReadOnlyPaths": [f"{IMAGE}:{ALIAS}", f"{POOL}/lower-state/{NONCE}:{STATE}/{NONCE}"],
+        "RuntimeDirectoryPreserve": "yes",
+        "RuntimeMaxSec": "infinity",
+        "MemoryMax": "1G",
+        "MemoryHigh": "768M",
+        "MemorySwapMax": "0",
+        "CPUQuota": "50%",
+        "TasksMax": "128",
+        "TimeoutStartSec": "15",
+        "TimeoutStopSec": "15",
+        "KillMode": "control-group",
+        "Restart": "no",
+    }

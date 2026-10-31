@@ -70,3 +70,25 @@ while retaining the preparation namespace's upper mount references. Native
 support must be observed, never inferred from offline adapters. Normal source
 review/CI/merge, the synthetic native run and the later original-unit preparation
 and login are separate gates. See the [checkpoint](../iterations/0038-opend-private-storage.md).
+
+
+## Final mount propagation amendment — 2026-10-31
+
+Issue263's c8 drop-in explicitly selects MountFlags=slave while retaining
+PrivateMounts=yes, readonly POOL, six external writes and all formal alias/claim
+binds. The c8 recovery manager must report exact slave and the pinned drop-in.
+Namespace isolation alone does not specify the final propagation mode. Under the
+reviewed systemd255 behavior, the final default shared conversion conflicts with
+the unchanged guard's no-shared predicate; master-only slave tags remain valid.
+Choose slave to retain host-to-service unmount propagation without propagation
+back to the host. Private would also remove shared status but could retain stale
+host mounts, so it is not selected. No host remount command or guard exception is
+introduced. See [systemd255 MountFlags](https://www.freedesktop.org/software/systemd/man/255/systemd.exec.html#MountFlags=)
+and [Linux shared-subtree semantics](https://docs.kernel.org/filesystems/sharedsubtree.html).
+
+The latest actual Source refused at the shared_mount predicate for POOL/fs, but
+raw tags/effective MountFlags were not observed; this is not a captured tag value
+or proof of a future pass. Source/config tests and publication precede one full
+formal transaction, conditional original fourth start and separate private window.
+The single-operator/agent-review/normal-merge authorization above remains bounded
+to this OpenD flow; no fabricated human review, SDK or trading authority follows.

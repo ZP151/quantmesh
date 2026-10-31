@@ -115,3 +115,43 @@ Verification: Python313 `-B -m pytest` focused new tests while iterating; affect
 OpenD suite plus scoped Ruff check/format, in-memory compile, git diff --check and
 submodule pin check at commit/final boundaries. Existing exact-main broader CI is
 not rerun for baseline; final PR required release checks run normally. No installs.
+
+
+## Propagation repair checkpoint — 2026-10-31, Refs #263
+
+This supersedes pending-publication/native wording above only where actual
+iteration evidence closes it: PR264 and its synthetic native fixture passed;
+PR265/PR266 were normally published. Actual original backend/window remains UNMET.
+Selected contract: the final namespace propagation amendment in the storage spec,
+and ADR0032. Scope is one original operator action, not a new provider platform.
+
+- [x] Reuse the sparse isolated checkout; fresh origin/main17c82e1 has no relevant
+  drift. Branch codex/0038-opend-mount-propagation; preserve old branches/main.
+- [x] Before production edits, add independent full base+drop-in effective vector,
+  manager MountFlags missing/empty/shared/private/unknown controls through the
+  real existing start/recovery gate, and KernelWorld per-mapping propagation
+  plus unchanged safety predicates. Record genuine old-source RED separately
+  from test seam failures; production hashes remain exact17c82 at RED checkpoint.
+- [x] Add MountFlags=slave, c8-only exact manager scalar and mechanical drop-in SHA.
+  Guard/recovery/base/fixture and all binds/alias/claim/resource settings frozen.
+- [x] Run same targeted two files GREEN, then the directly affected three files
+  including software fixture tests. Root explicitly selects this complete affected
+  boundary instead of unrelated full-local/frontend/native suites. Run scoped
+  Ruff/format, Python3.12 syntax, diff --check and submodule pins at final boundary.
+- [x] Update iteration with Planner/Quant/Implementer/Verifier, complete contract,
+  current user-loop limits, retained failure paths and finite Source12MiB forecast.
+- [ ] Parent assigns a fresh independent Spec/Quality reviewer; max R1/known-fixR2.
+  Third structural failure returns to Planner. No self-review substitutes for it.
+- [ ] Parent owns push/PR Refs263 (not Closes), exact-head selected CI/aggregate,
+  normal expected-head merge and complete actual merged tree/source catalog.
+- [ ] Only after publication and Parent's bounded operational release use the
+  existing single formal packet with matching propagation/source/readback pins.
+  One full Source admission, normal actor closure, fresh gates then at most one
+  original fourth start. All error/unknown results stop; no automatic retry.
+
+Verification commands use existing Python313 -B -m pytest -q -p no:cacheprovider
+with unique retained basetemp in propagation-repair-01, for
+ tests/test_opend_private_storage.py tests/test_opend_same_unit_recovery.py
+and at the final affected boundary also tests/test_opend_private_storage_fixture.py.
+No environment/dependency, host/auth/UI/SDK, Source CLI/native fixture or CI run
+is part of this local implementation checkpoint. Parent owns later CI once.
