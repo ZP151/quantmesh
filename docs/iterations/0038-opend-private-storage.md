@@ -187,3 +187,20 @@ never force/lazy/global cleanup or a refunded retry.
 
 Known-fix R2 closure and normal exact-head CI/publication are next. Issue263 stays
 open for actual native/operator evidence; the login window has not been opened.
+
+## Source review closure
+
+Reviewer: known-fix R2 on e8a986643935cb9b5ef2ed8c8eb92fbd310b2cb7 is READY for
+normal source publication only. Both admission findings and the safe diagnostic
+gap are closed; no Critical/Important/Minor remains in that delta. No test rerun or
+native operation occurred in review. R1/R2 original reports remain retained.
+
+Final: Ruling: the preexec boundary does not expose a kernel errno through the
+post-exec wrapper. Preserve actual outer stage/type and UNKNOWN errno rather than
+infer success or a cause. The cost of a preexec failure is retained evidence and
+a stopped native gate, never an automatic retry or production release.
+
+PR [264](https://github.com/ZP151/quantmesh/pull/264) carries this source slice;
+required exact-head CI is pending. This final documentation checkpoint changes
+no reviewed runtime/test bytes. Original complete-tree/catalog publication,
+synthetic native proof and the original login window remain pending.

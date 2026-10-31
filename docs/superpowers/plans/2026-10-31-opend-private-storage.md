@@ -94,7 +94,7 @@ verifies outside socket and controls remount of same image. No effective grant.
 - [x] Verify offline control flow with syscall/process adapters for failure cleanup,
   one-image identity, aggregate exhaustion, remount-spent and declared paths. Do not
   label these substitutes native evidence; actual native result remains pending.
-- [ ] One fresh spec+quality reviewer on exact whole slice; fix only confirmed
+- [x] One fresh spec+quality reviewer on exact whole slice; fix only confirmed
   blockers with RED/GREEN then known-fix R2. Third structural failure => Planner STOP.
 - [ ] Run relevant broad affected/static gates at final boundary, normal push/PR,
   attach artifact, required exact-head CI green/ready/no unresolved threads, normal
@@ -105,10 +105,10 @@ verifies outside socket and controls remount of same image. No effective grant.
 ## Completion checklist and self-review
 
 - [ ] All spec requirements map to the above tasks; interfaces/types consistent.
-- [ ] Six writes share one geometry; all other regular mounts readonly, no lower reads.
-- [ ] Profile/control/helper/drop-in pins and base-template preservation agree.
-- [ ] Claim and spent-marker semantics unchanged; new guard runs at final admission.
-- [ ] Source/tests/docs/iteration evidence agree; actual native/login still honestly pending.
+- [x] Six writes share one geometry in the source contract; native proof remains pending.
+- [x] Profile/control/helper/drop-in pins and base-template preservation agree.
+- [x] Claim and spent-marker semantics unchanged; new guard runs at final admission.
+- [x] Source/tests/docs/iteration evidence agree; actual native/login still honestly pending.
 - [x] Plan proportion/step scan/review-focus coverage checked before implementation.
 
 Verification: Python313 `-B -m pytest` focused new tests while iterating; affected
