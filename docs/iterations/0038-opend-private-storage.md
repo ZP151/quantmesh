@@ -329,3 +329,16 @@ one full Source actor, normal closure/fresh gates, at most original fourth start
 then fresh backend/socket/private-window acceptance. Any real deny/partial/unknown
 stops; cumulative transport exceptions USED2/remaining0 remain. Backend/window and
 the user goal are still UNMET.
+
+### Propagation slice independent review — 2026-10-31 13:43Z
+
+Reviewer: fresh independent Spec/Quality R1 reviewed implementation
+`d66ff31ba5e240838f14a3c2c03c90f544780376` against actual base17c82;
+READY with zero actionable findings, no R2. Report10065B,
+SHA256c67d6041d6d1918801384c13aacb5e44ba878d104d022906d689fe8a32905c30,
+under `output/opend-visible-mount-nearest-ancestor-20261031/propagation-repair-01/review/R1.md`.
+Parent matched27 source/evidence pins and the real235/273 overlapping results;
+reviewer independently matched18 evidence members and nine changed Git blobs.
+This checkpoint adds only the observed review fact; runtime/tests remain identical
+to the reviewed implementation. Exact-final-head CI/publication/catalog and actual
+Source/backend/window acceptance remain pending, not inferred from technical READY.
