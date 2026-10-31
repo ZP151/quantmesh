@@ -49,7 +49,7 @@ PRIVATE_STORAGE_DROPIN = Path(
     + PRIVATE_STORAGE_NONCE
     + ".service.d/30-private-storage.conf"
 )
-PRIVATE_STORAGE_DROPIN_SHA = "325cdfbf8424ac95b9d21a1a6929a886e1572c524078f785f462cf28438e83b9"
+PRIVATE_STORAGE_DROPIN_SHA = "b3073bdc16fb65e7bd4a1c771bc84a00621140419a1d70051ddd419a8f64176e"
 PRIVATE_STORAGE_SHA = "d2addaa991a5b22eff531ccb5891add5c4849ca1357f1c7ba83455b4dc907e30"
 RECOVERY_SHA = "761f5078f906d734d17bdeab6369bffd09578be5602d161682cb10470d0aee9d"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
@@ -513,6 +513,7 @@ def _manager_contract(window):
         contract.update(
             DropInPaths=PRIVATE_STORAGE_DROPIN.as_posix(),
             PrivateMounts="yes",
+            MountFlags="slave",
             PrivateTmp="no",
             StateDirectory="",
             RuntimeDirectoryPreserve="yes",
