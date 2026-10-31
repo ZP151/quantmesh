@@ -439,6 +439,7 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
         if line and not line.startswith(("#", "[")):
             key, value = line.split("=", 1)
             settings.setdefault(key, []).append(value)
+    assert settings.get("ReadOnlyPaths") == [POOL]
     assert settings["ReadWritePaths"] == ["", f"{HOME} {STATE} {RUNTIME} /tmp /var/tmp /dev/shm"]
     assert settings["BindPaths"] == [
         "",
@@ -469,6 +470,7 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
         "PrivateTmp",
         "StateDirectory",
         "RuntimeDirectoryPreserve",
+        "ReadOnlyPaths",
         "ReadWritePaths",
         "BindPaths",
         "BindReadOnlyPaths",
