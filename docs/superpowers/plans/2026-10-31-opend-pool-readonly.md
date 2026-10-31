@@ -14,7 +14,7 @@ Files: deploy/aws/opend/quantmesh-opend-console-c8-private-storage.conf; deploy/
 - [x] Run these two test nodes using existing Python313 -B -m pytest -q -p no:cacheprovider with unique retained basetemp; observe old-config/old-manager failures, retain raw stdout/stderr/RC and commit tests/docs before production changes.
 - [x] Add the single dropin line, literal dropin SHA and exact c8 manager scalar. No guard or recovery algorithm edits.
 - [x] Run the two nodes GREEN, then affected private-storage/fixture and recovery tests; changed-file Ruff check/format, in-memory Python3.12 compile, whitespace and submodule metadata at checkpoint. No old native/Windows/frontend replay, dependency install or host operation.
-- [ ] Update iteration with Planner/Quant/Implementer/Verifier evidence and commit coherent green delta. Independent fresh agent reviews exact base/head, proof limitations, drift tests and frozen guard/template/bind bytes. One known-fix R2 maximum.
+- [x] Update iteration with Planner/Quant/Implementer/Verifier evidence and commit coherent green delta. Independent fresh agent reviews exact base/head, proof limitations, drift tests and frozen guard/template/bind bytes. One known-fix R2 maximum.
 - [ ] Normal PR Refs263; exact final-head repository-selected jobs and aggregate green, no substantive findings, then expected-head normal merge. Fetch full actual tree, compare complete candidate tree and freeze literal source catalog; preserve old failures, commits, holds and local main divergence.
 
 Operator/backend acceptance remains pending. No original fourth start, Source main, SDK or private window is authorized by this software checkpoint alone. Parent owns later merged operational disposition.
