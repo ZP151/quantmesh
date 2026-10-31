@@ -24,6 +24,12 @@ Exactly one concurrent contender can consume; losers never release. A failure af
 
 The release method has an optional recovery-only before_gate hook after its existing admission/PID/clock checks. Consumption occurs there, followed by another clock check. Initial callers omit the hook. Original-claim opens are nonblocking and no-follow so a substituted FIFO cannot wait before the regular-file check.
 
+After persistence, repeat source/host/vendor admission, then recheck authority
+and clocks. Lease checks reopen the fixed private StateDirectory and compare
+its held/live device, inode, owner, group, mode and link count; claim/marker
+names are compared through that current directory. Directory size/timestamps
+are excluded because the new regular marker legitimately changes them.
+
 ## Verification and release
 
 Synthetic CLI/control and gated-release tests prove missing original recovery support, repeated checks, one release, concurrent uniqueness, missing/expired/replayed/replaced controls and claims, source/vendor/machine/owner/mode/nlink mismatch, failure between checks and release, original initial behavior and zero credential-value reads. Existing launcher/profile/terminal regression tests remain relevant; native Linux-only fixtures are not claimed to run on Windows. One fresh independent code review, maximum R1 plus known-fix R2, exact-head CI and ordinary matching-head squash/full-tree equality precede any new deployed source. A changed launcher must use its new actual SHA, never789b as its new runtime hash.

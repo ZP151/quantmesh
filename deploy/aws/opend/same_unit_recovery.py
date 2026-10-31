@@ -41,6 +41,15 @@ def _stamp(info):
     )
 
 
+def _directory_stamp(info):
+    # Creating the regular consumption file changes directory size/timestamps.
+    return {
+        key: value
+        for key, value in _stamp(info).items()
+        if key not in {"size", "mtime_ns", "ctime_ns"}
+    }
+
+
 def _require(ops, condition, code="recovery_denied"):
     if not condition:
         raise ops.StageDenied(code)
@@ -177,6 +186,7 @@ class Lease:
         self.control_fd = control_fd
         self.prior_fd = prior_fd
         self.directory = directory_fd
+        self.directory_identity = _directory_stamp(control.ops.os.fstat(directory_fd))
         self.claim = claim_fd
         self.marker = None
         self.marker_identity = None
@@ -208,24 +218,40 @@ class Lease:
         )
         with ops._protected_fd(ops.PERSISTENT_PERMIT) as current:
             _require(ops, _stamp(ops.os.fstat(current)) == prior_identity)
-        held = ops.os.fstat(self.claim)
-        named = ops.os.stat(c.nonce, dir_fd=self.directory, follow_symlinks=False)
-        _require(
-            ops,
-            stat.S_ISREG(held.st_mode)
-            and stat.S_ISREG(named.st_mode)
-            and _stamp(held) == _stamp(named) == c.claims["original_claim"],
-            "claim_changed",
-        )
-        if self.marker is not None:
-            held = ops.os.fstat(self.marker)
-            named = ops.os.stat(c.nonce + ".recovery", dir_fd=self.directory, follow_symlinks=False)
+        with ops._owned_dir(ops.STATE) as current_directory:
+            held_directory = ops.os.fstat(self.directory)
+            named_directory = ops.os.fstat(current_directory)
+            _require(
+                ops,
+                stat.S_ISDIR(held_directory.st_mode)
+                and stat.S_ISDIR(named_directory.st_mode)
+                and _directory_stamp(held_directory)
+                == _directory_stamp(named_directory)
+                == self.directory_identity
+                and held_directory.st_uid == c.claims["gateway_uid"]
+                and held_directory.st_gid == c.claims["gateway_gid"]
+                and stat.S_IMODE(held_directory.st_mode) == 0o700,
+            )
+            held = ops.os.fstat(self.claim)
+            named = ops.os.stat(c.nonce, dir_fd=current_directory, follow_symlinks=False)
             _require(
                 ops,
                 stat.S_ISREG(held.st_mode)
                 and stat.S_ISREG(named.st_mode)
-                and _stamp(held) == _stamp(named) == self.marker_identity,
+                and _stamp(held) == _stamp(named) == c.claims["original_claim"],
+                "claim_changed",
             )
+            if self.marker is not None:
+                held = ops.os.fstat(self.marker)
+                named = ops.os.stat(
+                    c.nonce + ".recovery", dir_fd=current_directory, follow_symlinks=False
+                )
+                _require(
+                    ops,
+                    stat.S_ISREG(held.st_mode)
+                    and stat.S_ISREG(named.st_mode)
+                    and _stamp(held) == _stamp(named) == self.marker_identity,
+                )
 
     def require_unspent(self):
         ops = self.control.ops

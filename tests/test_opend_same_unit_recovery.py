@@ -34,6 +34,7 @@ class SyntheticFiles:
     def __init__(self):
         self.paths = {}
         self.directories = {}
+        self.directory_info = {}
         self.metadata = {}
         self.next_directory = 100000
 
@@ -72,6 +73,8 @@ class SyntheticFiles:
         return SimpleNamespace(**attributes)
 
     def fstat(self, fd):
+        if fd in self.directories:
+            return self.info(self.directory_info[fd], self.directories[fd])
         return self.info(os.fstat(fd), self.paths[fd])
 
     def stat(self, name, *, dir_fd=None, follow_symlinks=True):
@@ -90,10 +93,12 @@ class SyntheticFiles:
         self.next_directory += 1
         fd = self.next_directory
         self.directories[fd] = Path(path)
+        self.directory_info[fd] = os.stat(path)
         try:
             yield fd
         finally:
             self.directories.pop(fd)
+            self.directory_info.pop(fd)
 
     @contextmanager
     def protected(self, path):
@@ -124,6 +129,7 @@ def recovery(tmp_path, monkeypatch):
     files = SyntheticFiles()
     state = tmp_path / "state"
     state.mkdir()
+    files.metadata[state] = {"uid": 1001, "gid": 1001, "mode": 0o700}
     claim = state / ("a" * 32)
     claim.write_bytes(b"")
     files.metadata[claim] = {"uid": 1001, "gid": 1001, "mode": 0o600}
@@ -703,3 +709,87 @@ def test_identical_bytes_in_replacement_object_cannot_reuse_recovery(
     assert lifecycle.releases == 0
     assert all(child.closed for child in lifecycle.children)
     assert not (recovery.state / ("a" * 32 + ".recovery")).exists()
+
+
+@pytest.mark.parametrize(
+    "field", ["machine_sha256", "launcher_sha256", "vendor_sha256", "tmux_sha256"]
+)
+def test_identity_drift_during_marker_persistence_refuses_with_spent_attempt(
+    recovery, lifecycle, monkeypatch, field
+):
+    window = stage.select_console_window("a" * 32, persistent=True)
+    original = recovery.files.fsync
+
+    def mutate(fd):
+        original(fd)
+        target = recovery.actor if field in recovery.actor else recovery.hashes
+        target[field] = "0" * 64
+
+    monkeypatch.setattr(recovery.files, "fsync", mutate)
+    with pytest.raises(stage.StageDenied):
+        stage.start_staging_console(window)
+    assert lifecycle.releases == 0
+    assert (recovery.state / ("a" * 32 + ".recovery")).exists()
+    assert all(child.closed for child in lifecycle.children)
+
+
+@pytest.mark.parametrize("change", ["inode", "uid", "gid", "mode", "nlink"])
+def test_live_state_directory_drift_refuses_even_when_old_claim_fd_matches(
+    recovery, lifecycle, monkeypatch, change
+):
+    window = stage.select_console_window("a" * 32, persistent=True)
+    changed = False
+    original_sync = recovery.files.fsync
+    original_directory = recovery.files.directory
+
+    def mutate(fd):
+        nonlocal changed
+        original_sync(fd)
+        changed = True
+        if change != "inode":
+            recovery.files.metadata[recovery.state][change] = {
+                "uid": 0,
+                "gid": 0,
+                "mode": 0o777,
+                "nlink": 99,
+            }[change]
+
+    @contextmanager
+    def current_directory(path):
+        with original_directory(path) as fd:
+            if changed and change == "inode":
+                value = recovery.files.directory_info[fd]
+                attributes = {
+                    key: getattr(value, key) for key in dir(value) if key.startswith("st_")
+                }
+                attributes["st_ino"] += 1  # New live dir; existing dirfd keeps old identity.
+                recovery.files.directory_info[fd] = SimpleNamespace(**attributes)
+            yield fd
+
+    monkeypatch.setattr(recovery.files, "fsync", mutate)
+    monkeypatch.setattr(stage, "_owned_dir", current_directory)
+    with pytest.raises(stage.StageDenied):
+        stage.start_staging_console(window)
+    assert lifecycle.releases == 0
+    assert (recovery.state / ("a" * 32 + ".recovery")).exists()
+    assert all(child.closed for child in lifecycle.children)
+
+
+def test_authority_changed_during_post_persistence_admission_is_rechecked(
+    recovery, lifecycle, monkeypatch
+):
+    window = stage.select_console_window("a" * 32, persistent=True)
+    original = stage._admit
+
+    def late_admission(candidate):
+        result = original(candidate)
+        if (recovery.state / ("a" * 32 + ".recovery")).exists():
+            recovery.files.metadata[recovery.claim]["mode"] = 0o644
+        return result
+
+    monkeypatch.setattr(stage, "_admit", late_admission)
+    with pytest.raises(stage.StageDenied):
+        stage.start_staging_console(window)
+    assert lifecycle.releases == 0
+    assert (recovery.state / ("a" * 32 + ".recovery")).exists()
+    assert all(child.closed for child in lifecycle.children)

@@ -43,7 +43,7 @@ LAUNCHER = BASE / "stage_console.py"
 PERMIT = Path("/etc/quantmesh/opend/staging-window.json")
 PERSISTENT_PERMIT = Path("/etc/quantmesh/opend/persistent-session.json")
 RECOVERY_PERMIT = Path("/etc/quantmesh/opend/persistent-recovery.json")
-RECOVERY_SHA = "b2ccc4d4ad9a9e11abd2f9856a51d8ea15bb0d298dcfe245133a57eae23fa71e"
+RECOVERY_SHA = "ac28d474f9bfcb58d20b3e9c10a85b7e7506d960e14b674707f7b82cc7dbc39a"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
 CONFIG = Path("/etc/quantmesh/opend/OpenD.xml")
 VENDOR = BASE / "10.10.7008/OpenD"
@@ -821,8 +821,6 @@ def start_staging_console(window):
                 **({"persistent": True} if window.persistent else {}),
             )
 
-            recovery_lease = None
-
             def final_admission():
                 latest = reload_console_window(window)
                 if latest.claims != window.claims or time.monotonic() >= deadline:
@@ -852,11 +850,19 @@ def start_staging_console(window):
 
             if isinstance(window, RecoveryWindow):
                 with window.control.release_lease() as recovery_lease:
+
+                    def release_recovery():
+                        recovery_lease.consume()
+                        # Persistence may block: revalidate current source/host
+                        # and then live authority again before the gate clocks.
+                        _admit(window)
+                        recovery_lease.check()
+
                     child.release(
                         final_admission,
                         deadline=deadline,
                         expires=window.expires,
-                        before_gate=recovery_lease.consume,
+                        before_gate=release_recovery,
                     )
             else:
                 child.release(final_admission, deadline=deadline, expires=window.expires)

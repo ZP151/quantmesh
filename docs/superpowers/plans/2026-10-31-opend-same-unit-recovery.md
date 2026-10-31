@@ -60,6 +60,15 @@ Ruling after RED05: consuming inside final_admission was too early because the e
 
 Checkpoint: Tasks1/2 are implemented together as one coherent authority-and-release slice. GREEN11 affected checks:167 passed/70 platform skips; focused Ruff/format/diff checks pass. Baseline fixture omissions, early fixture failures and genuine RED01/03/05/06 remain separately retained; no failed run is relabeled passed. Independent review/publication are still pending.
 
+R1 known fixes: source/host/vendor admission is repeated after marker persistence,
+then the authority lease and gate clocks are rechecked. The lease now reopens
+the fixed private STATE directory, compares held/live stable directory identity
+(device/inode/owner/group/mode/nlink), and resolves claim/marker through that
+current directory. Directory size/timestamps naturally change when creating a
+regular marker and are not identity pins. RED-R1-SOURCE4 and RED-R1-DIRECTORY5
+reproduce the two findings; GREEN12 affected177 passed/70 platform skips.
+Known-fix R2 is pending; no additional structural review or operational action.
+
 Ruling: Root already selected design and delegated engineering decisions, execution/review and normal merge; do not ask for another design/method/standard-merge approval. Public test seams are the explicitly authorized fixed CLI, authority FD validation and gated-release callback. Inline is chosen because routing and consumption share one lifecycle; no implementer-agent overlap.
 
 Ruling: native worktree API cannot request sparse/no-checkout; its49MB full tree exceeds32MiB. Existing dirty linked W cannot be reset. A manual no-checkout sparse linked worktree inside the ignored software purpose preserves original changes and shares objects; no setup/dependency install. Worktree-specific sparse config already supported.

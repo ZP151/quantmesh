@@ -42,3 +42,21 @@ models POSIX ctime consistently on Windows, retaining native timestamps on
 Linux. Ownership/dirfd/native terminal are modeled locally; native-only70 skips
 are not passes. No SDK, credentials, real service or recovery control was touched.
 Fresh independent spec+quality review and exact-head publication remain pending.
+
+## Independent R1 and bounded known fixes
+
+Reviewer: fresh R1 checked80015c68/treea9ca85eb and required two changes: source
+identity could change during marker fsync after admission, and held STATE dirfd
+checks did not reopen its current fixed path/privacy. Report is retained under
+the new purpose/review/R1.md; this is agent review, not a human approval fact.
+
+Implementer/Verifier: RED-R1-SOURCE4 reproduced machine/launcher/vendor/tmux
+drift releasing incorrectly; RED-R1-DIRECTORY5 reproduced live directory
+replacement/owner/group/mode/nlink drift. The recovery-only hook now repeats
+admission after persistence, then rechecks the lease and clocks. Lease checks
+reopen fixed STATE, compare stable held/live directory identity/private metadata,
+and compare claim/marker through the current directory. Directory size/time are
+excluded because consumption legitimately changes them. GREEN12:177 passed,
+70 platform skips, including late authority change during post-persistence
+admission; owned cleanup and spent failure semantics remain intact. One known-fix
+R2 and exact-head CI/normal publication remain; no third structural round.
