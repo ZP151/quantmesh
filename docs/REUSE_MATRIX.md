@@ -248,6 +248,14 @@ mean forking the full showcase application or shipping its default theme.
 
 ## License checklist
 
+OpenD issue263 reuses the installed Linux ext4/OverlayFS/loop facilities,
+util-linux mount/umount/losetup, e2fsprogs mke2fs and Python standard library.
+No package installation or upstream implementation copying is introduced.
+Linux UAPI mount_attr constants/layout and the x86_64 syscall number are ABI
+interfaces; the native fixture requires the exact already observed kernel and
+tools. Existing adapter/launcher/recovery consume and safety contracts remain
+the integration boundary. Native behavior is a separate actual acceptance gate.
+
 Before distributing QuantMesh outside personal use:
 
 1. Pin every upstream commit and record the commit in `git submodule status`.

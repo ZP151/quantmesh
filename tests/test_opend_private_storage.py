@@ -328,7 +328,10 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
             ]
         ),
     ]
-    assert settings["BindReadOnlyPaths"] == ["", f"{IMAGE}:{ALIAS}"]
+    assert settings["BindReadOnlyPaths"] == [
+        "",
+        f"{IMAGE}:{ALIAS} {POOL}/lower-state/{NONCE}:{STATE}/{NONCE}",
+    ]
     for key, value in {
         "PrivateMounts": "yes",
         "PrivateTmp": "no",

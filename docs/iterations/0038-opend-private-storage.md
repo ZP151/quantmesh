@@ -99,3 +99,37 @@ covered by the original unknown/test margin; no foreign cleanup was performed.
 
 Task3 remains: reviewed finite native fixture source, fresh whole-slice review,
 exact-head normal CI/publication/catalog, then separate synthetic native execution.
+
+## Synthetic fixture source checkpoint
+
+Implementer: a fixed, existing-tool adapter creates one retained synthetic image
+only inside an already verified preparation namespace. A nested namespace makes
+all copied mounts readonly, opens exactly six writable leaves, drops to997/987,
+clears groups and verifies CAPEff0/NNP. Its source embeds the exact pinned common
+guard and the same tested create-only/fsync marker and aggregate writer functions.
+The parent independently checks all six physical image backings before bulk writes
+and connects to the child's owned AF_UNIX socket. First round primes the marker
+and six4KiB files; normal unmount/remount of the same image precedes the spent-marker
+check and real aggregate errno28 exhaustion. This order avoids requiring new
+OverlayFS work metadata after filling the filesystem. Physical marker inode,
+image identity, fsid and runtime inode persist; OverlayFS view inode is not used
+as the physical remount identity. Only synthetic lower bytes are hashed.
+
+Verifier: RED12–18 cover missing fixture/lifecycle/namespace/aggregate/marker/
+embedded-code/owned cleanup behavior. RED20 adds controlled-stop cleanup; RED21b
+exposes and closes raw machine-id byte-hash drift. AFFECTED22:299 passed/70 Windows
+platform skips. Fixed proof deadline195s and cleanup reserve25s remain below the
+separately imposed240s native packet limit; output is bounded. Busy normal unmount
+retains its owned loop and returns failure, with no force/lazy or foreign cleanup.
+All failed images, logs and partial markers are retained. An initial missing
+Windows SIGCHLD adapter is setup failure, not product RED. Offline adapters do not
+prove kernel mount_setattr/OverlayFS or actual provider readiness.
+
+Ruling: explicitly bind the old claim readonly in the c8 drop-in as well as the
+prepared view, so the broader STATE write rule cannot make claim protection depend
+on recursive bind propagation. It changes no writable target or claim identity.
+If the actual manager mapping differs, the common guard still denies release.
+
+Reviewer: one fresh whole-source review is next. Native fixture, original-unit
+preparation, control consumption, provider start, visible login and SDK remain
+pending; no actual native/storage/provider operation occurred in these tests.

@@ -49,3 +49,24 @@ human review fact or a global change to repository review policy. Actual merged
 deployment, resource/native/source/provider gates and login remain separate.
 See the [specification](../superpowers/specs/2026-10-31-opend-same-unit-recovery.md)
 and [checkpoint](../iterations/0038-opend-same-unit-recovery.md).
+
+## Finite private storage amendment — 2026-10-31
+
+Issue [263](https://github.com/ZP151/quantmesh/issues/263) closes the unbounded
+original HOME/STATE growth gap for this same c8 instance. A single persistent
+33554432-byte ext4 image supplies OverlayFS upper/work directories and all six
+writable targets. Original lowers, spent initial claim and a metadata-only image
+alias are readonly. A closed root-protected profile binds the image/loop/layout
+and a new c8-only schema4 recovery digest; original claim and one-marker consume
+semantics remain unchanged. Actual kernel metadata is checked again at the final
+post-fsync vendor gate. Missing support or any drift denies release.
+
+The c8-only disarmed drop-in retains the existing unit and resource limits; it
+does not create a second unit, enable restart, increase RAM or confer SDK access.
+An independent retained synthetic image must first prove aggregate ENOSPC,
+same-image remount-spent behavior, unchanged synthetic lowers and an outside
+private socket. A nested private mount namespace makes copied mounts readonly
+while retaining the preparation namespace's upper mount references. Native
+support must be observed, never inferred from offline adapters. Normal source
+review/CI/merge, the synthetic native run and the later original-unit preparation
+and login are separate gates. See the [checkpoint](../iterations/0038-opend-private-storage.md).

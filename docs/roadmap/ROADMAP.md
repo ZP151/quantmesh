@@ -1,5 +1,14 @@
 # QuantMesh Product Roadmap
 
+## Bounded same-unit OpenD private storage — issue263
+
+One32MiB persistent disk image bounds the original c8 console's six writable
+targets, retaining readonly original state and the spent initial claim. Exact
+profile/layout checks extend the existing final recovery gate. Offline fixture
+controls precede normal source publication and one separate synthetic native
+proof; actual original-unit login and SDK/IVV qualification remain open. See the
+[checkpoint](../iterations/0038-opend-private-storage.md).
+
 ## Same-unit OpenD recovery — issue261
 
 One separately consumed recovery control can reopen the existing persistent

@@ -87,11 +87,11 @@ requires isolated preparation namespace, one retained fixture image, hard240s an
 owned cleanup. Nested namespace runs common layout inspection as997/987; parent
 verifies outside socket and controls remount of same image. No effective grant.
 
-- [ ] RED fixture rejects original mount namespace/foreign preexisting image before
+- [x] RED fixture rejects original mount namespace/foreign preexisting image before
   allocation, and failures close/join only owned child/mount/loop handles.
-- [ ] Implement finite construction/proof/cleanup and safe stage-specific diagnostics;
+- [x] Implement finite construction/proof/cleanup and safe stage-specific diagnostics;
   no automatic retry, new image, shared path mutation or global remount.
-- [ ] Verify offline control flow with syscall/process adapters for failure cleanup,
+- [x] Verify offline control flow with syscall/process adapters for failure cleanup,
   one-image identity, aggregate exhaustion, remount-spent and declared paths. Do not
   label these substitutes native evidence; actual native result remains pending.
 - [ ] One fresh spec+quality reviewer on exact whole slice; fix only confirmed
