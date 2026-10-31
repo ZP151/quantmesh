@@ -381,3 +381,15 @@ Same fresh reviewer known-fix R2 is next, limited to this P1 boundary; no R3. Pa
 owns the existing PR267/new exact-head CI and normal publication. The old CI run
 and historical review remain retained; their outcomes do not release this new
 candidate. No new ordinary approval or hash-by-hash Root gate is required.
+
+### Bind-reset known-fix R2 — 2026-10-31
+
+Same independent reviewer R2 reviewed `ca4acfc540f0c29f144d5de05def498232e6abc0`: READY,
+the Important/P1 blocker closed, zero remaining actionable Spec/Quality findings.
+Report9728B/SHA256fe87f3ef8934ab0bc60dfb295417cc30eebfe3ca8d71ec99b3545fc7064e15b7
+is retained beside the unchanged originalR1 and its superseding addendum. No R3.
+Parent matched28 current source/evidence pins and actual276-pass stdout; reviewer
+independently matched20 evidence members and eight known-fix Git blobs. This
+review-fact checkpoint changes no runtime/test bytes. PR267 needs new exact-head
+CI and normal publication; old-head CI518 cannot qualify this candidate. Actual
+formal Source, fourth start, backend/window and SDK acceptance remain separate.
