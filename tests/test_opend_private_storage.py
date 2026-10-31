@@ -68,7 +68,7 @@ def layout():
         f"17 10 7:8 /runtime {RUNTIME} rw - ext4 /dev/loop8 rw\n"
         "18 10 7:8 /tmp /tmp rw - ext4 /dev/loop8 rw\n"
         "19 10 7:8 /vartmp /var/tmp rw - ext4 /dev/loop8 rw\n"
-        "20 10 7:8 /shm /dev/shm rw - ext4 /dev/loop8 rw\n"
+        "20 23 7:8 /shm /dev/shm rw - ext4 /dev/loop8 rw\n"
         f"21 10 259:1 {IMAGE} {ALIAS} ro - ext4 /dev/root rw\n"
         "22 10 0:2 / /proc rw - proc proc rw\n"
         "23 10 0:3 / /dev rw - devtmpfs udev rw\n"
@@ -384,17 +384,14 @@ def test_mount_namespace_root_may_have_an_unlisted_external_parent():
 def test_visible_writable_child_under_new_prefix_is_still_denied():
     guard = module()
     profile, snapshot = layout()
-    raw = (
-        snapshot["mountinfo"]
-        + (
-            b"40 22 0:2 /sys /proc/sys ro - proc proc rw\n"
-            b"41 40 0:99 / /proc/sys/opaque-fixture rw - tmpfs tmpfs rw\n"
-        )
+    raw = snapshot["mountinfo"] + (
+        b"40 22 0:2 /sys /proc/sys ro - proc proc rw\n"
+        b"41 40 0:99 / /proc/sys/opaque-fixture rw - tmpfs tmpfs rw\n"
     )
     visible = guard._visible_mounts(guard.parse_mountinfo(raw))
     assert visible["/proc/sys/opaque-fixture"].identifier == 41
     snapshot.update(mountinfo=raw, mountinfo_after=raw)
-    with pytest.raises(guard.StorageDenied):
+    with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
         guard.validate_snapshot(profile, snapshot)
 
 
@@ -581,7 +578,11 @@ def test_writable_kernel_exceptions_are_bound_to_canonical_targets_and_roots(
 ):
     guard = module()
     profile, snapshot = layout()
-    parent = 14 if target.startswith(HOME + "/") else 10
+    parent = 10
+    if target.startswith(HOME + "/"):
+        parent = 14
+    elif target == "/dev/pts":
+        parent = 23
     raw = (
         snapshot["mountinfo"]
         + f"40 {parent} 0:99 {root} {target} rw - {filesystem} kernel rw\n".encode()

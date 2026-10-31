@@ -21,8 +21,8 @@ Files: deploy/aws/opend/private_storage.py; tests/test_opend_private_storage.py;
 
 - [x] Add independently expected captured-topology tests with public synthetic paths, reversed/arbitrary IDs and reversed rows, hidden-only child, true siblings, valid stack, path boundary, root/missing parent/cycle and new visible writable child.
 - [x] Run `python -B -m pytest -q tests/test_opend_private_storage.py` on unchanged guard. Expected: captured topology/hidden child and missing-parent regressions fail, existing direct controls pass. Retain raw RED; commit test/docs checkpoint before guard changes.
-- [ ] Apply only the nearest selected proper-prefix invariant inside `_visible_mounts`; preserve all other guard functions. Update only both exact guard SHA literals.
-- [ ] Run the direct file GREEN, then directly affected storage/fixture/recovery/console tests and changed-file Ruff/format/compile/diff. Record counts/RC and exact imported paths. Do not run unrelated full suite/native/old313 replay.
-- [ ] Update iteration and raw pin/forecast/handoff; commit coherent green slice. Parent reviews fresh, max R1/known-fixR2, and owns later exact-head CI/publication.
+- [x] Apply only the nearest selected proper-prefix invariant inside `_visible_mounts`; preserve all other guard functions. Update only both exact guard SHA literals.
+- [x] Run the direct file GREEN, then directly affected storage/fixture/recovery/console tests and changed-file Ruff/format/compile/diff. Record counts/RC and exact imported paths. Do not run unrelated full suite/native/old313 replay.
+- [x] Update iteration and raw pin/forecast/handoff; commit coherent green slice. Parent reviews fresh, max R1/known-fixR2, and owns later exact-head CI/publication.
 
 No shared task interfaces; unchanged public function signatures. Operator acceptance remains later merged Source/native/original backend/private window, not inferred from software tests.
