@@ -26,3 +26,10 @@ Files: deploy/aws/opend/private_storage.py; tests/test_opend_private_storage.py;
 - [x] Update iteration and raw pin/forecast/handoff; commit coherent green slice. Parent reviews fresh, max R1/known-fixR2, and owns later exact-head CI/publication.
 
 No shared task interfaces; unchanged public function signatures. Operator acceptance remains later merged Source/native/original backend/private window, not inferred from software tests.
+
+## R1 bounded test-only correction
+
+- [x] Reproduce foreign-root masking with exact writable_escape assertion:1failed/6passed on unchanged fixture.
+- [x] Reparent /dev/shm to replacement /dev, run selected7GREEN and actual-test RAM canonical-root mutation check; runtime3 files remain exact90e bytes.
+- [x] Run changed-test Ruff/format/diff and record R1 status in iteration; retain old handoff.
+- [ ] Parent obtains the same fresh reviewer's known-fix R2 on the resulting exact head, then owns publication/CI. No broader suite or host action is implied.

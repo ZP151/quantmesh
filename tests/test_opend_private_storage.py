@@ -589,11 +589,13 @@ def test_writable_kernel_exceptions_are_bound_to_canonical_targets_and_roots(
     )
     if target == "/dev":
         raw = raw.replace(b"23 10 0:3 / /dev rw - devtmpfs udev rw\n", b"")
+        # Keep the child attached to the replacement /dev mount.
+        raw = raw.replace(b"20 23 7:8 /shm", b"20 40 7:8 /shm")
     snapshot.update(mountinfo=raw, mountinfo_after=raw)
     if allowed:
         assert guard.validate_snapshot(profile, snapshot) is None
     else:
-        with pytest.raises(guard.StorageDenied):
+        with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
             guard.validate_snapshot(profile, snapshot)
 
 
