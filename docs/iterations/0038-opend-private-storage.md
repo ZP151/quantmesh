@@ -569,3 +569,19 @@ Known-fix final verification:174passed/6POSIXskipped/5.55s, witness+direct recov
 lifecycle only; scoped Ruff/format/Python3.12/diff/submodule pass. This overlaps
 prior results and does not replace the original R1FAIL or claim Linux/native.
 Same-reviewer scoped R2 remains pending; no push/CI or operational action.
+
+
+### Invocation-witness scoped R2 closure — software only
+
+The same fresh reviewer on bbb1df82707b0d830f01455633bf3e35c7fe664d reviewed the
+single known-fix range: sole Important ADDRESSED; Spec PASS/Quality READY; zero
+new Critical/Important. Immutable REVIEW-R2.md SHA256
+41dc9c7dd8a441b581e0449c49963de58622daf6d89e7629396c282f8a5745e0;
+original R1 FAIL is preserved, no R3 or fabricated human review. No tests/runtime
+were rerun by reviewer. This closure changes plan/iteration only; source/tests
+remain exactly bbb1df. Windows/synthetic evidence does not prove full protected
+file/inode integration, actual owned-kernel cleanup, Linux/native qualification
+or the earlier exit cause. Backend/window/SDK and a fifth start remain unapproved.
+Parent's diagnostic-1 proposal is separate and unimplemented. Parent owns normal
+exact-head publication/CI/catalog after this branch's ordinary push; no force,
+new protocol or operational action follows from software READY.

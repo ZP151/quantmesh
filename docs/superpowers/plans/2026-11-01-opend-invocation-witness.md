@@ -1,6 +1,6 @@
 # OpenD invocation witness implementation plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans, inline implementation only after Parent's independent targeted design check. Parent assigns fresh Spec/Quality R1, maximum one known-fixR2. Initial implementation reviewed; the sole known-fix wave is implemented locally, pending scoped R2.
+> **For agentic workers:** REQUIRED SUB-SKILL: superpowers:executing-plans, inline implementation only after Parent's independent targeted design check. Parent assigns fresh Spec/Quality R1, maximum one known-fixR2. Initial implementation reviewed; the sole known-fix wave passed scoped R2; publication remains separate.
 
 **Goal:** Retain a bounded invocation-bound pane/owned-child stage and exit witness without changing release authority.
 **Architecture:** Inline fixed writer/reader in the already pinned launcher, fixed preallocated runtime file, reuse existing child report pipe and owned process/reap/cleanup. No new runtime dependency or observer.
@@ -46,7 +46,7 @@ Original design NOT_READY; four Parent resolutions in spec are binding. Tests mu
 
 ## Current verification and handoff
 
-COMMIT-AFFECTED:234passed/42skipped in5.60s, directly affected witness/recovery/staging/persistent files only; the six new POSIX synthetic child cases and36 prior POSIX-dependent cases are Windows skips, not native qualification. New witness file has48passed/6skipped. Scoped Ruff/format, Python3.12 in-memory compile, whitespace and unchanged submodule pins pass. Current code supersedes interim215/231/232/233 results; no old guard/private-fixture294/candidate/native/frontend replay. Preserved REDs include absent API14fail/9fixture-errors, privacy unknown-field1fail, gate-write-asACK/error metadata2fail, pre-fork invented exit0, report retention after reap (separate Windows WNOHANG model setup failure), and original cgroup gate before witness creation. Fresh R1 is Spec FAIL/Quality NOT_READY on one Important record-error swallowing defect; the sole known-fix wave below awaits the same reviewer R2. No self-READY, push, CI or native effect.
+COMMIT-AFFECTED:234passed/42skipped in5.60s, directly affected witness/recovery/staging/persistent files only; the six new POSIX synthetic child cases and36 prior POSIX-dependent cases are Windows skips, not native qualification. New witness file has48passed/6skipped. Scoped Ruff/format, Python3.12 in-memory compile, whitespace and unchanged submodule pins pass. Current code supersedes interim215/231/232/233 results; no old guard/private-fixture294/candidate/native/frontend replay. Preserved REDs include absent API14fail/9fixture-errors, privacy unknown-field1fail, gate-write-asACK/error metadata2fail, pre-fork invented exit0, report retention after reap (separate Windows WNOHANG model setup failure), and original cgroup gate before witness creation. Fresh R1 is Spec FAIL/Quality NOT_READY on one Important record-error swallowing defect; the sole known-fix wave below subsequently passed the same reviewer scoped R2. No self-READY, push, CI or native effect.
 
 ## Sole R1 known-fix wave
 
@@ -59,10 +59,25 @@ outside that catch. Actual function plus _Owned.release and persistent main RED
 owned/backend cleanup is attempted, no success receipt or persistent-loop continuation.
 Separate benign disappearing-proc probe stays UNKNOWN without a record. Tests use
 existing synthetic recovery/kernel metadata seams, not native or full protected-file
-opening/guard integration. Same fresh reviewer scoped R2 is pending; no third review.
+opening/guard integration. Same fresh reviewer scoped R2 is complete as recorded below; no third review.
 
 Known-fix final direct boundary: R1-FIX-AFFECTED174passed/6POSIXskipped
 in5.55s (new witness plus directly reused recovery lifecycle, overlapping earlier
 checks); scoped Ruff/format/Python3.12 syntax/whitespace/submodule checks pass.
-No old guard/fixture/native or full frontend suite rerun. This is locally GREEN,
-not scoped R2 READY or runtime/login/root-cause qualification.
+No old guard/fixture/native or full frontend suite rerun. This local GREEN was subsequently accepted by scoped R2 below; it is not
+runtime/login/root-cause qualification.
+
+## Scoped R2 closure — software only
+
+The same independent reviewer on bbb1df82707b0d830f01455633bf3e35c7fe664d reports
+sole Important ADDRESSED, Spec PASS/Quality READY, zero new Critical/Important.
+Immutable REVIEW-R2.md SHA256
+41dc9c7dd8a441b581e0449c49963de58622daf6d89e7629396c282f8a5745e0.
+Original R1 FAIL remains unchanged. Reviewer ran no tests/runtime actions. This
+supersedes preceding historical pending-R2 references; no R3. Source/tests remain
+byte-for-byte bbb1df in this docs-only closure. Protected-file/inode integration
+and compound kernel cleanup are not proven end-to-end; cleanup regression uses
+synthetic callbacks. No Linux/native, old-exit-cause, fifth-start/login or SDK
+qualification. Parent owns normal exact-head CI/merge/catalog after normal push.
+The separate diagnostic-1 protocol remains an unapproved proposal, not runtime
+code or authority in this branch.
