@@ -393,3 +393,72 @@ independently matched20 evidence members and eight known-fix Git blobs. This
 review-fact checkpoint changes no runtime/test bytes. PR267 needs new exact-head
 CI and normal publication; old-head CI518 cannot qualify this candidate. Actual
 formal Source, fourth start, backend/window and SDK acceptance remain separate.
+
+## Complete private boundary — 2026-11-01 software slice
+
+Refs [issue263](https://github.com/ZP151/quantmesh/issues/263);
+[new spec](../superpowers/specs/2026-11-01-opend-private-boundary.md) and
+[plan](../superpowers/plans/2026-11-01-opend-private-boundary.md) supersede the
+earlier slave lifetime inference without replacing any historical outcome.
+
+Planner: Root selected one complete private/off/fullRO contract after the entire
+candidate proof, rather than another one-flag/CI/refusal loop. The single task's
+only shared interface is drop-in bytes -> launcher exact SHA/properties -> tests;
+these change atomically. No parallel task or guard/recovery/base edit is needed.
+Fresh origin/main is0620cc97b9d382f1f226e2f336fef7cf8890efec, no relevant drift;
+new branch codex/0038-opend-private-boundary preserves the old propagation branch
+and divergent local main. Existing issue263 remains open/ready-for-agent; open PR
+query returned none at slice start. One action remains the original private
+login window, which is still UNMET.
+
+Quant: no dataset, algorithm, confidence/math/order/SDK/capture change. IVV121,
+once/eight-false/encryption and paper/live gates remain separate and unchanged.
+
+Actual prerequisite: unchanged0620 Source check-window admitted once in the SAME
+candidate process/namespace as whole kernel classification at16:40:01Z. Six
+designated RW, zero noncanonical escapes, exact private/off/threeRO properties,
+all eight flags false/forbidden[], physical ALIAS/claim retained and normal
+actor/Ref/mount/loop/source rollback. Decoded28955B SHA256
+0b9fe86310f9ed5bc7e65403a1cebdfa029498b1d02ebecfc472076e6d40ed00 and thin seal
+are retained under candidate-private-boundary-01. No original start/window/SDK.
+The original manager still reflects published slave until later deployment.
+
+Implementer: runtime edits are only c8 private/off/RO append and the launcher c8
+exact manager expectations/mechanical drop-in SHA. Shared-list resets stay before
+all unchanged sixRW/twoRO pairs. Guard d2add, recovery761f, baseb23d, fixturea462,
+observer, schema4/nonce/image/claim9/ALIAS/resources stay byte/behavior frozen.
+The suspected nested cgroup defect was independently disproved: actual template
+slice is beneath `/system.slice/`, accepted by the existing predicate. Only the
+test positive now uses that actual hierarchy; no cgroup runtime change was made.
+
+Verifier: test-only checkpoint on actual old runtime produced genuine RED
+3failed/23passed/217deselected (old config, full vector, manager positive), then
+the minimal runtime delta gave26passed. Independent KernelWorld metadata covers
+RUN, hugepages and two synthetic opaque child classes, RO-parent/RW-child,
+pressure on/off, hidden mounts, normalization and later slave incoming mounts;
+historical opaque names remain UNKNOWN. Source is the admission oracle, not the
+property model. Each missing/extra/wrong manager property refuses before child,
+release or recovery marker while preserving claim/prior/control bytes. No new
+Source/host/native/CI/auth/UI/SDK was executed for this software task.
+
+Reviewer: fresh independent Spec/Quality R1 is pending on the coherent GREEN
+commit, at most one known-fix R2; no self-READY claim. Parent owns push/PR Refs263,
+normal exact-head selected/aggregate CI, merge/catalog and later formal gate.
+Root selects targeted twofiles + affected software fixture/static checks; no
+unrelated whole-local/frontend, old native or repeated prior CI. Exact commands,
+raw RED/GREEN, failures, pins, allocation and unified diff live in ignored
+private-boundary-repair-01. Source16MiB and N24MiB retain all old holds/evidence;
+the one added4MiB source margin is consumed, never renewed per artifact. Generic
+packing USED2/remaining0 and original starts3 remain unchanged. Private propagation
+requires proven-owned stop/terminal+recursiveCGempty before host cleanup; unknown
+live state must retain mappings. Backend/private-window/SDK acceptance stays open.
+
+Verifier final software boundary: targeted256passed; final affected294passed/7.46s
+(the affected count includes the targeted cases). Scoped Ruff check/three-file
+format, Python3.12 syntax, whitespace and unchanged submodule pins pass. The first
+E501 result remains INITIAL-RUFF-CHECK, corrected only by splitting a byte literal.
+No product setup failure is conflated with the genuine3-case RED. Runtime delta
+is drop-in1397B/SHA256c8a5b6517e2861cb5f20f6bc610f259a3d8964dcd62f7409d17d84a007f06c68
+and its matching c8 manager/pin; immutable guard/recovery/base/fixture byte checks
+and exact inverse proof accompany the unified review diff. This is review-ready
+software, not independent review READY or production/backend/window completion.

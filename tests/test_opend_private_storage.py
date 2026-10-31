@@ -439,7 +439,7 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
         if line and not line.startswith(("#", "[")):
             key, value = line.split("=", 1)
             settings.setdefault(key, []).append(value)
-    assert settings.get("ReadOnlyPaths") == [POOL]
+    assert settings.get("ReadOnlyPaths") == [POOL, "/run /dev/hugepages"]
     assert settings["ReadWritePaths"] == ["", f"{HOME} {STATE} {RUNTIME} /tmp /var/tmp /dev/shm"]
     assert settings["BindPaths"] == [
         "",
@@ -460,7 +460,8 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
     ]
     for key, value in {
         "PrivateMounts": "yes",
-        "MountFlags": "slave",
+        "MountFlags": "private",
+        "MemoryPressureWatch": "off",
         "PrivateTmp": "no",
         "StateDirectory": "",
         "RuntimeDirectoryPreserve": "yes",
@@ -469,6 +470,7 @@ def test_dropin_declares_only_the_six_writes_and_readonly_image_metadata():
     assert set(settings) == {
         "PrivateMounts",
         "MountFlags",
+        "MemoryPressureWatch",
         "PrivateTmp",
         "StateDirectory",
         "RuntimeDirectoryPreserve",
@@ -900,7 +902,7 @@ def test_either_empty_bind_directive_clears_both_accumulated_bind_kinds(reset):
     assert settings == {"BindPaths": [], "BindReadOnlyPaths": []}
 
 
-def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_slave_propagation():
+def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_private_boundary():
     # Independently specified effective vector, including shared-list reset semantics.
     effective = _merged_service_settings(
         [
@@ -947,13 +949,14 @@ def test_complete_base_and_c8_dropin_merge_keeps_six_writes_and_slave_propagatio
         "ProtectHome": "true",
         "PrivateTmp": "no",
         "PrivateMounts": "yes",
-        "MountFlags": "slave",
+        "MountFlags": "private",
+        "MemoryPressureWatch": "off",
         "ProtectKernelTunables": "true",
         "ProtectKernelModules": "true",
         "ProtectControlGroups": "true",
         "RestrictAddressFamilies": "AF_UNIX AF_INET AF_INET6",
         "CapabilityBoundingSet": "",
-        "ReadOnlyPaths": [POOL],
+        "ReadOnlyPaths": [POOL, "/run", "/dev/hugepages"],
         "ReadWritePaths": [HOME, STATE, RUNTIME, "/tmp", "/var/tmp", "/dev/shm"],
         "BindPaths": [
             f"{POOL}/view-home:{HOME}",
@@ -991,3 +994,116 @@ def test_nonempty_bind_directives_append_without_erasing_the_other_kind():
         "BindPaths": ["/synthetic/first:/synthetic/a", "/synthetic/last:/synthetic/c"],
         "BindReadOnlyPaths": ["/synthetic/readonly:/synthetic/b"],
     }
+
+
+def _private_boundary_layout():
+    # Independent metadata oracle from the same-actor proof, not a systemd emulator.
+    # Both opaque paths below are synthetic. Their actual historical names are UNKNOWN.
+    profile, snapshot = layout()
+    lines = snapshot["mountinfo"].decode().splitlines()
+    for i, line in enumerate(lines):
+        if line.split()[4] in (POOL + "/fs", POOL + "/lower-home", POOL + "/lower-state", RUNTIME):
+            fields = line.split()
+            fields[1] = "30"
+            lines[i] = " ".join(fields)
+    lines.extend(
+        [
+            "30 10 0:29 / /run ro - tmpfs tmpfs rw",
+            "31 23 0:36 / /dev/hugepages ro - hugetlbfs hugetlbfs rw",
+            "32 30 0:30 / /run/opaque-fixture ro - tmpfs tmpfs rw",
+            "33 10 0:31 / /sys/fs/cgroup ro - cgroup2 cgroup rw",
+            "34 33 0:31 /synthetic /sys/fs/cgroup/opaque-fixture ro - cgroup2 cgroup rw",
+        ]
+    )
+    raw = ("\n".join(lines) + "\n").encode()
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    return profile, snapshot
+
+
+@pytest.mark.parametrize(
+    "target",
+    [None, "/run", "/dev/hugepages", "/run/opaque-fixture", "/sys/fs/cgroup/opaque-fixture"],
+)
+def test_complete_private_boundary_covers_all_four_measured_classes(monkeypatch, target):
+    guard = module()
+    profile, snapshot = _private_boundary_layout()
+    if target is not None:
+        lines = snapshot["mountinfo"].decode().splitlines()
+        for i, line in enumerate(lines):
+            fields = line.split()
+            if fields[4] == target:
+                fields[5] = "rw"
+                lines[i] = " ".join(fields)
+        raw = ("\n".join(lines) + "\n").encode()
+        snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    world = KernelWorld(snapshot)
+    monkeypatch.setattr(guard, "os", world.os)
+    monkeypatch.setattr(guard, "open", world.open_file, raising=False)
+    captured = guard.capture_live(profile)
+    if target is not None:
+        # A readonly parent is insufficient if any one child remains writable.
+        with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
+            guard.validate_snapshot(profile, captured)
+    else:
+        assert guard.validate_snapshot(profile, captured) is None
+        visible = guard._visible_mounts(guard.parse_mountinfo(captured["mountinfo"]))
+        assert POOL not in visible  # Redundant self-record may disappear under readonly /run.
+        assert "ro" in visible["/run"].options
+        assert {p for p in guard.WRITES if "rw" in visible[p].options} == {
+            HOME,
+            STATE,
+            RUNTIME,
+            "/tmp",
+            "/var/tmp",
+            "/dev/shm",
+        }
+        assert all("ro" in visible[p].options for p in (POOL + "/fs", ALIAS, STATE + "/" + NONCE))
+    assert IMAGE not in world.reads
+
+
+@pytest.mark.parametrize("pressure", ["off", "on"])
+def test_pressure_notification_exception_is_not_a_canonical_kernel_write(pressure):
+    guard = module()
+    profile, snapshot = _private_boundary_layout()
+    # Distinct synthetic mechanism case, NOT identification of the measured opaque leaf.
+    if pressure == "on":
+        raw = snapshot["mountinfo"] + (
+            b"35 33 0:31 /synthetic-pressure "
+            b"/sys/fs/cgroup/pressure-fixture rw - cgroup2 cgroup rw\n"
+        )
+        snapshot.update(mountinfo=raw, mountinfo_after=raw)
+        with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
+            guard.validate_snapshot(profile, snapshot)
+    else:
+        assert guard.validate_snapshot(profile, snapshot) is None
+
+
+def test_private_boundary_ignores_hidden_old_child_but_rejects_new_visible_child():
+    guard = module()
+    profile, snapshot = _private_boundary_layout()
+    raw = snapshot["mountinfo"].replace(b"30 10 0:29", b"30 40 0:29")
+    raw = raw.replace(
+        b"32 30 0:30 / /run/opaque-fixture ro", b"32 40 0:30 / /run/opaque-fixture rw"
+    )
+    raw += b"40 10 0:99 / /run rw - tmpfs tmpfs rw\n"
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    assert guard.validate_snapshot(profile, snapshot) is None
+    raw += b"41 30 0:98 / /run/late-fixture rw - tmpfs tmpfs rw\n"
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
+        guard.validate_snapshot(profile, snapshot)
+
+
+@pytest.mark.parametrize("propagation", ["private", "slave"])
+def test_later_host_mount_requires_private_topology_not_merely_a_readonly_parent(propagation):
+    guard = module()
+    profile, snapshot = _private_boundary_layout()
+    # Linux shared-subtree counterexample model: slave receives a later host RW
+    # mount; private does not. It says nothing about same-filesystem socket writes.
+    if propagation == "slave":
+        raw = snapshot["mountinfo"] + b"40 30 0:99 / /run/later-host-fixture rw - tmpfs tmpfs rw\n"
+        snapshot.update(mountinfo=raw, mountinfo_after=raw)
+        with pytest.raises(guard.StorageDenied, match="^writable_escape$"):
+            guard.validate_snapshot(profile, snapshot)
+    else:
+        assert guard.validate_snapshot(profile, snapshot) is None

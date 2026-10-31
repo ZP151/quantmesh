@@ -100,3 +100,40 @@ empty assignment clears both kinds; interleaving a reset after six writable pair
 erased them. Preserve all eight pairs/flags and the final slave contract. The
 original separate-key test/derivation assumption is superseded; this order-only
 correction neither relaxes the guard nor proves actual manager/backend acceptance.
+
+## Complete private writable-boundary amendment — 2026-11-01
+
+This supersedes the earlier slave lifetime choice, preserving its failed runs and
+review history. Issue263 now selects final `MountFlags=private`, explicit
+`MemoryPressureWatch=off`, and appends `/run /dev/hugepages` to the existing POOL
+readonly list. Retain PrivateMounts, both common bind resets before all six RW/two
+RO assignments, physical ALIAS/claim, source/identity/resource/control guards.
+The c8 recovery manager requires exactly the new vector and pinned drop-in bytes;
+initial and other recovery modes gain no exemption.
+
+A readonly parent alone cannot exclude a later writable submount. Slave permits
+incoming host topology events; private disconnects them, while ordinary writes
+to the same filesystem/socket remain shared. The earlier preference for passive
+host-unmount propagation is therefore superseded: proven-owned service stop and
+terminal/recursive-cgroup-empty must precede normal host unmount/loop detach.
+Unknown-live retains all required state. Pressure-off disables notification setup
+only; memory.high/max/swap0, CPU50%, tasks128 and protected cgroups stay enforced.
+See [systemd255 execution settings](https://www.freedesktop.org/software/systemd/man/255/systemd.exec.html),
+[resource controls](https://www.freedesktop.org/software/systemd/man/255/systemd.resource-control.html#MemoryPressureWatch=)
+and [Linux shared-subtree transitions](https://docs.kernel.org/filesystems/sharedsubtree.html).
+
+The complete isolated candidate at2026-10-31T16:40:01Z used unchanged published0620
+Source and the same process/namespace for full kernel classification: real
+check-window admitted once, eight flags false, six designated writable targets,
+zero noncanonical escapes, normal actor/Ref/mount/loop/source rollback. It retained
+the complete ALIAS and physical-claim binds, with no diagnostic mirrors or omitted
+inputs. POOL's redundant self-record disappeared under readonly RUN, so acceptance
+uses effective protection and unchanged guard mappings, not historical IDs or
+14 self-records. The two earlier opaque identities remain UNKNOWN. The bounded
+candidate was not the original service start, backend, login or SDK qualification.
+
+This amendment changes no storage-guard/recovery/base/observer algorithm or
+resource limit. Fresh software review, exact-head CI/normal merge/catalog and a
+separately bounded formal transaction still precede original-unit backend/socket
+and visible-window acceptance. The original three starts remain historical;
+Source/manager GREEN does not release a fourth start or a trading action.
