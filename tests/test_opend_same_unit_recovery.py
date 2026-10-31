@@ -19,6 +19,7 @@ from test_opend_persistent_console import persistent_permit
 from test_opend_staging_window import stage
 
 NOW = datetime(2026, 10, 31, tzinfo=UTC)
+ORIGINAL_ADMIT = stage._admit
 
 
 class SyntheticFiles:
@@ -793,3 +794,303 @@ def test_authority_changed_during_post_persistence_admission_is_rechecked(
     assert lifecycle.releases == 0
     assert (recovery.state / ("a" * 32 + ".recovery")).exists()
     assert all(child.closed for child in lifecycle.children)
+
+
+@pytest.fixture
+def private_recovery(recovery, tmp_path, monkeypatch):
+    """Real control/lease/file IO plus explicit modeled Linux/vendor metadata."""
+    from test_opend_private_storage import NONCE, PROFILE, ProfileWorld, layout, module
+
+    spec = importlib.util.spec_from_file_location(
+        "storage_profile_validator", Path(stage.__file__).parent / "validate_profile.py"
+    )
+    validator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(validator)
+    guard = module()
+    public_profile, snapshot = layout()
+    world = ProfileWorld(public_profile, snapshot)
+    monkeypatch.setattr(guard, "os", world.os)
+    monkeypatch.setattr(guard, "open", world.open_file, raising=False)
+    claim = recovery.state / NONCE
+    claim.write_bytes(b"")
+    recovery.files.metadata[claim] = {"uid": 997, "gid": 987, "mode": 0o600}
+    recovery.files.metadata[recovery.state].update(uid=997, gid=987)
+    recovery.actor.update(gateway_uid=997, gateway_gid=987)
+    machine = b"SYNTHETIC_MACHINE_METADATA"
+    machine_hash = hashlib.sha256(machine).hexdigest()
+    monkeypatch.setattr(stage, "MACHINE_SHA", machine_hash)
+    recovery.actor["machine_sha256"] = machine_hash
+    recovery.claims.update(
+        schema_version=4,
+        nonce=NONCE,
+        unit="quantmesh-opend-console@" + NONCE + ".service",
+        gateway_uid=997,
+        gateway_gid=987,
+        machine_sha256=machine_hash,
+        original_claim=identity(recovery.files, claim),
+        storage_profile_sha256=hashlib.sha256(world.nodes[PROFILE].data).hexdigest(),
+    )
+    recovery.path.write_bytes(json.dumps(recovery.claims).encode())
+    original_open = recovery.files.open
+
+    def open_as_service(path, flags, mode=0o777, *, dir_fd=None):
+        fd = original_open(path, flags, mode, dir_fd=dir_fd)
+        if flags & os.O_CREAT:
+            recovery.files.metadata[recovery.files.paths[fd]].update(uid=997, gid=987)
+        return fd
+
+    monkeypatch.setattr(recovery.files, "open", open_as_service)
+    for name, value in {"getuid": 997, "geteuid": 997, "getgid": 987, "getegid": 987}.items():
+        monkeypatch.setattr(recovery.files, name, lambda value=value: value, raising=False)
+    monkeypatch.setattr(recovery.files, "getgroups", lambda: [987], raising=False)
+    monkeypatch.setitem(
+        sys.modules, "pwd", SimpleNamespace(getpwnam=lambda n: SimpleNamespace(pw_uid=997))
+    )
+    monkeypatch.setitem(
+        sys.modules, "grp", SimpleNamespace(getgrnam=lambda n: SimpleNamespace(gr_gid=987))
+    )
+    monkeypatch.setattr(stage, "_native", lambda **kw: None)
+    monkeypatch.setattr(stage, "_admit", ORIGINAL_ADMIT)
+    old_module = stage._module
+
+    def modules(path, digest):
+        if path.name == "private_storage.py":
+            assert (
+                digest
+                == hashlib.sha256(
+                    (Path(stage.__file__).parent / path.name).read_bytes()
+                ).hexdigest()
+            )
+            return guard
+        if path.name == "validate_profile.py":
+            return validator
+        if path.name == "same_unit_recovery.py":
+            return old_module(path, digest)
+        return SimpleNamespace()  # Terminal helper is never executed by check-window.
+
+    monkeypatch.setattr(stage, "_module", modules)
+    candidate_profile = (Path(stage.__file__).parent / "gateway-profile.json").read_bytes()
+    monkeypatch.setattr(
+        stage,
+        "_bytes",
+        lambda path, digest=None: (
+            candidate_profile
+            if path == stage.PROFILE
+            else validator.reviewed_configuration()
+            if path == stage.CONFIG
+            else machine
+        ),
+    )
+    monkeypatch.setattr(
+        stage,
+        "_digest",
+        lambda path: (
+            stage.RECOVERY_SHA
+            if path.name == "same_unit_recovery.py"
+            else stage.VENDOR_SHA
+            if path == stage.VENDOR
+            else stage.TMUX_SHA
+            if path.name == "tmux"
+            else "c" * 64
+        ),
+    )
+    monkeypatch.setattr(
+        stage, "_vendor_tree", lambda path: None
+    )  # Immutable installation metadata only.
+    home = tmp_path / "synthetic-home"
+    home.mkdir()
+    recovery.files.metadata[home] = {"uid": 997, "gid": 987, "mode": 0o700}
+    directory = recovery.files.directory
+    monkeypatch.setattr(
+        stage,
+        "_owned_dir",
+        lambda path: directory(home if path == Path("/var/lib/quantmesh-opend") else path),
+    )
+    result = SimpleNamespace(recovery=recovery, world=world, guard=guard, nonce=NONCE, claim=claim)
+    yield result
+    assert not world.handles
+
+
+@pytest.mark.parametrize("change", [None, "profile_bytes", "old_schema3"])
+def test_original_c8_check_requires_the_bound_live_private_storage(
+    private_recovery, capsys, change
+):
+    from test_opend_private_storage import PROFILE
+
+    fixture = private_recovery
+    if change == "profile_bytes":
+        node = fixture.world.nodes[PROFILE]
+        node.data += b" "
+        node.info.st_size += 1
+    elif change == "old_schema3":
+        fixture.recovery.claims["schema_version"] = 3
+        fixture.recovery.claims.pop("storage_profile_sha256")
+        fixture.recovery.path.write_bytes(json.dumps(fixture.recovery.claims).encode())
+    result = stage.main(["--check-window", "--persistent", "--nonce", fixture.nonce])
+    assert result == (0 if change is None else 2)
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["status"] == ("admitted" if change is None else "pending")
+    assert fixture.claim.read_bytes() == b""
+    assert not (fixture.recovery.state / (fixture.nonce + ".recovery")).exists()
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        None,
+        "DropInPaths",
+        "PrivateMounts",
+        "PrivateTmp",
+        "StateDirectory",
+        "RuntimeDirectoryPreserve",
+        "ReadWritePaths",
+        "ProtectSystem",
+        "dropin_bytes",
+    ],
+)
+def test_c8_manager_requires_only_its_exact_storage_dropin(private_recovery, monkeypatch, change):
+    nonce = private_recovery.nonce
+    unit = "quantmesh-opend-console@" + nonce + ".service"
+    dropin = "/etc/systemd/system/" + unit + ".d/30-private-storage.conf"
+    runtime = "quantmesh-opend-console-" + nonce
+    properties = dict(stage.MANAGER_FIXED)
+    properties.update(
+        RuntimeMaxUSec="infinity",
+        FragmentPath="/etc/systemd/system/quantmesh-opend-console@.service",
+        MemoryMax="1073741824",
+        MemoryHigh="805306368",
+        MemorySwapMax="0",
+        CPUQuotaPerSecUSec="500ms",
+        TasksMax="128",
+        Id=unit,
+        MainPID="7",
+        ActiveState="active",
+        ControlGroup="/system.slice/" + unit,
+        RuntimeDirectory=runtime,
+        DropInPaths=dropin,
+        PrivateMounts="yes",
+        PrivateTmp="no",
+        StateDirectory="",
+        RuntimeDirectoryPreserve="yes",
+        ProtectSystem="strict",
+        ReadWritePaths=(
+            "/var/lib/quantmesh-opend /var/lib/quantmesh-opend-stage "
+            f"/run/{runtime} /tmp /var/tmp /dev/shm"
+        ),
+    )
+    values = {
+        properties["FragmentPath"]: (
+            Path(stage.__file__).parent / "quantmesh-opend-console@.service"
+        ).read_bytes(),
+        dropin: (
+            Path(stage.__file__).parent / "quantmesh-opend-console-c8-private-storage.conf"
+        ).read_bytes(),
+    }
+    if change == "dropin_bytes":
+        values[dropin] += b"# drift\n"
+    elif change:
+        properties[change] = {
+            "DropInPaths": dropin + " /foreign.conf",
+            "PrivateMounts": "no",
+            "PrivateTmp": "yes",
+            "StateDirectory": "quantmesh-opend-stage",
+            "RuntimeDirectoryPreserve": "no",
+            "ReadWritePaths": properties["ReadWritePaths"] + " /host-escape",
+            "ProtectSystem": "no",
+        }[change]
+
+    def public_bytes(path, digest=None):
+        raw = values[path.as_posix()]
+        if hashlib.sha256(raw).hexdigest() != digest:
+            raise stage.StageDenied("pin_drift")
+        return raw
+
+    def manager_output(argv):
+        assert argv[0] == "/usr/bin/systemctl" and argv[-1] == unit
+        names = next(x.split("=", 1)[1] for x in argv if x.startswith("--property=")).split(",")
+        return "\n".join(key + "=" + properties[key] for key in names)
+
+    monkeypatch.setattr(stage, "_bytes", public_bytes)
+    monkeypatch.setattr(stage, "_command", manager_output)
+    window = stage.select_console_window(nonce, persistent=True)
+    if change:
+        with pytest.raises(stage.StageDenied):
+            stage._manager(window)
+    else:
+        assert stage._manager(window)["DropInPaths"] == dropin
+
+
+@pytest.mark.parametrize("late_drift", [False, True])
+def test_storage_guard_rechecks_after_marker_persistence_before_the_existing_gate(
+    private_recovery, lifecycle, monkeypatch, late_drift
+):
+    fixture = private_recovery
+    window = stage.select_console_window(fixture.nonce, persistent=True)
+    original_sync = fixture.recovery.files.fsync
+
+    def sync(fd):
+        original_sync(fd)
+        if late_drift and fixture.recovery.files.paths.get(fd) == (
+            fixture.recovery.state / (fixture.nonce + ".recovery")
+        ):
+            fixture.world.values["/sys/block/loop8/loop/sizelimit"] = b"0\n"
+
+    monkeypatch.setattr(fixture.recovery.files, "fsync", sync)
+    if late_drift:
+        with pytest.raises(stage.StageDenied, match="storage_denied"):
+            stage.start_staging_console(window)
+        assert lifecycle.releases == 0
+    else:
+        assert stage.start_staging_console(window)["status"] == "stopped"
+        assert lifecycle.releases == 1
+    assert (fixture.recovery.state / (fixture.nonce + ".recovery")).exists()
+    assert all(child.closed for child in lifecycle.children)
+    assert fixture.claim.read_bytes() == b""
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        "missing_digest",
+        "invalid_digest",
+        "boolean_digest",
+        "foreign_nonce",
+        "foreign_uid",
+        "foreign_gid",
+        "extra_flag",
+    ],
+)
+def test_private_recovery_authority_is_closed_and_cannot_transfer(private_recovery, capsys, change):
+    fixture = private_recovery
+    c = fixture.recovery.claims
+    nonce = fixture.nonce
+    if change == "missing_digest":
+        c.pop("storage_profile_sha256")
+    elif change == "invalid_digest":
+        c["storage_profile_sha256"] = "not-a-digest"
+    elif change == "boolean_digest":
+        c["storage_profile_sha256"] = True
+    elif change == "foreign_nonce":
+        nonce = c["nonce"] = "a" * 32
+        c["unit"] = "quantmesh-opend-console@" + nonce + ".service"
+    elif change == "foreign_uid":
+        c["gateway_uid"] = 1001
+    elif change == "foreign_gid":
+        c["gateway_gid"] = 1001
+    else:
+        c["storage_verified"] = True
+    fixture.recovery.path.write_bytes(json.dumps(c).encode())
+    assert stage.main(["--check-window", "--persistent", "--nonce", nonce]) == 2
+    assert json.loads(capsys.readouterr().out)["status"] == "pending"
+    assert not fixture.world.reads
+    assert not (fixture.recovery.state / (fixture.nonce + ".recovery")).exists()
+
+
+def test_storage_dropin_exemption_is_not_available_to_initial_or_other_recovery():
+    initial = persistent_permit()
+    initial["nonce"] = "c8f0d0de4ca641a491fca6df24c66ceb"
+    windows = [stage.StagingWindow(initial), stage.RecoveryWindow(SimpleNamespace(nonce="a" * 32))]
+    for window in windows:
+        contract = stage._manager_contract(window)
+        assert contract["DropInPaths"] == ""
+        assert "PrivateMounts" not in contract
