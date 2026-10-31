@@ -23,6 +23,11 @@ requires exact matching c8 manager properties/pin and preserves guard/resources.
 Private isolation makes service stop plus recursive-cgroup-empty before host
 unmount essential. See the [current contract](../superpowers/specs/2026-11-01-opend-private-boundary.md).
 
+Fresh whole-slice R1 on the private-boundary software is Spec PASS/Quality READY
+with no findings; runtime/tests stay reviewed and no R2 is needed. Exact-final-head
+CI/normal publication/catalog and original backend/private-window acceptance
+remain pending, with no Source/SDK or fourth-start claim from review.
+
 ## Same-unit OpenD recovery — issue261
 
 One separately consumed recovery control can reopen the existing persistent

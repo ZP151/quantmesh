@@ -462,3 +462,22 @@ is drop-in1397B/SHA256c8a5b6517e2861cb5f20f6bc610f259a3d8964dcd62f7409d17d84a007
 and its matching c8 manager/pin; immutable guard/recovery/base/fixture byte checks
 and exact inverse proof accompany the unified review diff. This is review-ready
 software, not independent review READY or production/backend/window completion.
+
+### Complete-boundary independent R1 closure
+
+Fresh independent whole-slice review on b88c6d0b332ad343dda7c26663a0c23aa056dfb0:
+Spec PASS / Quality READY, zero Critical/Important/Minor findings; no R2 needed.
+Report2269B SHA2569b4b25dafc3ef776a13752c463b43075f2ada5e87a75e84adfa0650528022fb7
+is retained as private-boundary-repair-01/review/R1.md. Reviewer independently
+read the41200B unified diff, runtime pins, ten raw receipts and complete actual
+candidate; no tests or native operation were repeated. This docs closure leaves
+runtime/tests/spec bytes exactly reviewed. Parent owns normal PR/selectedCI and
+publication; original backend/window/SDK remain unaccepted.
+
+The final Win32 accounting found17,646,848B actual against the historical16MiB
+source hold, over869632B (+64KiB directory margin over935168B). All bytes remain,
+not retroactively compliant. Root registered ONE8MiB supplement at16:49:25Z,
+newsource24MiB, G10240999514/P4297298958, guardG10266837082/P4323136526.
+Actual growth consumes a fixed remaining future envelope for R1/R2/CI/catalog
+and known-fix evidence; it never renews the supplement. N24MiB/remote72/ops8
+and all failures remain retained, no deletion/refund/borrowing or new test run.

@@ -15,7 +15,8 @@ Six RW/two RO/common reset order, guard/recovery/base/observer, image/claim/ALIA
 nonce/schema4, identities, eight flags and resource caps remain fixed. No host,
 native/auth/UI/SDK, dependency, CI change, source variant or evidence deletion.
 Root selects affected/static gates instead of unrelated broad local replay.
-Source16MiB includes old evidence and ONE previously charged4MiB margin;
+Source24MiB includes old evidence, the previously charged4MiB margin and one
+central8MiB supplement; the old16MiB overrun remains retained.
 N24MiB/remote72MiB/ops8MiB remain unchanged. Stop before push/PR for Parent review.
 
 ## Review focus
@@ -61,3 +62,14 @@ counts). Scoped Ruff check/format, Python3.12 in-memory syntax, diff/submodule
 checks pass. One initial E501 lint result is retained separately from product RED.
 Exact commands/raw/pins and final commit/diff live in private-boundary-repair-01.
 Fresh independent review/CI/publication/runtime remain pending; stop before push.
+
+## Independent R1 closure
+
+Fresh whole-slice Spec/Quality R1 on b88c6d0b332ad343dda7c26663a0c23aa056dfb0
+reports Spec PASS/Quality READY, zero Critical/Important/Minor findings. Report
+2269B/SHA2569b4b25dafc3ef776a13752c463b43075f2ada5e87a75e84adfa0650528022fb7
+is retained in private-boundary-repair-01/review/R1.md. The reviewer read the
+full diff, pins, ten raw receipts and actual candidate; no suite was rerun.
+No R2 is needed. This closure changes only plan/iteration/roadmap; runtime/tests
+and spec remain byte-identical to reviewed b88c. Exact-final-head CI/normal
+publication/catalog and original backend/window acceptance remain pending.
