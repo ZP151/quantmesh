@@ -42,6 +42,8 @@ BASE = Path("/opt/quantmesh/opend")
 LAUNCHER = BASE / "stage_console.py"
 PERMIT = Path("/etc/quantmesh/opend/staging-window.json")
 PERSISTENT_PERMIT = Path("/etc/quantmesh/opend/persistent-session.json")
+RECOVERY_PERMIT = Path("/etc/quantmesh/opend/persistent-recovery.json")
+RECOVERY_SHA = "ac28d474f9bfcb58d20b3e9c10a85b7e7506d960e14b674707f7b82cc7dbc39a"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
 CONFIG = Path("/etc/quantmesh/opend/OpenD.xml")
 VENDOR = BASE / "10.10.7008/OpenD"
@@ -80,6 +82,9 @@ CODES = {
     "deadline",
     "fixture_failed",
     "context_denied",
+    "recovery_denied",
+    "duplicate_recovery",
+    "claim_changed",
 }
 
 
@@ -107,6 +112,27 @@ class StagingWindow:
     @property
     def persistent(self):
         return self.claims.get("schema_version") == 2
+
+
+@dataclass(frozen=True)
+class RecoveryWindow:
+    control: object
+
+    @property
+    def claims(self):
+        return self.control.claims
+
+    @property
+    def nonce(self):
+        return self.control.nonce
+
+    @property
+    def expires(self):
+        return _utc(self.claims["expires_at"])
+
+    @property
+    def persistent(self):
+        return True
 
 
 def _utc(value):
@@ -282,6 +308,25 @@ def load_staging_window(path=None, *, persistent=False):
     return StagingWindow(_json(_bytes(path)))
 
 
+def select_console_window(nonce, *, persistent=False):
+    if persistent:
+        try:
+            RECOVERY_PERMIT.lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            module = _module(BASE / "same_unit_recovery.py", RECOVERY_SHA)
+            return RecoveryWindow(module.load(sys.modules[__name__], nonce))
+    return load_staging_window(persistent=True) if persistent else load_staging_window()
+
+
+def reload_console_window(window):
+    if isinstance(window, RecoveryWindow):
+        module = _module(BASE / "same_unit_recovery.py", RECOVERY_SHA)
+        return RecoveryWindow(module.load(sys.modules[__name__], window.nonce))
+    return load_staging_window(persistent=True) if window.persistent else load_staging_window()
+
+
 def _module(path, digest):
     # Compile only verified source bytes. No import loader, pycache or search path.
     module = types.ModuleType(path.stem)
@@ -315,7 +360,16 @@ def _admit(window):
         gateway_gid=group.gr_gid,
     )
     hashes = dict(launcher_sha256=_digest(LAUNCHER), tmux_sha256=_digest(Path("/usr/bin/tmux")))
-    validate_staging_window(window, now=datetime.now(UTC), identity=identity, hashes=hashes)
+    if isinstance(window, RecoveryWindow):
+        if _digest(BASE / "same_unit_recovery.py") != RECOVERY_SHA:
+            raise StageDenied("pin_drift")
+        window.control.validate(
+            now=datetime.now(UTC),
+            identity=identity,
+            hashes={**hashes, "vendor_sha256": _digest(VENDOR)},
+        )
+    else:
+        validate_staging_window(window, now=datetime.now(UTC), identity=identity, hashes=hashes)
     validator = _module(BASE / "validate_profile.py", VALIDATOR_SHA)
     profile = _json(_bytes(PROFILE, PROFILE_SHA))
     configuration = _bytes(CONFIG, CONFIG_SHA)
@@ -613,6 +667,9 @@ def _claim(window, directory):
 
 
 def _unclaimed(window):
+    if isinstance(window, RecoveryWindow):
+        window.control.check_available()
+        return
     with _owned_dir(STATE) as directory:
         try:
             os.stat(window.nonce, dir_fd=directory, follow_symlinks=False)
@@ -732,8 +789,9 @@ def start_staging_console(window):
     )
     try:
         _unclaimed(window)
-        with _owned_dir(STATE) as directory:
-            _claim(window, directory)
+        if not isinstance(window, RecoveryWindow):
+            with _owned_dir(STATE) as directory:
+                _claim(window, directory)
         for fd in (0, 1, 2):
             held.append(os.dup(fd))
         proof = helper.inspect_private_terminal(*held, expected_uid=os.getuid())
@@ -764,11 +822,7 @@ def start_staging_console(window):
             )
 
             def final_admission():
-                latest = (
-                    load_staging_window(persistent=True)
-                    if window.persistent
-                    else load_staging_window()
-                )
+                latest = reload_console_window(window)
                 if latest.claims != window.claims or time.monotonic() >= deadline:
                     raise StageDenied("deadline")
                 check = inspect_staging_context(latest)
@@ -786,11 +840,7 @@ def start_staging_console(window):
                     os.close(check["backend_pidfd"])
                 # Manager, descriptor and source checks can consume the launch
                 # window. Recheck both clocks and the exact permit after them.
-                final_permit = (
-                    load_staging_window(persistent=True)
-                    if window.persistent
-                    else load_staging_window()
-                )
+                final_permit = reload_console_window(window)
                 if (
                     final_permit.claims != window.claims
                     or time.monotonic() >= deadline
@@ -798,7 +848,24 @@ def start_staging_console(window):
                 ):
                     raise StageDenied("deadline")
 
-            child.release(final_admission, deadline=deadline, expires=window.expires)
+            if isinstance(window, RecoveryWindow):
+                with window.control.release_lease() as recovery_lease:
+
+                    def release_recovery():
+                        recovery_lease.consume()
+                        # Persistence may block: revalidate current source/host
+                        # and then live authority again before the gate clocks.
+                        _admit(window)
+                        recovery_lease.check()
+
+                    child.release(
+                        final_admission,
+                        deadline=deadline,
+                        expires=window.expires,
+                        before_gate=release_recovery,
+                    )
+            else:
+                child.release(final_admission, deadline=deadline, expires=window.expires)
             while child.alive():
                 if window.persistent:
                     # Freshness was checked immediately before release. Once released,
@@ -894,7 +961,7 @@ class _Owned:
     def alive(self):
         return not self.terminal and not select.select([self.pidfd], [], [], 0)[0]
 
-    def release(self, admission=lambda: None, *, deadline=None, expires=None):
+    def release(self, admission=lambda: None, *, deadline=None, expires=None, before_gate=None):
         admission()
         if not self.alive() or _identity(self.pid, self.pidfd) != self.identity:
             raise StageDenied("missing_handle")
@@ -902,6 +969,14 @@ class _Owned:
             expires is not None and datetime.now(UTC) >= expires
         ):
             raise StageDenied("deadline")
+        if before_gate is not None:
+            # Recovery authority commits after existing PID checks, at this gate.
+            # Initial callers keep the original path and perform no extra work.
+            before_gate()
+            if (deadline is not None and time.monotonic() >= deadline) or (
+                expires is not None and datetime.now(UTC) >= expires
+            ):
+                raise StageDenied("deadline")
         os.write(self.gate, b"R")
         self.released = True
         if _report(self.report, 1) != b"R":
@@ -1256,9 +1331,7 @@ def main(argv=None):
         if args.owned_fixture:
             receipt = run_owned_fixture()
         elif args.start or args.check_window or args.prepare or args.create_pane or args.pane:
-            window = (
-                load_staging_window(persistent=True) if args.persistent else load_staging_window()
-            )
+            window = select_console_window(args.nonce, persistent=args.persistent)
             if window.persistent != args.persistent:
                 raise StageDenied()
             _admit(window)
