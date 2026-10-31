@@ -43,7 +43,15 @@ LAUNCHER = BASE / "stage_console.py"
 PERMIT = Path("/etc/quantmesh/opend/staging-window.json")
 PERSISTENT_PERMIT = Path("/etc/quantmesh/opend/persistent-session.json")
 RECOVERY_PERMIT = Path("/etc/quantmesh/opend/persistent-recovery.json")
-RECOVERY_SHA = "ac28d474f9bfcb58d20b3e9c10a85b7e7506d960e14b674707f7b82cc7dbc39a"
+PRIVATE_STORAGE_NONCE = "c8f0d0de4ca641a491fca6df24c66ceb"
+PRIVATE_STORAGE_DROPIN = Path(
+    "/etc/systemd/system/quantmesh-opend-console@"
+    + PRIVATE_STORAGE_NONCE
+    + ".service.d/30-private-storage.conf"
+)
+PRIVATE_STORAGE_DROPIN_SHA = "82c4db6a982311c0472165f6a923c27cd230e30615a7e2d93b9875744727c918"
+PRIVATE_STORAGE_SHA = "d6ec674821d75e50ada3e40c956487c84bcca4e36a2cd773ab431925baae9c5a"
+RECOVERY_SHA = "761f5078f906d734d17bdeab6369bffd09578be5602d161682cb10470d0aee9d"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
 CONFIG = Path("/etc/quantmesh/opend/OpenD.xml")
 VENDOR = BASE / "10.10.7008/OpenD"
@@ -85,6 +93,7 @@ CODES = {
     "recovery_denied",
     "duplicate_recovery",
     "claim_changed",
+    "storage_denied",
 }
 
 
@@ -368,6 +377,12 @@ def _admit(window):
             identity=identity,
             hashes={**hashes, "vendor_sha256": _digest(VENDOR)},
         )
+        if window.nonce == PRIVATE_STORAGE_NONCE:
+            storage = _module(BASE / "private_storage.py", PRIVATE_STORAGE_SHA)
+            try:
+                storage.validate_live(window.claims)
+            except storage.StorageDenied:
+                raise StageDenied("storage_denied") from None
     else:
         validate_staging_window(window, now=datetime.now(UTC), identity=identity, hashes=hashes)
     validator = _module(BASE / "validate_profile.py", VALIDATOR_SHA)
@@ -484,7 +499,7 @@ MANAGER_FIXED = dict(
 def _manager_contract(window):
     if not window.persistent:
         return MANAGER_FIXED
-    return {
+    contract = {
         **MANAGER_FIXED,
         "RuntimeMaxUSec": "infinity",
         "FragmentPath": "/etc/systemd/system/quantmesh-opend-console@.service",
@@ -494,6 +509,20 @@ def _manager_contract(window):
         "CPUQuotaPerSecUSec": "500ms",
         "TasksMax": "128",
     }
+    if isinstance(window, RecoveryWindow) and window.nonce == PRIVATE_STORAGE_NONCE:
+        contract.update(
+            DropInPaths=PRIVATE_STORAGE_DROPIN.as_posix(),
+            PrivateMounts="yes",
+            PrivateTmp="no",
+            StateDirectory="",
+            RuntimeDirectoryPreserve="yes",
+            ProtectSystem="strict",
+            ReadWritePaths=(
+                "/var/lib/quantmesh-opend /var/lib/quantmesh-opend-stage "
+                "/run/quantmesh-opend-console-" + PRIVATE_STORAGE_NONCE + " /tmp /var/tmp /dev/shm"
+            ),
+        )
+    return contract
 
 
 def _validate_manager(window, properties, *, preparing=False):
@@ -539,6 +568,8 @@ def _command(argv):
 def _manager(window, *, preparing=False):
     contract = _manager_contract(window)
     _bytes(Path(contract["FragmentPath"]), PERSISTENT_UNIT_SHA if window.persistent else UNIT_SHA)
+    if isinstance(window, RecoveryWindow) and window.nonce == PRIVATE_STORAGE_NONCE:
+        _bytes(PRIVATE_STORAGE_DROPIN, PRIVATE_STORAGE_DROPIN_SHA)
     names = list(contract) + [
         "Id",
         "MainPID",

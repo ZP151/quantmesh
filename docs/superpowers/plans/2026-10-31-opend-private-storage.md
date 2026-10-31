@@ -65,14 +65,14 @@ RecoveryWindow c8 _admit invokes pinned helper.validate_live(claims); manager co
 adds exact c8 drop-in SHA/path and namespace properties. Existing final _admit call
 reuses it; no new consume/backend/timeout/order mechanism.
 
-- [ ] RED schema4 c8 control with valid profile/layout reaches existing check, while
+- [x] RED schema4 c8 control with valid profile/layout reaches existing check, while
   missing digest/old schema3 c8/profile drift denies without marker/vendor release.
-- [ ] Implement strict schema4 and recovery-only manager/admission integration; update helper pins.
-- [ ] RED/GREEN manager wrong drop-in/SHA/PrivateMounts/PrivateTmp/StateDirectory/
+- [x] Implement strict schema4 and recovery-only manager/admission integration; update helper pins.
+- [x] RED/GREEN manager wrong drop-in/SHA/PrivateMounts/PrivateTmp/StateDirectory/
   RuntimeDirectoryPreserve/ReadWritePaths, and guard drift after marker fsync.
-- [ ] Verify original nine-field claim/one O_EXCL/spent-failure regressions plus
+- [x] Verify original nine-field claim/one O_EXCL/spent-failure regressions plus
   legacy initial/schema3 non-c8 unchanged. No real vendor, credential or SDK calls.
-- [ ] Run affected OpenD tests, focused Ruff/format/compile/whitespace and update iteration;
+- [x] Run affected OpenD tests, focused Ruff/format/compile/whitespace and update iteration;
   commit tested recovery integration. Linux-only skips are not native passes.
 
 ## Task3: finite native fixture, review and normal publication

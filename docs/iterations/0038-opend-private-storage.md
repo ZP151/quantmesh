@@ -69,3 +69,33 @@ Ruling: a nested fixture namespace models systemd's clone of prepared OverlayFS
 mounts. Its recursive readonly flags must affect copied mounts, preserving the
 preparation namespace's upper mount references. Unsupported native behavior stops
 the retained fixture; it does not permit a new unit, image or host-global remount.
+
+## Recovery integration checkpoint
+
+Implementer: closed schema4 adds only the profile digest and fixes c8/997/987.
+Other schema3 and initial controls retain their contracts. Original c8 recovery
+requires pinned live storage admission, so old schema3 cannot bypass it. The exact
+c8 drop-in path/SHA and manager namespace/state/runtime/write-path properties are
+checked; original template SHA remains b23d91ec. The existing post-persistence
+_admit call now also rechecks storage before its unchanged child gate. No backend,
+consume ordering, timeout, SDK or vendor operation was changed. Safe storage_denied
+was added to the fixed error categories after its regression exposed generic masking.
+
+Verifier: actual CLI RED08c refused new schema4 but admitted old c8; after schema4
+support, RED08d exposed missing profile enforcement. GREEN08 closes both with real
+Control/Lease IO and modeled Linux/vendor facts. RED09b exposed the exact-drop-in
+manager gap; all manager wrong-property/SHA vectors now deny. Final-gate simulation
+has one release on valid layout, zero after fsync-time loop drift, retained spent
+marker and normal owned handle closure. Affected11:263 passed/70 platform skips;
+focused Ruff/format/compile/diff and unchanged submodule pins pass. This is software
+evidence, not Linux native qualification or an opened login window.
+
+Test setup failures are retained separately: default pytest temp cleanup encountered
+an unrelated inaccessible old pytest-current path; one owned basetemp lacked its
+parent, and one manager adapter used Windows backslashes for POSIX keys. None is
+claimed as product RED. Subsequent runs use unique owned vector roots, preserving
+all prior failures. The tiny first default-temp fixture footprint is additionally
+covered by the original unknown/test margin; no foreign cleanup was performed.
+
+Task3 remains: reviewed finite native fixture source, fresh whole-slice review,
+exact-head normal CI/publication/catalog, then separate synthetic native execution.

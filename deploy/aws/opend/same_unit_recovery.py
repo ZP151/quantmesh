@@ -25,6 +25,7 @@ STAMP_FIELDS = {
     "ctime_ns",
 }
 EXTRA_FIELDS = {"unit", "vendor_sha256", "session_lifetime", "original_claim", "prior_permit"}
+PRIVATE_STORAGE_NONCE = "c8f0d0de4ca641a491fca6df24c66ceb"
 
 
 def _stamp(info):
@@ -89,10 +90,17 @@ class Control:
 
     def _shape(self):
         ops, c = self.ops, self.claims
-        _require(ops, type(c) is dict and set(c) == ops.FIELDS | EXTRA_FIELDS)
+        _require(ops, type(c) is dict)
+        private_storage = c.get("schema_version") == 4
+        fields = ops.FIELDS | EXTRA_FIELDS
+        if private_storage:
+            fields = fields | {"storage_profile_sha256"}
+        _require(ops, set(c) == fields)
         _require(ops, _hex(self.nonce, 32))
+        if private_storage:
+            _require(ops, self.nonce == PRIVATE_STORAGE_NONCE and _hex(c["storage_profile_sha256"]))
         exact = dict(
-            schema_version=3,
+            schema_version=4 if private_storage else 3,
             purpose="opend_same_unit_recovery",
             nonce=self.nonce,
             unit="quantmesh-opend-console@" + self.nonce + ".service",
@@ -109,6 +117,8 @@ class Control:
             new_device_approved=True,
             market_right_transfer_approved=True,
         )
+        if private_storage:
+            exact.update(gateway_uid=997, gateway_gid=987)
         _require(ops, all(type(c[k]) is type(v) and c[k] == v for k, v in exact.items()))
         _require(ops, _hex(c["approved_build"], 40) and _hex(c["launcher_sha256"]))
         _require(
