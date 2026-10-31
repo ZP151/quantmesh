@@ -18,6 +18,7 @@ import socket
 import stat
 import subprocess
 import sys
+import textwrap
 import threading
 import time
 from pathlib import Path
@@ -31,11 +32,17 @@ HOME = "/var/lib/quantmesh-opend"
 STATE = "/var/lib/quantmesh-opend-stage"
 RUNTIME = "/run/quantmesh-opend-console-" + NONCE
 WRITES = (HOME, STATE, RUNTIME, "/tmp", "/var/tmp", "/dev/shm")
-GUARD_SHA = "d6ec674821d75e50ada3e40c956487c84bcca4e36a2cd773ab431925baae9c5a"
+GUARD_SHA = "6e8177e51abb2b8381881ac6d2cac237c00d353efc734292f2730d2d68b3e518"
 
 
 class FixtureDenied(RuntimeError):
     pass
+
+
+class ChildFailed(FixtureDenied):
+    def __init__(self, diagnostic):
+        super().__init__("fixture_child_failed")
+        self.diagnostic = diagnostic
 
 
 def need(condition, reason):
@@ -191,6 +198,8 @@ def run_fixture(ops):
             reason=str(exc) if isinstance(exc, FixtureDenied) else None,
             errno=exc.errno if isinstance(exc, OSError) else None,
         )
+        if isinstance(exc, ChildFailed):
+            receipt["primary"]["child"] = exc.diagnostic
     finally:
         try:
             receipt["cleanup"] = ops.cleanup()
@@ -321,11 +330,12 @@ def child_program(profile, *, prime, gate_fd, guard_source):
     code += f"STATE={STATE!r}\nNONCE={NONCE!r}\nIMAGE_BYTES={IMAGE_BYTES!r}\n"
     code += f"WRITES={WRITES!r}\nRUNTIME={RUNTIME!r}\n"
     code += inspect.getsource(consume_marker) + "\n" + inspect.getsource(fill_files) + "\n"
-    code += "guard=types.ModuleType('fixture_storage_guard')\n"
-    code += "sys.modules[guard.__name__]=guard\n"
-    code += f"exec(compile({guard_source!r}, '<reviewed-storage-guard>', 'exec'),guard.__dict__)\n"
-    code += f"profile={profile!r}\nprime={prime!r}\ngate_fd={gate_fd!r}\n"
-    code += """
+    body = "guard=types.ModuleType('fixture_storage_guard')\n"
+    body += "sys.modules[guard.__name__]=guard\n"
+    body += f"exec(compile({guard_source!r}, '<reviewed-storage-guard>', 'exec'),guard.__dict__)\n"
+    body += f"profile={profile!r}\nprime={prime!r}\ngate_fd={gate_fd!r}\n"
+    body += """
+stage='IDENTITY'
 need(os.getuid()==997 and os.geteuid()==997 and os.getgid()==987 and not os.getgroups(),
      'fixture_child_identity')
 with open('/proc/self/status','rb') as stream:
@@ -334,11 +344,14 @@ need(len(status)<=16384, 'fixture_status_bound')
 fields=dict(line.split(b':',1) for line in status.splitlines() if b':' in line)
 need(int(fields[b'CapEff'].strip(),16)==0 and fields[b'NoNewPrivs'].strip()==b'1',
      'fixture_child_privileges')
+stage='LAYOUT'
 guard.validate_snapshot(profile,guard.capture_live(profile))
+stage='MARKER'
 marker_view_inode=consume_marker(prime=prime)
 fds=[]
 listener=None
 try:
+    stage='PROBES'
     for target in WRITES:
         flags=os.O_WRONLY|os.O_APPEND|os.O_NOFOLLOW|os.O_CLOEXEC
         if prime: flags|=os.O_CREAT|os.O_EXCL
@@ -354,6 +367,7 @@ try:
         else:
             need(info.st_size==4096,'fixture_remount_probe_size')
     if prime:
+        stage='SOCKET'
         listener=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM)
         listener.settimeout(15)
         listener.bind(RUNTIME+'/.qm-fixture.sock')
@@ -366,21 +380,73 @@ try:
             connection.settimeout(10)
             need(connection.recv(4)==b'PING','fixture_socket_request')
             connection.sendall(b'PONG')
+    stage='GATE'
     need(os.read(gate_fd,1)==b'G','fixture_parent_gate')
     os.close(gate_fd)
     if prime:
         result=dict(per_target_bytes=[os.fstat(fd).st_size for fd in fds])
     else:
+        stage='FILL'
         result=fill_files(fds)
+    stage='FINAL_LAYOUT'
     guard.validate_snapshot(profile,guard.capture_live(profile))
     print(json.dumps(dict(event='DONE',**result)),flush=True)
 finally:
     if listener is not None: listener.close()
     for fd in fds: os.close(fd)
 """
+    code += "stage='SETUP'\ntry:\n" + textwrap.indent(body, "    ")
+    code += """except BaseException as exc:
+    reason=str(exc) if type(exc).__name__ in {'FixtureDenied','StorageDenied'} else None
+    print(json.dumps(dict(event='FAIL',stage=stage,type=type(exc).__name__,reason=reason,
+                          errno=exc.errno if isinstance(exc,OSError) else None)),flush=True)
+    raise SystemExit(1)
+"""
     need(len(code.encode("utf-8")) <= 65536, "fixture_child_source_bound")
     compile(code, "<synthetic-child>", "exec")
     return code
+
+
+def decode_event(raw):
+    need(len(raw) <= 8192, "fixture_child_output_bound")
+    value = json.loads(raw)
+    need(type(value) is dict, "fixture_child_receipt")
+    if value.get("event") == "FAIL":
+        need(set(value) == {"event", "stage", "type", "reason", "errno"}, "child_failure_shape")
+        need(
+            value["stage"]
+            in {
+                "SETUP",
+                "IDENTITY",
+                "LAYOUT",
+                "MARKER",
+                "PROBES",
+                "SOCKET",
+                "GATE",
+                "FILL",
+                "FINAL_LAYOUT",
+            },
+            "child_failure_shape",
+        )
+        need(
+            type(value["type"]) is str
+            and re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,63}", value["type"]) is not None,
+            "child_failure_shape",
+        )
+        need(
+            value["reason"] is None
+            or (
+                type(value["reason"]) is str
+                and re.fullmatch(r"[a-z][a-z0-9_]{0,63}", value["reason"]) is not None
+            ),
+            "child_failure_shape",
+        )
+        need(
+            value["errno"] is None or (type(value["errno"]) is int and 0 <= value["errno"] < 4096),
+            "child_failure_shape",
+        )
+        raise ChildFailed({key: value[key] for key in ("stage", "type", "reason", "errno")})
+    return value
 
 
 class NativeOps:
@@ -636,9 +702,7 @@ class NativeOps:
             char = os.read(self.child.stdout.fileno(), 1)
             need(bool(char), "fixture_child_eof")
             if char == b"\n":
-                value = json.loads(raw)
-                need(type(value) is dict, "fixture_child_receipt")
-                return value
+                return decode_event(raw)
             raw.extend(char)
         raise FixtureDenied("fixture_child_output_bound")
 

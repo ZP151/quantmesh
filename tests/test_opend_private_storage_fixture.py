@@ -505,3 +505,64 @@ def test_native_environment_preserves_the_exact_pinned_machine_id_bytes(monkeypa
         ),
     )
     assert ops.environment()["machine_sha256"] == hashlib.sha256(machine_id).hexdigest()
+
+
+def test_generated_child_failure_keeps_safe_stage_without_traceback_or_private_values(
+    monkeypatch, capsys
+):
+    import json
+
+    from test_opend_private_storage import layout
+
+    fixture = module()
+    profile, _ = layout()
+    profile["backing_file"] = IMAGE
+    program = fixture.child_program(
+        profile,
+        prime=True,
+        gate_fd=17,
+        guard_source=(ROOT / "deploy/aws/opend/private_storage.py").read_bytes(),
+    )
+    # Stop before any namespace/OS metadata effect; this is actual generated code,
+    # not an emulated diagnostic. Identity is deliberately wrong in both OSes.
+    monkeypatch.setattr(os, "getuid", lambda: 0, raising=False)
+    with pytest.raises(SystemExit) as error:
+        exec(program, {})
+    assert error.value.code == 1
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    event = json.loads(captured.out)
+    assert event == dict(
+        event="FAIL",
+        stage="IDENTITY",
+        type="FixtureDenied",
+        reason="fixture_child_identity",
+        errno=None,
+    )
+
+
+def test_parent_retains_only_closed_child_failure_fields_in_the_final_receipt(monkeypatch):
+    import json
+
+    fixture = module()
+    assert hasattr(fixture, "decode_event"), "safe child failure transport is absent"
+    event = dict(
+        event="FAIL", stage="LAYOUT", type="StorageDenied", reason="loop_drift", errno=None
+    )
+    kernel = KernelAdapter()
+
+    def failed(profile, *, prime):
+        fixture.decode_event(json.dumps(event).encode())
+
+    kernel.exercise = failed
+    receipt = fixture.run_fixture(kernel)
+    assert receipt["primary"]["child"] == {k: v for k, v in event.items() if k != "event"}
+    assert kernel.cleaned and len(kernel.images) == 1
+    for unsafe in (
+        dict(event, reason="SECRET /private/path"),
+        dict(event, extra="SECRET"),
+        dict(event, errno=True),
+        dict(event, stage="/private/path"),
+    ):
+        with pytest.raises(fixture.FixtureDenied, match="child_failure_shape"):
+            fixture.decode_event(json.dumps(unsafe).encode())

@@ -133,3 +133,57 @@ If the actual manager mapping differs, the common guard still denies release.
 Reviewer: one fresh whole-source review is next. Native fixture, original-unit
 preparation, control consumption, provider start, visible login and SDK remain
 pending; no actual native/storage/provider operation occurred in these tests.
+
+## Whole-slice R1 and one fix pass
+
+Reviewer: fresh independent R1 on c9e4c01 found two Important admission defects:
+writable pseudo-filesystem types were exempted at arbitrary targets, and loop
+facts could drift during live capture without a repeat read. No Critical/Minor
+finding was reported. The source remained blocked; offline adapters were not
+called native evidence. The report is retained as review/R1.md in this purpose.
+
+Implementer/Verifier: R1-RED23 reproduces four foreign/noncanonical pseudo mounts
+and all five loop-field drift cases (nine failures). Writable kernel exceptions
+now require their closed canonical target and root, and all five loop observations
+are repeated around the remaining metadata reads. R1-GREEN23 passes; unchanged
+canonical proc/dev/sys/cgroup positives remain accepted. Guard SHA is6e8177e51abb2b8381881ac6d2cac237c00d353efc734292f2730d2d68b3e518,
+with launcher and fixture pins refreshed.
+
+The author also confirmed that pre-READY child exceptions lost their safe cause
+because stderr is discarded. R1-RED24 executes generated child code with a wrong
+modeled identity, exposing the missing structured failure. The same single fix
+pass adds bounded stage/type/fixed reason/errno events and a closed parent decoder;
+no traceback, private values, arbitrary fields or paths enter the receipt.
+R1-GREEN24 passes. Preexec failures still report their actual outer stage/type;
+unobserved kernel errno remains UNKNOWN. AFFECTED25:313 passed/70 platform skips.
+Native support and all original-provider operations remain pending.
+
+Final: Ruling: actual mount_setattr/OverlayFS behavior and parent upper references
+require the separate finite native gate; source tests cannot certify them. Cost
+if unsupported is a retained failed fixture and no production release.
+
+Final: Ruling: actual systemd bind serialization and original socket visibility
+require the later original-unit check; the exact source guard denies mismatches.
+Cost is a refused startup until the concrete mapping is corrected.
+
+Final: Ruling: target persistence/aggregate ENOSPC require the one actual fixture;
+source control flow is not filesystem evidence. Failure stops before production.
+
+Final: Ruling: production profile/control/start/login/SDK/headroom remain later
+gates; this source checkpoint confers none of them. Cost is remaining operator
+work rather than an unsupported readiness claim.
+
+Final: Ruling: unchanged PR262/base-unit implementation and global review-policy
+redesign stay outside this bounded slice. New integration is reviewed; an unrelated
+older defect would need separate triage rather than silent expansion.
+
+Final: Ruling: snapshots establish observed admission stability, not immunity to
+future privileged reconfiguration. A later root change requires a new live check;
+the source does not certify indefinite layout integrity.
+
+Final: Ruling: foreign/busy mount repair is excluded. Failed normal owned cleanup
+retains evidence and reports remaining handles; the cost is manual disposition,
+never force/lazy/global cleanup or a refunded retry.
+
+Known-fix R2 closure and normal exact-head CI/publication are next. Issue263 stays
+open for actual native/operator evidence; the login window has not been opened.

@@ -436,6 +436,66 @@ def test_live_metadata_capture_preserves_the_complete_mapping_and_never_reads_pa
         assert ALIAS in world.stats and RUNTIME in world.stats
 
 
+@pytest.mark.parametrize(
+    "filesystem,target,root,allowed",
+    [
+        ("devtmpfs", HOME + "/escape", "/foreign-writable", False),
+        ("proc", HOME + "/escape", "/", False),
+        ("devtmpfs", "/dev", "/foreign-writable", False),
+        ("devpts", "/escape", "/", False),
+        ("sysfs", "/sys", "/", True),
+        ("cgroup2", "/sys/fs/cgroup", "/", True),
+        ("devpts", "/dev/pts", "/", True),
+    ],
+)
+def test_writable_kernel_exceptions_are_bound_to_canonical_targets_and_roots(
+    filesystem, target, root, allowed
+):
+    guard = module()
+    profile, snapshot = layout()
+    parent = 14 if target.startswith(HOME + "/") else 10
+    raw = (
+        snapshot["mountinfo"]
+        + f"40 {parent} 0:99 {root} {target} rw - {filesystem} kernel rw\n".encode()
+    )
+    if target == "/dev":
+        raw = raw.replace(b"23 10 0:3 / /dev rw - devtmpfs udev rw\n", b"")
+    snapshot.update(mountinfo=raw, mountinfo_after=raw)
+    if allowed:
+        assert guard.validate_snapshot(profile, snapshot) is None
+    else:
+        with pytest.raises(guard.StorageDenied):
+            guard.validate_snapshot(profile, snapshot)
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("loop/backing_file", b"/srv/foreign.ext4\n"),
+        ("loop/offset", b"4096\n"),
+        ("loop/sizelimit", b"0\n"),
+        ("size", b"65537\n"),
+        ("ro", b"1\n"),
+    ],
+)
+def test_loop_drift_inside_capture_is_denied_before_the_snapshot_returns(monkeypatch, field, value):
+    guard = module()
+    profile, snapshot = layout()
+    world = KernelWorld(snapshot)
+    original_stat = world.os.stat
+
+    def stat_and_drift(path, **kwargs):
+        if str(path) == RUNTIME:
+            world.values["/sys/block/loop8/" + field] = value
+        return original_stat(path, **kwargs)
+
+    world.os.stat = stat_and_drift
+    monkeypatch.setattr(guard, "os", world.os)
+    monkeypatch.setattr(guard, "open", world.open_file, raising=False)
+    with pytest.raises(guard.StorageDenied):
+        guard.validate_snapshot(profile, guard.capture_live(profile))
+
+
 PROFILE = "/etc/quantmesh/opend/private-storage.json"
 
 

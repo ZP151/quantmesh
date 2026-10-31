@@ -22,21 +22,21 @@ IMAGE_ALIAS = "/etc/quantmesh/opend/private-storage-image"
 PROFILE = "/etc/quantmesh/opend/private-storage.json"
 WRITES = (HOME, STATE, RUNTIME, "/tmp", "/var/tmp", "/dev/shm")
 PSEUDO_FILESYSTEMS = {
-    "proc",
-    "sysfs",
-    "devtmpfs",
-    "devpts",
-    "cgroup2",
-    "cgroup",
-    "mqueue",
-    "securityfs",
-    "debugfs",
-    "tracefs",
-    "pstore",
-    "bpf",
-    "configfs",
-    "fusectl",
-    "efivarfs",
+    "proc": "/proc",
+    "sysfs": "/sys",
+    "devtmpfs": "/dev",
+    "devpts": "/dev/pts",
+    "cgroup2": "/sys/fs/cgroup",
+    "cgroup": "/sys/fs/cgroup",
+    "mqueue": "/dev/mqueue",
+    "securityfs": "/sys/kernel/security",
+    "debugfs": "/sys/kernel/debug",
+    "tracefs": "/sys/kernel/tracing",
+    "pstore": "/sys/fs/pstore",
+    "bpf": "/sys/fs/bpf",
+    "configfs": "/sys/kernel/config",
+    "fusectl": "/sys/fs/fuse/connections",
+    "efivarfs": "/sys/firmware/efi/efivars",
 }
 PROFILE_FIELDS = {
     "schema_version",
@@ -306,8 +306,11 @@ def _validate_mounts(profile, snapshot):
             visible, target, filesystem="ext4", root=root, device=profile["device"], writable=True
         )
     for mount in visible.values():
-        if "rw" in mount.options and mount.filesystem not in PSEUDO_FILESYSTEMS:
-            _need(mount.target in WRITES, "writable_escape")
+        if "rw" in mount.options:
+            canonical_kernel_mount = (
+                PSEUDO_FILESYSTEMS.get(mount.filesystem) == mount.target and mount.root == "/"
+            )
+            _need(mount.target in WRITES or canonical_kernel_mount, "writable_escape")
 
 
 def validate_snapshot(profile, snapshot):
@@ -392,6 +395,19 @@ def _runtime_identity(info):
     )
 
 
+def _loop_metadata(profile):
+    prefix = "/sys/block/loop" + str(profile["device"][1])
+    return dict(
+        backing_file=_read_fixed(prefix + "/loop/backing_file", 4096)
+        .decode("utf-8")
+        .removesuffix("\n"),
+        offset=_scalar(prefix + "/loop/offset"),
+        sizelimit=_scalar(prefix + "/loop/sizelimit"),
+        size_sectors=_scalar(prefix + "/size"),
+        read_only=_scalar(prefix + "/ro"),
+    )
+
+
 def capture_live(profile):
     """Read only fixed kernel metadata and image/runtime stat; no payload open."""
     validate_profile(profile)
@@ -399,17 +415,7 @@ def capture_live(profile):
         mounts = _read_fixed("/proc/self/mountinfo", 262144)
         image_info = os.stat(IMAGE_ALIAS, follow_symlinks=False)
         image = _image_identity(image_info)
-        prefix = "/sys/block/loop" + str(profile["device"][1])
-        backing = (
-            _read_fixed(prefix + "/loop/backing_file", 4096).decode("utf-8").removesuffix("\n")
-        )
-        loop = dict(
-            backing_file=backing,
-            offset=_scalar(prefix + "/loop/offset"),
-            sizelimit=_scalar(prefix + "/loop/sizelimit"),
-            size_sectors=_scalar(prefix + "/size"),
-            read_only=_scalar(prefix + "/ro"),
-        )
+        loop = _loop_metadata(profile)
         runtime = _runtime_identity(os.stat(RUNTIME, follow_symlinks=False))
         geometry = os.statvfs(RUNTIME)
         _need(
@@ -417,9 +423,11 @@ def capture_live(profile):
         )
         runtime.update(fsid=geometry.f_fsid, blocks=geometry.f_blocks, frsize=geometry.f_frsize)
         _need(_image_identity(os.stat(IMAGE_ALIAS, follow_symlinks=False)) == image, "image_drift")
+        mounts_after = _read_fixed("/proc/self/mountinfo", 262144)
+        _need(_loop_metadata(profile) == loop, "loop_drift")
         return dict(
             mountinfo=mounts,
-            mountinfo_after=_read_fixed("/proc/self/mountinfo", 262144),
+            mountinfo_after=mounts_after,
             image_identity=image,
             image_device=[os.major(image_info.st_dev), os.minor(image_info.st_dev)],
             loop=loop,
