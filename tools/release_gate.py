@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import shutil
@@ -72,6 +73,24 @@ _PYTEST_FAILURE_MARKER = re.compile(r"\b(?:FAILED|FAILURES|ERROR)\b")
 _PYTEST_QUIET_STATUS_ROW = re.compile(
     r"(?m)^[ \t]*([.FEsxX]+)[ \t]*\[\s*(?:100|[1-9]?\d)%\][ \t]*\r?$",
 )
+_PROFILE_TARGETS = (
+    "tests/test_decision_session_e2e.py::test_nvda_aapl_refresh_is_bounded_and_exact_results_survive_reconstruction",
+    "tests/test_packet_reviews.py::test_risk_refusal_and_operator_invoked_watch_coverage_remain_exact",
+)
+_PROFILE_PREFIX = b"CI_PROFILE "
+_PROFILE_LINE_LIMIT = 8192
+_PROFILE_FIELDS = {
+    "nodeid",
+    "scope",
+    "timing_note",
+    "functions",
+    "calendar_calls",
+    "calendar_wall_seconds",
+    "calendar_unique_arguments",
+    "calendar_arguments",
+    "calendar_identity_errors",
+    "calendar_overflow_calls",
+}
 
 
 def print_console(value: object = "", *, file=None, flush: bool = False) -> None:
@@ -217,6 +236,123 @@ def _slow_tests(log_path: Path) -> list[str]:
         log.seek(max(0, log_path.stat().st_size - 65536))
         tail = log.read().decode("utf-8", errors="replace")
     return re.findall(r"(?m)^\d+(?:\.\d+)?s\s+(?:call|setup|teardown)\s+.+$", tail)
+
+
+def _profile_count(value: object, *, maximum: int = 1_000_000_000) -> bool:
+    return type(value) is int and 0 <= value <= maximum
+
+
+def _profile_seconds(value: object) -> bool:
+    if type(value) is int:
+        return 0 <= value <= 86400
+    return type(value) is float and math.isfinite(value) and 0 <= value <= 86400
+
+
+def _valid_profile(value: object) -> bool:
+    if not isinstance(value, dict) or set(value) != _PROFILE_FIELDS:
+        return False
+    if value["nodeid"] not in _PROFILE_TARGETS:
+        return False
+    if value["scope"] != "pytest-call-thread-cprofile; calendar-wrapper-all-threads":
+        return False
+    if value["timing_note"] != "cumulative times overlap; profiler and wrapper add overhead":
+        return False
+    if not all(
+        _profile_count(value[key])
+        for key in ("calendar_calls", "calendar_identity_errors", "calendar_overflow_calls")
+    ):
+        return False
+    if not _profile_count(value["calendar_unique_arguments"], maximum=256):
+        return False
+    if not _profile_seconds(value["calendar_wall_seconds"]):
+        return False
+    functions = value["functions"]
+    arguments = value["calendar_arguments"]
+    if not isinstance(functions, list) or len(functions) > 12:
+        return False
+    if not isinstance(arguments, list) or len(arguments) > 12:
+        return False
+    for row in functions:
+        if not isinstance(row, dict) or set(row) != {"function", "calls", "cumulative_seconds"}:
+            return False
+        label = row["function"]
+        if not isinstance(label, str) or len(label) > 160:
+            return False
+        if any(ord(char) < 32 or char in "/\\" for char in label):
+            return False
+        if not _profile_count(row["calls"]) or not _profile_seconds(row["cumulative_seconds"]):
+            return False
+    digests = set()
+    for row in arguments:
+        if not isinstance(row, dict) or set(row) != {"sha256", "calls"}:
+            return False
+        digest = row["sha256"]
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            return False
+        if digest in digests or not _profile_count(row["calls"]):
+            return False
+        digests.add(digest)
+    if len(arguments) > value["calendar_unique_arguments"]:
+        return False
+    if sum(row["calls"] for row in arguments) > value["calendar_calls"]:
+        return False
+    if (
+        value["calendar_identity_errors"] + value["calendar_overflow_calls"]
+        > value["calendar_calls"]
+    ):
+        return False
+    return True
+
+
+def _unique_profile_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate profile key")
+        result[key] = value
+    return result
+
+
+def _profile_exports(log_path: Path) -> list[dict[str, object]]:
+    """Read only two bounded, exact-schema profile rows before gate cleanup."""
+    profiles: dict[str, dict[str, object]] = {}
+    invalid = False
+    candidates = 0
+    try:
+        with log_path.open("rb") as log:
+            while line := log.readline(_PROFILE_LINE_LIMIT + 1):
+                if len(line) > _PROFILE_LINE_LIMIT:
+                    if line.startswith(_PROFILE_PREFIX):
+                        invalid = True
+                    while line and not line.endswith(b"\n"):
+                        line = log.readline(_PROFILE_LINE_LIMIT + 1)
+                    continue
+                if not line.startswith(_PROFILE_PREFIX):
+                    continue
+                candidates += 1
+                if candidates > len(_PROFILE_TARGETS):
+                    invalid = True
+                    continue
+                try:
+                    profile = json.loads(
+                        line[len(_PROFILE_PREFIX) :].decode("utf-8"),
+                        object_pairs_hook=_unique_profile_keys,
+                    )
+                except (UnicodeError, ValueError, RecursionError):
+                    invalid = True
+                    continue
+                if not _valid_profile(profile) or profile["nodeid"] in profiles:
+                    invalid = True
+                    continue
+                profiles[profile["nodeid"]] = profile
+    except OSError:
+        invalid = True
+    return [
+        {"nodeid": nodeid, "status": "invalid" if invalid else "missing"}
+        if invalid or nodeid not in profiles
+        else {"nodeid": nodeid, "status": "ok", "profile": profiles[nodeid]}
+        for nodeid in _PROFILE_TARGETS
+    ]
 
 
 def run_step(
@@ -596,6 +732,8 @@ def main() -> int:
     pytest_logs = tuple(logs.glob("*-full-pytest-suite.log"))
     if pytest_logs:
         pytest_log = pytest_logs[0]
+        for export in _profile_exports(pytest_log):
+            print_console("CI_PROFILE_EXPORT " + json.dumps(export, sort_keys=True))
         lines = [
             line
             for line in pytest_log.read_text(encoding="utf-8", errors="replace").splitlines()
