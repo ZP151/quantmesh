@@ -906,6 +906,9 @@ def private_recovery(recovery, tmp_path, monkeypatch):
         "_owned_dir",
         lambda path: directory(home if path == Path("/var/lib/quantmesh-opend") else path),
     )
+    from test_opend_diagnostic_1 import configure_diagnostic
+
+    configure_diagnostic(recovery, tmp_path, monkeypatch)
     result = SimpleNamespace(recovery=recovery, world=world, guard=guard, nonce=NONCE, claim=claim)
     yield result
     assert not world.handles
@@ -931,7 +934,7 @@ def test_original_c8_check_requires_the_bound_live_private_storage(
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["status"] == ("admitted" if change is None else "pending")
     assert fixture.claim.read_bytes() == b""
-    assert not (fixture.recovery.state / (fixture.nonce + ".recovery")).exists()
+    assert not (fixture.recovery.state / (fixture.nonce + ".diagnostic-1.recovery")).exists()
 
 
 @pytest.mark.parametrize(
@@ -1098,7 +1101,7 @@ def test_c8_manager_requires_only_its_exact_storage_dropin(
             stage.start_staging_console(window)
         assert lifecycle.children == []
         assert lifecycle.releases == 0
-        assert not (private_recovery.recovery.state / (nonce + ".recovery")).exists()
+        assert not (private_recovery.recovery.state / (nonce + ".diagnostic-1.recovery")).exists()
         assert before == (
             private_recovery.claim.read_bytes(),
             identity(private_recovery.recovery.files, private_recovery.claim),
@@ -1126,7 +1129,7 @@ def test_storage_guard_rechecks_after_marker_persistence_before_the_existing_gat
     def sync(fd):
         original_sync(fd)
         if late_drift and fixture.recovery.files.paths.get(fd) == (
-            fixture.recovery.state / (fixture.nonce + ".recovery")
+            fixture.recovery.state / (fixture.nonce + ".diagnostic-1.recovery")
         ):
             fixture.world.values["/sys/block/loop8/loop/sizelimit"] = b"0\n"
 
@@ -1138,7 +1141,7 @@ def test_storage_guard_rechecks_after_marker_persistence_before_the_existing_gat
     else:
         assert stage.start_staging_console(window)["status"] == "stopped"
         assert lifecycle.releases == 1
-    assert (fixture.recovery.state / (fixture.nonce + ".recovery")).exists()
+    assert (fixture.recovery.state / (fixture.nonce + ".diagnostic-1.recovery")).exists()
     assert all(child.closed for child in lifecycle.children)
     assert fixture.claim.read_bytes() == b""
 
@@ -1178,7 +1181,7 @@ def test_private_recovery_authority_is_closed_and_cannot_transfer(private_recove
     assert stage.main(["--check-window", "--persistent", "--nonce", nonce]) == 2
     assert json.loads(capsys.readouterr().out)["status"] == "pending"
     assert not fixture.world.reads
-    assert not (fixture.recovery.state / (fixture.nonce + ".recovery")).exists()
+    assert not (fixture.recovery.state / (fixture.nonce + ".diagnostic-1.recovery")).exists()
 
 
 def test_storage_dropin_exemption_is_not_available_to_initial_or_other_recovery():

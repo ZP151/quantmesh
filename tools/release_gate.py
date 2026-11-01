@@ -529,6 +529,8 @@ def main() -> int:
                 _venv_python(temp / "release-venv"),
                 "-m",
                 "pytest",
+                "-p",
+                "tools.ci_profile_plugin",
                 # Keep exact failing/running node IDs if a native signal stops
                 # pytest before its terminal assertion summary is printed.
                 "-vv",

@@ -125,6 +125,8 @@ def test_full_pytest_command_is_exhaustive_with_duration_reporting(
     pytest_index = full_pytest.index("pytest")
     assert full_pytest[pytest_index:] == [
         "pytest",
+        "-p",
+        "tools.ci_profile_plugin",
         "-vv",
         "--durations=50",
         "--basetemp",

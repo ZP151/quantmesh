@@ -32,7 +32,7 @@ HOME = "/var/lib/quantmesh-opend"
 STATE = "/var/lib/quantmesh-opend-stage"
 RUNTIME = "/run/quantmesh-opend-console-" + NONCE
 WRITES = (HOME, STATE, RUNTIME, "/tmp", "/var/tmp", "/dev/shm")
-GUARD_SHA = "d2addaa991a5b22eff531ccb5891add5c4849ca1357f1c7ba83455b4dc907e30"
+GUARD_SHA = "2d494084781ece33d2be718b531df4d319751ba65b2ba4d6d76a39f0730577d6"
 
 
 class FixtureDenied(RuntimeError):

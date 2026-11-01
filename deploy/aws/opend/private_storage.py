@@ -507,7 +507,11 @@ def validate_live(claims):
     """Production-only c8 gate; synthetic common inspection is not authority."""
     _need(type(claims) is dict, "storage_control")
     _need(
-        type(claims.get("schema_version")) is int and claims["schema_version"] == 4,
+        type(claims.get("schema_version")) is int
+        and (
+            claims["schema_version"] == 4
+            or (claims["schema_version"] == 5 and claims.get("diagnostic_id") == "diagnostic-1")
+        ),
         "storage_control",
     )
     _need(

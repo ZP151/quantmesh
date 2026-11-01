@@ -585,3 +585,56 @@ or the earlier exit cause. Backend/window/SDK and a fifth start remain unapprove
 Parent's diagnostic-1 proposal is separate and unimplemented. Parent owns normal
 exact-head publication/CI/catalog after this branch's ordinary push; no force,
 new protocol or operational action follows from software READY.
+
+
+## Fixed diagnostic-1 approved design checkpoint
+
+Actual human approval call_667904a5ea5645c4b62f045ccb4782b6 is recorded in Root
+resume-after-pr270-20261101.json; historical unapproved proposal remains unchanged.
+[design](../superpowers/specs/2026-11-01-opend-diagnostic-1.md) and
+[plan](../superpowers/plans/2026-11-01-opend-diagnostic-1.md) define strict schema5,
+fixed diagnostic-1 consumption and heldRO original spent evidence, same unit/image/
+claim/prior, source-enforced90s with no timing rebase. Source guard's only runtime
+change will be explicit fixed5 eligibility, not a kernel exception. Old control
+may be renamed only to fixed protected history with REAL post-rename stamps;
+old consumed files/claim are never renamed/deleted/reset. Known runtime public
+artifact collisions are pre-start STOP risks, not unapproved cleanup permission.
+Planner scoped one task; Quant no data/math/SDK/trial; Implementer design only,
+no fetch/branch/code/test/host; Reviewer Parent scan pending; Verifier fresh local
+physical/authority pins only. Source40MiB was registered once; old holds/failures
+and new8MiB finite envelope remain, N24/remote72/ops8 unchanged. Conditional fifth
+is not executed; backend/window/SDK remain UNMET.
+
+### 2026-11-01 fixed diagnostic-1 software checkpoint (Refs #263)
+
+Planner: actual human approval and Parent design/conflict scan select exactly one schema5/diagnostic-1 authority, held old schema4-control/ATTEMPTED evidence and <=90s source-enforced lifetime; future fifth start remains unexecuted/conditional. Shared interfaces are strict recovery shape/name/lease, stage witness+deadline, storage eligibility and mechanical pins. No marker/claim reset or new manager/resources. Quant: no dataset, SDK, strategy, market/order or confidence-promotion work. Implementer: branch codex/0038-opend-diagnostic-1 from freshly fetched actual b8ce; old branches/localmain retained. Old c8 schema3/4 active grants stay spent; ordinary non-c8 legacy lifetime remains. Child remaining alarm and parent frozen monotonic deadline do not restart after consume.
+
+Verifier: genuine old-source RED9failed/12passed; first protocol GREEN21; direct actual-spawn RED4failed then corrected signature; exhausted-deadline category RED2failed/1passed then distinct DEADLINE frame. Initial path harness21setup errors, duration expectation2fail, affected first30fail/118pass (synthetic digest/clock setup), and intermediate spawn error-expectation1fail/16pass all retained separately, not relabeled as successful TDD. Final current-code direct affected run:279passed/42Windows-POSIX-skipped, scoped Ruff/format/Python3.12 compile-only/diff/submodule checks pass. No staging-host/native qualification. Reviewer: fresh Parent-assigned R1 pending, at most one known-fixR2. Actual four starts/old ATTEMPTED/original claim persist; backend/window/cause/SDK remain unqualified.
+
+Capacity: initial private-test4MiB next-run forecast stopped before execution; retained artifacts were not deleted. Actual Root net4MiB supplement after prior8MiB makes Source44MiB/newpurpose12MiB, fullforward46026680<46137344 with oldforward33443768 preserved. The private9MiB tmp envelope includes directory allocation, unique basetemp/-B/no cacheprovider and retained failures. No hold refund/borrowing or additional execution permission is inferred.
+
+#### Diagnostic-1 R1 → one correction wave (software only)
+
+Fresh independent R1 reviewed3835 full range and found four Important authorization/deadline/preflight defects; original SpecFAIL/QualityNOT_READY is preserved. Planner bounds one correction wave: independent fixed old-byte pins, one effective clock deadline through child+lease, immediate pre-O_EXCL clock check, and fixed5<=4096 initial admission. Implementer first retained genuine R1-FOUR-RED9fail/1pass on exact3835 runtime bytes, then minimal first GREEN10pass; delayed-gate/fractional regression and final direct affected subset follow. Quant remains no data/SDK/market/order work. Reviewer same-agent scoped R2 pending, no third review. Verifier preserves all first failures and no native/fifth start/marker reset/CI/UI occurred. Optional profiling carrier stays byte-frozen.
+
+R1 correction verification now records62passed in the final directly affected subset, scoped Ruff/format and Python3.12 compile-only/diff/submodule checks pass. Exact stage/helper pins are bound in R1-STATIC-FINAL; guard/fixture/drop-in/base/carrier stay frozen. Same-reviewer R2 remains pending; no push/CI/host/native/fifth/SDK/UI.
+
+Diagnostic-1 scoped R2 completed on cd423eb4064eea7d749ebad8ca0cbef456485794: independent agent SpecPASS/QualityREADY, all I1-I4+Minor addressed, zero new findings/out-of-scope items. Faithful4298B report SHA12508a264729159ec5d840ed8179328be530121f019fa1b1731a737682aa3a32 retained; original R1FAIL/RED and current62/static evidence remain. This is technical review under the actual earlier human authorization, not a new human approval or native qualification. Runtime/tests/carrier stay frozen while only plan+iteration closure is committed and normally pushed; Parent owns PR/sole CI/normal merge/catalog. No fifth start, Source host action, SDK, UI or old-state reset occurred.
+
+
+### PR271 ambient fast-gate repair checkpoint
+
+The first exact-head CI41293273729 fast job failed when its broad ambient install
+lacked six and had python-dateutil version drift. The original CI Publisher owns
+the repair: reviewed commit322d522 changes only tests/test_security.py so the
+ambient license check classifies installed exact-pinned members; the isolated
+production release still rejects missing and wrong-version closure members.
+Publisher evidence records genuine synthetic RED1, focused GREEN4, the combined
+LicenseReview/ClosureContract/AuditLock22passed, and scoped Ruff/format/diff PASS.
+Independent agent Spec PASS/Quality READY has no Important finding; this is not
+human or native qualification. The exact commit was integrated by fast-forward,
+then this docs-only checkpoint; no tests were rerun during integration. OpenD
+runtime/tests, the six CI-profile carrier blobs, production license tool, locks
+and workflows remain byte-identical to5534. New exact-head CI is pending; Parent
+is its only watcher. Native draft remains DISARMED, with no host/Source CLI,
+fifth start, SDK or window action. Refs #263.
