@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from tools import release_gate
+from tools import ci_profile_plugin, release_gate
 
 
 def _events(logs: Path) -> list[dict[str, object]]:
@@ -17,6 +17,107 @@ def _events(logs: Path) -> list[dict[str, object]]:
         json.loads(line)
         for line in (logs / "events.jsonl").read_text(encoding="utf-8").splitlines()
     ]
+
+
+def _profile_payload(nodeid: str) -> dict[str, object]:
+    return {
+        "nodeid": nodeid,
+        "scope": "pytest-call-thread-cprofile; calendar-wrapper-all-threads",
+        "timing_note": "cumulative times overlap; profiler and wrapper add overhead",
+        "functions": [
+            {"function": "calendars.py:112:sessions", "calls": 1, "cumulative_seconds": 0.5}
+        ],
+        "calendar_calls": 1,
+        "calendar_wall_seconds": 0.5,
+        "calendar_unique_arguments": 1,
+        "calendar_arguments": [{"sha256": "a" * 64, "calls": 1}],
+        "calendar_identity_errors": 0,
+        "calendar_overflow_calls": 0,
+    }
+
+
+@pytest.mark.parametrize(
+    ("case", "child_exit", "expected"),
+    [
+        ("two_valid", 0, ("ok", "ok")),
+        ("failed_step", 1, ("ok", "missing")),
+        ("missing", 0, ("missing", "missing")),
+        ("oversize", 0, ("invalid", "invalid")),
+        ("malformed", 0, ("invalid", "invalid")),
+        ("huge_integer", 0, ("invalid", "invalid")),
+        ("wrong_schema", 0, ("invalid", "invalid")),
+        ("too_many_rows", 0, ("invalid", "invalid")),
+        ("duplicate", 0, ("invalid", "invalid")),
+        ("non_target", 0, ("invalid", "invalid")),
+    ],
+)
+def test_profile_export_uses_real_step_log_before_release_cleanup(
+    tmp_path: Path, monkeypatch, capsys, case: str, child_exit: int, expected: tuple[str, str]
+) -> None:
+    targets = sorted(ci_profile_plugin.TARGETS)
+    valid = ["CI_PROFILE " + json.dumps(_profile_payload(nodeid)) for nodeid in targets]
+    wrong_schema = _profile_payload(targets[0])
+    wrong_schema["calendar_arguments"] = [{"sha256": "not-a-digest", "calls": 1}]
+    huge_integer = _profile_payload(targets[0])
+    huge_integer["calendar_wall_seconds"] = 10**400
+    too_many_rows = _profile_payload(targets[0])
+    too_many_rows["functions"] = too_many_rows["functions"] * 13
+    lines = {
+        "two_valid": valid,
+        "failed_step": valid[:1],
+        "missing": ["ordinary pytest summary"],
+        "oversize": ["CI_PROFILE " + "x" * 9000],
+        "malformed": ["CI_PROFILE {bad json"],
+        "huge_integer": ["CI_PROFILE " + json.dumps(huge_integer)],
+        "wrong_schema": ["CI_PROFILE " + json.dumps(wrong_schema)],
+        "too_many_rows": ["CI_PROFILE " + json.dumps(too_many_rows)],
+        "duplicate": [valid[0], valid[0]],
+        "non_target": ["CI_PROFILE " + json.dumps(_profile_payload("tests/other.py::test_other"))],
+    }[case]
+    gate_root = tmp_path / "gate-root"
+    gate_root.mkdir()
+    monkeypatch.setattr(release_gate, "STEPS", [])
+    monkeypatch.setattr(release_gate.tempfile, "mkdtemp", lambda prefix: str(gate_root))
+    monkeypatch.setattr(sys, "argv", ["release_gate.py"])
+
+    def fake_git(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+        del cwd
+        value = (
+            "test-branch\n" if args == ["rev-parse", "--abbrev-ref", "HEAD"] else "a" * 40 + "\n"
+        )
+        if args == ["status", "--porcelain"]:
+            value = ""
+        return subprocess.CompletedProcess(["git", *args], 0, stdout=value)
+
+    monkeypatch.setattr(release_gate, "_git", fake_git)
+    real_run_step = release_gate.run_step
+
+    def run_synthetic_pytest(name: str, cmd: list[str], cwd: Path, logs: Path, timeout: int):
+        del cmd, cwd, timeout
+        if name != "full pytest suite":
+            return True, 0.0
+        child = [
+            sys.executable,
+            "-c",
+            "import sys; print(sys.argv[1], flush=True); sys.exit(int(sys.argv[2]))",
+            "\n".join(lines),
+            str(child_exit),
+        ]
+        return real_run_step(name, child, tmp_path, logs, timeout=5, progress_interval_seconds=0.05)
+
+    monkeypatch.setattr(release_gate, "run_step", run_synthetic_pytest)
+
+    assert release_gate.main() == child_exit
+    output = capsys.readouterr().out
+    exports = [
+        json.loads(line.removeprefix("CI_PROFILE_EXPORT "))
+        for line in output.splitlines()
+        if line.startswith("CI_PROFILE_EXPORT ")
+    ]
+    assert [record["nodeid"] for record in exports] == targets
+    assert tuple(record["status"] for record in exports) == expected
+    assert all(("profile" in record) == (record["status"] == "ok") for record in exports)
+    assert gate_root.exists() is (child_exit != 0)
 
 
 class Cp1252Console(io.StringIO):
@@ -316,6 +417,7 @@ def test_run_step_emits_one_first_failure_event_and_timeout_exit_code(
 
 def test_run_step_accepts_zero_exit_during_final_controller_wait(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(release_gate, "STEPS", [])
+
     class ExitedDuringWait:
         pid = 4242
         returncode = None

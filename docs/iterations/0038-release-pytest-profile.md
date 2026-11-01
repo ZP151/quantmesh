@@ -45,3 +45,47 @@ for some of that use; an attempted PowerShell cleanup was automatically rejected
 by execution policy, so those untracked artifacts remain outside the commit.
 No new worktree, virtual environment, CI job, provider call or server action was
 made.
+
+## Same-run profile export follow-up — 2026-11-01
+
+Published PR #271 merged as `ca0856e35026da32837818639854be02a1521baa`.
+Its ordinary release CI 41296471808 passed 7026 tests with 143 skips and
+golden-path 60, but the saved Parent release-job summary contained zero
+`CI_PROFILE` rows. Successful `run_step` wrote child stdout only to its temporary
+step log; the release summary printed counts, then deleted the temporary root.
+The workflow's artifact path consequently found no files. This retained
+evidence does not establish whether either target was actually sampled or
+whether the plugin emitted a line in the deleted child log.
+
+**Planner.** Preserve the single full pytest and golden gates. Export at most
+two validated records into the existing release stdout before successful
+cleanup, or report `missing`/`invalid` without treating absence as a profile.
+
+**Quant researcher.** This is evidence retention only. The cProfile thread
+scope, calendar digest limits, timing overlap and overhead remain unchanged;
+there is no measured Linux bottleneck or optimization claim.
+
+**Implementer.** `tools/release_gate.py` now reads only lines beginning
+`CI_PROFILE ` from its full-pytest child log, with an 8192-byte line ceiling,
+exact two-node/schema checks, 12-row and 256-identity limits, and duplicate or
+non-target rejection. It emits exactly one bounded `CI_PROFILE_EXPORT` result
+per target before deleting the temporary root. The original plugin and test
+node IDs, assertions, gate exit codes, dependencies and workflow are unchanged.
+
+**Reviewer.** Independent R1 found one P2: an oversized JSON integer reached
+`math.isfinite` and raised `OverflowError`, turning an otherwise passing gate
+into a failure. A synthetic child-to-cleanup RED reproduced it; the validator
+now range-checks integers before calling `math.isfinite` on floats. R2 is
+Spec PASS / Quality READY with no remaining or new P1/P2 on this one correction
+wave. Neither review ran CI or the two slow nodes.
+
+**Verifier.** A synthetic child process exercising the real `run_step` log,
+release summary and cleanup path failed RED with no export. The final scoped
+export/plugin/command checks passed 17/17; cases cover success, failure,
+missing sample, malformed or oversized line, huge integer, wrong schema, too
+many rows, duplicate and non-target records. A broader two-file local run had
+36 pass and one unrelated existing Windows timeout-reaping failure: its child
+wrote after the timeout; this leaf does not alter that behavior. Ruff lint,
+changed-file format and whitespace checks pass. These are synthetic checks,
+not a rerun of either slow node, full suite or CI. A future normally triggered
+release run is required to learn whether valid profile rows are present.
