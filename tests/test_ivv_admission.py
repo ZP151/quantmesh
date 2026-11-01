@@ -662,6 +662,18 @@ def test_object_binding_after_review_checks_input_set_before_grant(tmp_path, mon
     registered = v.bind_reviewed_ivv_input(
         store, input_set_ref=staged, proofs=kwargs["proofs"], output_root=study
     )
+    assert v._load(store, registered.package_ref)["review_refs"] == [
+        getattr(kwargs["proofs"], name).model_dump()
+        for name in (
+            "acceptance_ref",
+            "scope_ref",
+            "effect_ref",
+            "execution_ref",
+            "go_ref",
+            "windows_policy_ref",
+        )
+    ]
+    assert "capture_policy_ref" not in v._load(store, registered.real_binding)["proofs"]
     assert registered.request == v.register_ivv_input(store, **kwargs).request
     bad = store.put_bytes(
         "application/json",

@@ -10,9 +10,10 @@ import stat
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
-from test_ivv_capture_contract import DATES, Clock, ScriptedBackend, contract, leaf
+from test_ivv_capture_contract import DATES, SCHEDULE, Clock, ScriptedBackend, contract, leaf
 
 
 def dev_module():
@@ -142,12 +143,77 @@ def test_public_dev_entry_refuses_without_trusted_held_authority(tmp_path):
     assert not (tmp_path / "capture").exists()
 
 
-def kernel_fixture(tmp_path, monkeypatch):
+def _registration_authorities(tmp_path, monkeypatch):
+    """Fictional immutable originals prepared before Linux kernel emulation."""
+    from quantmesh.research import ivv_admission as v
+    from quantmesh.research import ivv_runtime, native_daily_candidate
+    from quantmesh.research import native_daily_real as daily
+
+    scope_id, job_id = "fictional-connected-dev-scope", str(uuid4())
+    scope = daily.canonical({"selection": {"asset": "US.IVV"}, "software_only": True})
+    effect = daily.canonical(
+        {"scope_approval_sha256": daily.digest(scope), "paper_live": False, "software_only": True}
+    )
+    execution = daily.canonical(
+        {
+            "approval_sha256": daily.digest(effect),
+            "fixed_scope": {
+                "asset": "US.IVV",
+                "scope_id": scope_id,
+                "input_window_digest": daily.digest(daily.canonical(v.WINDOW)),
+            },
+            "software_only": True,
+        }
+    )
+    originals = {"scope": scope, "effect": effect, "execution": execution}
+    pins = {key: daily.digest(body) for key, body in originals.items()}
+    windows_policy = daily.canonical(
+        {
+            "planning_scope_id": scope_id,
+            "planning_job_uuid": job_id,
+            "full_execution_approval_sha256": pins["effect"],
+            "software_only": True,
+        }
+    )
+    monkeypatch.setattr(v, "SCOPE_ID", scope_id)
+    monkeypatch.setattr(v, "ORIGINAL_PINS", pins)
+    monkeypatch.setattr(v, "SOURCE_ID", "scripted_software_control")
+    monkeypatch.setattr(ivv_runtime, "WINDOWS_POLICY_SHA", daily.digest(windows_policy))
+    output_root = tmp_path / "uncreated-numerical-study"
+    return {
+        "scope_id": scope_id,
+        "original_pins": pins,
+        "originals": originals,
+        "windows_policy": windows_policy,
+        "window": v.WINDOW,
+        "output_root": output_root,
+        "go_fields": {
+            "job_id": job_id,
+            "output_root_digest": daily._root_pin(output_root),
+            "windows_policy_sha256": daily.digest(windows_policy),
+            "code": native_daily_candidate._code(),
+            "adapter_sha256": daily.digest(Path(daily.__file__).read_bytes()),
+            "gate_sha256": daily.digest(Path(v.__file__).read_bytes()),
+            "runtime": daily.runtime_versions(),
+            "controls": {
+                "released": True,
+                "resource_bounds": True,
+                "provider_log_cache_bounds": False,
+            },
+        },
+    }
+
+
+def kernel_fixture(tmp_path, monkeypatch, *, registration=None):
     """Real files/hash/issuer/admission; replace only unavailable Linux syscalls/provider."""
     d, m = dev_module(), leaf()
     monkeypatch.setattr(m, "SCOPE", "fictional-dev-scope")
     monkeypatch.setattr(m, "EXECUTION", "e" * 64)
     monkeypatch.setattr(m, "APPROVAL", "a" * 64)
+    if registration is not None:
+        monkeypatch.setattr(m, "SCOPE", registration["scope_id"])
+        monkeypatch.setattr(m, "APPROVAL", registration["original_pins"]["effect"])
+        monkeypatch.setattr(m, "EXECUTION", registration["original_pins"]["execution"])
     root = tmp_path / "capture"
 
     def put(name, value, raw=False):
@@ -162,8 +228,17 @@ def kernel_fixture(tmp_path, monkeypatch):
         ("window_ref", "FULL_WINDOW"),
         ("schedule_ref", "SCHEDULE_SHA"),
     ):
-        refs[key] = put(key, {"fictional": key})
+        value = {"fictional": key}
+        if registration is not None:
+            value = {"input_window_ref": registration["window"], "schedule_ref": SCHEDULE}.get(
+                key, value
+            )
+        refs[key] = put(key, value)
         monkeypatch.setattr(m, constant, refs[key]["sha256"])
+    if registration is not None:
+        for name, body in registration["originals"].items():
+            put("original-" + name, body, raw=True)
+        put("windows-policy", registration["windows_policy"], raw=True)
     refs["dates_ref"] = put("dates", ("\n".join(DATES) + "\n").encode(), raw=True)
     sdk = tmp_path / "sdk"
     sdk.mkdir()
@@ -254,6 +329,8 @@ def kernel_fixture(tmp_path, monkeypatch):
         "input_window_digest": m.WINDOW,
         "full_window_sha256": m.FULL_WINDOW,
     }
+    if registration is not None:
+        go.update(registration["go_fields"])
     go_ref = put("go", go)
     snapshot = {
         **evidence,
@@ -368,8 +445,10 @@ def kernel_fixture(tmp_path, monkeypatch):
 
 def test_actual_issuer_held_admission_and_public_dev_capture(tmp_path, monkeypatch):
     # Load Windows numerical packages before emulating Linux kernel calls.
-    importlib.import_module("quantmesh.research.ivv_admission")
-    d, m, plan_ref, root, kwargs, snapshot = kernel_fixture(tmp_path, monkeypatch)
+    registration = _registration_authorities(tmp_path, monkeypatch)
+    d, m, plan_ref, root, kwargs, snapshot = kernel_fixture(
+        tmp_path, monkeypatch, registration=registration
+    )
     assert hasattr(m, "capture_dev_once"), "DEV public admission seam missing"
     fd, digest = d.issue_dev_permit(plan_ref, root, **kwargs)
     startup = {key: value for key, value in kwargs.items() if key.startswith("expected_")}
@@ -423,7 +502,17 @@ def test_actual_issuer_held_admission_and_public_dev_capture(tmp_path, monkeypat
         assert result["counts"]["contexts"] == 1
         assert result["counts"]["initializations"] == 1
         assert result["requires_parent_close_receipt"] is True
-        _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypatch)
+        capture_originals = {path.name: path.read_bytes() for path in root.iterdir()}
+        authority_originals = {
+            name: (tmp_path / name).read_bytes() for name in ("go", "policy", "authorization")
+        }
+        _consume_real_capture_artifacts(
+            m, root, result, kwargs, tmp_path, monkeypatch, registration
+        )
+        assert {path.name: path.read_bytes() for path in root.iterdir()} == capture_originals
+        assert {
+            name: (tmp_path / name).read_bytes() for name in authority_originals
+        } == authority_originals
         assert os.fstat(fd).st_size > 0
         with pytest.raises(m.CaptureRejected, match="spent_capture_effect"):
             m.capture_dev_once(
@@ -433,7 +522,7 @@ def test_actual_issuer_held_admission_and_public_dev_capture(tmp_path, monkeypat
         os.close(fd)
 
 
-def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypatch):
+def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypatch, registration):
     """Actual helper artifact bytes through the existing consumer's parent gate.
 
     Parent exit is an authored independent observation in this software model,
@@ -457,15 +546,6 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         )
     raw_ref = store.put_bytes("application/json", (root / "capture-manifest.json").read_bytes())
     go = json.loads(Path(kwargs["go_ref"]["path"]).read_bytes())
-    proofs = SimpleNamespace(
-        capture_policy_ref=SimpleNamespace(digest=kwargs["expected_policy_sha256"]),
-        authorization_ref=SimpleNamespace(digest=kwargs["expected_authorization_sha256"]),
-        expected_policy_sha256=kwargs["expected_policy_sha256"],
-        expected_authorization_sha256=kwargs["expected_authorization_sha256"],
-        go_ref=SimpleNamespace(digest=kwargs["expected_go_sha256"]),
-        effect_ref=SimpleNamespace(digest=m.APPROVAL),
-        execution_ref=SimpleNamespace(digest=m.EXECUTION),
-    )
     evidence = put({"authored_parent_process_observation": "software-only"})
     provenance = {
         key: result[key]
@@ -503,6 +583,86 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         "parent_close_ref": put(parent).model_dump(),
         "parent_evidence_refs": [evidence.model_dump()],
     }
+
+    def original(name):
+        return store.put_bytes("application/json", (tmp_path / name).read_bytes())
+
+    source_facts = {
+        "schema_id": "qm.ivv.source-facts.v1",
+        "currency": "USD",
+        "volume_unit": "shares",
+        "historical_trade_venues": "fictional independent reviewer venue basis",
+        "action_coverage": "complete_cash_ex_pay_no_splits",
+        "pit_status": "unknown",
+        "revision_note": "constructed software evidence; no real provider qualification",
+        "basis": "fictional independent H1/H2/H3 reviewer facts; never inferred from login",
+    }
+    source_ref = put(source_facts)
+    plain = json.loads((root / "plain.json").read_bytes())
+    normalized = m.normalize_capture(
+        plain,
+        schedule=SCHEDULE,
+        source_facts={
+            "capture_evidence_sha256": m.capture_evidence_digest(plain),
+            "price_currency": "USD",
+            "volume_unit": "shares",
+            "volume_venue": source_facts["historical_trade_venues"],
+            "coverage_start": DATES[0],
+            "coverage_end": DATES[-1],
+            "evidence_refs": [source_ref.digest],
+        },
+    )
+    exposure = put(
+        {"scope_id": m.SCOPE, "sample_role": "development_only_retrospective", "unseen_oos": False}
+    )
+    trial_ledger = put(
+        {
+            "scope_id": m.SCOPE,
+            "trial_id": "qm-ivv-trial-" + m.SCOPE,
+            "max_trials": 1,
+            "state": "UNRESERVED",
+        }
+    )
+    staged_ref = v.stage_ivv_input_set(
+        store,
+        normalized=normalized,
+        source_facts=source_facts,
+        capture_ref=raw_ref,
+        exposure_ref=exposure,
+        trial_ledger_ref=trial_ledger,
+    )
+    accepted.update(
+        {
+            "schema_id": "qm.ivv.input-acceptance.dev-diagnostic.v1",
+            **provenance,
+            "decision": "ACCEPT_FOR_ONE_DECLARED_RETROSPECTIVE_RESEARCH",
+            "reviewer": v.REVIEWER,
+            "scope_id": m.SCOPE,
+            "input_set_digest": v._load(store, staged_ref)["input_set_digest"],
+            "capture_ref": raw_ref.model_dump(),
+            "source_facts_ref": source_ref.model_dump(),
+            "checks": {name: True for name in v.INPUT_CHECKS},
+            "financial_qualification": "INSUFFICIENT",
+            "paper_allowed": False,
+            "live_allowed": False,
+            "test_control": "fictional independent review",
+        }
+    )
+    acceptance_ref = put(accepted)
+    proofs = v.TrustedIVVProofs(
+        scope_ref=original("original-scope"),
+        effect_ref=original("original-effect"),
+        execution_ref=original("original-execution"),
+        windows_policy_ref=original("windows-policy"),
+        go_ref=original("go"),
+        capture_policy_ref=original("policy"),
+        authorization_ref=original("authorization"),
+        expected_go_sha256=kwargs["expected_go_sha256"],
+        expected_policy_sha256=kwargs["expected_policy_sha256"],
+        expected_authorization_sha256=kwargs["expected_authorization_sha256"],
+        acceptance_ref=acceptance_ref,
+        expected_acceptance_sha256=acceptance_ref.digest,
+    )
     parent_ref, objects = v._capture_close(store, raw_ref, accepted, go, proofs)
     assert parent_ref.digest == accepted["parent_close_ref"]["digest"]
     assert result["intent_ref"]["sha256"] in {ref.digest for ref in objects}
@@ -542,6 +702,79 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
             {**accepted, "parent_close_ref": stale_parent.model_dump()},
             go,
             proofs,
+        )
+
+    from quantmesh.research import native_daily_candidate as native
+
+    def no_calculation(*args, **kwargs):
+        pytest.fail("registration/cold reads must never compute or reserve a trial")
+
+    monkeypatch.setattr(native, "_calculate_matrix", no_calculation)
+    output_root = registration["output_root"]
+    try:
+        registered = v.bind_reviewed_ivv_input(
+            store, input_set_ref=staged_ref, proofs=proofs, output_root=output_root
+        )
+    except daily.NativeError as error:
+        raise AssertionError(
+            "connected capture must reach real registration"
+        ) from error.__context__
+    package = v._load(store, registered.package_ref)
+    assert raw_ref.model_dump() in package["source_asset_refs"]
+    assert (
+        proofs.go_ref.digest
+        == kwargs["expected_go_sha256"]
+        == result["source_binding"]["root_go_sha256"]
+    )
+    assert proofs.capture_policy_ref.digest == result["policy_sha256"]
+    assert proofs.authorization_ref.digest == result["authorization_sha256"]
+    checked = v.verify_saved_binding(
+        store, registered.package_ref, registered.real_binding, executing=False
+    )
+    assert checked["capture_ref"] == raw_ref.model_dump()
+    assert checked["job_id"] == go["job_id"]
+    assert checked["scope_trial_key"] == daily.digest(
+        daily.canonical({"execution": m.EXECUTION, "scope": m.SCOPE, "trial": 1})
+    )
+    archived = {ref.digest: body for ref, body in v.binding_objects(store, registered.real_binding)}
+    for ref, path in (
+        (proofs.go_ref, tmp_path / "go"),
+        (proofs.capture_policy_ref, tmp_path / "policy"),
+        (proofs.authorization_ref, tmp_path / "authorization"),
+    ):
+        assert archived[ref.digest] == path.read_bytes()
+    assert archived[result["intent_ref"]["sha256"]] == (root / "capture-intent.json").read_bytes()
+    assert (
+        daily.NativeDailyService._from_store(store, raw_ref)
+        == (root / "capture-manifest.json").read_bytes()
+    )
+    assert v._load(store, trial_ledger)["state"] == "UNRESERVED"
+    assert not output_root.exists()
+    for change in (
+        {"checks": {**accepted["checks"], "shares_unit": False}},
+        {"checks": {**accepted["checks"], "complete_actions": False}},
+        {"checks": {**accepted["checks"], "raw_prices": False}},
+        {"authorization_sha256": "f" * 64},
+        {"parent_close_ref": put({**parent, "helper_exit_code": 1}).model_dump()},
+    ):
+        rejected_ref = put({**accepted, **change})
+        rejected_proofs = proofs.model_copy(
+            update={
+                "acceptance_ref": rejected_ref,
+                "expected_acceptance_sha256": rejected_ref.digest,
+            }
+        )
+        with pytest.raises(daily.NativeError, match="ivv_not_admitted"):
+            v.bind_reviewed_ivv_input(
+                store, input_set_ref=staged_ref, proofs=rejected_proofs, output_root=output_root
+            )
+    assert not output_root.exists()
+    with pytest.raises(daily.NativeError, match="ivv_not_admitted"):
+        v.bind_reviewed_ivv_input(
+            store,
+            input_set_ref=staged_ref,
+            proofs=proofs.model_copy(update={"authorization_ref": None}),
+            output_root=output_root,
         )
 
 

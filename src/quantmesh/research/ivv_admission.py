@@ -535,6 +535,11 @@ def bind_reviewed_ivv_input(store, *, input_set_ref, proofs, output_root):
                 "windows_policy_ref",
             )
         ]
+        facts["review_refs"].extend(
+            ref.model_dump()
+            for ref in (proofs.capture_policy_ref, proofs.authorization_ref)
+            if ref is not None
+        )
         package_ref = _put(store, facts)
         checked = _verify(store, package_ref, proofs, executing=True)
         _require(checked["output_root_digest"] == daily._root_pin(output_root))
