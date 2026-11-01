@@ -38,12 +38,12 @@ Once key depends only on scope/execution/effect, with fixed canonical ledger loc
 
 ## Task 1: Consistent contract/issuer/capture/consumer slice
 
-- [ ] Add tests in the owned files that first fail: DEV22 positive through actual helper admission/issuer seams and shared scripted backend to manifest, parent seal and consumer registration; strict baseline remains unchanged.
-- [ ] Run existing .venv/Scripts/python.exe -B -m pytest tests/test_ivv_capture_contract.py tests/test_ivv_dev_diagnostic.py tests/test_ivv_admission.py -q -p no:cacheprovider, with a bounded private --basetemp under dev-A-01; preserve RED. Assert literal schema fields, seven ordered sends/one InitConnect, byte/presence limits, policy/authorization provenance and create/fsync order.
-- [ ] Test missing/wrong/cross-version policy and authorization; strict rejects DEV22; DEV cannot use strict bounds or false hard-limit claims; permit binding/inode/flags failures; spent effect across roots/versions; child success without valid independent parent closure; consumer cannot run without actual accepted facts. Test actual functions, mock only kernel/provider external boundary, never fabricate native qualification.
-- [ ] Implement shared fixed-data validation plus explicit DEV entry and purpose-limited issuer in existing helper/new module. Preserve old source bytes in historical artifacts. No generic bypass flag, callback-only signer, schema downcast or production synthetic authority.
-- [ ] Adapt existing ivv_admission consumer and cold binding/archive closure for DEV provenance while keeping original trial key/math/default strict behavior and separately trusted input acceptance.
-- [ ] Run GREEN, affected Ruff check/format, whitespace and source pins. Parent independently reruns relevant checks, records exact failure/pass evidence and commits coherent slice. Do not run full release for each small edit.
+- [x] Add tests in the owned files that first fail: DEV22 positive through actual helper admission/issuer seams and shared scripted backend to manifest, parent seal and consumer registration; strict baseline remains unchanged.
+- [x] Run existing .venv/Scripts/python.exe -B -m pytest tests/test_ivv_capture_contract.py tests/test_ivv_dev_diagnostic.py tests/test_ivv_admission.py -q -p no:cacheprovider, with a bounded private --basetemp under dev-A-01; preserve RED. Assert literal schema fields, seven ordered sends/one InitConnect, byte/presence limits, policy/authorization provenance and create/fsync order.
+- [x] Test missing/wrong/cross-version policy and authorization; strict rejects DEV22; DEV cannot use strict bounds or false hard-limit claims; permit binding/inode/flags failures; spent effect across roots/versions; child success without valid independent parent closure; consumer cannot run without actual accepted facts. Test actual functions, mock only kernel/provider external boundary, never fabricate native qualification.
+- [x] Implement shared fixed-data validation plus explicit DEV entry and purpose-limited issuer in existing helper/new module. Preserve old source bytes in historical artifacts. No generic bypass flag, callback-only signer, schema downcast or production synthetic authority.
+- [x] Adapt existing ivv_admission consumer and cold binding/archive closure for DEV provenance while keeping original trial key/math/default strict behavior and separately trusted input acceptance.
+- [x] Run GREEN, affected Ruff check/format, whitespace and source pins. Parent independently reruns relevant checks, records exact failure/pass evidence and commits coherent slice. Do not run full release for each small edit.
 
 ## Task 2: Actual native producer and one bounded route
 
