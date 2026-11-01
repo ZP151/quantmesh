@@ -35,6 +35,8 @@ FULL_WINDOW = "38f7822357ce458d4fe1d974821e7fda89deb3a31208c68dcea6abb85b04eaf4"
 SCHEDULE_SHA = "218786ac3b29e04d3a90cc90b971c7536ce8f0795c6746b002cb9a7ae79445de"
 DATES_SHA = "50e126ad528c49c458517407fda23ca4dcd6205d663ea4b44d49836e183f016a"
 MIB = 1024 * 1024
+ONCE_LEDGER = Path("/var/lib/quantmesh/ivv-capture-once")
+DEV_SUFFIX = ".dev-diagnostic.v1"
 
 
 class CaptureRejected(ValueError):
@@ -305,7 +307,8 @@ class _Clock:
     sleep = staticmethod(time.sleep)
 
 
-def _validate_production_plan_keys(plan):
+def _validate_production_plan_keys(plan, *, schema="qm.ivv.capture-plan.v1"):
+    _require(plan.get("schema_id") == schema, "plan_schema")
     allowed = {
         "schema_id",
         "scope_id",
@@ -329,14 +332,16 @@ def _validate_production_plan_keys(plan):
         "window_ref",
         "schedule_ref",
     }
+    if schema == "qm.ivv.capture-plan" + DEV_SUFFIX:
+        allowed = (allowed - {"provider_bounds_ref"}) | {"provider_evidence_ref", "policy_ref"}
     _require(type(plan) is dict and set(plan) <= allowed, "unknown_plan_fields")
     _require(set(plan) == allowed, "missing_plan_fields")
 
 
-def _validate_fixed_plan(plan):
+def _validate_fixed_plan(plan, *, schema="qm.ivv.capture-plan.v1"):
     _require(
         type(plan) is dict
-        and plan.get("schema_id") == "qm.ivv.capture-plan.v1"
+        and plan.get("schema_id") == schema
         and plan.get("scope_id") == SCOPE
         and plan.get("symbol") == "US.IVV"
         and plan.get("approval_sha256") == APPROVAL
@@ -369,6 +374,71 @@ def _validate_fixed_plan(plan):
         and plan["started_monotonic"] >= 0,
         "clock_binding",
     )
+
+
+def _dev_provenance(value):
+    keys = (
+        "policy_sha256",
+        "authorization_sha256",
+        "diagnostic_mode",
+        "hard_limit_enforced",
+        "provider_tail_max",
+    )
+    _require(
+        _digest(value.get("policy_sha256"))
+        and _digest(value.get("authorization_sha256"))
+        and value.get("diagnostic_mode") == "DEV_DIAGNOSTIC"
+        and value.get("hard_limit_enforced") is False
+        and value.get("provider_tail_max") == "UNKNOWN",
+        "dev_provenance",
+    )
+    return {key: value[key] for key in keys}
+
+
+def _reserve_once(plan, *, sync_dir=None):
+    """Create-only canonical effect key. An uncertain fsync remains spent."""
+    # effect_id is an attempt label, not authority for another effect. Bind
+    # the original immutable effect approval across every policy and label.
+    key = {
+        "scope_id": plan["scope_id"],
+        "execution_sha256": plan["execution_sha256"],
+        "effect_sha256": plan["approval_sha256"],
+    }
+    raw = _canonical(key)
+    name = hashlib.sha256(raw).hexdigest()
+    flags = (
+        os.O_WRONLY
+        | os.O_CREAT
+        | os.O_EXCL
+        | getattr(os, "O_NOFOLLOW", 0)
+        | getattr(os, "O_CLOEXEC", 0)
+    )
+    _require(
+        ONCE_LEDGER.is_absolute() and ONCE_LEDGER.resolve() == ONCE_LEDGER, "once_ledger_alias"
+    )
+    if sys.platform == "linux":
+        for parent in (ONCE_LEDGER, *ONCE_LEDGER.parents):
+            info = parent.stat()
+            _require(
+                stat.S_ISDIR(info.st_mode)
+                and info.st_uid == 0
+                and not stat.S_IMODE(info.st_mode) & 0o022,
+                "once_ledger_control",
+            )
+    try:
+        fd = os.open(ONCE_LEDGER / name, flags, 0o600)
+    except FileExistsError as error:
+        raise CaptureRejected("spent_capture_effect") from error
+    try:
+        view = memoryview(raw)
+        while view:
+            count = os.write(fd, view)
+            _require(count > 0, "once_short_write")
+            view = view[count:]
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+    (sync_dir or _sync_dir)(ONCE_LEDGER)
 
 
 def _sync_dir(path):
@@ -659,7 +729,9 @@ def _failure(stage, error):
 
 
 def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=False, dates=None):
-    _validate_fixed_plan(plan)
+    suffix = DEV_SUFFIX if plan.get("schema_id") == "qm.ivv.capture-plan" + DEV_SUFFIX else ".v1"
+    _validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
+    provenance = _dev_provenance(plan["_verified_binding"]) if suffix == DEV_SUFFIX else {}
     _require(
         type(dates) is list
         and len(dates) == 121
@@ -670,7 +742,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
     intent = writer.json(
         "capture-intent.json",
         {
-            "schema_id": "qm.ivv.capture-intent.v1",
+            "schema_id": "qm.ivv.capture-intent" + suffix,
+            **provenance,
             "state": "ATTEMPTED",
             "synthetic": synthetic,
             "scope_id": SCOPE,
@@ -777,7 +850,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         else "FAILED_CAPTURE_REQUIRES_PARENT_SEAL"
     )
     manifest = {
-        "schema_id": "qm.ivv.capture.v1",
+        "schema_id": "qm.ivv.capture" + suffix,
+        **provenance,
         "state": state,
         "scope_id": SCOPE,
         "symbol": "US.IVV",
@@ -808,7 +882,12 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
             "poison": observer.poison,
         },
     )
-    observer.check(480) if observer.poison is None else None
+    try:
+        observer.check(480) if observer.poison is None else None
+    except BaseException as error:
+        if manifest["primary_failure"] is None:
+            manifest["primary_failure"] = _failure("final_guard", error)
+        manifest["state"] = "FAILED_CAPTURE_REQUIRES_PARENT_SEAL"
     writer.json("capture-manifest.json", manifest)
     return manifest
 
@@ -1341,6 +1420,21 @@ def _admit(plan_path, receipt_root, fd, expected_sha256):
     plan = _strict_json(raw)
     _validate_production_plan_keys(plan)
     _validate_fixed_plan(plan)
+    bounds = _strict_json(
+        _read_root_ref(plan["provider_bounds_ref"], maximum=32768, exact_mode=True)
+    )
+    for ref in _validate_provider_bounds(bounds, plan):
+        _read_root_ref(ref, maximum=32768, exact_mode=True)
+    plan, dates, permit = _admit_material(
+        plan, plan_path, receipt_root, permit, fd, expected_sha256
+    )
+    plan["_verified_binding"].update(
+        provider_bounds_ref=plan["provider_bounds_ref"], provider_actor=bounds["provider_actor"]
+    )
+    return plan, dates, permit
+
+
+def _admit_material(plan, plan_path, receipt_root, permit, fd, expected_sha256):
     for key in (
         "scope_id",
         "effect_id",
@@ -1375,11 +1469,6 @@ def _admit(plan_path, receipt_root, fd, expected_sha256):
         and 0 < budget["P"] <= 4500000000,
         "root_budget_fit",
     )
-    bounds = _strict_json(
-        _read_root_ref(plan.get("provider_bounds_ref"), maximum=32768, exact_mode=True)
-    )
-    for ref in _validate_provider_bounds(bounds, plan):
-        _read_root_ref(ref, maximum=32768, exact_mode=True)
     expected_refs = {
         "dates_ref": DATES_SHA,
         "input_window_ref": WINDOW,
@@ -1425,8 +1514,20 @@ def _admit(plan_path, receipt_root, fd, expected_sha256):
         )
     _require(os.statvfs(__file__).f_flag & os.ST_RDONLY, "helper_source_not_readonly")
 
+    # The purpose-limited Root issuer validates the same material before it
+    # creates the permit. Public capture admission always requires a held FD.
+    if fd is None:
+        return plan, date_bytes.decode("ascii").splitlines(), permit
+    held_stamp = _fd_stamp(os.fstat(fd))
+
     def live():
+        _require(_fd_stamp(os.fstat(fd)) == held_stamp, "held_permit_replaced")
         _read_held_json(fd, expected_sha256)
+        _read_root_ref(
+            {"path": str(plan_path), "sha256": permit["plan_sha256"]},
+            maximum=32768,
+            exact_mode=True,
+        )
         _native_recheck(actor, Path(receipt_root).parent)
 
     plan["_live_verifier"] = live
@@ -1446,12 +1547,6 @@ def _admit(plan_path, receipt_root, fd, expected_sha256):
             "root_permit_sha256": expected_sha256,
             "approval_sha256": APPROVAL,
             "execution_sha256": EXECUTION,
-        }
-    )
-    plan["_verified_binding"].update(
-        {
-            "provider_bounds_ref": plan["provider_bounds_ref"],
-            "provider_actor": bounds["provider_actor"],
         }
     )
     return plan, date_bytes.decode("ascii").splitlines(), permit
@@ -1500,6 +1595,7 @@ def capture_once(plan_path, receipt_root, *, permit_fd=None, expected_sha256=Non
     manifest still requires independent parent normal-process close evidence.
     """
     plan, dates, permit = _admit(plan_path, receipt_root, permit_fd, expected_sha256)
+    _reserve_once(plan)
     clock = _NativeClock()
     with clock.phase(plan["started_monotonic"] + 480):
         result = _run_capture(
@@ -1511,6 +1607,69 @@ def capture_once(plan_path, receipt_root, *, permit_fd=None, expected_sha256=Non
             dates=dates,
         )
     return result
+
+
+def _dev_contract():
+    spec = importlib.util.spec_from_file_location(
+        "ivv_dev_diagnostic", Path(__file__).with_name("ivv_dev_diagnostic.py")
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def capture_dev_once(
+    plan_path,
+    receipt_root,
+    *,
+    permit_fd=None,
+    expected_sha256=None,
+    expected_policy_sha256=None,
+    expected_authorization_sha256=None,
+    expected_go_sha256=None,
+):
+    """Explicit DEV policy; startup trust pins never come from browser fields."""
+    _require(
+        sys.platform == "linux"
+        and type(permit_fd) is int
+        and all(
+            _digest(value)
+            for value in (
+                expected_sha256,
+                expected_policy_sha256,
+                expected_authorization_sha256,
+                expected_go_sha256,
+            )
+        ),
+        "dev_trusted_held_authority",
+    )
+    module = sys.modules.get(__name__)
+    # Modules loaded by an isolated file loader may not be registered globally.
+    if module is None:
+        from types import SimpleNamespace
+
+        module = SimpleNamespace(**globals())
+    plan, dates, permit = _dev_contract().admit_dev(
+        module,
+        plan_path,
+        receipt_root,
+        permit_fd,
+        expected_sha256,
+        expected_policy_sha256=expected_policy_sha256,
+        expected_authorization_sha256=expected_authorization_sha256,
+        expected_go_sha256=expected_go_sha256,
+    )
+    _reserve_once(plan)
+    clock = _NativeClock()
+    with clock.phase(plan["started_monotonic"] + 480):
+        return _run_capture(
+            plan,
+            receipt_root,
+            backend_factory=_OfficialBackend,
+            clock=clock,
+            sync_dir=_sync_dir,
+            dates=dates,
+        )
 
 
 def main(argv=None):

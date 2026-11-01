@@ -1,5 +1,9 @@
 # QuantMesh Product Roadmap
 
+## Explicit original IVV DEV diagnostic route A — issue272, 2026-11-02
+
+Actual Operator approved one versioned private diagnostic on the existing logged-in eabdda chain with the stated provider hard-storage/loaded-guard/UNKNOWN-tail limitations. The coherent DEV22 policy/Root issuer/held-permit/intent/manifest/existing consumer software slice has Parent133-pass affected verification; strict defaults and original data/math stay. Concrete native collector/monitor/config/runtime/parent producer, independent review, normal release/catalog and actual gates remain before the original one-effect capture. No B restart or new trial is added; actual originals may still be unreviewed or insufficient. See the [checkpoint](../iterations/0038-ivv-native-producer.md).
+
 ## Native IVV producer feasibility — issue272
 
 The approved original IVV route lacks its native provider-bound/held-permit producer implementation. One bounded stdlib-only producer check now targets actual existing-provider feasibility before issuer work. It must report real native facts or an exact failed predicate without SDK, permit, intent or provider changes. Reviewed code and a single pre-publication feasibility check do not qualify capture; actual 32MiB-through-480s/fullRO-sixRW, trusted config/runtime, capture actor, once and normal-close gates remain. See [checkpoint](../iterations/0038-ivv-native-producer.md).

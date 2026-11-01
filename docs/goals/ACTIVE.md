@@ -1,5 +1,9 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Approved original IVV DEV route A — 2026-11-02, implementation active
+
+Actual Operator approved one private DEV diagnostic under the original scope/execution/effect and explicitly accepted provider32MiB/fullRO-sixRW/legacy loaded-guard proof limitations and UNKNOWN tail/threshold-interval risk. Preserve eabdda/login, original data/math/once and actual identity/config/runtime/unknown-writer/actor/output/480s gates. No B maintenance/restart or repeat approval/login. [Plan](../superpowers/plans/2026-11-02-ivv-dev-diagnostic.md); [active checkpoint](../iterations/0038-ivv-native-producer.md). The first software contract slice now has Parent133-pass affected verification, with native collector still fail-closed; independent review and concrete native producer precede normal release/catalog and actual one-shot diagnostic. CAPTURED_UNREVIEWED/INSUFFICIENT remains possible; H1/H2/H3 and original financial Goal are not qualified by tests. The historical app Goal remains blocked/mismatched because its API cannot resume/edit; no duplicate or false completion is created. Original2h/4h start UNKNOWN.
+
 ## Approved IVV native producer port — 2026-11-01
 
 [Issue272](https://github.com/ZP151/quantmesh/issues/272) implements the missing producer for the existing [IVV slice259](https://github.com/ZP151/quantmesh/issues/259). [Plan](../superpowers/plans/2026-11-01-ivv-native-producer.md); [checkpoint](../iterations/0038-ivv-native-producer.md). Feasibility comes first: one read-only native check after code/privacy/physical review, no SDK/permit/intent or existing-provider mutation. Infeasibility stops dependent issuer work. The original helper/21-key plan/5-field provider identity/7-send/once480/data-math contracts and all old evidence remain. No real-data/trading qualification follows from a check result.

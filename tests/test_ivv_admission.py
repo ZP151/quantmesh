@@ -17,7 +17,9 @@ def implementation():
         pytest.fail("scoped IVV admission is not implemented")
 
 
-def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, parent_change=None):
+def scripted_registration(
+    tmp_path, monkeypatch, *, acceptance_change=None, parent_change=None, dev=False
+):
     """Fictional authority pins/IDs; no production e285 scope can be reserved."""
     v = implementation()
     from quantmesh.data.calendars import CalendarService, SessionPolicy
@@ -183,9 +185,46 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
         }
     )
     monkeypatch.setattr(runtime, "WINDOWS_POLICY_SHA", policy_ref.digest)
+    provenance = {}
+    dev_refs = {}
+    if dev:
+        authorization = put({"fictional_operator_authorization": True})
+        capture_policy = put(
+            {
+                "schema_id": "qm.ivv.capture-policy.dev-diagnostic.v1",
+                "scope_id": scope_id,
+                "execution_sha256": execution_original.digest,
+                "effect_id": "scripted-effect",
+                "authorization_sha256": authorization.digest,
+                "diagnostic_mode": "DEV_DIAGNOSTIC",
+                "hard_limit_enforced": False,
+                "provider_tail_max": "UNKNOWN",
+                "legacy_loaded_guard_provenance": "UNKNOWN",
+                "exceptions": ["provider_32MiB_fullRO_sixRW", "legacy_loaded_guard_provenance"],
+                "thresholds": {"G": 10500000000, "P": 4500000000, "free": 53687091200},
+            }
+        )
+        provenance = {
+            "policy_sha256": capture_policy.digest,
+            "authorization_sha256": authorization.digest,
+            "diagnostic_mode": "DEV_DIAGNOSTIC",
+            "hard_limit_enforced": False,
+            "provider_tail_max": "UNKNOWN",
+        }
+        dev_refs = dict(
+            capture_policy_ref=capture_policy,
+            authorization_ref=authorization,
+            expected_policy_sha256=capture_policy.digest,
+            expected_authorization_sha256=authorization.digest,
+        )
+
+    def schema(name):
+        return "qm.ivv." + name + (".dev-diagnostic.v1" if dev else ".v1")
+
     go = put(
         {
-            "schema_id": "qm.ivv.root-go.v1",
+            "schema_id": schema("root-go"),
+            **provenance,
             "decision": "GO_ONCE_AFTER_INPUT_ACCEPTANCE",
             "scope_id": scope_id,
             "execution_sha256": execution_original.digest,
@@ -206,15 +245,34 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
             "controls": {
                 "released": True,
                 "resource_bounds": True,
-                "provider_log_cache_bounds": True,
+                "provider_log_cache_bounds": not dev,
             },
             "test_control": True,
         }
     )
+    if dev:
+        original = put(
+            {
+                "schema_id": schema("capture-intent"),
+                **provenance,
+                "scope_id": scope_id,
+                "effect_id": "scripted-effect",
+                "state": "ATTEMPTED",
+                "synthetic": False,
+                "execution_sha256": execution_original.digest,
+                "approval_sha256": effect_original.digest,
+            }
+        )
+        local_ref = {
+            "path": "authored.json",
+            "sha256": original.digest,
+            "bytes": original.byte_length,
+        }
     actor = {"pid": 123, "uid": 1000, "start_ticks": 456, "cgroup": "/scripted"}
     raw = put(
         {
-            "schema_id": "qm.ivv.capture.v1",
+            "schema_id": schema("capture"),
+            **provenance,
             "state": "CAPTURED_UNREVIEWED",
             "scope_id": scope_id,
             "symbol": "US.IVV",
@@ -243,6 +301,7 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
                 for name in ("rehab", "dividends", "splits", "history")
             },
             "source_binding": {
+                **provenance,
                 "actor": actor,
                 "root_go_sha256": go.digest,
                 "catalog_sha256": "c" * 64,
@@ -255,7 +314,8 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
     )
     package["source_asset_refs"] = [raw.model_dump()]
     parent = {
-        "schema_id": "qm.ivv.capture-parent-close.v1",
+        "schema_id": schema("capture-parent-close"),
+        **provenance,
         "scope_id": scope_id,
         "state": "NORMAL_EXIT",
         "termination": "NORMAL",
@@ -279,7 +339,8 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
         parent_change(parent)
     parent_ref = put(parent)
     accepted = {
-        "schema_id": "qm.ivv.input-acceptance.v1",
+        "schema_id": schema("input-acceptance"),
+        **provenance,
         "decision": "ACCEPT_FOR_ONE_DECLARED_RETROSPECTIVE_RESEARCH",
         "reviewer": v.REVIEWER,
         "scope_id": scope_id,
@@ -305,6 +366,8 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
         go.model_dump(),
         policy_ref.model_dump(),
     ]
+    if dev:
+        package["review_refs"] += [capture_policy.model_dump(), authorization.model_dump()]
     package_ref = put(package)
     scope = {
         "schema_id": "qm.native-daily.research-scope.v1",
@@ -339,6 +402,7 @@ def scripted_registration(tmp_path, monkeypatch, *, acceptance_change=None, pare
         }
     )
     proofs = v.TrustedIVVProofs(
+        **dev_refs,
         windows_policy_ref=policy_ref,
         scope_ref=scope_original,
         effect_ref=effect_original,
@@ -730,9 +794,9 @@ def test_private_startup_composes_ordinary_workstation_api_and_cold_originals(
     import runpy
 
     from fastapi.testclient import TestClient
-
     from quantmesh.api.watchlist import WatchlistStore
     from quantmesh.api.workstation import create_workstation_app
+
     from quantmesh.execution.accounting import PaperAccount
 
     v, m, store, study, job_id, kwargs = scripted_registration(tmp_path, monkeypatch)
@@ -818,3 +882,46 @@ def test_child_close_cannot_replace_independent_parent_normal_exit(tmp_path, mon
     with pytest.raises(m.NativeError, match="ivv_not_admitted"):
         v.register_ivv_input(store, **kwargs)
     assert not study.exists()
+
+
+def test_dev_registration_and_cold_archive_retain_policy_without_new_trial(tmp_path, monkeypatch):
+    v, m, store, study, job_id, kwargs = scripted_registration(tmp_path, monkeypatch, dev=True)
+    registration = v.register_ivv_input(store, **kwargs)
+    saved = v._load(store, registration.real_binding)
+    assert saved["schema_id"] == "qm.ivv.registration.dev-diagnostic.v1"
+    assert saved["policy_sha256"] == kwargs["proofs"].expected_policy_sha256
+    assert saved["authorization_sha256"] == kwargs["proofs"].expected_authorization_sha256
+    from quantmesh.research import native_daily_candidate as native
+
+    def no_calculation(*args, **kwargs):
+        pytest.fail("cold provenance read must never compute")
+
+    monkeypatch.setattr(native, "_calculate_matrix", no_calculation)
+    checked = v.verify_saved_binding(
+        store, kwargs["package_ref"], registration.real_binding, executing=False
+    )
+    assert checked["scope_trial_key"] == saved["scope_trial_key"]
+    archive = {ref.digest for ref, body in v.binding_objects(store, registration.real_binding)}
+    assert kwargs["proofs"].capture_policy_ref.digest in archive
+    assert kwargs["proofs"].authorization_ref.digest in archive
+
+
+@pytest.mark.parametrize("part", ["schema", "policy", "authorization", "shares", "coverage", "raw"])
+def test_dev_acceptance_requires_same_provenance_and_independent_input_facts(
+    tmp_path, monkeypatch, part
+):
+    def change(value):
+        if part == "schema":
+            value["schema_id"] = "qm.ivv.input-acceptance.v1"
+        elif part in ("policy", "authorization"):
+            value[part + "_sha256"] = "f" * 64
+        else:
+            value["checks"][
+                {"shares": "shares_unit", "coverage": "complete_actions", "raw": "raw_prices"}[part]
+            ] = False
+
+    v, m, store, study, job_id, kwargs = scripted_registration(
+        tmp_path, monkeypatch, dev=True, acceptance_change=change
+    )
+    with pytest.raises(m.NativeError, match="ivv_not_admitted"):
+        v.register_ivv_input(store, **kwargs)
