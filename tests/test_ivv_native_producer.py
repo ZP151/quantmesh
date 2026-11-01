@@ -41,6 +41,7 @@ class NativeFixture:
     def __init__(self, mounts=UNBOUNDED):
         self.mounts = mounts
         self.closed = False
+        self.finished = False
 
     def identity(self):
         return {
@@ -97,6 +98,9 @@ class NativeFixture:
     def mountinfo(self):
         return self.mounts
 
+    def finish(self):
+        self.finished = True
+
     def close(self):
         self.closed = True
 
@@ -104,8 +108,8 @@ class NativeFixture:
 POOL = "/run/quantmesh-opend-storage-0123456789abcdef0123456789abcdef"
 FINITE = (
     """1 99 259:1 / / ro - ext4 /dev/root rw
-2 1 0:5 / /dev rw - devtmpfs devtmpfs rw
-3 1 0:6 / /proc rw - proc proc rw
+2 1 0:5 / /dev ro - devtmpfs devtmpfs rw
+3 1 0:6 / /proc ro - proc proc rw
 10 1 7:17 / """
     + POOL
     + """/fs ro - ext4 /dev/loop17 rw
@@ -277,7 +281,7 @@ class CheckProviderTests(unittest.TestCase):
         result = producer().check_existing_provider(reader)
         self.assertEqual(result["first_failure"]["code"], "WRITABLE_ESCAPE")
         self.assertNotIn("PRIVATE_SENTINEL", repr(result))
-        self.assertFalse(reader.finished)
+        self.assertTrue(reader.finished)
 
     def test_six_writable_bindings_cannot_claim_different_backing(self):
         reader = FiniteFixture()
@@ -684,6 +688,196 @@ class HostBindingTests(unittest.TestCase):
             self.assertTrue(m.PosixReader.verify_machine(raw))
             with self.assertRaises(m.FeasibilityRejected):
                 m.PosixReader.verify_machine(raw.rstrip())
+
+
+class R1Corrections(unittest.TestCase):
+    def test_negative_predicate_is_revalidated_and_drift_removes_attribution(self):
+        r = NativeFixture()
+        r.finished = False
+
+        def finish():
+            r.finished = True
+            raise OSError(5, "PRIVATE_SENTINEL")
+
+        r.finish = finish
+        actual = producer().check_existing_provider(r)
+        self.assertTrue(r.finished)
+        self.assertEqual(actual["first_failure"]["code"], "HOME_NOT_FINITE")
+        self.assertFalse(actual["provider_identity_verified"])
+        self.assertFalse(actual["endpoint_matches_fixed"])
+        self.assertTrue(actual["postcheck"])
+        self.assertNotIn("PRIVATE_SENTINEL", repr(actual))
+
+    def test_negative_stable_predicate_keeps_closed_attribution(self):
+        r = NativeFixture()
+        r.finished = False
+
+        def finish():
+            r.finished = True
+
+        r.finish = finish
+        actual = producer().check_existing_provider(r)
+        self.assertTrue(r.finished)
+        self.assertEqual(actual["first_failure"]["code"], "HOME_NOT_FINITE")
+        self.assertTrue(actual["provider_identity_verified"])
+        self.assertEqual(actual["postcheck"], [])
+
+    def test_home_and_state_handles_use_the_validated_mount_device_pair(self):
+        r = FiniteFixture()
+        r.channel_data["fds"] = [
+            {"kind": "DIR", "device": (0, 77), "mount_id": 20, "access": 0},
+            {"kind": "REG", "device": (0, 78), "mount_id": 21, "access": 2},
+        ]
+        actual = producer().check_existing_provider(r)
+        self.assertTrue(actual["storage_feasible"])
+
+    def test_same_device_wrong_mount_and_outside_readonly_handle_stay_unproven(self):
+        for fd in (
+            {"kind": "DIR", "device": (7, 17), "mount_id": 1, "access": 0},
+            {"kind": "REG", "device": (259, 1), "mount_id": 1, "access": 0},
+            {"kind": "SOCKET"},
+            {"kind": "FIFO"},
+        ):
+            r = FiniteFixture()
+            r.channel_data["fds"] = [fd]
+            actual = producer().check_existing_provider(r)
+            self.assertFalse(actual["storage_feasible"])
+            self.assertEqual(actual["first_failure"]["code"], "WRITABLE_CHANNEL_UNPROVEN")
+
+    def test_char_handles_require_safe_rdev_not_just_dev_mount(self):
+        for rdev, accepted in (((1, 3), True), ((1, 1), False), ((7, 17), False), (None, False)):
+            r = FiniteFixture()
+            r.channel_data["fds"] = [
+                {"kind": "CHAR", "device": (0, 5), "mount_id": 2, "rdev": rdev, "access": 2}
+            ]
+            actual = producer().check_existing_provider(r)
+            self.assertEqual(actual["storage_feasible"], accepted)
+
+    def test_writable_pseudo_control_interface_is_not_a_storage_exception(self):
+        for fs, path in (
+            ("debugfs", "/sys/kernel/debug"),
+            ("configfs", "/sys/kernel/config"),
+            ("efivarfs", "/sys/firmware/efi/efivars"),
+        ):
+            r = FiniteFixture()
+            r.mounts += ("40 1 0:99 / " + path + " rw - " + fs + " none rw\n").encode()
+            actual = producer().check_existing_provider(r)
+            self.assertFalse(actual["storage_feasible"])
+            self.assertEqual(actual["first_failure"]["code"], "WRITABLE_INTERFACE_UNPROVEN")
+
+    def test_regular_backing_stamp_includes_size_and_times_but_not_directory_times(self):
+        import os
+
+        m = producer()
+        fake = MetadataOS(os)
+        a = fake.items["/srv/quantmesh-opend-private-storage-20261031/provider.ext4"]
+        before = m.PosixReader.stamp(a)
+        for key in ("st_size", "st_mtime_ns", "st_ctime_ns"):
+            old = getattr(a, key)
+            setattr(a, key, old + 1)
+            self.assertNotEqual(m.PosixReader.stamp(a), before)
+            setattr(a, key, old)
+        d = fake.items["/srv"]
+        old = m.PosixReader.stamp(d)
+        d.st_mtime_ns += 1
+        d.st_ctime_ns += 1
+        self.assertEqual(m.PosixReader.stamp(d), old)
+
+    def test_partial_reader_postcheck_does_not_acquire_uncollected_families(self):
+        r = producer().PosixReader()
+        r.finish()
+        r.close()
+
+    def test_query_compound_failure_closes_pipe_preserves_primary_and_blocks_closed(self):
+        from unittest.mock import patch
+
+        m = producer()
+        events = []
+
+        class Pipe:
+            def fileno(self):
+                raise m.FeasibilityRejected("MANAGER_UNAVAILABLE")
+
+            def close(self):
+                events.append("pipeclose")
+                raise OSError("PRIVATE_SENTINEL")
+
+        class Child:
+            stdout = Pipe()
+
+            def poll(self):
+                return None
+
+            def kill(self):
+                events.append("kill")
+                raise OSError("PRIVATE_SENTINEL")
+
+            def wait(self, timeout):
+                events.append("wait")
+                raise OSError("PRIVATE_SENTINEL")
+
+        r = m.PosixReader()
+        with patch.object(m.subprocess, "Popen", return_value=Child()):
+            with self.assertRaises(m.FeasibilityRejected) as caught:
+                r.manager()
+        self.assertEqual(str(caught.exception), "MANAGER_UNAVAILABLE")
+        self.assertIn("pipeclose", events)
+        self.assertIn("wait", events)
+        with self.assertRaises(OSError):
+            r.close()
+
+
+class R1ActualLifetimeTests(unittest.TestCase):
+    def test_actual_held_backing_postcheck_rejects_same_inode_regular_change(self):
+        import os
+        from unittest.mock import patch
+
+        m = producer()
+        fake = MetadataOS(os)
+        r = m.PosixReader()
+        with patch.object(m, "os", fake):
+            r.backing((7, 17), POOL)
+            fake.items[
+                "/srv/quantmesh-opend-private-storage-20261031/provider.ext4"
+            ].st_mtime_ns += 1
+            self.assertIn("PATH_RACE", r.finish())
+            r.close()
+        self.assertEqual(fake.handles, {})
+
+    def test_query_child_and_pipe_uncertainty_propagate_through_public_outcome(self):
+        from unittest.mock import patch
+
+        m = producer()
+        kernel = m.PosixReader()
+
+        class Pipe:
+            def fileno(self):
+                raise m.FeasibilityRejected("MANAGER_UNAVAILABLE")
+
+            def close(self):
+                raise OSError("PRIVATE_SENTINEL")
+
+        class Child:
+            stdout = Pipe()
+
+            def poll(self):
+                return None
+
+            def kill(self):
+                raise OSError("PRIVATE_SENTINEL")
+
+            def wait(self, timeout):
+                raise OSError("PRIVATE_SENTINEL")
+
+        kernel.identity = kernel.manager
+        with patch.object(m.subprocess, "Popen", return_value=Child()):
+            actual = m.check_existing_provider(kernel)
+        self.assertEqual(actual["first_failure"]["code"], "MANAGER_UNAVAILABLE")
+        self.assertFalse(actual["owned_fds_closed"])
+        self.assertFalse(actual["provider_identity_verified"])
+        self.assertIn("QUERY_CHILD_REAP_UNKNOWN", actual["cleanup"])
+        self.assertIn("QUERY_PIPE_CLOSE_UNKNOWN", actual["cleanup"])
+        self.assertNotIn("PRIVATE_SENTINEL", repr(actual))
 
 
 if __name__ == "__main__":

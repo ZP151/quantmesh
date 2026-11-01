@@ -302,29 +302,36 @@ def _check_backing(actual, device):
     )
 
 
-def _check_channels(value, visible, device):
+def _check_channels(value, visible, device, validated_pairs):
     by_id = {m.identifier: m for m in visible.values()}
+    # These typed kernel sinks/sources have no persistent storage side effect.
+    safe_characters = {(1, 3), (1, 5), (1, 7), (1, 8), (1, 9)}
     for fd in value["fds"]:
         kind = fd.get("kind")
         mount = by_id.get(fd.get("mount_id"))
-        if kind in ("SOCKET", "FIFO"):
-            continue
-        if (
+        safe_character = (
             kind == "CHAR"
             and mount is not None
-            and mount.filesystem in ("devpts", "devtmpfs", "tmpfs")
-            and mount.target in ("/dev", "/dev/pts")
-        ):
+            and mount.filesystem == "devtmpfs"
+            and mount.target == "/dev"
+            and mount.root == "/"
+            and fd.get("device") == mount.device
+            and fd.get("rdev") in safe_characters
+        )
+        if safe_character:
             continue
-        _require(kind in ("REG", "DIR") and mount is not None, "WRITABLE_CHANNEL_UNPROVEN")
-        if kind == "DIR" or fd.get("access") in (1, 2):
-            _require(
-                fd.get("device") == device or "ro" in mount.options, "WRITABLE_CHANNEL_UNPROVEN"
-            )
+        # No generic socket peer, pipe consumer or outside-file reopen proof exists.
+        _require(
+            kind in ("REG", "DIR")
+            and mount is not None
+            and (mount.identifier, fd.get("device")) in validated_pairs,
+            "WRITABLE_CHANNEL_UNPROVEN",
+        )
+    mapped_devices = {dev for _, dev in validated_pairs}
     for mapping in value["maps"]:
         if mapping.get("inode") == 0 or not mapping.get("shared") or not mapping.get("writable"):
             continue
-        _require(mapping.get("device") == device, "WRITABLE_CHANNEL_UNPROVEN")
+        _require(mapping.get("device") in mapped_devices, "WRITABLE_CHANNEL_UNPROVEN")
 
 
 def _storage(reader, visible):
@@ -344,6 +351,7 @@ def _storage(reader, visible):
         )
         canonical = PSEUDO_FILESYSTEMS.get(m.filesystem) == m.target and m.root == "/"
         _require("rw" not in m.options or m.target in WRITES or canonical, "WRITABLE_ESCAPE")
+        _require("rw" not in m.options or not canonical, "WRITABLE_INTERFACE_UNPROVEN")
     runtime = _mapping(visible, RUNTIME, "ext4", "/runtime", writable=True)
     device = runtime.device
     _require(device[0] == 7, "WRITE_ROLE_MAPPING")
@@ -383,21 +391,28 @@ def _storage(reader, visible):
         _mapping(visible, target, "ext4", root, device, True)
         _directory(reader.path_info("provider", target), device)
     _check_backing(reader.backing(device, pool), device)
-    _check_channels(reader.channels(), visible, device)
+    _check_channels(
+        reader.channels(),
+        visible,
+        device,
+        {(visible[p].identifier, visible[p].device) for p in WRITES},
+    )
     return {"write_roles": 6, "backing_bytes": IMAGE_BYTES, "writable_escape": False}
 
 
 def check_existing_provider(reader=None):
-    """Closed feasibility result; injected OS test seams never count as native proof."""
-    native = reader is None
+    """Closed feasibility result; injected OS seams never count as native proof."""
     result = {
         "state": "INSUFFICIENT_NATIVE_EVIDENCE",
         "storage_feasible": False,
         "full_readiness": False,
-        "native_observation": native,
+        "native_observation": reader is None,
         "first_failure": None,
+        "postcheck": [],
         "cleanup": [],
         "owned_fds_closed": False,
+        "provider_identity_verified": False,
+        "endpoint_matches_fixed": False,
         "SDK": 0,
         "permit": 0,
         "intent": 0,
@@ -405,19 +420,21 @@ def check_existing_provider(reader=None):
     }
     if reader is None:
         reader = PosixReader()
+    candidate = False
     try:
         _check_identity(reader.identity())
         result["provider_identity_verified"] = True
         result["endpoint_matches_fixed"] = True
         visible = _visible_mounts(parse_mountinfo(reader.mountinfo()))
         result["storage"] = _storage(reader, visible)
-        reader.finish()
-        result.update(state="FEASIBILITY_ONLY", storage_feasible=True)
+        candidate = True
     except FeasibilityRejected as exc:
+        code = str(exc)
         result["first_failure"] = {
-            "code": str(exc),
+            "code": code,
             "class": "UNPROVEN"
-            if str(exc) in ("WRITABLE_CHANNEL_UNPROVEN", "MANAGER_UNAVAILABLE")
+            if code
+            in ("WRITABLE_CHANNEL_UNPROVEN", "WRITABLE_INTERFACE_UNPROVEN", "MANAGER_UNAVAILABLE")
             else "REJECTED",
         }
     except StorageDenied:
@@ -425,14 +442,35 @@ def check_existing_provider(reader=None):
     except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
         result["first_failure"] = {"code": "NATIVE_EVIDENCE_UNAVAILABLE", "class": "UNPROVEN"}
     finally:
+        # Revalidate only metadata families actually sampled, including a negative result.
+        try:
+            result["postcheck"] = reader.finish() or []
+        except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+            result["postcheck"] = ["COLLECTED_FACTS_UNVERIFIED"]
+        if result["postcheck"]:
+            result["provider_identity_verified"] = False
+            result["endpoint_matches_fixed"] = False
+            if result["first_failure"] is None:
+                result["first_failure"] = {
+                    "code": "NATIVE_EVIDENCE_UNAVAILABLE",
+                    "class": "UNPROVEN",
+                }
         try:
             reader.close()
             result["owned_fds_closed"] = True
         except OSError:
-            result["cleanup"].append("OWNED_FD_CLOSE_UNPROVEN")
-            result.update(state="INSUFFICIENT_NATIVE_EVIDENCE", storage_feasible=False)
+            result["cleanup"] = list(getattr(reader, "resource_cleanup", [])) + [
+                "OWNED_FD_CLOSE_UNPROVEN"
+            ]
             if result["first_failure"] is None:
                 result["first_failure"] = {"code": "OWNED_FD_CLOSE_UNPROVEN", "class": "UNPROVEN"}
+    if (
+        candidate
+        and not result["postcheck"]
+        and result["owned_fds_closed"]
+        and result["first_failure"] is None
+    ):
+        result.update(state="FEASIBILITY_ONLY", storage_feasible=True)
     return result
 
 
@@ -443,6 +481,9 @@ class PosixReader:
         self.deadline = time.monotonic() + 25
         self.fds = []
         self.close_failed = False
+        self.resource_cleanup = []
+        self.manager_fields = None
+        self.endpoint_collected = False
         self.processes = {}
         self.paths = []
         self.sysfs = []
@@ -604,7 +645,10 @@ class PosixReader:
 
     @staticmethod
     def stamp(s):
-        return (s.st_dev, s.st_ino, s.st_mode, s.st_uid, s.st_gid, s.st_nlink)
+        identity = (s.st_dev, s.st_ino, s.st_mode, s.st_uid, s.st_gid, s.st_nlink)
+        if stat.S_ISREG(s.st_mode):
+            identity += (s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+        return identity
 
     @staticmethod
     def info(s):
@@ -632,6 +676,7 @@ class PosixReader:
             "size": s.st_size,
             "device": (os.major(s.st_dev), os.minor(s.st_dev)),
             "inode": s.st_ino,
+            "rdev": (os.major(s.st_rdev), os.minor(s.st_rdev)) if stat.S_ISCHR(s.st_mode) else None,
         }
 
     def manager(self):
@@ -670,10 +715,31 @@ class PosixReader:
                 child.wait(timeout=max(0.001, limit - time.monotonic())) == 0, "MANAGER_UNAVAILABLE"
             )
         finally:
-            if child.poll() is None:
-                child.kill()
-                child.wait(timeout=2)
-            child.stdout.close()
+            primary = sys.exc_info()[0] is not None
+            failures = []
+            try:
+                try:
+                    running = child.poll() is None
+                except (OSError, subprocess.SubprocessError):
+                    running = True
+                    failures.append("QUERY_CHILD_STATUS_UNKNOWN")
+                if running:
+                    try:
+                        child.kill()
+                    except (OSError, subprocess.SubprocessError):
+                        failures.append("QUERY_CHILD_KILL_UNKNOWN")
+                    try:
+                        child.wait(timeout=2)
+                    except (OSError, subprocess.SubprocessError):
+                        failures.append("QUERY_CHILD_REAP_UNKNOWN")
+            finally:
+                try:
+                    child.stdout.close()
+                except OSError:
+                    failures.append("QUERY_PIPE_CLOSE_UNKNOWN")
+            self.resource_cleanup.extend(failures)
+            if failures and not primary:
+                raise FeasibilityRejected("QUERY_CLEANUP_UNPROVEN")
         fields = {}
         for line in data.decode("ascii").splitlines():
             key, sep, value = line.partition("=")
@@ -805,6 +871,7 @@ class PosixReader:
         endpoint = self.fixed_endpoint(
             self.read(self.processes[705711][0], "net/tcp", 262144), inodes
         )
+        self.endpoint_collected = True
         return {
             "machine": MACHINE,
             "unit": self.manager_fields["Id"],
@@ -931,34 +998,70 @@ class PosixReader:
         )
 
     def finish(self):
-        self.verify_channels()
-        _require(
-            self.fixed_endpoint(
-                self.read(self.processes[705711][0], "net/tcp", 262144),
-                self.socket_inodes(self.processes[705711][0]),
-            ),
-            "ENDPOINT_RACE",
-        )
-        _require(self.manager() == self.manager_fields, "PROVIDER_RACE")
-        _require(self.mountinfo() == self.raw_mounts, "MOUNT_RACE")
-        for pid, (d, stamp, row, exe, exe_stamp) in self.processes.items():
-            _require(
-                self.stamp(os.fstat(d)) == stamp
-                and self.stamp(os.stat("/proc/" + str(pid))) == stamp
-                and self.process(pid, d)
-                == {k: v for k, v in row.items() if k not in ("role", "exe_verified")}
-                and self.stamp(os.stat("exe", dir_fd=d)) == exe_stamp
-                and self.stamp(os.fstat(exe)) == exe_stamp,
+        errors = []
+
+        def attempt(code, check):
+            try:
+                check()
+            except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError):
+                if code not in errors:
+                    errors.append(code)
+
+        if self.channel_snapshot is not None:
+            attempt("CHANNEL_RACE", self.verify_channels)
+        if self.endpoint_collected:
+
+            def endpoint():
+                _require(
+                    self.fixed_endpoint(
+                        self.read(self.processes[705711][0], "net/tcp", 262144),
+                        self.socket_inodes(self.processes[705711][0]),
+                    ),
+                    "ENDPOINT_RACE",
+                )
+
+            attempt("ENDPOINT_RACE", endpoint)
+        if self.manager_fields is not None:
+            attempt(
                 "PROVIDER_RACE",
+                lambda: _require(self.manager() == self.manager_fields, "PROVIDER_RACE"),
             )
+        if self.raw_mounts is not None:
+            attempt(
+                "MOUNT_RACE", lambda: _require(self.mountinfo() == self.raw_mounts, "MOUNT_RACE")
+            )
+        for pid, (d, stamp, row, exe, exe_stamp) in self.processes.items():
+
+            def process(pid=pid, d=d, stamp=stamp, row=row, exe=exe, exe_stamp=exe_stamp):
+                _require(
+                    self.stamp(os.fstat(d)) == stamp
+                    and self.stamp(os.stat("/proc/" + str(pid))) == stamp
+                    and self.process(pid, d)
+                    == {k: v for k, v in row.items() if k not in ("role", "exe_verified")}
+                    and self.stamp(os.stat("exe", dir_fd=d)) == exe_stamp
+                    and self.stamp(os.fstat(exe)) == exe_stamp,
+                    "PROVIDER_RACE",
+                )
+
+            attempt("PROVIDER_RACE", process)
         for scope, path, fd, stamp in self.paths:
-            current = self.held_path(path, self.root if scope == "provider" else None)
-            _require(
-                self.stamp(os.fstat(fd)) == stamp and self.stamp(os.fstat(current)) == stamp,
-                "PATH_RACE",
-            )
+
+            def held_path(scope=scope, path=path, fd=fd, stamp=stamp):
+                current = self.held_path(path, self.root if scope == "provider" else None)
+                _require(
+                    self.stamp(os.fstat(fd)) == stamp and self.stamp(os.fstat(current)) == stamp,
+                    "PATH_RACE",
+                )
+
+            attempt("PATH_RACE", held_path)
         for d, name, raw in self.sysfs:
-            _require(self.read(d, name, 4096).strip() == raw, "BACKING_RACE")
+            attempt(
+                "BACKING_RACE",
+                lambda d=d, name=name, raw=raw: _require(
+                    self.read(d, name, 4096).strip() == raw, "BACKING_RACE"
+                ),
+            )
+        return errors
 
     def close(self):
         errors = []
@@ -968,7 +1071,7 @@ class PosixReader:
                 os.close(fd)
             except OSError:
                 errors.append(True)
-        if errors or self.close_failed:
+        if errors or self.close_failed or self.resource_cleanup:
             raise OSError("owned descriptor close not established")
 
 
