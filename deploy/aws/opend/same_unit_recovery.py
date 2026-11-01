@@ -26,6 +26,9 @@ STAMP_FIELDS = {
 }
 EXTRA_FIELDS = {"unit", "vendor_sha256", "session_lifetime", "original_claim", "prior_permit"}
 PRIVATE_STORAGE_NONCE = "c8f0d0de4ca641a491fca6df24c66ceb"
+# Independent fixed historical event pins; current controls cannot choose another pair.
+DIAGNOSTIC_HISTORY_SHA = "8247e05ca30e7118e9a1494b31f11292502f072a1b86f119e260b71707a71afb"
+DIAGNOSTIC_MARKER_SHA = "544e4f73d22b061926d665f207265f2cf11fd9ce974f45bc62d9b4074fb6acae"
 
 
 def _stamp(info):
@@ -171,7 +174,9 @@ class Control:
         )
 
         if diagnostic:
-            _require(ops, c["diagnostic_id"] == "diagnostic-1")
+            _require(
+                ops, c["diagnostic_id"] == "diagnostic-1" and self.file_identity["size"] <= 4096
+            )
             spent = c["spent_recovery"]
             _require(ops, type(spent) is dict and set(spent) == {"control", "marker"})
             for key in ("control", "marker"):
@@ -181,6 +186,11 @@ class Control:
                     type(item) is dict
                     and set(item) == {"identity", "sha256"}
                     and _hex(item["sha256"]),
+                )
+                _require(
+                    ops,
+                    item["sha256"]
+                    == (DIAGNOSTIC_HISTORY_SHA if key == "control" else DIAGNOSTIC_MARKER_SHA),
                 )
                 _identity_shape(ops, item["identity"])
                 stamp = item["identity"]
@@ -212,9 +222,17 @@ class Control:
         )
 
     @contextmanager
-    def release_lease(self):
+    def release_lease(self, *, deadline=None):
         self._active_protocol()
         ops = self.ops
+        if self.is_diagnostic:
+            values = [self.runtime_deadline] + ([deadline] if deadline is not None else [])
+            _require(
+                ops,
+                all(type(x) in (int, float) and ops.math.isfinite(x) for x in values),
+                "deadline",
+            )
+            deadline = min(values)
         with ExitStack() as stack:
             control = stack.enter_context(ops._protected_fd(ops.RECOVERY_PERMIT))
             prior = stack.enter_context(ops._protected_fd(ops.PERSISTENT_PERMIT))
@@ -234,7 +252,7 @@ class Control:
                     dir_fd=directory,
                 )
                 stack.callback(ops.os.close, old_marker)
-            lease = Lease(self, control, prior, directory, claim, history, old_marker)
+            lease = Lease(self, control, prior, directory, claim, history, old_marker, deadline)
             stack.callback(lease.close)
             lease.check()
             lease.require_unspent()
@@ -255,6 +273,7 @@ class Lease:
         claim_fd,
         history_fd=None,
         old_marker_fd=None,
+        deadline=None,
     ):
         self.control = control
         self.control_fd = control_fd
@@ -264,6 +283,7 @@ class Lease:
         self.claim = claim_fd
         self.history = history_fd
         self.old_marker = old_marker_fd
+        self.deadline = deadline
         self.marker = None
         self.marker_identity = None
 
@@ -397,6 +417,16 @@ class Lease:
         ops, c = self.control.ops, self.control
         _require(ops, self.marker is None, "duplicate_recovery")
         self.check()
+        if c.is_diagnostic:
+            # All potentially blocking evidence checks finish before this irreversible boundary.
+            _require(
+                ops,
+                ops._utc(c.claims["not_before"])
+                <= ops.datetime.now(ops.UTC)
+                < ops._utc(c.claims["expires_at"])
+                and ops.time.monotonic() < self.deadline,
+                "deadline",
+            )
         try:
             self.marker = ops.os.open(
                 c.consumption_name,
@@ -456,10 +486,9 @@ def load(ops, nonce):
     result = Control(ops, ops._json(raw), nonce, identity, hashlib.sha256(raw).hexdigest())
     result._shape()
     if result.is_diagnostic:
+        anchor = ops.time.monotonic()
         remaining = min(
             90, (ops._utc(result.claims["expires_at"]) - ops.datetime.now(ops.UTC)).total_seconds()
         )
-        result = Control(
-            ops, result.claims, nonce, identity, result.digest, ops.time.monotonic() + remaining
-        )
+        result = Control(ops, result.claims, nonce, identity, result.digest, anchor + remaining)
     return result

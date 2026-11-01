@@ -52,7 +52,7 @@ PRIVATE_STORAGE_DROPIN = Path(
 )
 PRIVATE_STORAGE_DROPIN_SHA = "c8a5b6517e2861cb5f20f6bc610f259a3d8964dcd62f7409d17d84a007f06c68"
 PRIVATE_STORAGE_SHA = "2d494084781ece33d2be718b531df4d319751ba65b2ba4d6d76a39f0730577d6"
-RECOVERY_SHA = "94f6660e68cdeb129fc62c402d0114f9f379dba9b873436d903b63a5919e5071"
+RECOVERY_SHA = "3505febfa75ef34422f22f448a953b883946523657b6e1d349031c524ce802e0"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
 CONFIG = Path("/etc/quantmesh/opend/OpenD.xml")
 VENDOR = BASE / "10.10.7008/OpenD"
@@ -829,7 +829,8 @@ def start_staging_console(window):
     registered = []
     held = []
     old_handlers = {}
-    deadline = time.monotonic() + min(
+    anchor = time.monotonic()
+    deadline = anchor + min(
         window.claims["max_seconds"], (window.expires - datetime.now(UTC)).total_seconds()
     )
     runtime_persistent = _runtime_persistent(window)
@@ -839,6 +840,7 @@ def start_staging_console(window):
         if diagnostic_deadline is None:
             raise StageDenied("deadline")
         deadline = min(deadline, diagnostic_deadline)
+        diagnostic_deadline = deadline
     try:
         _witness_event("PANE_CONTEXT_OK")
         _unclaimed(window)
@@ -907,7 +909,9 @@ def start_staging_console(window):
                     raise StageDenied("deadline")
 
             if isinstance(window, RecoveryWindow):
-                with window.control.release_lease() as recovery_lease:
+                with window.control.release_lease(
+                    **({"deadline": deadline} if diagnostic_deadline is not None else {})
+                ) as recovery_lease:
 
                     def release_recovery():
                         _witness_event("CONSUME_ENTER")

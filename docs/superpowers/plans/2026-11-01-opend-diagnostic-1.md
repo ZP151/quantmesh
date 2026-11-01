@@ -1,6 +1,6 @@
 # Fixed diagnostic-1 implementation and execution plan
 
-> **For agentic workers:** Use superpowers:executing-plans inline after Parent's one design/conflict scan. Parent assigns independent Spec/Quality R1/maxoneknown-fixR2. No implementation in this checkpoint.
+> **For agentic workers:** Use superpowers:executing-plans inline after Parent's one design/conflict scan. Parent assigns independent Spec/Quality R1/maxoneknown-fixR2. Implementation and this one correction wave are complete; scoped R2 is pending, with no publication/native effects.
 
 **Goal:** Admit one separately consumed c8 diagnostic authority while preserving every old spent fact and a source-enforced <=90s runtime.
 **Architecture:** Extend existing recovery/launcher and storage eligibility only; reuse actual PR270 witness/lease/ownership and original unit/mappings. No generic generations or new platform.
@@ -35,10 +35,16 @@ Actual merged catalog, source pins and full physical/resource gates precede pack
 
 One full formal same-sandbox Source check-window actor, admitted/all8false/no consume and normal closure, then fresh gates/adequate remaining budget permit ONE cumulative fifth diagnostic start. Source and host each enforce the same fixed authorization window: source monotonic deadline+remaining child alarm, host90s from start issue; no post-consume rebase. Retain bounded invocation-bound witness and unit/child/cleanup facts; normal owned stop/terminal+CGempty before host cleanup, unknown-live retains mappings. No sixth/restart, market/capture/UI/SDK. This phase needs Parent reviewed actual packet under the approved scope, not another human approval.
 
-## Current roles / status
+## Historical pre-review roles / status
 
 Planner: actual approval and one fixed protocol; design/conflict scan passed; implement only the fixed protocol. Quant: no data/algorithm/leakage/cost/trial/order/SDK effects or confidence promotion. Implementer: new codex/0038-opend-diagnostic-1 branch from freshly fetched actual b8ce; old branches/main preserved. Reviewer: Parent design/conflict scan PASS; fresh software R1/at most known-fix R2 pending. Verifier: metadata/current source/actual registration read only; actual old-source RED9fail/12pass and first protocol GREEN21 retained in diagnostic-1-01; final affected/static evidence pending. No native/CI evidence for this slice. Old PR270 Linux software gates passed, staging-host witness/cleanup paths remain unqualified; old4 starts and spent states persist.
 
 Capacity supersession: actual diagnostic1-capacity-supplement-4MiB-20261101.json adds only net4MiB after the original8MiB; Source44MiB, fixed oldforward33443768+new12MiB=46026680<46137344. Retained pytest metadata exceeded the initial4MiB next-run forecast, triggering preventive STOP, not an overrun. New12MiB includes9MiB private tmp,0.5MiB Git,0.25MiB code/docs,0.5MiB logs/review,1MiB CI/catalog,0.75MiB closeout; actual work consumes this envelope, never renews it. No deletes/refunds/borrow.
 
 Final pre-review software evidence:279 passed/42 POSIX skips on current Windows code, scoped static checks pass; all initial harness/oracle failures retained and classified in the iteration. Fresh independent R1 remains pending; no push/CI/host permission follows from this checkpoint.
+
+## Current R1 correction wave
+
+Independent R1 on3835 reported SpecFAIL/QualityNOT_READY with four Important findings; the original report is retained unchanged in diagnostic-1-01/review/REVIEW-R1.md. This one authorized wave pins the original historical byte hashes independently of the new control, shares one conservative effective monotonic deadline across source/lease/child, rechecks both clocks immediately before irreversible creation, and rejects fixed5 controls above the witness4096-byte boundary at initial admission. Synthetic positive pins are test-only module patches, not runtime configuration. RED9fail/1pass on actual reviewed production is retained; final targeted GREEN/static results are recorded below; same-reviewer scoped R2 is required. No native protocol/software publication/fifth start or UI/SDK is implied.
+
+Correction verification: R1-FINAL-TARGETED62passed on current corrected source, all newly added R1 regressions and directly affected recovery/witness lifecycle subset; scoped Ruff/format/Python3.12 syntax/diff/submodule checks pass. No repeat of the prior279/42 suite or native acceptance. Same-reviewer R2 is the next gate.

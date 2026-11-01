@@ -78,6 +78,20 @@ def configure_diagnostic(recovery, tmp_path, monkeypatch):
     )
     recovery.path.write_bytes(json.dumps(claims).encode())
     monkeypatch.setattr(stage, "RECOVERY_HISTORY", history, raising=False)
+    module_loader = stage._module
+    pinned_history = old_digest
+    pinned_marker = claims["spent_recovery"]["marker"]["sha256"]
+
+    def synthetic_pins(path, digest):
+        module = module_loader(path, digest)
+        if path.name == "same_unit_recovery.py":
+            # Test-only public fixture seam; no production configuration override.
+            monkeypatch.setattr(module, "DIAGNOSTIC_HISTORY_SHA", pinned_history, raising=False)
+            monkeypatch.setattr(module, "DIAGNOSTIC_MARKER_SHA", pinned_marker, raising=False)
+        return module
+
+    monkeypatch.setattr(stage, "_module", synthetic_pins)
+    recovery.real_module_loader = module_loader
     opened = files.open
     new_marker = recovery.state / (C8 + ".diagnostic-1.recovery")
 
@@ -320,8 +334,7 @@ def test_diagnostic_expiry_during_consume_cannot_release_or_refresh_budget(
     assert all(c.closed for c in lifecycle.children) and lifecycle.closed_handles
 
 
-@pytest.mark.parametrize("remaining", [0.375, 0, -1])
-def test_child_alarm_uses_same_fractional_remaining_budget_before_ack_exec(monkeypatch, remaining):
+def _observe_child(monkeypatch, deadline, now, seconds=90):
     # Actual child function, modeled OS only: never fork/exec/signal a native process.
     class Exit(BaseException):
         pass
@@ -341,7 +354,7 @@ def test_child_alarm_uses_same_fractional_remaining_budget_before_ack_exec(monke
     monkeypatch.setattr(stage, "_WITNESS", None)
     monkeypatch.setattr(stage, "_prctl", lambda *a: None)
     monkeypatch.setattr(stage.Path, "iterdir", lambda p: iter(()))
-    monkeypatch.setattr(stage, "time", SimpleNamespace(monotonic=lambda: 20.0))
+    monkeypatch.setattr(stage, "time", SimpleNamespace(monotonic=lambda: now))
     monkeypatch.setattr(
         stage,
         "signal",
@@ -363,8 +376,14 @@ def test_child_alarm_uses_same_fractional_remaining_budget_before_ack_exec(monke
     monkeypatch.setattr(stage, "_child_fail", lambda fd, kind, *a: events.append(("failure", kind)))
     with pytest.raises(Exit):
         stage._child(
-            4, 5, (0, 1, 2), 90, 12, False, "blocked", 6, [], diagnostic_deadline=20 + remaining
+            4, 5, (0, 1, 2), seconds, 12, False, "blocked", 6, [], diagnostic_deadline=deadline
         )
+    return events
+
+
+@pytest.mark.parametrize("remaining", [0.375, 0, -1])
+def test_child_alarm_uses_same_fractional_remaining_budget_before_ack_exec(monkeypatch, remaining):
+    events = _observe_child(monkeypatch, 20 + remaining, 20)
     if remaining > 0:
         assert events[:3] == [("alarm", 0.375), ("write", b"R"), ("chdir",)]
     else:
@@ -451,3 +470,176 @@ def test_diagnostic_deadline_frame_is_distinct_and_fragment_never_complete():
     frame = stage._child_failure_frame("DEADLINE", 0, 1234)
     assert stage._decode_child_frames(frame) == [dict(kind="DEADLINE", errno=0, monotonic_ns=1234)]
     assert stage._decode_child_frames(frame[:-1]) is None
+
+
+@pytest.mark.parametrize("replacement", ["pair", "whitespace"])
+def test_r1_fixed_historical_pins_reject_self_consistent_replacement(diagnostic, replacement):
+    if replacement == "pair":
+        old = json.loads(diagnostic.history.read_bytes())
+        old["launcher_sha256"] = "d" * 64
+        diagnostic.history.write_bytes(json.dumps(old, sort_keys=True).encode())
+        digest = hashlib.sha256(diagnostic.history.read_bytes()).hexdigest()
+        marker = json.loads(diagnostic.old_marker.read_bytes())
+        marker["control_sha256"] = digest
+        diagnostic.old_marker.write_bytes(json.dumps(marker, sort_keys=True).encode())
+        diagnostic.claims["spent_recovery"]["control"] = dict(
+            identity=identity(diagnostic.files, diagnostic.history), sha256=digest
+        )
+    else:
+        diagnostic.old_marker.write_bytes(b" " + diagnostic.old_marker.read_bytes() + b" ")
+    diagnostic.claims["spent_recovery"]["marker"] = dict(
+        identity=identity(diagnostic.files, diagnostic.old_marker),
+        sha256=hashlib.sha256(diagnostic.old_marker.read_bytes()).hexdigest(),
+    )
+    diagnostic.path.write_bytes(json.dumps(diagnostic.claims).encode())
+    with pytest.raises(stage.StageDenied):
+        load(diagnostic).check_available()
+    assert not diagnostic.new_marker.exists()
+
+
+def test_r1_production_evidence_hashes_are_independent_of_control(diagnostic):
+    module = diagnostic.real_module_loader(stage.BASE / "same_unit_recovery.py", stage.RECOVERY_SHA)
+    assert (
+        module.DIAGNOSTIC_HISTORY_SHA
+        == "8247e05ca30e7118e9a1494b31f11292502f072a1b86f119e260b71707a71afb"
+    )
+    assert (
+        module.DIAGNOSTIC_MARKER_SHA
+        == "544e4f73d22b061926d665f207265f2cf11fd9ce974f45bc62d9b4074fb6acae"
+    )
+    with pytest.raises(stage.StageDenied):
+        module.load(stage, C8)
+
+
+def test_r1_clock_sampling_stall_never_adds_monotonic_budget(diagnostic, monkeypatch):
+    clock = [100.0]
+    monkeypatch.setattr(stage, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+
+    def delayed_wall(tz):
+        clock[0] += 7
+        return NOW
+
+    monkeypatch.setattr(
+        stage,
+        "datetime",
+        SimpleNamespace(now=delayed_wall, fromisoformat=stage.datetime.fromisoformat),
+    )
+    control = load(diagnostic)
+    assert control.runtime_deadline == 160.0
+
+
+@pytest.mark.parametrize("gate_now", [110.75, 115.25, 115.5])
+def test_r1_forward_wall_step_passes_same_effective_deadline_to_child(
+    diagnostic, lifecycle, monkeypatch, gate_now
+):
+    clock = [100.0]
+    monkeypatch.setattr(stage, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    window = stage.RecoveryWindow(load(diagnostic))
+    assert window.control.runtime_deadline == 160.0
+    clock[0] = 110.0
+    monkeypatch.setattr(
+        stage,
+        "datetime",
+        SimpleNamespace(
+            now=lambda tz: NOW + timedelta(seconds=54.75),
+            fromisoformat=stage.datetime.fromisoformat,
+        ),
+    )
+    original = stage._spawn_gated
+    seen = []
+
+    def spawn(*a, **kw):
+        seen.append(kw)
+        return original(*a, **kw)
+
+    monkeypatch.setattr(stage, "_spawn_gated", spawn)
+    stage.start_staging_console(window)
+    assert seen[0]["diagnostic_deadline"] == 115.25
+    events = _observe_child(
+        monkeypatch, seen[0]["diagnostic_deadline"], gate_now, seen[0]["seconds"]
+    )
+    if gate_now < 115.25:
+        assert events[:3] == [("alarm", 4.5), ("write", b"R"), ("chdir",)]
+    else:
+        assert events[0] == ("failure", "DEADLINE")
+        assert not any(row[0] in {"alarm", "write", "chdir"} for row in events)
+
+
+@pytest.mark.parametrize("clock_kind", ["wall", "monotonic"])
+def test_r1_evidence_read_expiry_leaves_unused_marker_absent(diagnostic, monkeypatch, clock_kind):
+    clock = [100.0]
+    wall = [NOW]
+    monkeypatch.setattr(stage, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    monkeypatch.setattr(
+        stage,
+        "datetime",
+        SimpleNamespace(now=lambda tz: wall[0], fromisoformat=stage.datetime.fromisoformat),
+    )
+    control = load(diagnostic)
+    original = diagnostic.files.read
+    armed = [False]
+
+    def read(fd, size):
+        value = original(fd, size)
+        if armed[0] and diagnostic.files.paths.get(fd) == diagnostic.old_marker:
+            if clock_kind == "wall":
+                wall[0] = NOW + timedelta(seconds=61)
+            else:
+                clock[0] = 161.0
+        return value
+
+    monkeypatch.setattr(diagnostic.files, "read", read)
+    with pytest.raises(stage.StageDenied):
+        with control.release_lease() as lease:
+            armed[0] = True
+            lease.consume()
+    assert not diagnostic.new_marker.exists()
+
+
+def test_r1_consume_uses_caller_earlier_effective_deadline(diagnostic, monkeypatch):
+    clock = [100.0]
+    monkeypatch.setattr(stage, "time", SimpleNamespace(monotonic=lambda: clock[0]))
+    control = load(diagnostic)
+    with control.release_lease(deadline=105.25) as lease:
+        clock[0] = 105.25
+        with pytest.raises(stage.StageDenied):
+            lease.consume()
+    assert not diagnostic.new_marker.exists()
+
+
+@pytest.mark.parametrize("size", [4096, 4097])
+def test_r1_admission_and_witness_share_fixed5_size_boundary(diagnostic, monkeypatch, capsys, size):
+    raw = json.dumps(diagnostic.claims).encode()
+    assert len(raw) < 4096
+    diagnostic.path.write_bytes(raw + b" " * (size - len(raw)))
+    expected = 0 if size == 4096 else 2
+    assert stage.main(["--check-window", "--persistent", "--nonce", C8]) == expected
+    capsys.readouterr()
+    protected = stage._protected_fd
+    monkeypatch.setattr(
+        stage, "_protected_fd", lambda p: protected(diagnostic.path if p == stage.LAUNCHER else p)
+    )
+    monkeypatch.setattr(stage, "_digest_fd", lambda fd: "c" * 64)
+    unit = "quantmesh-opend-console@" + C8 + ".service"
+    monkeypatch.setattr(
+        stage,
+        "_command",
+        lambda a: (
+            "Id="
+            + unit
+            + "\nInvocationID="
+            + "a" * 32
+            + "\nControlGroup=/system.slice/fixed\nMainPID=7"
+        ),
+    )
+    monkeypatch.setattr(stage, "_cgroup", lambda who: "/system.slice/fixed")
+    monkeypatch.setattr(diagnostic.files, "environ", {"INVOCATION_ID": "a" * 32}, raising=False)
+    if size == 4096:
+        assert (
+            stage._witness_binding(pane=False)["control"]
+            == hashlib.sha256(diagnostic.path.read_bytes()).hexdigest()
+        )
+    else:
+        with pytest.raises(stage.StageDenied):
+            stage._witness_binding(pane=False)
+    assert not diagnostic.new_marker.exists()
