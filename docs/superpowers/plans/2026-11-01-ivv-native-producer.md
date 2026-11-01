@@ -10,13 +10,13 @@ Fresh Reviewer: read-only independent specification/quality R1, only located kno
 
 ## Phase A — first verifiable user loop
 
-- [ ] Record real invariant/interface design and separate 8MiB complete forecast before writing implementation/fixtures.
-- [ ] Add behavior tests at the real check/collector seams; run Python 3.12 -B -m unittest discover -s tests -p test_ivv_native_producer.py. Retain actual RED output and failed fixtures within the assigned test bucket.
-- [ ] Implement the smallest stdlib-only native collector/evaluator that produces a safe exact failed predicate or feasibility-only facts. Cover fixed lifetime/identity, post-read races, mount graph, readonly parent/RW child, same-prefix/hidden/extra write paths, forged image claims, underlying storage and unknown writable FD channels. No positive production admission from synthetic facts.
-- [ ] Run the same targeted command GREEN, Python 3.12 compilation, available existing Ruff/format, whitespace and unchanged helper SHA checks. Do not install dependencies or invoke SDK.
-- [ ] Fresh independent R1 at the complete feasibility boundary; correct only located findings and run bounded known-fix R2 if needed. Stop/replan after a third structural failure.
-- [ ] Parent independently reads code/diff/tests, checks private outputs/full physical futures and freezes one packet. Original executor may invoke the check at most once with bounded transport; no SDK/source CLI/intent/permit/service effects.
-- [ ] Record actual native result and closure. If infeasible, stop issuer work, commit the coherent reviewed increment and give one exact failed predicate/minimum disposition. Do not claim current provider lacks a runtime/cap solely because proof is missing.
+- [x] Record real invariant/interface design and separate 8MiB complete forecast before writing implementation/fixtures.
+- [x] Add behavior tests at the real check/collector seams; run Python 3.12 -B -m unittest discover -s tests -p test_ivv_native_producer.py. Retain actual RED output and failed fixtures within the assigned test bucket.
+- [x] Implement the smallest stdlib-only native collector/evaluator that produces a safe exact failed predicate or feasibility-only facts. Cover fixed lifetime/identity, post-read races, mount graph, readonly parent/RW child, same-prefix/hidden/extra write paths, forged image claims, underlying storage and unknown writable FD channels. No positive production admission from synthetic facts.
+- [x] Run the same targeted command GREEN, Python 3.12 compilation, available existing Ruff/format, whitespace and unchanged helper SHA checks. Do not install dependencies or invoke SDK.
+- [x] Fresh independent R1 at the complete feasibility boundary; correct only located findings and run bounded known-fix R2 if needed. Stop/replan after a third structural failure.
+- [x] Parent independently reads code/diff/tests, checks private outputs/full physical futures and freezes one packet. Original executor may invoke the check at most once with bounded transport; no SDK/source CLI/intent/permit/service effects.
+- [x] Record actual native result and closure. If infeasible, stop issuer work, commit the coherent reviewed increment and give one exact failed predicate/minimum disposition. Do not claim current provider lacks a runtime/cap solely because proof is missing. Actual HOME_NOT_FINITE on2026-11-01T14:35Z; normal publication remains pending.
 
 ## Phase B — conditional, only if Phase A proves feasible
 
