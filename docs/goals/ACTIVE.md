@@ -1,5 +1,9 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Approved IVV native producer port — 2026-11-01
+
+[Issue272](https://github.com/ZP151/quantmesh/issues/272) implements the missing producer for the existing [IVV slice259](https://github.com/ZP151/quantmesh/issues/259). [Plan](../superpowers/plans/2026-11-01-ivv-native-producer.md); [checkpoint](../iterations/0038-ivv-native-producer.md). Feasibility comes first: one read-only native check after code/privacy/physical review, no SDK/permit/intent or existing-provider mutation. Infeasibility stops dependent issuer work. The original helper/21-key plan/5-field provider identity/7-send/once480/data-math contracts and all old evidence remain. No real-data/trading qualification follows from a check result.
+
 ## Approved guarded history RAM auxiliary slice —2026-10-30
 
 Actual human approval resumes source/Server work despite the historical blocked app Goal label; no duplicate Goal is created. [Issue255](https://github.com/ZP151/quantmesh/issues/255), [plan](../superpowers/plans/2026-10-30-history-ram-aux.md), [iteration](../iterations/0038-history-ram-aux.md). Source and Server have independent tracked/ignored ownership; sole Publisher owns normal CI/merge. OriginalAPI200 plus full111x17 independent oracle/math/normal closes remains UNMET. Existing workstation PR254 is merged as057f2823 and its bytes are preserved.

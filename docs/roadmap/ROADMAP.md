@@ -1,5 +1,9 @@
 # QuantMesh Product Roadmap
 
+## Native IVV producer feasibility — issue272
+
+The approved original IVV route lacks its native provider-bound/held-permit producer implementation. One bounded stdlib-only producer check now targets actual existing-provider feasibility before issuer work. It must report real native facts or an exact failed predicate without SDK, permit, intent or provider changes. Reviewed code and a single pre-publication feasibility check do not qualify capture; actual 32MiB-through-480s/fullRO-sixRW, trusted config/runtime, capture actor, once and normal-close gates remain. See [checkpoint](../iterations/0038-ivv-native-producer.md).
+
 ## Bounded same-unit OpenD private storage — issue263
 
 One32MiB persistent disk image bounds the original c8 console's six writable
