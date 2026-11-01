@@ -620,3 +620,21 @@ Fresh independent R1 reviewed3835 full range and found four Important authorizat
 R1 correction verification now records62passed in the final directly affected subset, scoped Ruff/format and Python3.12 compile-only/diff/submodule checks pass. Exact stage/helper pins are bound in R1-STATIC-FINAL; guard/fixture/drop-in/base/carrier stay frozen. Same-reviewer R2 remains pending; no push/CI/host/native/fifth/SDK/UI.
 
 Diagnostic-1 scoped R2 completed on cd423eb4064eea7d749ebad8ca0cbef456485794: independent agent SpecPASS/QualityREADY, all I1-I4+Minor addressed, zero new findings/out-of-scope items. Faithful4298B report SHA12508a264729159ec5d840ed8179328be530121f019fa1b1731a737682aa3a32 retained; original R1FAIL/RED and current62/static evidence remain. This is technical review under the actual earlier human authorization, not a new human approval or native qualification. Runtime/tests/carrier stay frozen while only plan+iteration closure is committed and normally pushed; Parent owns PR/sole CI/normal merge/catalog. No fifth start, Source host action, SDK, UI or old-state reset occurred.
+
+
+### PR271 ambient fast-gate repair checkpoint
+
+The first exact-head CI41293273729 fast job failed when its broad ambient install
+lacked six and had python-dateutil version drift. The original CI Publisher owns
+the repair: reviewed commit322d522 changes only tests/test_security.py so the
+ambient license check classifies installed exact-pinned members; the isolated
+production release still rejects missing and wrong-version closure members.
+Publisher evidence records genuine synthetic RED1, focused GREEN4, the combined
+LicenseReview/ClosureContract/AuditLock22passed, and scoped Ruff/format/diff PASS.
+Independent agent Spec PASS/Quality READY has no Important finding; this is not
+human or native qualification. The exact commit was integrated by fast-forward,
+then this docs-only checkpoint; no tests were rerun during integration. OpenD
+runtime/tests, the six CI-profile carrier blobs, production license tool, locks
+and workflows remain byte-identical to5534. New exact-head CI is pending; Parent
+is its only watcher. Native draft remains DISARMED, with no host/Source CLI,
+fifth start, SDK or window action. Refs #263.
