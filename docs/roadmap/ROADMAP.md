@@ -735,3 +735,7 @@ unknown despite a complete current ATTEMPTED marker. A bounded c8/schema4-only
 launcher witness is an independent diagnostic software slice, not a cause fix or
 new execution grant. Existing consumed-marker protocol blocks another start;
 backend/private window/SDK remain unmet. See the invocation-witness design/plan.
+
+### 2026-11-01 diagnostic-1 bounded software follow-up
+
+Refs #263: fixed c8 schema5 diagnostic authority preserves permanently spent legacy consumption and original claim/history while enforcing a source-side <=90s deadline. Local affected software checks pass; independent review/publication and the separately gated single diagnostic fifth start remain pending. This is an exit-witness diagnostic, not a demonstrated root-cause repair or backend/login/window/SDK acceptance.

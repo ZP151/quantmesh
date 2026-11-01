@@ -87,21 +87,43 @@ class Control:
     nonce: str
     file_identity: dict
     digest: str
+    runtime_deadline: float | None = None
+
+    @property
+    def is_diagnostic(self):
+        return (
+            self.claims.get("schema_version") == 5
+            and self.claims.get("diagnostic_id") == "diagnostic-1"
+        )
+
+    @property
+    def consumption_name(self):
+        return self.nonce + (".diagnostic-1.recovery" if self.is_diagnostic else ".recovery")
+
+    def _active_protocol(self):
+        _require(
+            self.ops,
+            self.nonce != PRIVATE_STORAGE_NONCE or self.is_diagnostic,
+            "duplicate_recovery",
+        )
 
     def _shape(self):
         ops, c = self.ops, self.claims
         _require(ops, type(c) is dict)
-        private_storage = c.get("schema_version") == 4
+        diagnostic = c.get("schema_version") == 5
+        private_storage = c.get("schema_version") in (4, 5)
         fields = ops.FIELDS | EXTRA_FIELDS
         if private_storage:
             fields = fields | {"storage_profile_sha256"}
+        if diagnostic:
+            fields = fields | {"diagnostic_id", "spent_recovery"}
         _require(ops, set(c) == fields)
         _require(ops, _hex(self.nonce, 32))
         if private_storage:
             _require(ops, self.nonce == PRIVATE_STORAGE_NONCE and _hex(c["storage_profile_sha256"]))
         exact = dict(
-            schema_version=4 if private_storage else 3,
-            purpose="opend_same_unit_recovery",
+            schema_version=5 if diagnostic else 4 if private_storage else 3,
+            purpose="opend_fixed_diagnostic_recovery" if diagnostic else "opend_same_unit_recovery",
             nonce=self.nonce,
             unit="quantmesh-opend-console@" + self.nonce + ".service",
             tmux_version="3.4",
@@ -109,10 +131,10 @@ class Control:
             tmux_sha256=ops.TMUX_SHA,
             vendor_sha256=ops.VENDOR_SHA,
             ci_conclusion="success",
-            max_seconds=180,
+            max_seconds=90 if diagnostic else 180,
             human_reviewers=["Operator"],
             safety_owner="Operator",
-            session_lifetime="until_operator_stop",
+            session_lifetime="bounded_diagnostic" if diagnostic else "until_operator_stop",
             operator_window_approved=True,
             new_device_approved=True,
             market_right_transfer_approved=True,
@@ -125,7 +147,7 @@ class Control:
             ops, all(type(c[k]) is int and 0 < c[k] < 2**31 for k in ("gateway_uid", "gateway_gid"))
         )
         start, end = ops._utc(c["not_before"]), ops._utc(c["expires_at"])
-        _require(ops, 0 < (end - start).total_seconds() <= 300)
+        _require(ops, 0 < (end - start).total_seconds() <= (90 if diagnostic else 300))
         old = c["original_claim"]
         _identity_shape(ops, old)
         _require(
@@ -148,8 +170,31 @@ class Control:
             and 0 < prior["identity"]["size"] <= 32768,
         )
 
+        if diagnostic:
+            _require(ops, c["diagnostic_id"] == "diagnostic-1")
+            spent = c["spent_recovery"]
+            _require(ops, type(spent) is dict and set(spent) == {"control", "marker"})
+            for key in ("control", "marker"):
+                item = spent[key]
+                _require(
+                    ops,
+                    type(item) is dict
+                    and set(item) == {"identity", "sha256"}
+                    and _hex(item["sha256"]),
+                )
+                _identity_shape(ops, item["identity"])
+                stamp = item["identity"]
+                _require(
+                    ops,
+                    stamp["uid"] == (0 if key == "control" else 997)
+                    and stamp["gid"] == (0 if key == "control" else 987)
+                    and stamp["mode"] == (0o444 if key == "control" else 0o600)
+                    and 0 < stamp["size"] <= (32768 if key == "control" else 1024),
+                )
+
     def validate(self, *, now, identity, hashes):
         self._shape()
+        self._active_protocol()
         ops, c = self.ops, self.claims
         _require(
             ops,
@@ -168,6 +213,7 @@ class Control:
 
     @contextmanager
     def release_lease(self):
+        self._active_protocol()
         ops = self.ops
         with ExitStack() as stack:
             control = stack.enter_context(ops._protected_fd(ops.RECOVERY_PERMIT))
@@ -179,7 +225,16 @@ class Control:
                 dir_fd=directory,
             )
             stack.callback(ops.os.close, claim)
-            lease = Lease(self, control, prior, directory, claim)
+            history = old_marker = None
+            if self.is_diagnostic:
+                history = stack.enter_context(ops._protected_fd(ops.RECOVERY_HISTORY))
+                old_marker = ops.os.open(
+                    self.nonce + ".recovery",
+                    ops.os.O_RDONLY | ops.os.O_NOFOLLOW | ops.os.O_NONBLOCK,
+                    dir_fd=directory,
+                )
+                stack.callback(ops.os.close, old_marker)
+            lease = Lease(self, control, prior, directory, claim, history, old_marker)
             stack.callback(lease.close)
             lease.check()
             lease.require_unspent()
@@ -191,19 +246,31 @@ class Control:
 
 
 class Lease:
-    def __init__(self, control, control_fd, prior_fd, directory_fd, claim_fd):
+    def __init__(
+        self,
+        control,
+        control_fd,
+        prior_fd,
+        directory_fd,
+        claim_fd,
+        history_fd=None,
+        old_marker_fd=None,
+    ):
         self.control = control
         self.control_fd = control_fd
         self.prior_fd = prior_fd
         self.directory = directory_fd
         self.directory_identity = _directory_stamp(control.ops.os.fstat(directory_fd))
         self.claim = claim_fd
+        self.history = history_fd
+        self.old_marker = old_marker_fd
         self.marker = None
         self.marker_identity = None
 
     def check(self):
         c, ops = self.control, self.control.ops
         c._shape()
+        c._active_protocol()
         _require(
             ops,
             ops._utc(c.claims["not_before"])
@@ -251,10 +318,12 @@ class Lease:
                 and _stamp(held) == _stamp(named) == c.claims["original_claim"],
                 "claim_changed",
             )
+            if c.is_diagnostic:
+                self._check_spent(current_directory)
             if self.marker is not None:
                 held = ops.os.fstat(self.marker)
                 named = ops.os.stat(
-                    c.nonce + ".recovery", dir_fd=current_directory, follow_symlinks=False
+                    c.consumption_name, dir_fd=current_directory, follow_symlinks=False
                 )
                 _require(
                     ops,
@@ -263,12 +332,62 @@ class Lease:
                     and _stamp(held) == _stamp(named) == self.marker_identity,
                 )
 
+    def _check_spent(self, directory):
+        c, ops = self.control, self.control.ops
+        historical = None
+        for key, fd, maximum in (
+            ("control", self.history, 32768),
+            ("marker", self.old_marker, 1024),
+        ):
+            raw, identity = _read(ops, fd, maximum)
+            expected = c.claims["spent_recovery"][key]
+            _require(
+                ops,
+                identity == expected["identity"]
+                and hashlib.sha256(raw).hexdigest() == expected["sha256"],
+            )
+            if key == "control":
+                with ops._protected_fd(ops.RECOVERY_HISTORY) as named:
+                    _require(ops, _stamp(ops.os.fstat(named)) == identity)
+                historical = ops._json(raw)
+                old = Control(ops, historical, c.nonce, identity, expected["sha256"])
+                old._shape()
+                _require(ops, historical["schema_version"] == 4)
+                _require(
+                    ops,
+                    all(
+                        historical[k] == c.claims[k]
+                        for k in (
+                            "nonce",
+                            "unit",
+                            "machine_sha256",
+                            "gateway_uid",
+                            "gateway_gid",
+                            "original_claim",
+                            "prior_permit",
+                            "storage_profile_sha256",
+                        )
+                    ),
+                )
+            else:
+                named = ops.os.stat(c.nonce + ".recovery", dir_fd=directory, follow_symlinks=False)
+                _require(ops, stat.S_ISREG(named.st_mode) and _stamp(named) == identity)
+                _require(
+                    ops,
+                    ops._json(raw)
+                    == dict(
+                        schema_version=1,
+                        state="ATTEMPTED",
+                        purpose="opend_same_unit_recovery_consumed",
+                        nonce=c.nonce,
+                        control_sha256=c.claims["spent_recovery"]["control"]["sha256"],
+                    ),
+                )
+
     def require_unspent(self):
         ops = self.control.ops
         try:
-            ops.os.stat(
-                self.control.nonce + ".recovery", dir_fd=self.directory, follow_symlinks=False
-            )
+            ops.os.stat(self.control.consumption_name, dir_fd=self.directory, follow_symlinks=False)
         except FileNotFoundError:
             return
         raise ops.StageDenied("duplicate_recovery")
@@ -280,7 +399,7 @@ class Lease:
         self.check()
         try:
             self.marker = ops.os.open(
-                c.nonce + ".recovery",
+                c.consumption_name,
                 ops.os.O_WRONLY | ops.os.O_CREAT | ops.os.O_EXCL | ops.os.O_NOFOLLOW,
                 0o600,
                 dir_fd=self.directory,
@@ -336,4 +455,11 @@ def load(ops, nonce):
         _require(ops, identity["uid"] == 0 and identity["mode"] == 0o444 and identity["nlink"] == 1)
     result = Control(ops, ops._json(raw), nonce, identity, hashlib.sha256(raw).hexdigest())
     result._shape()
+    if result.is_diagnostic:
+        remaining = min(
+            90, (ops._utc(result.claims["expires_at"]) - ops.datetime.now(ops.UTC)).total_seconds()
+        )
+        result = Control(
+            ops, result.claims, nonce, identity, result.digest, ops.time.monotonic() + remaining
+        )
     return result

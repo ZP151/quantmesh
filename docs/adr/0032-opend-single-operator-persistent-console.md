@@ -163,3 +163,7 @@ alone cannot admit another invocation. An independent protocol disposition is
 required before a future diagnostic execution; this software does not reset or
 extend recovery generations. See the invocation-witness design/plan and active
 storage iteration for tests, review and publication boundaries.
+
+## 2026-11-01 fixed diagnostic-1 exception (software pending publication)
+
+Actual human authorization permits one independently consumed, bounded diagnostic; it does not revive the c8 schema3/4 authority or prove the earlier exit cause. Schema5 is limited to diagnostic-1, the same unit/host/claim/image and protected old-control/ATTEMPTED evidence. Its exclusive fixed marker is permanently spent on any creation. Source uses one signed <=90s expiry with a frozen monotonic deadline, a remaining-budget child alarm and existing owned cleanup; ordinary non-c8 legacy persistent sessions retain their lifetime. Witness eligibility explicitly covers this fixed diagnostic without making ACK/EOF/ATTEMPTED an exec proof. Existing private/off/RO3/sixRW/twoRO/guard invariants are unchanged. See the diagnostic-1 spec/plan for the bounded protocol and future-only no-replace public control/config preservation; no native fifth start, SDK, account, market or UI acceptance is claimed.

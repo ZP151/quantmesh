@@ -585,3 +585,30 @@ or the earlier exit cause. Backend/window/SDK and a fifth start remain unapprove
 Parent's diagnostic-1 proposal is separate and unimplemented. Parent owns normal
 exact-head publication/CI/catalog after this branch's ordinary push; no force,
 new protocol or operational action follows from software READY.
+
+
+## Fixed diagnostic-1 approved design checkpoint
+
+Actual human approval call_667904a5ea5645c4b62f045ccb4782b6 is recorded in Root
+resume-after-pr270-20261101.json; historical unapproved proposal remains unchanged.
+[design](../superpowers/specs/2026-11-01-opend-diagnostic-1.md) and
+[plan](../superpowers/plans/2026-11-01-opend-diagnostic-1.md) define strict schema5,
+fixed diagnostic-1 consumption and heldRO original spent evidence, same unit/image/
+claim/prior, source-enforced90s with no timing rebase. Source guard's only runtime
+change will be explicit fixed5 eligibility, not a kernel exception. Old control
+may be renamed only to fixed protected history with REAL post-rename stamps;
+old consumed files/claim are never renamed/deleted/reset. Known runtime public
+artifact collisions are pre-start STOP risks, not unapproved cleanup permission.
+Planner scoped one task; Quant no data/math/SDK/trial; Implementer design only,
+no fetch/branch/code/test/host; Reviewer Parent scan pending; Verifier fresh local
+physical/authority pins only. Source40MiB was registered once; old holds/failures
+and new8MiB finite envelope remain, N24/remote72/ops8 unchanged. Conditional fifth
+is not executed; backend/window/SDK remain UNMET.
+
+### 2026-11-01 fixed diagnostic-1 software checkpoint (Refs #263)
+
+Planner: actual human approval and Parent design/conflict scan select exactly one schema5/diagnostic-1 authority, held old schema4-control/ATTEMPTED evidence and <=90s source-enforced lifetime; future fifth start remains unexecuted/conditional. Shared interfaces are strict recovery shape/name/lease, stage witness+deadline, storage eligibility and mechanical pins. No marker/claim reset or new manager/resources. Quant: no dataset, SDK, strategy, market/order or confidence-promotion work. Implementer: branch codex/0038-opend-diagnostic-1 from freshly fetched actual b8ce; old branches/localmain retained. Old c8 schema3/4 active grants stay spent; ordinary non-c8 legacy lifetime remains. Child remaining alarm and parent frozen monotonic deadline do not restart after consume.
+
+Verifier: genuine old-source RED9failed/12passed; first protocol GREEN21; direct actual-spawn RED4failed then corrected signature; exhausted-deadline category RED2failed/1passed then distinct DEADLINE frame. Initial path harness21setup errors, duration expectation2fail, affected first30fail/118pass (synthetic digest/clock setup), and intermediate spawn error-expectation1fail/16pass all retained separately, not relabeled as successful TDD. Final current-code direct affected run:279passed/42Windows-POSIX-skipped, scoped Ruff/format/Python3.12 compile-only/diff/submodule checks pass. No staging-host/native qualification. Reviewer: fresh Parent-assigned R1 pending, at most one known-fixR2. Actual four starts/old ATTEMPTED/original claim persist; backend/window/cause/SDK remain unqualified.
+
+Capacity: initial private-test4MiB next-run forecast stopped before execution; retained artifacts were not deleted. Actual Root net4MiB supplement after prior8MiB makes Source44MiB/newpurpose12MiB, fullforward46026680<46137344 with oldforward33443768 preserved. The private9MiB tmp envelope includes directory allocation, unique basetemp/-B/no cacheprovider and retained failures. No hold refund/borrowing or additional execution permission is inferred.

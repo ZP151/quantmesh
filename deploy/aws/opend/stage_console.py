@@ -43,6 +43,7 @@ LAUNCHER = BASE / "stage_console.py"
 PERMIT = Path("/etc/quantmesh/opend/staging-window.json")
 PERSISTENT_PERMIT = Path("/etc/quantmesh/opend/persistent-session.json")
 RECOVERY_PERMIT = Path("/etc/quantmesh/opend/persistent-recovery.json")
+RECOVERY_HISTORY = Path("/etc/quantmesh/opend/persistent-recovery-c8-schema4-history.json")
 PRIVATE_STORAGE_NONCE = "c8f0d0de4ca641a491fca6df24c66ceb"
 PRIVATE_STORAGE_DROPIN = Path(
     "/etc/systemd/system/quantmesh-opend-console@"
@@ -50,8 +51,8 @@ PRIVATE_STORAGE_DROPIN = Path(
     + ".service.d/30-private-storage.conf"
 )
 PRIVATE_STORAGE_DROPIN_SHA = "c8a5b6517e2861cb5f20f6bc610f259a3d8964dcd62f7409d17d84a007f06c68"
-PRIVATE_STORAGE_SHA = "d2addaa991a5b22eff531ccb5891add5c4849ca1357f1c7ba83455b4dc907e30"
-RECOVERY_SHA = "761f5078f906d734d17bdeab6369bffd09578be5602d161682cb10470d0aee9d"
+PRIVATE_STORAGE_SHA = "2d494084781ece33d2be718b531df4d319751ba65b2ba4d6d76a39f0730577d6"
+RECOVERY_SHA = "94f6660e68cdeb129fc62c402d0114f9f379dba9b873436d903b63a5919e5071"
 PROFILE = Path("/etc/quantmesh/opend/gateway-profile.json")
 CONFIG = Path("/etc/quantmesh/opend/OpenD.xml")
 VENDOR = BASE / "10.10.7008/OpenD"
@@ -142,6 +143,12 @@ class RecoveryWindow:
     @property
     def persistent(self):
         return True
+
+
+def _runtime_persistent(window):
+    return window.persistent and not (
+        isinstance(window, RecoveryWindow) and window.control.is_diagnostic
+    )
 
 
 def _utc(value):
@@ -825,6 +832,13 @@ def start_staging_console(window):
     deadline = time.monotonic() + min(
         window.claims["max_seconds"], (window.expires - datetime.now(UTC)).total_seconds()
     )
+    runtime_persistent = _runtime_persistent(window)
+    diagnostic_deadline = None
+    if isinstance(window, RecoveryWindow) and window.control.is_diagnostic:
+        diagnostic_deadline = window.control.runtime_deadline
+        if diagnostic_deadline is None:
+            raise StageDenied("deadline")
+        deadline = min(deadline, diagnostic_deadline)
     try:
         _witness_event("PANE_CONTEXT_OK")
         _unclaimed(window)
@@ -852,12 +866,17 @@ def start_staging_console(window):
                 tuple(held),
                 fixture=False,
                 seconds=0
-                if window.persistent
+                if runtime_persistent
                 else min(900, math.ceil(deadline - time.monotonic())),
                 executable=executable,
                 vendor_argv=profile["runtime"]["argv"],
                 registry=registered,
-                **({"persistent": True} if window.persistent else {}),
+                **({"persistent": True} if runtime_persistent else {}),
+                **(
+                    {"diagnostic_deadline": diagnostic_deadline}
+                    if diagnostic_deadline is not None
+                    else {}
+                ),
             )
 
             def final_admission():
@@ -908,7 +927,7 @@ def start_staging_console(window):
             else:
                 child.release(final_admission, deadline=deadline, expires=window.expires)
             while child.alive():
-                if window.persistent:
+                if runtime_persistent:
                     # Freshness was checked immediately before release. Once released,
                     # this explicit Operator session lasts until owned stop/exit.
                     if select.select([context["backend_pidfd"]], [], [], 0)[0]:
@@ -925,7 +944,13 @@ def start_staging_console(window):
             child.close()
         return dict(
             status="stopped",
-            scope="PERSISTENT_PRIVATE_CONSOLE_ONLY" if window.persistent else "EXPIRING_STAGE_ONLY",
+            scope=(
+                "BOUNDED_DIAGNOSTIC_ONLY"
+                if diagnostic_deadline is not None
+                else "PERSISTENT_PRIVATE_CONSOLE_ONLY"
+                if runtime_persistent
+                else "EXPIRING_STAGE_ONLY"
+            ),
             **FALSE_FLAGS,
             child_terminal=child.terminal,
             child_returncode=child.returncode,
@@ -1002,7 +1027,7 @@ _WITNESS_STAGES = frozenset(
         "TERMINAL",
     )
 )
-_CHILD_FAILURES = ("PARENT", "TIMEOUT", "GATE", "SETUP", "CHDIR", "EXEC", "OTHER")
+_CHILD_FAILURES = ("PARENT", "TIMEOUT", "GATE", "SETUP", "CHDIR", "EXEC", "OTHER", "DEADLINE")
 _WITNESS_TYPES = frozenset(("StageDenied", "OSError", "ValueError", "KeyboardInterrupt", "OTHER"))
 _WITNESS_ERRNOS = frozenset(
     (0, 1, 2, 5, 7, 8, 9, 11, 12, 13, 14, 20, 22, 23, 24, 26, 28, 30, 32, 36, 40, 80)
@@ -1013,7 +1038,10 @@ def _witness_enabled(window, claims):
     return (
         window.persistent
         and window.nonce == PRIVATE_STORAGE_NONCE
-        and claims.get("schema_version") == 4
+        and (
+            claims.get("schema_version") == 4
+            or (claims.get("schema_version") == 5 and claims.get("diagnostic_id") == "diagnostic-1")
+        )
     )
 
 
@@ -1281,7 +1309,9 @@ def _witness_binding(*, pane):
             return None
         raise
     claims = _json(raw)
-    if claims.get("schema_version") != 4:
+    if claims.get("schema_version") != 4 and not (
+        claims.get("schema_version") == 5 and claims.get("diagnostic_id") == "diagnostic-1"
+    ):
         return None
     if claims.get("nonce") != PRIVATE_STORAGE_NONCE:
         raise StageDenied("context_denied")
@@ -1640,6 +1670,7 @@ def _child(
     executable,
     vendor_argv,
     persistent=False,
+    diagnostic_deadline=None,
 ):
     """Gated child; terminal descriptors pass directly, with no relay or capture."""
     phase = "SETUP"
@@ -1681,6 +1712,11 @@ def _child(
 
             os.setsid()
             fcntl.ioctl(0, termios.TIOCSCTTY, 0)
+        if diagnostic_deadline is not None:
+            seconds = min(seconds, diagnostic_deadline - time.monotonic())
+            if seconds <= 0:
+                _child_fail(report, "DEADLINE", None, diagnostic)
+                os._exit(40)
         signal.setitimer(signal.ITIMER_REAL, 0 if persistent else seconds)
         os.write(report, b"R")
         if not fixture:
@@ -1726,6 +1762,7 @@ def _spawn_gated(
     vendor_argv=None,
     registry=None,
     persistent=False,
+    diagnostic_deadline=None,
 ):
     global _WITNESS
     _native()
@@ -1734,6 +1771,14 @@ def _spawn_gated(
     if (
         role not in {"blocked", "parent"}
         or type(persistent) is not bool
+        or (
+            diagnostic_deadline is not None
+            and (
+                persistent
+                or type(diagnostic_deadline) not in (int, float)
+                or not math.isfinite(diagnostic_deadline)
+            )
+        )
         or not (seconds == 0 if persistent else 0 < seconds <= 900)
     ):
         raise StageDenied("context_denied")
@@ -1776,6 +1821,7 @@ def _spawn_gated(
                 executable,
                 vendor_argv,
                 persistent,
+                diagnostic_deadline,
             )
             os._exit(41)
         os.close(gate_r)
