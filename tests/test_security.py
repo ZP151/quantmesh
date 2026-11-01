@@ -207,30 +207,67 @@ class TestLicenseReview:
     def test_every_installed_closure_member_classifies_allowed(
         self,
     ) -> None:
-        """The closure contract: classification covers the pinned
-        release closure (requirements-audit.txt), never the ambient
-        environment. Installed closure members must classify to an
-        allowed license; members absent on this platform (the
-        documented Linux-only set) are tolerated."""
+        """Classify exact pinned members present in the ambient fast environment.
+
+        Broad-range installs may omit or change transitive members. This test
+        does not certify those versions; the isolated release review enforces
+        the complete pinned closure, including missing and wrong versions.
+        """
         review = _load_license_review()
         installed = {d.metadata["Name"]: d for d in review.md.distributions()}
         closure = review.read_closure()
         assert len(closure) >= 40, "the audit lock is suspiciously thin"
         for name in closure:
-            if name in review.PLATFORM_TOLERATED and name not in installed:
+            dist = installed.get(name)
+            if dist is None or dist.version != closure[name]:
                 continue
-            assert name in installed, (
-                f"{name} is pinned in requirements-audit.txt but not "
-                "installed — incomplete release environment"
-            )
-            # The fast gate installs the broad pyproject ranges, not the
-            # deterministic release closure. A newer ambient distribution is
-            # not the pinned member whose license is recorded in this lock;
-            # tools/license_review.review enforces exact versions in release.
-            if installed[name].version != closure[name]:
-                continue
-            key = review.classify(installed[name])
-            assert not key.startswith("UNKNOWN"), f"{name} {installed[name].version}: {key}"
+            key = review.classify(dist)
+            assert not key.startswith("UNKNOWN"), f"{name} {dist.version}: {key}"
+
+    def test_ambient_transitive_drift_does_not_claim_a_new_license(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        closure = {"six": "1.17.0", "python-dateutil": "2.9.0.post0"}
+        closure.update({f"package-{number:02d}": "1.0" for number in range(38)})
+        installed = [
+            _FakeDist("python-dateutil", "4.0.0", **{"License-Expression": "GPL-3.0-only"}),
+            _FakeDist("package-00", "1.0", **{"License-Expression": "MIT"}),
+        ]
+        monkeypatch.setattr(review, "md", _FakeMetaModule(installed))
+        monkeypatch.setattr(review, "read_closure", lambda: closure)
+        classified = []
+        original_classify = review.classify
+
+        def classify(dist):
+            classified.append((dist.metadata["Name"], dist.version))
+            return original_classify(dist)
+
+        monkeypatch.setattr(review, "classify", classify)
+        monkeypatch.setitem(globals(), "_load_license_review", lambda: review)
+
+        self.test_every_installed_closure_member_classifies_allowed()
+        assert classified == [("package-00", "1.0")]
+
+        _, failures, _, _ = review.review(closure)
+        assert any("six==1.17.0" in failure and "not installed" in failure for failure in failures)
+        assert any(
+            "python-dateutil==2.9.0.post0" in failure and "installed version is 4.0.0" in failure
+            for failure in failures
+        )
+
+    def test_ambient_exact_pin_still_refuses_unknown_license(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        review = _load_license_review()
+        closure = {f"package-{number:02d}": "1.0" for number in range(40)}
+        installed = [_FakeDist("package-00", "1.0", **{"License-Expression": "GPL-3.0-only"})]
+        monkeypatch.setattr(review, "md", _FakeMetaModule(installed))
+        monkeypatch.setattr(review, "read_closure", lambda: closure)
+        monkeypatch.setitem(globals(), "_load_license_review", lambda: review)
+
+        with pytest.raises(AssertionError, match="package-00 1.0: UNKNOWN"):
+            self.test_every_installed_closure_member_classifies_allowed()
 
     def test_licenses_doc_inventories_exactly_the_closure(self) -> None:
         """docs/licenses.md is the closure inventory: its rows must
