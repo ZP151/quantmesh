@@ -40,6 +40,12 @@ SAFE-FEASIBILITY.raw343 bytes / SHA256 e01570862ddcdc37f44c55d8332056a3aa8c7eeb0
 
 Minimum disposition: retain this logged-in provider without issuing original capture authority; the owner must select a separately enforceable provider-bound finite-storage arrangement before dependent issuance can resume. Changing the live provider, substituting c8's image/certificate, or relaxing the original32MiB/full-readonly/six-write contract is outside this check. Issue272 and original259 remain open. Normal software publication/CI is separate from actual provider qualification.
 
+### Normal publication preparation
+
+The previously reviewed CI-export fix b833dcce72bfb558af29b822a0c40e80743f48f3 was imported without conflict as4809575e3a18b048af467ec660bca6bfe3714073; all three carried paths are byte-exact to that reviewed commit. It rides this producer's naturally required release CI; no separate workflow run or optimization claim. A fresh existing-runtime pytest check passed47 (37 producer tests plus10 new export cases),22 unrelated release-gate cases deselected. Scoped materialized tools/tests Ruff, four changed-source formatting, whitespace and exact carrier comparison passed. Full repository gates remain for normal matching-head CI, not this sparse checkout.
+
+Parent independently verified the native safe/transport/final receipt hashes and actual closure. PARENT-CLOSEOUT.json3603 bytes / SHA2564ffa8a06b45c4e4bf48d95faad7fa8fabf4e2d6c91590d2cce41405417f1e1d4 records the47-test result and retained local fixture-ACL sealing failures/correction. Fresh whole-purpose readback125 paths/0 failures; physical actual1987376 bytes plus8192 report upper remains within fixed8MiB. Native actual83272 stays within786432; all old capture/source/N holds and unused futures remain charged. Production issuance and original input/trial acceptance remain unmet.
+
 No provider stop/restart/mount/config/permission/runtime installation, c8 fifth start, private payload/env/argv/XML/key reads, health probe, new signing service or automatic retry. The separate producer purpose is 8388608 bytes including code/Git/tests/failures/review/catalog/one bounded native check and closure. All earlier holds/failures remain.
 
 Initial worktree --no-checkout created an empty index; explicit read-tree with the sparse patterns populated only the selected baseline, leaving index/worktree clean. The native app worktree API cannot request sparse checkout and cannot attach the manual sparse tree; all operations use the explicit isolated path. No old worktree/index was changed.
