@@ -5,7 +5,7 @@ import hashlib
 import json
 import os
 import stat
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import SimpleNamespace
 
 import pytest
@@ -15,6 +15,55 @@ from test_ivv_dev_diagnostic import dev_module, dev_plan, policy
 FAMILY = ".dev-trusted-environment.v1"
 AUTH = "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452"
 ASSURANCE = "UNVERIFIED_TRUSTED_EXTERNAL"
+
+
+def _kernel_path_arguments(args, aliases, path_type):
+    """Preserve known physical fixture paths before projecting logical prefixes."""
+    if not args:
+        return args
+    value = os.fspath(args[0]).replace("\\", "/")
+    candidate = path_type(value)
+    if any(candidate == actual or candidate.is_relative_to(actual) for _, actual in aliases):
+        return args
+    for logical, actual in aliases:
+        if value == logical or value.startswith(logical + "/"):
+            return (actual / value[len(logical) :].lstrip("/"), *args[1:])
+    return args
+
+
+@pytest.mark.parametrize("prefix", ["/tmp/fixture", "/home/runner/work/_temp/fixture"])
+@pytest.mark.parametrize(
+    "logical", ["/child", "/sdk", "/home", "/once", "/usr", "/source", "/controls"]
+)
+@pytest.mark.parametrize("physical", [False, True])
+def test_connected_kernel_path_arguments_preserve_physical_and_project_logical(
+    prefix, logical, physical
+):
+    root = PurePosixPath(prefix)
+    aliases = [
+        (name, root / name.lstrip("/"))
+        for name in ("/child", "/sdk", "/home", "/once", "/usr", "/source", "/controls")
+    ]
+    actual = dict(aliases)[logical]
+    value = str(actual) if physical else logical
+    projected = _kernel_path_arguments((value, "nested", "file"), aliases, PurePosixPath)
+    assert PurePosixPath(*projected) == actual / "nested/file"
+
+
+@pytest.mark.parametrize("value", ["/homey/file", "/source-other/file", "relative/file"])
+def test_connected_kernel_path_arguments_do_not_match_similar_logical_prefixes(value):
+    root = PurePosixPath("/home/runner/work/_temp/fixture")
+    aliases = [("/home", root / "home"), ("/source", root / "source")]
+    assert _kernel_path_arguments((value,), aliases, PurePosixPath) == (value,)
+
+
+def test_connected_kernel_path_arguments_do_not_whitelist_a_physical_sibling():
+    root = PurePosixPath("/home/runner/work/_temp/fixture")
+    aliases = [("/home", root / "home"), ("/controls", root)]
+    value = "/home/runner/work/_temp/fixture-sibling/file"
+    projected = _kernel_path_arguments((value,), aliases, PurePosixPath)
+    assert PurePosixPath(*projected) == root / "home/runner/work/_temp/fixture-sibling/file"
+    assert PurePosixPath(*projected) != PurePosixPath(value)
 
 
 def trusted_plan(m):
@@ -1812,22 +1861,10 @@ def connected_acquisition_kernel(r, kernel, monkeypatch, tmp_path, local, d, m, 
 
     class KernelPath(Base):
         def __init__(self, *args):
-            if args:
-                value = os.fspath(args[0]).replace("\\", "/")
-                for logical, actual in aliases:
-                    if value == logical or value.startswith(logical + "/"):
-                        args = (actual / value[len(logical) :].lstrip("/"), *args[1:])
-                        break
-            super().__init__(*args)
+            super().__init__(*_kernel_path_arguments(args, aliases, RealPath))
 
         def __new__(cls, *args):
-            if args:
-                value = os.fspath(args[0]).replace("\\", "/")
-                for logical, actual in aliases:
-                    if value == logical or value.startswith(logical + "/"):
-                        args = (actual / value[len(logical) :].lstrip("/"), *args[1:])
-                        break
-            return super().__new__(cls, *args)
+            return super().__new__(cls, *_kernel_path_arguments(args, aliases, RealPath))
 
         def real(self):
             return RealPath(Base.__str__(self))
