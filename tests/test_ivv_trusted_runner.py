@@ -194,7 +194,8 @@ def test_ready_gate_runtime_cannot_omit_installed_sdk_search_origin(monkeypatch)
     assert observed == [{"op": "ready"}]
 
 
-def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeypatch):
+@pytest.mark.parametrize("pidfd_first", [False, True])
+def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeypatch, pidfd_first):
     """Real immutable bytes cross every policy/permit/capture/seal/import boundary.
 
     Only Linux metadata/IPC/provider observations and the SDK are modeled. This
@@ -213,11 +214,14 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         tmp_path, monkeypatch, registration=registration
     )
     r = runner()
+    child_root = tmp_path / "child"
+    child_root.mkdir()
+    root = child_root / "capture"
     auth = kwargs["expected_authorization_sha256"]  # fictional authority, never actual once
     for owner, name in ((r, "AUTH"), (m, "TRUSTED_AUTH"), (v, "TRUSTED_AUTH")):
         monkeypatch.setattr(owner, name, auth)
     monkeypatch.setattr(r, "CONTROL", tmp_path)
-    monkeypatch.setattr(r, "CHILD", tmp_path)
+    monkeypatch.setattr(r, "CHILD", child_root)
     monkeypatch.setattr(r, "RECEIPT", root)
     monkeypatch.setattr(r, "LEDGER", m.ONCE_LEDGER)
 
@@ -228,6 +232,7 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         return {"path": str(target), "sha256": hashlib.sha256(target.read_bytes()).hexdigest()}
 
     plan = json.loads(Path(old_ref["path"]).read_bytes())
+    plan["receipt_root"] = str(root)
     plan["schema_id"] = "qm.ivv.capture-plan" + FAMILY
     material = json.loads(Path(plan["policy_ref"]["path"]).read_bytes())
     material.update(
@@ -237,10 +242,28 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
     )
     material["exceptions"].append("external_provider_terminal_ipc_socket_environment")
     plan["policy_ref"] = body("policy", material)
-    pins = json.loads(Path(plan["sdk_pins_ref"]["path"]).read_bytes())
-    plan["sdk_pins_ref"] = body("pins", pins)
+    sdk_root = Path(plan["sdk_root"])
+    roles = [
+        "moomoo/quote/open_quote_context.py",
+        "moomoo/pb/Qot_pb2.py",
+        *["moomoo/module" + str(i) + ".py" for i in range(10)],
+    ]
+    pins = {"pins": []}
+    for role in roles:
+        path = sdk_root / role
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"# fixed SDK source\n")
+        pins["pins"].append(
+            {"relative_path": role, "LF_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+        )
+    plan["sdk_pins_ref"] = body("sdk-pins.json", pins)
+    plan["sdk_pins_sha256"] = plan["sdk_pins_ref"]["sha256"]
     catalog = json.loads(Path(kwargs["catalog_ref"]["path"]).read_bytes())
     catalog["trusted_runner_sha256"] = hashlib.sha256(Path(r.__file__).read_bytes()).hexdigest()
+    python = tmp_path / "usr/bin/python3.12"
+    python.parent.mkdir(parents=True)
+    python.write_bytes(b"model interpreter")
+    catalog["python_sha256"] = hashlib.sha256(python.read_bytes()).hexdigest()
     catalog_ref = body("catalog", catalog)
     plan["catalog_sha256"] = catalog_ref["sha256"]
     actor = m._native_actor()
@@ -273,7 +296,9 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         "go_fields_ref": registration["go_fields"],
         "budget_ref": {"G": 1000, "P": 1000},
     }
-    context = (startup, values, d, m, None, None)
+    from test_ivv_native_producer import producer
+
+    context = (startup, values, d, m, None, producer())
     # File ownership and mount observations are the Linux syscall boundary.
     monkeypatch.setattr(os, "lstat", lambda path, **kw: os.stat(path, **kw))
     old_stat, old_fstat = os.stat, os.fstat
@@ -290,7 +315,8 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         old_close(fd)
 
     def metadata(info, path):
-        if path is not None and path.parent == root:
+        actual_root = root.real() if hasattr(root, "real") else root
+        if path is not None and path.parent == actual_root:
             return SimpleNamespace(**{**vars(info), "st_mode": stat.S_IFREG | 0o600})
         return info
 
@@ -317,6 +343,10 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
             self.o.context_created()
             self.o.initializing()
 
+        def close(self):
+            self.clock.value = 389.9
+            super().close()
+
     monkeypatch.setattr(m, "_NativeClock", NativeClock)
     monkeypatch.setattr(m, "_OfficialBackend", lambda o, w, p, c: Backend(m, o, w, c, root))
     import queue
@@ -324,6 +354,7 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
     import threading
 
     done, available = threading.Event(), threading.Event()
+    parent_clock = {"now": 0.0}
     local = threading.local()
     kernel.os.getpid = lambda: 502 if getattr(local, "child", False) else 501
     kernel.os.getppid = lambda: 501
@@ -361,11 +392,18 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
             pass
 
         def send(self, raw):
+            packet = json.loads(raw)
+            if packet.get("op") == "observe" and getattr(acquired, "closed_at", None) == 389.9:
+                parent_clock["now"] = 390.05
+            elif packet.get("op") == "terminal":
+                parent_clock["now"] = 390.1
             self.peer.incoming.put((raw, kernel.os.getpid()))
             available.set()
             return len(raw)
 
         def recvmsg(self, *args):
+            if self.peer.closed and self.incoming.empty():
+                return b"", [], 0, None
             raw, pid = self.incoming.get(timeout=2)
             return (
                 raw,
@@ -384,18 +422,29 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
     monitor.next = 0
 
     def sample():
-        monitor.next = 5
+        monitor.next = 500
         return snapshot
 
     monitor.sample = sample
     monkeypatch.setattr(r, "_Provider", lambda *a: monitor)
-    monkeypatch.setattr(r, "_child_kernel", lambda *a: {"namespace_inode": 44})
-    monkeypatch.setattr(r, "_owned_peer", lambda pid: (101, 102))
-    monkeypatch.setattr(r, "_libcall", lambda *a: None)
-    monkeypatch.setattr(r, "_child_namespace", lambda *a: 44)
-    monkeypatch.setattr(r, "_environment", lambda: None)
-    monkeypatch.setattr(r, "_runtime", lambda *a: {"namespace_inode": 44})
-    monkeypatch.setattr(r.sys, "path", [*r.sys.path])
+    # R1: this connected positive must drive the real acquisition bodies.
+    acquired = connected_acquisition_kernel(r, kernel, monkeypatch, tmp_path, local, d, m, real_d)
+    monkeypatch.setattr(r, "time", SimpleNamespace(monotonic=lambda: parent_clock["now"]))
+    assert r.RELEASE.is_absolute() and r.RELEASE.resolve(strict=True) == r.RELEASE, (
+        str(r.RELEASE),
+        r.RELEASE.drive,
+        r.RELEASE.anchor,
+        str(r.RELEASE.resolve(strict=True)),
+    )
+    root = acquired.Path(root)
+    for ref in startup.values():
+        ref["path"] = str(acquired.Path(ref["path"]))
+    for key, value in plan.items():
+        if type(value) is dict and "path" in value:
+            value["path"] = str(acquired.Path(value["path"]))
+        elif key in ("sdk_root", "receipt_root"):
+            plan[key] = str(acquired.Path(value))
+    monkeypatch.setattr(__import__("test_ivv_dev_diagnostic"), "Path", acquired.Path)
     status = {"rc": 1}
 
     def child_entry():
@@ -404,6 +453,7 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
             r._child(child_channel, 501, context, plan)
             status["rc"] = 0
         except BaseException as error:
+            status["error"] = error
             child_channel.send({"op": "failed", "code": r.reason(error)})
         finally:
             b.closed = True
@@ -415,9 +465,10 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
             available.clear()
             if a.incoming.empty() and not done.is_set():
                 assert available.wait(2), "modeled private IPC stalled"
-        if not a.incoming.empty():
+        if not a.incoming.empty() and not (pidfd_first and done.is_set()):
             return [a], [], []
         assert done.is_set()
+        parent_clock["now"] = 391.0
         kernel.nodes[kernel.handles[scope.leaf] + "/cgroup.procs"]["content"] = ""
         return [scope.pidfd], [], []
 
@@ -431,8 +482,13 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         produced = r._supervise(scope, channel, 6001, context, plan)
     finally:
         child_thread.join(timeout=3)
+        if status.get("error"):
+            raise status["error"]
     assert not child_thread.is_alive() and status["rc"] == 0
+    assert acquired.namespace == 44 and acquired.nnp == 1 and acquired.caps == 0
+    assert acquired.runtime_reads > 12 and acquired.bound_mounts
     assert scope.reaped is True
+    assert acquired.closed_at == 389.9 and produced["elapsed_seconds"] == 391.0
     scope.check_resources()
     scope.remove()
     result = json.loads((root / "capture-manifest.json").read_bytes())
@@ -547,7 +603,7 @@ def test_readonly_source_read_retains_exact_fd_lifetime_and_primary(tmp_path, mo
         )
 
 
-def owned_scope(r, monkeypatch):
+def owned_scope(r, monkeypatch, *, create=True):
     """Kernel boundary: real _Scope ownership checks over literal cgroup2 nodes."""
     nodes, handles, stamps, writes, signals = {}, {}, {}, [], []
     root = "/sys/fs/cgroup/system.slice/owned.service"
@@ -690,8 +746,9 @@ def owned_scope(r, monkeypatch):
     )
     monkeypatch.setattr(r.signal, "SIGKILL", 9, raising=False)
     stack = contextlib.ExitStack()
-    scope = r._Scope(stack)
-    scope.bind(502)
+    scope = r._Scope(stack) if create else None
+    if scope is not None:
+        scope.bind(502)
     return scope, SimpleNamespace(
         nodes=nodes,
         handles=handles,
@@ -1548,7 +1605,9 @@ def test_supervisor_cannot_seal_uncertain_child_or_monitor(monkeypatch, fault):
 
     channel = SimpleNamespace(
         send=lambda packet: None,
-        recv=lambda pid: packets.pop(0),
+        recv=lambda pid: (
+            packets.pop(0) if packets else (_ for _ in ()).throw(r.Refused("CONTROL_EOF"))
+        ),
         check=check,
         s=SimpleNamespace(recv=lambda *a: b""),
     )
@@ -1577,3 +1636,601 @@ def test_supervisor_cannot_seal_uncertain_child_or_monitor(monkeypatch, fault):
     context = ({"budget_ref": {}}, {}, None, helper, None, None)
     with pytest.raises(r.Refused):
         r._supervise(scope, channel, 700, context, {"started_monotonic": 0})
+
+
+@pytest.mark.parametrize(
+    "case", ["pidfd_first", "terminal_after390", "parent_work", "reap_work", "over480"]
+)
+def test_r1_terminal_exit_and_parent_deadlines_are_independent(monkeypatch, case):
+    r = runner()
+    scope, kernel = owned_scope(r, monkeypatch)
+    clock = {"now": 0.0, "step": 0}
+    if case == "reap_work":
+        prior_reap = scope.reap
+
+        def slow_reap():
+            rc = prior_reap()
+            clock["now"] = 465.0
+            return rc
+
+        scope.reap = slow_reap
+    monkeypatch.setattr(r.time, "monotonic", lambda: clock["now"])
+    monitor = SimpleNamespace(next=0, last={})
+
+    def sample():
+        monitor.next = 500
+        if scope.reaped and case in ("parent_work", "over480"):
+            clock["now"] = 465.0 if case == "parent_work" else 480.1
+
+    monitor.sample = sample
+    monkeypatch.setattr(r, "_Provider", lambda *a: monitor)
+    monkeypatch.setattr(r, "_authorize", lambda *a: ({}, {}, {}, {}))
+    monkeypatch.setattr(r, "_child_kernel", lambda *a: {"namespace_inode": 44})
+    monkeypatch.setattr(r, "_owned_peer", lambda *a: (1, 2))
+    packets = [{"op": "ready"}, {"op": "observe"}]
+    if case == "terminal_after390":
+        packets.append({"op": "observe"})
+    packets.append({"op": "terminal", "permit_sha256": "1" * 64, "manifest_sha256": "2" * 64})
+
+    def recv(pid):
+        if packets:
+            return packets.pop(0)
+        raise r.Refused("CONTROL_EOF")
+
+    channel = SimpleNamespace(
+        send=lambda packet: None,
+        recv=recv,
+        check=lambda: None,
+        s=SimpleNamespace(recv=lambda *a: b""),
+    )
+
+    def ready(*a):
+        step = clock["step"]
+        clock["step"] += 1
+        if step < 2:
+            return [channel.s], [], []
+        if case == "terminal_after390" and step in (2, 3):
+            clock["now"] = 390.05 if step == 2 else 390.1
+            return [channel.s], [], []
+        if step == 2 and case != "pidfd_first":
+            clock["now"] = 419.8
+            return [channel.s], [], []
+        clock["now"] = (
+            1.0 if case == "pidfd_first" else 391.0 if case == "terminal_after390" else 419.9
+        )
+        kernel.nodes[kernel.handles[scope.leaf] + "/cgroup.procs"]["content"] = ""
+        return [scope.pidfd], [], []
+
+    monkeypatch.setattr(r, "select", SimpleNamespace(select=ready))
+    monkeypatch.setattr(r.socket, "MSG_DONTWAIT", 64, raising=False)
+    monkeypatch.setattr(r, "_seal", lambda *args: {"elapsed_seconds": args[-1], "kernel": args[-4]})
+    context = ({"budget_ref": {}}, {}, None, leaf(), None, None)
+    if case == "over480":
+        with pytest.raises(r.Refused, match="FINAL_SEAL_DEADLINE"):
+            r._supervise(scope, channel, 700, context, {"started_monotonic": 0})
+    else:
+        result = r._supervise(scope, channel, 700, context, {"started_monotonic": 0})
+        assert result["elapsed_seconds"] == (
+            465.0 if case in ("parent_work", "reap_work") else clock["now"]
+        )
+        assert scope.reaped
+
+
+def test_r1_run_once_keeps_total_events_through_publication(monkeypatch):
+    r = runner()
+    closed = []
+
+    class Scope:
+        def __init__(self, stack):
+            self.leaf = 40
+            stack.callback(closed.append, "total-events")
+
+        def bind(self, pid):
+            assert pid == 502
+
+        def check_resources(self):
+            assert not closed
+
+        def check_final_resources(self):
+            assert not closed
+
+        def remove(self):
+            pass
+
+        def abort(self):
+            return []
+
+    class Socket:
+        def close(self):
+            pass
+
+    monkeypatch.setattr(r, "_Scope", Scope)
+    monkeypatch.setattr(r, "_bootstrap", lambda ref: ({}, {}, None, None, None, None))
+    monkeypatch.setattr(r, "_seed", lambda *a: {"started_monotonic": 0})
+    monkeypatch.setattr(r, "_stdio", lambda: None)
+    monkeypatch.setattr(r, "_fds", lambda: {0, 1, 2})
+    monkeypatch.setattr(r, "_Channel", lambda sock: SimpleNamespace(origin=(1, 700)))
+    monkeypatch.setattr(r, "_supervise", lambda *a: {"state": "NORMAL_EXIT"})
+    monkeypatch.setattr(
+        r, "os", SimpleNamespace(umask=lambda mask: None, getpid=lambda: 501, fork=lambda: 502)
+    )
+    monkeypatch.setattr(r.socket, "socketpair", lambda *a: (Socket(), Socket()))
+    monkeypatch.setattr(r.socket, "SOCK_SEQPACKET", 5, raising=False)
+    monkeypatch.setattr(r.socket, "SOCK_CLOEXEC", 0, raising=False)
+    monkeypatch.setattr(r.socket, "AF_UNIX", 1, raising=False)
+    monkeypatch.setattr(r.time, "monotonic", lambda: 1.0)
+    prior = Path.iterdir
+    monkeypatch.setattr(
+        Path, "iterdir", lambda p: iter([1]) if p.as_posix() == "/proc/self/task" else prior(p)
+    )
+    published = []
+
+    def publish(path, obj):
+        assert not closed, "resource event handles ended before normal publication"
+        published.append(obj)
+        return {"path": str(path), "sha256": "1" * 64}
+
+    monkeypatch.setattr(r, "put", publish)
+    monkeypatch.setattr(r, "_commit_close", lambda ref: r.need(not closed, "EVENTS_CLOSED"))
+    assert r.run_once({})["state"] == "NORMAL_EXIT"
+    assert len(published) == 1 and closed == ["total-events"]
+
+
+def connected_acquisition_kernel(r, kernel, monkeypatch, tmp_path, local, d, m, real_d):
+    """Map a literal Linux kernel into fixture files; no acquisition predicate is stubbed."""
+    import ctypes
+    import sys
+
+    RealPath = Path
+    Base = type(RealPath())
+    home = tmp_path / "home"
+    (home / ".com.moomoo.OpenD/Log").mkdir(parents=True)
+    aliases = [
+        ("/child", tmp_path / "child"),
+        ("/sdk", tmp_path / "sdk"),
+        ("/home", home),
+        ("/once", m.ONCE_LEDGER),
+        ("/usr", tmp_path / "usr"),
+        ("/source", RealPath(r.__file__).parent),
+        ("/controls", tmp_path),
+    ]
+    state = SimpleNamespace(
+        namespace=40,
+        nnp=0,
+        caps=1,
+        connected=False,
+        runtime_reads=0,
+        bound_mounts=[],
+        readonly={},
+        fds={0, 1, 2, 6000, 6001, *kernel.handles},
+        rules={},
+        nextfd=8001,
+    )
+
+    def child():
+        return getattr(local, "child", False)
+
+    class KernelPath(Base):
+        def __init__(self, *args):
+            if args:
+                value = os.fspath(args[0]).replace("\\", "/")
+                for logical, actual in aliases:
+                    if value == logical or value.startswith(logical + "/"):
+                        args = (actual / value[len(logical) :].lstrip("/"), *args[1:])
+                        break
+            super().__init__(*args)
+
+        def __new__(cls, *args):
+            if args:
+                value = os.fspath(args[0]).replace("\\", "/")
+                for logical, actual in aliases:
+                    if value == logical or value.startswith(logical + "/"):
+                        args = (actual / value[len(logical) :].lstrip("/"), *args[1:])
+                        break
+            return super().__new__(cls, *args)
+
+        def real(self):
+            return RealPath(Base.__str__(self))
+
+        def is_absolute(self):
+            return bool(self.drive and self.root) or str(self).startswith("/")
+
+        def __str__(self):
+            raw = Base.__str__(self)
+            actual = RealPath(raw)
+            for logical, root in aliases:
+                if actual == root or actual.is_relative_to(root):
+                    tail = actual.relative_to(root).as_posix()
+                    return logical + ("/" + tail if tail != "." else "")
+            return raw.replace("\\", "/") if raw.startswith("\\") else raw
+
+        def resolve(self, strict=False):
+            name = str(self)
+            if name in ("/proc/self/exe", "/proc/502/exe"):
+                return KernelPath("/usr/bin/python3.12")
+            if name.startswith(("/proc/", "/sys/", "/etc/")):
+                return self
+            return KernelPath(self.real().resolve(strict=strict))
+
+        def stat(self, *, follow_symlinks=True):
+            name = str(self)
+            if name.endswith("ns/mnt"):
+                ns = state.namespace if "/502/" in name or child() else 40
+                return SimpleNamespace(st_ino=ns)
+            if name.endswith("/exe") and name.startswith("/proc/"):
+                return os.stat(tmp_path / "usr/bin/python3.12")
+            if "/fd/" in name and name.startswith("/proc/"):
+                fd = int(self.name)
+                inode = 102 if "/705711/" in name else 101 if fd == 500 else fd
+                return SimpleNamespace(
+                    st_dev=77,
+                    st_ino=inode,
+                    st_uid=0,
+                    st_rdev=259,
+                    st_mode=stat.S_IFCHR | 0o600 if fd in (0, 1, 2) else stat.S_IFSOCK | 0o600,
+                )
+            if name.startswith("/sys/fs/cgroup"):
+                return kernel.os.stat(self)
+            if name.startswith(("/proc/", "/etc/")):
+                directory = name in ("/proc", "/proc/self", "/proc/502", "/etc")
+                return SimpleNamespace(
+                    st_dev=77,
+                    st_ino=100,
+                    st_uid=0,
+                    st_nlink=1,
+                    st_mode=(stat.S_IFDIR | 0o700) if directory else stat.S_IFREG | 0o444,
+                )
+            return os.stat(self.real(), follow_symlinks=follow_symlinks)
+
+        def lstat(self):
+            return self.stat(follow_symlinks=False)
+
+        def exists(self):
+            return str(self).startswith(("/proc/", "/sys/", "/etc/")) or self.real().exists()
+
+        def is_dir(self):
+            return stat.S_ISDIR(self.stat().st_mode)
+
+        def is_symlink(self):
+            return (
+                False
+                if str(self).startswith(("/proc/", "/sys/", "/etc/"))
+                else self.real().is_symlink()
+            )
+
+        def read_bytes(self):
+            name = str(self)
+            if name.endswith("/mountinfo"):
+
+                def modes(path):
+                    return "ro" if state.readonly.get(path, False) else "rw"
+
+                return (
+                    f"1 99 8:1 / / {modes('/')} - ext4 /dev/root rw\n"
+                    f"2 1 8:1 /child /child {modes('/child')} - ext4 /dev/root rw\n"
+                    f"3 1 8:1 /once /once {modes('/once')} - ext4 /dev/root rw\n"
+                ).encode()
+            if name.endswith("/net/tcp"):
+                rows = (
+                    ""
+                    if not state.connected
+                    else (
+                        "0: 0100007F:4444 0100007F:2B68 01 0 0 0 0 0 101\n"
+                        "1: 0100007F:2B68 0100007F:4444 01 0 0 0 0 0 102\n"
+                    )
+                )
+                return ("header\n" + rows).encode()
+            state.runtime_reads += 1
+            return self.real().read_bytes()
+
+        def read_text(self, *a, **kw):
+            name = str(self)
+            if name == "/proc/self/fdinfo/90":
+                return "Pid:\t502\n"
+            if name.endswith("cap_last_cap"):
+                return "40"
+            if name.endswith("/status"):
+                return (
+                    "NoNewPrivs:\t"
+                    + str(state.nnp)
+                    + "\n"
+                    + "\n".join(
+                        k + ":\t" + str(state.caps)
+                        for k in ("CapEff", "CapPrm", "CapInh", "CapBnd", "CapAmb")
+                    )
+                )
+            if name.startswith("/sys/fs/cgroup/"):
+                return kernel.nodes[name]["content"]
+            return self.real().read_text(*a, **kw)
+
+        def iterdir(self):
+            name = str(self)
+            if name == "/proc/502/fd":
+                return iter(
+                    [self / str(fd) for fd in state.fds | ({500} if state.connected else set())]
+                )
+            if name == "/proc/705711/fd":
+                return iter([self / "550"])
+            return iter([KernelPath(p) for p in self.real().iterdir()])
+
+        def mkdir(self, *a, **kw):
+            return self.real().mkdir(*a, **kw)
+
+        def write_bytes(self, data):
+            return self.real().write_bytes(data)
+
+        def open(self, *a, **kw):
+            return self.real().open(*a, **kw)
+
+    state.Path = KernelPath
+    before_open, before_close, before_fstat, before_stat = (
+        kernel.os.open,
+        kernel.os.close,
+        kernel.os.fstat,
+        kernel.os.stat,
+    )
+    raw_open = os.open
+
+    def opened(path, flags, mode=0o777, *, dir_fd=None):
+        p = KernelPath(path) if dir_fd is None else None
+        name = str(p) if p is not None else str(path)
+        if flags & 2097152:
+            fd = state.nextfd
+            state.nextfd += 1
+            state.rules[fd] = name
+            state.fds.add(fd)
+            return fd
+        if name == "/dev/null":
+            state.fds.add(7999)
+            return 7999
+        if name.startswith("/sys/fs/cgroup") or dir_fd is not None:
+            return before_open(path, flags, mode, dir_fd=dir_fd)
+        fd = raw_open(p.real(), flags, mode)
+        if child():
+            state.fds.add(fd)
+        return fd
+
+    def close(fd):
+        if child() and (
+            fd in kernel.handles or fd in (6000, 6001, 7999, 8000) or fd in state.rules
+        ):
+            state.fds.discard(fd)
+            return
+        if child():
+            state.fds.discard(fd)
+        return before_close(fd)
+
+    def fstat(fd):
+        if fd in (0, 1, 2, 7999):
+            return SimpleNamespace(
+                st_mode=stat.S_IFCHR | 0o600, st_rdev=259, st_dev=77, st_ino=fd, st_uid=0
+            )
+        return before_fstat(fd)
+
+    kernel.os.open, kernel.os.close, kernel.os.fstat = opened, close, fstat
+    kernel.os.stat = lambda path, **kw: (
+        before_stat(path, **kw)
+        if "dir_fd" in kw or str(path).replace("\\", "/").startswith("/sys/fs/cgroup")
+        else KernelPath(path).stat(**kw)
+    )
+    kernel.os.listdir = lambda path: list(map(str, state.fds))
+    kernel.os.dup2 = lambda *a, **kw: None
+    kernel.os.makedev = lambda a, b: (a << 8) | b
+    kernel.os.fsencode = lambda path: os.fsencode(str(path))
+    kernel.os.uname = lambda: SimpleNamespace(machine="x86_64")
+    kernel.os.environ = {"HOME": "/home"}
+    kernel.os.ST_RDONLY = 1
+    kernel.os.statvfs = lambda path: SimpleNamespace(f_flag=1, f_bavail=100000000000, f_frsize=1)
+    kernel.os.fstatvfs = lambda fd: SimpleNamespace(f_flag=1)
+    kernel.os.O_PATH = 2097152
+    kernel.os.O_RDWR = 2
+
+    def libcall(name, *args):
+        if name == "unshare":
+            state.namespace = 44
+        elif name == "mount":
+            state.bound_mounts.append(args)
+        elif name == "prctl" and args[:2] == (38, 1):
+            state.nnp = 1
+        elif name == "capset":
+            state.caps = 0
+        elif name == "syscall":
+            attr = ctypes.cast(args[4], ctypes.POINTER(r._MountAttr)).contents
+            path = args[2].decode()
+            if path == "/" and args[3] == 0x8000:
+                state.readonly.update({key: True for key in ("/", "/child", "/once")})
+            state.readonly[path] = bool(attr.set)
+
+    def syscall(number, *args):
+        if number == 444 and args[-1] == 1:
+            return 5
+        if number == 444:
+            state.fds.add(8000)
+            return 8000
+        return 0
+
+    monkeypatch.setattr(r, "_libcall", libcall)
+    monkeypatch.setattr(r.ctypes, "CDLL", lambda *a, **kw: SimpleNamespace(syscall=syscall))
+    for owner in (r, m, d):
+        monkeypatch.setattr(owner, "Path", KernelPath)
+    for name, value in (
+        ("CONTROL", tmp_path),
+        ("CHILD", tmp_path / "child"),
+        ("RECEIPT", tmp_path / "child/capture"),
+        ("LEDGER", m.ONCE_LEDGER),
+        ("SDK", tmp_path / "sdk"),
+        ("RELEASE", RealPath(r.__file__).parent),
+    ):
+        monkeypatch.setattr(r, name, KernelPath(value))
+    for owner in (m, d, real_d):
+        proxy = {name: getattr(os, name) for name in dir(os)}
+        proxy.update(open=opened, close=close, stat=kernel.os.stat, fstat=fstat, getpid=lambda: 502)
+        monkeypatch.setattr(owner, "os", SimpleNamespace(**proxy))
+    proxy = {name: getattr(sys, name) for name in dir(sys)}
+    proxy.update(
+        path=["/usr/lib/python3.12", str(r.SDK)],
+        executable="/usr/bin/python3.12",
+        version_info=(3, 12),
+    )
+    monkeypatch.setattr(r, "sys", SimpleNamespace(**proxy))
+    monkeypatch.setattr(
+        r.importlib.machinery.PathFinder,
+        "find_spec",
+        lambda *a: SimpleNamespace(origin=str(r.SDK / "moomoo/__init__.py")),
+    )
+    # The scripted SDK controls only the modeled socket's kernel lifetime.
+    original = m._OfficialBackend
+
+    def backend(*args):
+        obj = original(*args)
+        opening, closing = obj.open, obj.close
+
+        def connected():
+            opening()
+            state.connected = True
+
+        def disconnected():
+            closing()
+            state.closed_at = obj.clock.value
+            state.connected = False
+
+        obj.open, obj.close = connected, disconnected
+        return obj
+
+    monkeypatch.setattr(m, "_OfficialBackend", backend)
+    return state
+
+
+@pytest.mark.parametrize(
+    "fault", ["normal", "json_event", "commit_event", "fsync", "close", "both", "over480"]
+)
+def test_r1_real_run_once_publication_rejects_late_events_and_close_uncertainty(
+    tmp_path, monkeypatch, fault
+):
+    from test_ivv_dev_diagnostic import kernel_fixture
+
+    kernel_fixture(tmp_path, monkeypatch)
+    r = runner()
+    _, kernel = owned_scope(r, monkeypatch, create=False)
+    monkeypatch.setattr(r, "CONTROL", tmp_path)
+    monkeypatch.setattr(os, "lstat", lambda path, **kw: os.stat(path, **kw))
+    monkeypatch.setattr(r, "_bootstrap", lambda ref: ({}, {}, None, None, None, None))
+    monkeypatch.setattr(r, "_seed", lambda *a: {"started_monotonic": 0})
+    monkeypatch.setattr(r, "_stdio", lambda: None)
+    monkeypatch.setattr(r, "_fds", lambda: {0, 1, 2})
+    clock = {"now": 1.0}
+    monkeypatch.setattr(r.time, "monotonic", lambda: clock["now"])
+    prior = Path.iterdir
+    monkeypatch.setattr(
+        Path, "iterdir", lambda p: iter([1]) if p.as_posix() == "/proc/self/task" else prior(p)
+    )
+    kernel.os.umask = lambda mode: None
+    kernel.os.fork = lambda: 502
+    kernel.os.fsencode = os.fsencode
+    original_stat = kernel.os.fstat
+    kernel.os.fstat = lambda fd: (
+        SimpleNamespace(st_dev=77, st_ino=fd, st_mode=stat.S_IFSOCK | 0o600, st_uid=0)
+        if fd in (6000, 6001)
+        else original_stat(fd)
+    )
+
+    class Socket:
+        type = 5
+
+        def __init__(self, fd):
+            self.fd = fd
+
+        def fileno(self):
+            return self.fd
+
+        def setsockopt(self, *args):
+            pass
+
+        def settimeout(self, *args):
+            pass
+
+        def close(self):
+            pass
+
+    for key, value in (
+        ("AF_UNIX", 1),
+        ("SO_PASSCRED", 16),
+        ("SOCK_SEQPACKET", 5),
+        ("SOCK_CLOEXEC", 0),
+    ):
+        monkeypatch.setattr(r.socket, key, value, raising=False)
+    monkeypatch.setattr(r.socket, "socketpair", lambda *a: (Socket(6000), Socket(6001)))
+    saved = {}
+
+    def closed_capture(scope, *args):
+        assert scope.reap() == 0
+        kernel.nodes[kernel.handles[scope.leaf] + "/cgroup.procs"]["content"] = ""
+        scope.empty()
+        scope.check_resources()
+        saved["scope"] = scope
+        return {"state": "NORMAL_EXIT", "resource_limit_event": False}
+
+    monkeypatch.setattr(r, "_supervise", closed_capture)
+    syncs = []
+
+    def sync(path):
+        # Both serialization fsync and commit fsync run with TOTAL event FDs held.
+        scope = saved["scope"]
+        if not (tmp_path / "parent-close.rejected.json").exists():
+            assert all(fd in kernel.handles for fd in scope.events)
+        syncs.append(str(path))
+        if (fault == "json_event" and len(syncs) == 1) or (
+            fault in ("commit_event", "both") and len(syncs) == 2
+        ):
+            kernel.nodes["/sys/fs/cgroup/system.slice/owned.service/memory.events"]["content"] = (
+                "oom_kill 1"
+            )
+        if fault == "fsync" and len(syncs) == 2:
+            raise OSError("simulated directory fsync")
+        if fault == "over480" and len(syncs) == 2:
+            clock["now"] = 480.1
+
+    monkeypatch.setattr(r, "_sync_dir", sync)
+
+    def call(name, *args):
+        assert name == "renameat2" and args[0] == args[2] == -100 and args[4] == 1
+        source, target = os.fsdecode(args[1]), os.fsdecode(args[3])
+        assert Path(source).parent == Path(target).parent == tmp_path
+        if Path(target).exists():
+            raise FileExistsError(target)
+        os.rename(source, target)
+
+    monkeypatch.setattr(r, "_libcall", call)
+    original_close = kernel.os.close
+    failed = {"done": False}
+
+    def close(fd):
+        scope = saved.get("scope")
+        if (
+            fault in ("close", "both")
+            and scope
+            and fd == scope.total_events[0]
+            and not failed["done"]
+        ):
+            failed["done"] = True
+            original_close(fd)
+            raise OSError("simulated retained close")
+        original_close(fd)
+
+    kernel.os.close = close
+    if fault == "normal":
+        assert r.run_once({})["state"] == "NORMAL_EXIT"
+        assert (tmp_path / "parent-close.json").exists()
+    else:
+        with pytest.raises(r.Refused) as exc:
+            r.run_once({})
+        assert "SEAL_RETIRE" not in str(exc.value)
+        assert not (tmp_path / "parent-close.json").exists()
+        assert not (tmp_path / "parent-close.pending.json").exists()
+        assert (
+            json.loads((tmp_path / "parent-close.rejected.json").read_bytes())["state"]
+            == "NORMAL_EXIT"
+        )
+        if fault == "both":
+            assert "RESOURCE_LIMIT_EVENT" in str(exc.value) and "CLOSE_OSError" in str(exc.value)
+    assert not kernel.handles

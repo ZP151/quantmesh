@@ -590,9 +590,11 @@ def _consume_real_capture_artifacts(
         controls = {
             Path(ref["path"]).name: ref["sha256"] for ref in produced_parent["evidence_refs"]
         }
-    parent_roots = [
-        {"path": str(tmp_path / name), "sha256": digest} for name, digest in controls.items()
-    ]
+    parent_roots = (
+        [{"path": str(tmp_path / name), "sha256": digest} for name, digest in controls.items()]
+        if produced_parent is None
+        else produced_parent["evidence_refs"]
+    )
     parent_objects = [
         store.put_bytes("application/json", m._read_root_ref(ref, maximum=32768, exact_mode=True))
         for ref in parent_roots
@@ -804,8 +806,11 @@ def _consume_real_capture_artifacts(
     for ref, body in copies:
         assert cold.put_bytes(ref.media_type, body) == ref
     assert len(parent_objects) == len(package["review_refs"]) == 8
-    for name, ref in zip(controls, parent_objects, strict=True):
-        assert daily.NativeDailyService._from_store(cold, ref) == (tmp_path / name).read_bytes()
+    for original_ref, ref in zip(parent_roots, parent_objects, strict=True):
+        assert (
+            daily.NativeDailyService._from_store(cold, ref)
+            == Path(original_ref["path"]).read_bytes()
+        )
     assert set(controls.values()).isdisjoint(ref["digest"] for ref in package["review_refs"])
     for ref, path in (
         (proofs.go_ref, Path(kwargs["go_ref"]["path"])),

@@ -545,6 +545,22 @@ class _Scope:
         self.controls(self.leaf)
         need([_events(fd) for fd in self.events] == self.initial, "RESOURCE_LIMIT_EVENT")
 
+    def check_final_resources(self):
+        # The empty removed leaf cannot accrue events. Its FDs stay retained;
+        # the enclosing TOTAL counters still cover all final parent work.
+        need(self.reaped and self.leaf is None, "FINAL_CHILD_NOT_REMOVED")
+        self.verify_unit()
+        need(
+            self.dirs(self.group) == {self.manager}
+            and not self.dirs(self.man)
+            and _kread(self.man, "cgroup.procs") == str(os.getpid()),
+            "FINAL_UNIT_NOT_EMPTY",
+        )
+        need(
+            [_events(fd) for fd in self.total_events] == self.initial[: len(self.total_events)],
+            "RESOURCE_LIMIT_EVENT",
+        )
+
     def reap(self):
         self.check_pid()
         info = os.waitid(os.P_PIDFD, self.pidfd, os.WEXITED | os.WNOHANG)
@@ -1364,7 +1380,9 @@ def _supervise(scope, channel, endpoint, context, plan):
     channel.send({"op": "enter"})
     while True:
         now = time.monotonic()
-        deadline = start + (420 if terminal is not None else 390 if grant is not None else 180)
+        # The shared capture enforces context close <=390. Receipt fsync and
+        # terminal IPC may follow it; actual child exit has its own420 limit.
+        deadline = start + (420 if grant is not None else 180)
         need(now < deadline, "OWNED_CHILD_DEADLINE")
         scope.check_resources()
         if now >= monitor.next:
@@ -1374,6 +1392,7 @@ def _supervise(scope, channel, endpoint, context, plan):
         ready, _, _ = select.select(
             [channel.s, scope.pidfd], [], [], max(0, until - time.monotonic())
         )
+        exit_observed = time.monotonic() - start if scope.pidfd in ready else None
         if channel.s in ready:
             try:
                 packet = channel.recv(scope.pid)
@@ -1414,17 +1433,77 @@ def _supervise(scope, channel, endpoint, context, plan):
                 )
         if scope.pidfd in ready:
             rc = scope.reap()
-            need(rc == 0 and terminal and grant and kernel, "CHILD_TERMINAL_MISSING")
+            exited = exit_observed
+            need(exited <= 420, "CHILD_EXIT_DEADLINE")
+            need(rc == 0 and grant and kernel, "CHILD_TERMINAL_MISSING")
+            # select may have checked the channel before the child's final
+            # send and the pidfd after its exit. Authenticate queued terminal
+            # and EOF after the actual wait, independent of readiness order.
+            for _ in range(3):
+                need(time.monotonic() - start <= 480, "FINAL_SEAL_DEADLINE")
+                try:
+                    packet = channel.recv(scope.pid)
+                except Refused as error:
+                    if reason(error) != "CONTROL_EOF":
+                        raise
+                    break
+                need(
+                    terminal is None
+                    and type(packet) is dict
+                    and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
+                    and packet["op"] == "terminal"
+                    and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
+                    "CHILD_TERMINAL_PROTOCOL",
+                )
+                terminal = packet
+            else:
+                raise Refused("CONTROL_NOT_CLOSED")
+            need(terminal, "CHILD_TERMINAL_MISSING")
             scope.empty()
             scope.check_resources()
             scope.verify_manager()
             monitor.sample()
             channel.check()
-            need(channel.s.recv(1, socket.MSG_DONTWAIT) == b"", "CONTROL_NOT_CLOSED")
             break
     elapsed = time.monotonic() - start
-    need(elapsed <= 420, "CHILD_EXIT_DEADLINE")
-    return _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed)
+    need(elapsed <= 480, "FINAL_SEAL_DEADLINE")
+    return _seal(
+        context,
+        grant,
+        scope,
+        monitor,
+        {**kernel, "child_exit_observed_seconds": exited},
+        terminal,
+        peer,
+        elapsed,
+    )
+
+
+def _commit_close(ref):
+    source = CONTROL / "parent-close.pending.json"
+    read_ref(ref, source)
+    _libcall(
+        "renameat2", -100, os.fsencode(source), -100, os.fsencode(CONTROL / "parent-close.json"), 1
+    )
+    _sync_dir(CONTROL)
+
+
+def _reject_close(ref, committed):
+    source = CONTROL / ("parent-close.json" if committed else "parent-close.pending.json")
+    try:
+        read_ref({"path": str(source), "sha256": ref["sha256"]}, source)
+    except FileNotFoundError:
+        source = CONTROL / ("parent-close.pending.json" if committed else "parent-close.json")
+        read_ref({"path": str(source), "sha256": ref["sha256"]}, source)
+    _libcall(
+        "renameat2",
+        -100,
+        os.fsencode(source),
+        -100,
+        os.fsencode(CONTROL / "parent-close.rejected.json"),
+        1,
+    )
+    _sync_dir(CONTROL)
 
 
 def run_once(startup_ref):
@@ -1438,6 +1517,8 @@ def run_once(startup_ref):
     )
     os.umask(0o077)
     primary = None
+    pending = None
+    committed = False
     with _Handles() as stack:
         scope = _Scope.__new__(_Scope)
         try:
@@ -1469,13 +1550,28 @@ def run_once(startup_ref):
             elapsed = time.monotonic() - plan["started_monotonic"]
             need(elapsed <= 480, "FINAL_SEAL_DEADLINE")
             result["elapsed_seconds"] = elapsed
+            # Keep all resource/event handles through JSON/file+directory
+            # fsync and normal publication. No partial file is normal authority.
+            pending = put(CONTROL / "parent-close.pending.json", result)
+            scope.check_final_resources()
+            need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
+            committed = True
+            _commit_close(pending)
+            scope.check_final_resources()
+            need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
             failures = scope.abort()
             primary = [reason(error), *failures]
+    if time.monotonic() - plan["started_monotonic"] > 480:
+        primary = [*(primary or []), "FINAL_SEAL_DEADLINE"]
     if primary or stack.errors:
-        raise Refused("+".join([*(primary or []), *stack.errors])) from None
-    need(time.monotonic() - plan["started_monotonic"] < 480, "FINAL_SEAL_DEADLINE")
-    put(CONTROL / "parent-close.json", result)
+        failures = [*(primary or []), *stack.errors]
+        if pending is not None:
+            try:
+                _reject_close(pending, committed)
+            except BaseException as error:
+                failures.append("SEAL_RETIRE_" + reason(error))
+        raise Refused("+".join(failures)) from None
     return result
 
 
