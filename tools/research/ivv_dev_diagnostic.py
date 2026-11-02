@@ -1,14 +1,14 @@
 """Purpose-limited DEV authority. No SDK, provider mutation or self-approval.
 
-The native collector is deliberately fail-closed until the independently
-reviewed native integration is installed. Offline kernel models are not proof.
+Only an independently acquired native session can provide evidence. Current
+cohort observations cannot prove exclusive external PTY holder closure.
 """
 
 import hashlib
-import importlib.util
 import os
 import stat
 import sys
+import types
 from pathlib import Path
 
 SUFFIX = ".dev-diagnostic.v1"
@@ -22,11 +22,10 @@ PROVENANCE_KEYS = (
 
 
 def _capture():
-    spec = importlib.util.spec_from_file_location(
-        "ivv_dev_capture", Path(__file__).with_name("capture_opend_ivv_daily.py")
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    path = Path(__file__).with_name("capture_opend_ivv_daily.py")
+    module = types.ModuleType("ivv_dev_capture")
+    module.__file__ = str(path)
+    exec(compile(path.read_bytes(), str(path), "exec"), module.__dict__)
     return module
 
 
@@ -52,9 +51,126 @@ def validate_policy(m, value, plan, authorization_sha256):
     )
 
 
+def _released_module(name, expected):
+    """Compile the checked bytes directly. Native authority never executes a .pyc file."""
+    if name not in ("ivv_dev_native.py", "ivv_native_producer.py"):
+        raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
+    path = Path(__file__).with_name(name)
+    if path.resolve() != path or not os.statvfs(path).f_flag & os.ST_RDONLY:
+        raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
+    with path.open("rb") as stream:
+        raw = stream.read(262145)
+    if (
+        len(raw) > 262144
+        or hashlib.sha256(raw).hexdigest() != expected
+        or not os.statvfs(path).f_flag & os.ST_RDONLY
+    ):
+        raise RuntimeError("DEV_NATIVE_SOURCE_PIN")
+    mod = types.ModuleType("_qm_" + name[:-3] + "_" + expected)
+    mod.__file__ = str(path)
+    exec(compile(raw, str(path), "exec"), mod.__dict__)
+    return mod
+
+
+def _native_sources(m, catalog, go=None):
+    result = {}
+    for key, filename in (
+        ("dev_native_sha256", "ivv_dev_native.py"),
+        ("native_producer_sha256", "ivv_native_producer.py"),
+    ):
+        expected = catalog.get(key)
+        m._require(
+            m._digest(expected) and (go is None or go.get(key) == expected),
+            "dev_native_source_catalog",
+        )
+        result[key] = _released_module(filename, expected)
+    return result["dev_native_sha256"], result["native_producer_sha256"]
+
+
+def prepare_native_evidence(plan, *, provenance, budget_ref):
+    """Root pre-GO, in the already-bounded actor. A failed collector never registers a session."""
+    m = _capture()
+    m._require(sys.platform == "linux" and os.getuid() == os.geteuid() == 0, "dev_root_issuer")
+    m._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + SUFFIX)
+    m._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + SUFFIX)
+    m._require(
+        m._dev_provenance(provenance) == provenance
+        and plan["policy_ref"]["sha256"] == provenance["policy_sha256"],
+        "dev_policy_pin",
+    )
+    policy = m._strict_json(m._read_root_ref(plan["policy_ref"], maximum=32768, exact_mode=True))
+    validate_policy(m, policy, plan, provenance["authorization_sha256"])
+    catalog_ref = {
+        "path": str(Path(__file__).with_name("ivv-dev-catalog.json")),
+        "sha256": plan["catalog_sha256"],
+    }
+    catalog = m._strict_json(m._read_root_ref(catalog_ref, maximum=32768, exact_mode=True))
+    for path, key in (
+        (Path(__file__), "dev_issuer_sha256"),
+        (Path(m.__file__), "capture_helper_sha256"),
+    ):
+        m._require(
+            os.statvfs(path).f_flag & os.ST_RDONLY
+            and hashlib.sha256(path.read_bytes()).hexdigest() == catalog.get(key),
+            "dev_released_source",
+        )
+    m._require(
+        catalog["capture_helper_sha256"] == plan["capture_helper_sha256"], "dev_released_source"
+    )
+    native, producer = _native_sources(m, catalog)
+    actor = m._native_actor()
+    m._native_recheck(actor, Path(plan["receipt_root"]).parent)
+    m._require(0 <= m.time.monotonic() - plan["started_monotonic"] < 180, "root_effect_expired")
+    m._read_root_ref(budget_ref, maximum=32768, exact_mode=True)
+    # No success instance can exist until the native external-holder gate is satisfied.
+    session = native.prepare_provider(plan, producer, budget_ref)
+    try:
+        actual = session.snapshot()
+        evidence = {
+            "schema_id": "qm.ivv.provider-evidence" + SUFFIX,
+            "state": "DEV_DIAGNOSTIC",
+            **{k: plan[k] for k in ("scope_id", "execution_sha256", "effect_id")},
+            **provenance,
+            **{
+                k: actual[k]
+                for k in (
+                    "provider_actor",
+                    "endpoint",
+                    "identity_binding_sha256",
+                    "configuration_binding_sha256",
+                    "channels_binding_sha256",
+                )
+            },
+        }
+        # The helper loads this module separately. Share only the prepared private instance.
+        name = "_qm_live_ivv_native_" + str(os.getpid())
+        m._require(name not in sys.modules, "dev_native_session_busy")
+        state = types.ModuleType(name)
+        state.session = session
+        state.helper = m
+        state.evidence = m._canonical(evidence)
+        state.plan = m._canonical({k: v for k, v in plan.items() if k != "provider_evidence_ref"})
+        sys.modules[name] = state
+        return session, evidence
+    except BaseException:
+        session.close()
+        raise
+
+
 def _read_native_provider(plan, evidence):
-    """Task2 must collect actual metadata; never accept a caller JSON proof."""
-    raise RuntimeError("DEV_NATIVE_COLLECTOR_NOT_RELEASED")
+    """A supplied artifact cannot recreate a live process-private observation session."""
+    state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
+    if state is None:
+        raise RuntimeError("DEV_NATIVE_SESSION_ABSENT")
+    m = state.helper
+    original = {
+        k: v for k, v in plan.items() if not k.startswith("_") and k != "provider_evidence_ref"
+    }
+    m._require(
+        m._canonical(original) == state.plan and m._canonical(evidence) == state.evidence,
+        "dev_native_session_binding",
+    )
+    return state.session.snapshot()
 
 
 def native_provider_snapshot(m, plan, evidence):
@@ -159,6 +275,7 @@ def _context(
         and os.statvfs(__file__).f_flag & os.ST_RDONLY,
         "dev_released_source",
     )
+    _native_sources(m, catalog, go)
     evidence = m._strict_json(
         m._read_root_ref(plan["provider_evidence_ref"], maximum=32768, exact_mode=True)
     )

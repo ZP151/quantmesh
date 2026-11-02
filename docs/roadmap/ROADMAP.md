@@ -2,6 +2,8 @@
 
 ## Explicit original IVV DEV diagnostic route A — issue272, 2026-11-02
 
+The bounded Task2 adapter now has138-pass Parent verification and a precise pre-admission PTY_EXTERNAL_HOLDER_UNPROVEN disposition. This is reusable kernel/config/monitor/closure software, not complete native readiness: allowed metadata cannot exclude prior transferred external holders, and post-connect peer/readonly namespace/connected runner and real parent seal remain separately incomplete. Root declined expanded scans/probes/waivers; no actual capture attempt is spent. The unchanged source/data/once and independent input gates stay open.
+
 Actual Operator approved one versioned private diagnostic on the existing logged-in eabdda chain with the stated provider hard-storage/loaded-guard/UNKNOWN-tail limitations. The coherent DEV22 policy/Root issuer/held-permit/intent/manifest/existing consumer software slice has Parent133-pass affected verification; strict defaults and original data/math stay. Concrete native collector/monitor/config/runtime/parent producer, independent review, normal release/catalog and actual gates remain before the original one-effect capture. No B restart or new trial is added; actual originals may still be unreviewed or insufficient. See the [checkpoint](../iterations/0038-ivv-native-producer.md).
 
 ## Native IVV producer feasibility — issue272

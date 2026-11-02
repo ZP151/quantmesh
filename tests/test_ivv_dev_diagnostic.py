@@ -292,8 +292,16 @@ def kernel_fixture(tmp_path, monkeypatch, *, registration=None):
     evidence_ref = put("provider", evidence)
     helper_sha = hashlib.sha256(Path(m.__file__).read_bytes()).hexdigest()
     issuer_sha = hashlib.sha256(Path(d.__file__).read_bytes()).hexdigest()
+    native_sources = {
+        k: hashlib.sha256(Path(d.__file__).with_name(f).read_bytes()).hexdigest()
+        for k, f in (
+            ("dev_native_sha256", "ivv_dev_native.py"),
+            ("native_producer_sha256", "ivv_native_producer.py"),
+        )
+    }
     catalog_ref = put(
-        "catalog", {"capture_helper_sha256": helper_sha, "dev_issuer_sha256": issuer_sha}
+        "catalog",
+        {"capture_helper_sha256": helper_sha, "dev_issuer_sha256": issuer_sha, **native_sources},
     )
     plan.update(
         policy_ref=policy_ref,
@@ -325,6 +333,7 @@ def kernel_fixture(tmp_path, monkeypatch, *, registration=None):
         "provider_evidence_sha256": evidence_ref["sha256"],
         "catalog_sha256": catalog_ref["sha256"],
         "capture_helper_sha256": helper_sha,
+        **native_sources,
         "dev_issuer_sha256": issuer_sha,
         "input_window_digest": m.WINDOW,
         "full_window_sha256": m.FULL_WINDOW,
@@ -546,7 +555,32 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         )
     raw_ref = store.put_bytes("application/json", (root / "capture-manifest.json").read_bytes())
     go = json.loads(Path(kwargs["go_ref"]["path"]).read_bytes())
-    evidence = put({"authored_parent_process_observation": "software-only"})
+    # The executor chooses these paths locally. Only digests are taken from the
+    # capture binding. No child path or nested evidence index is dereferenced.
+    binding = result["source_binding"]
+    controls = {
+        "plan": binding["plan_sha256"],
+        "permit": binding["root_permit_sha256"],
+        "provider": binding["provider_evidence_ref"]["sha256"],
+        "catalog": binding["catalog_sha256"],
+        "pins": binding["sdk_pins_sha256"],
+    }
+    for name, observation in (
+        ("native-config", {"configuration_binding_sha256": "9" * 64}),
+        ("monitor", {"sample_count": 2, "observed_incremental_bytes": 0}),
+        ("parent-kernel-close", {"return_code": 0, "cgroup_populated": 0}),
+    ):
+        body = m._canonical({"software_only": True, "observation": name, **observation})
+        (tmp_path / name).write_bytes(body)
+        controls[name] = hashlib.sha256(body).hexdigest()
+    parent_roots = [
+        {"path": str(tmp_path / name), "sha256": digest} for name, digest in controls.items()
+    ]
+    parent_objects = [
+        store.put_bytes("application/json", m._read_root_ref(ref, maximum=32768, exact_mode=True))
+        for ref in parent_roots
+    ]
+    assert [ref.digest for ref in parent_objects] == list(controls.values())
     provenance = {
         key: result[key]
         for key in (
@@ -577,11 +611,11 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         "force_killed": False,
         "resource_limit_event": False,
         "elapsed_seconds": 1,
-        "evidence_refs": [{"path": "/fictional-parent/evidence", "sha256": evidence.digest}],
+        "evidence_refs": parent_roots,
     }
     accepted = {
         "parent_close_ref": put(parent).model_dump(),
-        "parent_evidence_refs": [evidence.model_dump()],
+        "parent_evidence_refs": [ref.model_dump() for ref in parent_objects],
     }
 
     def original(name):
@@ -736,7 +770,15 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
     assert checked["scope_trial_key"] == daily.digest(
         daily.canonical({"execution": m.EXECUTION, "scope": m.SCOPE, "trial": 1})
     )
-    archived = {ref.digest: body for ref, body in v.binding_objects(store, registered.real_binding)}
+    copies = v.binding_objects(store, registered.real_binding)
+    archived = {ref.digest: body for ref, body in copies}
+    cold = ObjectStore(tmp_path / "cold-binding-objects")
+    for ref, body in copies:
+        assert cold.put_bytes(ref.media_type, body) == ref
+    assert len(parent_objects) == len(package["review_refs"]) == 8
+    for name, ref in zip(controls, parent_objects, strict=True):
+        assert daily.NativeDailyService._from_store(cold, ref) == (tmp_path / name).read_bytes()
+    assert set(controls.values()).isdisjoint(ref["digest"] for ref in package["review_refs"])
     for ref, path in (
         (proofs.go_ref, tmp_path / "go"),
         (proofs.capture_policy_ref, tmp_path / "policy"),
