@@ -87,6 +87,18 @@ function realUseBasis(v: unknown, id: string): boolean {
   return ['scope_ref', 'effect_ref', 'execution_ref', 'go_ref', 'acceptance_ref', 'windows_policy_ref'].every(key => nativeRef(proof[key]))
     && nativeRef(proof.go_ref) && proof.expected_go_sha256 === proof.go_ref.digest
     && nativeRef(proof.acceptance_ref) && proof.expected_acceptance_sha256 === proof.acceptance_ref.digest
+    && diagnosticUseBasis(v, proof)
+}
+// Presentation contract only. The server authenticates policy/authorization and
+// independent input acceptance; these fields never authorize browser submission.
+function diagnosticUseBasis(v: Record<string, unknown>, proof: Record<string, unknown>): boolean {
+  const fields = ['diagnostic_mode', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max']
+  const refs = ['capture_policy_ref', 'authorization_ref', 'expected_policy_sha256', 'expected_authorization_sha256']
+  if (!fields.some(key => key in v) && !refs.some(key => key in proof)) return true // archived strict originals
+  return v.diagnostic_mode === 'DEV_DIAGNOSTIC' && v.hard_limit_enforced === false && v.provider_tail_max === 'UNKNOWN'
+    && nativeRef(proof.capture_policy_ref) && nativeRef(proof.authorization_ref)
+    && v.policy_sha256 === proof.capture_policy_ref.digest && proof.expected_policy_sha256 === v.policy_sha256
+    && v.authorization_sha256 === proof.authorization_ref.digest && proof.expected_authorization_sha256 === v.authorization_sha256
 }
 function numericClose(v: unknown): boolean {
   if (!object(v) || v.schema_id !== 'qm.ivv.numeric-close.v1' || v.job_commit_bytes !== 536870912

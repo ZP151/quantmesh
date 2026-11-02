@@ -46,15 +46,22 @@ const copy = {
     engineering: 'Engineering fixture only. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
     real: 'Declared retrospective research. Private diagnostic once; external API retention applicability UNKNOWN. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
     realRunning: 'Running · retrospective research', realSucceeded: 'Report ready · retrospective research',
+    dev: 'DEV_DIAGNOSTIC · capture policy exception',
+    devLimits: 'Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Full read-only/six-writable enforcement and legacy loaded-guard provenance are unproved. Monitoring is not a hard limit.',
+    devQualification: 'Diagnostic capture alone is unreviewed. Only independently accepted input and a registered grant allow this fixed study; neither the capture exception nor a report proves profitability, out-of-sample validity, or Paper/live eligibility.',
+    captureAuthority: 'Capture-once usage: UNKNOWN on this page. Research-trial status is separate; an uncomputed result or returning to input does not restore capture authority.',
+    captureStatus: 'DEV capture and review status: UNKNOWN in this input list. Empty options do not prove unused capture authority; only registered study inputs are listed.',
+    devBinding: 'Capture policy and authorization originals', devPolicy: 'Capture policy SHA-256', devAuthorization: 'Capture authorization SHA-256',
     missing: 'No registered package and candidate grant are selected. Save the admission reasons without calculating a report.',
+    inputReview: 'Captured originals remain unreviewed until independent input acceptance. This page cannot qualify data or grant authority; select only a registered package and its matching grant to submit the fixed study.',
     unavailable: 'Durable research storage is unavailable. Existing IDs can still be reopened.', loading: 'Reading registered configuration…', retryOptions: 'Read configuration again',
     submit: 'Submit fixed study', insufficient: 'Save insufficient evidence', waiting: 'Waiting for acknowledgement…', retry: 'Retry saved submission', read: 'Read saved study', retained: 'The ID and exact request were saved before submission. Read this ID after an uncertain response.',
     status: 'Study evidence', notRun: 'Not run · evidence insufficient', rejected: 'Not run · admission rejected', running: 'Running · engineering calculation', succeeded: 'Report ready · engineering evidence', failed: 'Calculation failed', interrupted: 'Interrupted · no automatic rerun',
-    noReport: 'No report was calculated. No trial was consumed.', noResult: 'No report is available. The reserved trial remains consumed.', trial: 'Trial consumed', yes: 'Yes', no: 'No', verify: 'Verifying original evidence…', paused: 'Automatic status checks paused. Read this ID to continue.',
+    noReport: 'No report was calculated. No research trial was consumed.', noResult: 'No report is available. The reserved research trial remains consumed; read this ID instead of rerunning it.', trial: 'Research trial consumed', yes: 'Yes', no: 'No', verify: 'Verifying original evidence…', paused: 'Automatic status checks paused. Read this ID to continue.',
     decision: 'Research decision', decisionHelp: 'Save one immutable Reject or Watch decision bound to the original admission and report, if present.', reject: 'Reject', watch: 'Watch', reason: 'Reason', saveDecision: 'Save research decision', retryDecision: 'Retry saved decision', pendingDecision: 'Decision acknowledgement is uncertain. Read this ID or retry the saved decision key.',
     admissionDownload: 'Download admission', reportDownload: 'Download report', decisionDownload: 'Download decision',
-    reopen: 'Reopen an existing study', id: 'Saved study ID', open: 'Open study', newStudy: 'Start another study', identity: 'Original identity and timestamps', created: 'Created', completed: 'Completed', request: 'Request SHA-256', protocol: 'Protocol SHA-256', packageHash: 'Package SHA-256', grantHash: 'Grant SHA-256',
-    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', notAdmitted: 'Study was not admitted. No trial was consumed; resolve admission checks and retry this saved request.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
+    reopen: 'Reopen an existing study', id: 'Saved study ID', open: 'Open study', newStudy: 'Return to study input', identity: 'Original identity and timestamps', created: 'Created', completed: 'Completed', request: 'Request SHA-256', protocol: 'Protocol SHA-256', packageHash: 'Package SHA-256', grantHash: 'Grant SHA-256',
+    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', notAdmitted: 'Study was not admitted. No research trial was consumed; resolve admission checks and retry this saved request.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
     comparison: 'Same-cost comparison', base: '5 bps · base', stress: '10 bps · stress', arm: 'Arm', net: 'Net return', equity: 'Terminal equity', drawdown: 'Max drawdown', friction: 'Friction', fills: 'Fills', costs: 'Uncalibrated combined cost proxy. Fee, spread and slippage components are unknown. Fills are not independent opportunities.', arms: 'T: trend · TO: trend with overlay · B50/B100: 50%/100% buy-and-hold · C: cash, 0% interest.',
   },
   'zh-CN': {
@@ -64,15 +71,22 @@ const copy = {
     engineering: '仅工程样本。金融证据仍为 INSUFFICIENT，不能授权 Paper 或实盘交易。',
     real: '已声明的真实回溯研究，仅一次私人开发诊断；外部 API 留存适用性 UNKNOWN。金融证据仍为 INSUFFICIENT，Paper 与实盘不可用。',
     realRunning: '运行中 · 回溯研究', realSucceeded: '报告就绪 · 回溯研究',
+    dev: 'DEV_DIAGNOSTIC · 采集政策例外',
+    devLimits: '未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。完整只读/六个可写路径约束与旧版已加载防护的来源仍未证明。监测不等于硬上限。',
+    devQualification: '诊断采集原件本身仍未审核。只有独立验收的输入与已注册授权才允许本次固定研究；采集例外或报告均不能证明盈利、样本外有效性，也不授予 Paper 或实盘资格。',
+    captureAuthority: '本页未提供采集 once 使用状态，仍为 UNKNOWN。研究计算试验是另一项状态；未计算或返回输入均不恢复采集权限。',
+    captureStatus: '此输入列表未提供 DEV 采集与审核进度，仍为 UNKNOWN。列表为空不能证明采集权限尚未消耗；这里只列出已注册研究输入。',
+    devBinding: '采集政策与授权原件', devPolicy: '采集政策 SHA-256', devAuthorization: '采集授权 SHA-256',
     missing: '未同时选择已注册输入包与候选授权。可保存准入不足原因，不计算报告。',
+    inputReview: '采集原件须经独立输入验收，此前仍未审核。本页面不能认定数据合格或授予权限；只有选择已注册输入包及其匹配授权，才能提交固定研究。',
     unavailable: '持久化研究存储未配置，仍可重开已有 ID。', loading: '正在读取已注册配置…', retryOptions: '重新读取配置',
     submit: '提交固定研究', insufficient: '保存证据不足记录', waiting: '等待服务端确认…', retry: '重试已保存提交', read: '读取已保存研究', retained: '提交前已保存 ID 与完整请求。响应不确定时请读取原 ID。',
     status: '研究证据', notRun: '未运行 · 证据不足', rejected: '未运行 · 准入被拒绝', running: '运行中 · 工程计算', succeeded: '报告就绪 · 工程证据', failed: '计算失败', interrupted: '已中断 · 不自动重跑',
-    noReport: '未计算报告，未消耗试验额度。', noResult: '无可用报告，已保留试验占用。', trial: '已消耗试验额度', yes: '是', no: '否', verify: '正在校验原始证据…', paused: '自动状态查询已暂停，可按原 ID 继续读取。',
+    noReport: '未计算报告，未消耗研究计算试验额度。', noResult: '无可用报告，本次研究计算试验已消耗；请按原 ID 查看记录，不会自动重算。', trial: '已消耗研究计算试验', yes: '是', no: '否', verify: '正在校验原始证据…', paused: '自动状态查询已暂停，可按原 ID 继续读取。',
     decision: '研究决定', decisionHelp: '保存一条不可编辑的拒绝或观察决定，绑定原始准入记录与报告（如有）。', reject: '拒绝', watch: '观察', reason: '理由', saveDecision: '保存研究决定', retryDecision: '重试已保存决定', pendingDecision: '决定尚未确认，请读取原 ID 或按原决定键重试。',
     admissionDownload: '下载准入原件', reportDownload: '下载报告原件', decisionDownload: '下载决定原件',
-    reopen: '重开已有研究', id: '已保存研究 ID', open: '打开研究', newStudy: '开始另一项研究', identity: '原始标识与时间', created: '创建时间', completed: '完成时间', request: '请求 SHA-256', protocol: '协议 SHA-256', packageHash: '输入包 SHA-256', grantHash: '授权 SHA-256',
-    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', notAdmitted: '研究尚未获准，未消耗试验额度。请处理准入检查后重试已保存请求。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
+    reopen: '重开已有研究', id: '已保存研究 ID', open: '打开研究', newStudy: '返回研究输入', identity: '原始标识与时间', created: '创建时间', completed: '完成时间', request: '请求 SHA-256', protocol: '协议 SHA-256', packageHash: '输入包 SHA-256', grantHash: '授权 SHA-256',
+    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', notAdmitted: '研究尚未获准，未消耗研究计算试验额度。请处理准入检查后重试已保存请求。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
     comparison: '同成本基准比较', base: '5 bps · 基准', stress: '10 bps · 压力', arm: '比较臂', net: '净收益率', equity: '期末资金', drawdown: '最大回撤', friction: '综合摩擦', fills: '成交笔数', costs: '未校准综合成本代理。费用、价差与滑点拆分未知，成交笔数不代表独立机会数。', arms: 'T：趋势 · TO：趋势叠加 · B50/B100：50%/100% 买入持有 · C：现金，利息 0%。',
   },
 }
@@ -185,6 +199,8 @@ export function NativeDailyPanel() {
   const evidenceNote = real ? w.real : w.engineering
   const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? (real ? w.realRunning : w.running) : job?.state === 'succeeded' ? (real ? w.realSucceeded : w.succeeded) : job?.state === 'failed' ? w.failed : w.interrupted
   const verified = evidence?.jobId === job?.job_id ? evidence : null
+  const useBasis = real && verified ? verified.admission.value.use_basis as Record<string, unknown> : null
+  const diagnostic = useBasis?.diagnostic_mode === 'DEV_DIAGNOSTIC'
   const pendingDecision = intent?.decision
   const usd = (v: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(v)
   const percent = (v: number) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(v)
@@ -196,6 +212,8 @@ export function NativeDailyPanel() {
         <h3 id="native-input" className="font-medium">{w.input}</h3>
         <label className="block space-y-1 text-sm"><span>{w.candidate}</span><select className={control} value={NATIVE_CANDIDATE} disabled><option value={NATIVE_CANDIDATE}>{w.candidateLabel}</option></select></label>
         <p className="text-xs text-muted-foreground">{w.fixed}</p>
+        <p className="text-sm text-muted-foreground">{w.inputReview}</p>
+        <p className="text-sm text-muted-foreground">{w.captureStatus}</p>
         {!options ? <><p className="text-sm text-muted-foreground">{w.loading}</p>{error && <Button variant="outline" onClick={() => void loadOptions()}>{w.retryOptions}</Button>}</> : !options.configured ? <p className="text-sm text-muted-foreground">{w.unavailable}</p> : <>
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <label className="block min-w-0 space-y-1 text-sm"><span>{w.package}</span><select className={control} value={packageId} onChange={event => { setPackageId(event.target.value); setGrantId('') }}><option value="">{w.noPackage}</option>{options.packages.map(p => <option key={p.package_ref.digest} value={p.package_ref.digest}>{p.label}</option>)}</select></label>
@@ -218,11 +236,19 @@ export function NativeDailyPanel() {
         <p className="text-xs text-muted-foreground">{w.trial}: {job.trial_consumed ? w.yes : w.no}</p>
         {!verified && error !== 'artifact' && <p className="text-sm text-muted-foreground">{w.verify}</p>}
         {verified && <>
+          {real && <><p className="text-sm text-muted-foreground">{evidenceNote}</p><p className="text-sm text-muted-foreground">{w.captureAuthority}</p></>}
+          {diagnostic && <div className="space-y-2 text-sm" role="note" aria-label={w.dev}>
+            <p className="font-medium">{w.dev}</p>
+            <p>{w.devLimits}</p><p>{w.devQualification}</p>
+            <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{w.devBinding}</summary>
+              <dl className="space-y-2">{[[w.devPolicy, useBasis!.policy_sha256], [w.devAuthorization, useBasis!.authorization_sha256]].map(([label, value]) => <div key={String(label)}><dt className="text-muted-foreground">{String(label)}</dt><dd className="break-all font-mono">{String(value)}</dd></div>)}</dl>
+            </details>
+          </div>}
           <ul className="space-y-1 text-sm">{job.admission_reasons.map(code => <li key={code} title={code}>{reasons[code]?.[zh ? 1 : 0] ?? code}</li>)}</ul>
           {job.state === 'not_run' && <p className="text-sm">{w.noReport}</p>}
           {['failed', 'interrupted'].includes(job.state) && <p className="text-sm">{w.noResult}</p>}
           {verified.report && <>
-            <p className="text-sm text-muted-foreground">{evidenceNote}</p>
+            {!real && <p className="text-sm text-muted-foreground">{evidenceNote}</p>}
             <div className="flex flex-wrap gap-1" aria-label={zh ? '成本场景' : 'Cost scenario'}>{(['base5', 'stress10'] as const).map(value => <Button key={value} className="min-h-11" variant={scenario === value ? 'secondary' : 'ghost'} aria-pressed={scenario === value} onClick={() => setScenario(value)}>{value === 'base5' ? w.base : w.stress}</Button>)}</div>
             <div className="max-w-full overflow-x-auto"><table className="w-full text-left text-sm tabular-nums"><caption className="sr-only">{w.comparison}</caption><thead className="text-xs text-muted-foreground"><tr>{[w.arm, w.net, w.equity, w.drawdown, w.friction, w.fills].map(label => <th key={label} className="px-2 py-2 font-normal first:pl-0">{label}</th>)}</tr></thead><tbody>{nativeArms.map(arm => { const m = (verified.report!.value as unknown as NativeReport).calculation[scenario][arm].metrics; return <tr key={arm} className="border-t"><th scope="row" className="py-2 pr-2 font-normal">{arm}</th>{[percent(m.total_return), usd(m.terminal_equity), percent(m.max_drawdown), usd(m.friction_usd), String(m.fills)].map((value, index) => <td key={index} className="whitespace-nowrap px-2 py-2">{value}</td>)}</tr> })}</tbody></table></div>
             <p className="text-xs text-muted-foreground">{w.arms}</p><p className="text-xs text-muted-foreground">{w.costs}</p>
