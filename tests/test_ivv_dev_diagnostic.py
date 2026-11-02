@@ -111,14 +111,34 @@ def test_closed_dev_policy_rejects_false_guarantees_and_version_mix(mutation):
             d.validate_policy(m, value, contract(m), "2" * 64)
 
 
+def _protected_once_ledger(m, ledger, monkeypatch, *, rejected_metadata=None):
+    """Model only this ledger's directory metadata; retain real reservation I/O."""
+    directories = {ledger, *ledger.parents}
+
+    class LedgerPath(type(ledger)):
+        def stat(self, *args, **kwargs):
+            info = super().stat(*args, **kwargs)
+            if Path(self) not in directories:
+                return info
+            values = {name: getattr(info, name) for name in dir(info) if name.startswith("st_")}
+            values.update(st_uid=0, st_mode=stat.S_IFDIR | 0o700)
+            if rejected_metadata is not None and Path(self) == rejected_metadata[0]:
+                values.update(rejected_metadata[1])
+            return SimpleNamespace(**values)
+
+    monkeypatch.setattr(m, "ONCE_LEDGER", LedgerPath(ledger))
+    monkeypatch.setattr(m, "sys", SimpleNamespace(platform="linux"))
+
+
 def test_once_effect_remains_spent_across_policy_helper_and_output(tmp_path, monkeypatch):
     m = leaf()
     monkeypatch.setattr(m, "SCOPE", "fictional-once-scope")
     monkeypatch.setattr(m, "APPROVAL", "0" * 64)
     monkeypatch.setattr(m, "EXECUTION", "e" * 64)
     assert hasattr(m, "_reserve_once"), "canonical cross-policy once reservation is missing"
-    monkeypatch.setattr(m, "ONCE_LEDGER", tmp_path / "ledger")
-    m.ONCE_LEDGER.mkdir()
+    ledger = tmp_path / "ledger"
+    ledger.mkdir()
+    _protected_once_ledger(m, ledger, monkeypatch)
     plan = contract(m)
     order = []
     m._reserve_once(plan, sync_dir=lambda path: order.append("directory"))
@@ -133,6 +153,24 @@ def test_once_effect_remains_spent_across_policy_helper_and_output(tmp_path, mon
     assert set(marker) == {"scope_id", "execution_sha256", "effect_sha256"}
     assert marker["effect_sha256"] == m.APPROVAL
     assert hashlib.sha256(m._canonical(marker)).hexdigest() == markers[0].name
+
+
+@pytest.mark.parametrize("location", ["ledger", "ancestor"])
+@pytest.mark.parametrize("invalid", ["owner", "writable", "not_directory"])
+def test_once_guard_rejects_unprotected_ledger_metadata(tmp_path, monkeypatch, location, invalid):
+    m = leaf()
+    ledger = tmp_path / "ledger"
+    ledger.mkdir()
+    path = ledger if location == "ledger" else ledger.parent
+    changes = {
+        "owner": {"st_uid": 1000},
+        "writable": {"st_mode": stat.S_IFDIR | 0o720},
+        "not_directory": {"st_mode": stat.S_IFREG | 0o700},
+    }[invalid]
+    _protected_once_ledger(m, ledger, monkeypatch, rejected_metadata=(path, changes))
+    with pytest.raises(m.CaptureRejected, match="once_ledger_control"):
+        m._reserve_once(contract(m), sync_dir=lambda path: None)
+    assert list(ledger.iterdir()) == []
 
 
 def test_public_dev_entry_refuses_without_trusted_held_authority(tmp_path):
@@ -953,7 +991,7 @@ def test_uncertain_once_fsync_stays_spent(tmp_path, monkeypatch, failure):
     monkeypatch.setattr(m, "EXECUTION", "e" * 64)
     ledger = tmp_path / "ledger"
     ledger.mkdir()
-    monkeypatch.setattr(m, "ONCE_LEDGER", ledger)
+    _protected_once_ledger(m, ledger, monkeypatch)
 
     def fail(*args):
         raise OSError("authored fsync uncertainty")
@@ -973,7 +1011,7 @@ def test_attempt_label_cannot_renew_the_original_authorized_effect(tmp_path, mon
     monkeypatch.setattr(m, "EXECUTION", "e" * 64)
     ledger = tmp_path / "ledger"
     ledger.mkdir()
-    monkeypatch.setattr(m, "ONCE_LEDGER", ledger)
+    _protected_once_ledger(m, ledger, monkeypatch)
     m._reserve_once(contract(m), sync_dir=lambda path: None)
     other = dev_plan(m)
     other.update(

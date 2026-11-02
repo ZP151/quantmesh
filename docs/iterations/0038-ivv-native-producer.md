@@ -1,5 +1,13 @@
 # Iteration 0038 — IVV native producer
 
+## Located Linux once-ledger test fixture compatibility — 2026-11-03 Singapore
+
+PR275's new inline P1 identifies three independent once-test groups which use ordinary temporary ledger paths without modeling the production root-owned/non-writable ancestor prerequisite. Parent confirmed the actual unchanged helper rejects a fictional empty ledger under existing Ubuntu as `once_ledger_control` (UID1000/mode0777, marker0, no SDK or research-host call). A module-local Linux platform view reproduces the original four test cases failing at that guard before their intended assertions; the exact RED is retained. This is a test-fixture defect, not permission to relax the production guard.
+
+Root/Planner limited the correction to tests/test_ivv_dev_diagnostic.py. A local concrete-Path subclass supplies metadata only for that test's ledger and known ancestors, delegating all other paths and real exclusive-create/write/fsync; the leaf module receives its own platform view without mutating shared sys/pathlib/os metadata. Six ledger/ancestor owner, writable and non-directory negatives require the actual rejection and marker0. The original four cases plus six negatives pass10/0.25s; Parent's complete changed-file check passes31/6.63s. All six reviewed production file SHA256s remain unchanged; Ruff/format/whitespace pass. Independent bounded local review is READY with no blocking findings; it is static, not a Linux execution matrix or a third runner structural review.
+
+The first changed-file harness correctly stopped on an existing fallback file's CRLF-versus-Git-LF byte difference before tests. Its retained corrected copy verifies150 fallback Python candidates against Git, explicitly recording that single line-ending-only difference; the actual consumer still resolves to this checkout. Every failed harness/RED/old CI/review remains private under dev-A-01/normal-publication-01. Current CI41469508404 is not cancelled or manually rerun; the same PR's next head must pass its naturally required complete CI. No merge/native/SDK/GO/held-permit/original once action follows from this local evidence.
+
 ## First natural CI early lint stop; mechanical correction — 2026-11-02
 
 PR275/headfe1c6645 entered actual pull_request CI41466145185. research_service and classify succeeded; fast/release stopped on the same single I001 import-group blank line in tests/test_ivv_admission.py:806; python aggregate failed consequently. Full Python/release checks had not run, so no green release or native readiness is inferred. Both original job logs remain private under dev-A-01/normal-publication-01; the first4283-entry full-tree catalog remains explicitly HEAD-only/unmerged.
