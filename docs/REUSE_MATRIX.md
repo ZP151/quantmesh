@@ -6,7 +6,7 @@ Reuse current native-daily-v2 cashbook/matrix and ordinary workstation; scoped o
 
 ## Original IVV DEV preflight support — issue272, 2026-11-02
 
-Reuse the existing strict PosixReader/proc/mount parsers, shared capture and ObjectStore/parent-ref/archive contracts. New stdlib-only metadata/configuration/role-growth/cgroup/wait helpers are purpose-limited and refuse an unproved PTY holder boundary; no SDK/third-party code is copied or dependency installed. Root source loaders compile authenticated readonly source bytes, preserving historical failures and existing strict default. Normal-route/native/input acceptance remains incomplete; see the [iteration](iterations/0038-ivv-native-producer.md).
+Reuse the existing strict PosixReader/proc/mount parsers, shared capture and ObjectStore/parent-ref/archive contracts. New stdlib-only metadata/configuration/role-growth helpers are purpose-limited and refuse an unproved PTY holder boundary; no SDK/third-party code is copied or dependency installed. Root source loaders compile authenticated readonly source bytes, preserving historical failures and existing strict default. Unconnected cgroup mutation/positive-parent helpers were withdrawn during located R1 correction. Normal-route/native/input acceptance remains incomplete; see the [iteration](iterations/0038-ivv-native-producer.md).
 
 ## Guarded history RAM auxiliary profile — issue255,2026-10-30
 

@@ -6,7 +6,6 @@ import hashlib
 import json
 import os
 import re
-import select
 import stat
 import subprocess
 import sys
@@ -29,12 +28,22 @@ def _need(value, reason):
         raise NativeUnproven(reason)
 
 
+class _CleanupFailure(NativeUnproven):
+    def __init__(self, code, primary):
+        super().__init__(code)
+        self.primary = primary
+
+
 @contextmanager
 def _held(reader, fd):
     try:
         yield fd
     finally:
-        reader.release(fd)
+        primary = sys.exc_info()[1]
+        try:
+            reader.release(fd)
+        except OSError:
+            raise _CleanupFailure("NATIVE_FD_CLOSE", primary) from None
 
 
 def _stamp(item):
@@ -133,11 +142,16 @@ def _classify_initial(reader):
     return sockets, result, _tmux_filesystem_endpoint(reader)
 
 
-def initial_socket_roles(reader):
-    """Only the two pre-connect listeners, using held producer-verified proc handles."""
+def _verified_socket_inventory(reader):
     before = _classify_initial(reader)
     _need(_classify_initial(reader) == before, "SOCKET_TABLE_RACE")
-    return before[1]
+    return before[0], before[1]
+
+
+def initial_socket_roles(reader):
+    """Only the two pre-connect listeners, using held producer-verified proc handles."""
+    _, listeners = _verified_socket_inventory(reader)
+    return listeners
 
 
 _ROLE_PATHS = (
@@ -181,7 +195,13 @@ class RoleGrowth:
 
         flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC
 
-        def directory(fd, depth):
+        def mount_id(fd):
+            raw = reader.read(None, f"/proc/self/fdinfo/{fd}", 4096)
+            rows = [line[7:].strip() for line in raw.splitlines() if line.startswith(b"mnt_id:")]
+            _need(len(rows) == 1 and rows[0].isdigit() and int(rows[0]) > 0, "ROLE_MOUNT_UNKNOWN")
+            return int(rows[0])
+
+        def directory(fd, depth, role_mount):
             tick()
             _need(depth <= 64, "SAMPLE_DEPTH")
             before = os.fstat(fd)
@@ -196,13 +216,25 @@ class RoleGrowth:
                             reader, reader.keep(os.open(entry.name, flags, dir_fd=fd))
                         ) as child:
                             _need(_stamp(os.fstat(child)) == _stamp(named), "ROLE_ENTRY_RACE")
-                            directory(child, depth + 1)
+                            _need(mount_id(child) == role_mount, "ROLE_MOUNT_CROSSING")
+                            directory(child, depth + 1, role_mount)
                     else:
                         _need(
                             stat.S_ISREG(named.st_mode) or stat.S_ISSOCK(named.st_mode),
                             "UNPROVEN_ROLE_ENTRY",
                         )
-                        measure(named)
+                        with _held(
+                            reader,
+                            reader.keep(
+                                os.open(
+                                    entry.name, os.O_PATH | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=fd
+                                )
+                            ),
+                        ) as leaf:
+                            _need(mount_id(leaf) == role_mount, "ROLE_MOUNT_CROSSING")
+                            item = os.fstat(leaf)
+                            _need(_stamp(item) == _stamp(named), "ROLE_ENTRY_RACE")
+                            measure(item)
                     after = os.stat(entry.name, dir_fd=fd, follow_symlinks=False)
                     _need(
                         _stamp(after) == _stamp(named)
@@ -220,7 +252,9 @@ class RoleGrowth:
         for path in _ROLE_PATHS:
             with _held(reader, reader.held_path(path, reader.root)) as ref:
                 with _held(reader, reader.keep(os.open(".", flags, dir_fd=ref))) as fd:
-                    directory(fd, 0)
+                    role_mount = mount_id(ref)
+                    _need(mount_id(fd) == role_mount, "ROLE_MOUNT_CROSSING")
+                    directory(fd, 0, role_mount)
             tick()
         self.current = observed
         if self.baseline is None:
@@ -232,86 +266,6 @@ class RoleGrowth:
         _need(incremental < 33554432, "PROVIDER_GROWTH")
         tick()
         return incremental
-
-
-def _observe_empty(handles):
-    for name, keys in (
-        ("cgroup.events", {"populated", "frozen"}),
-        ("pids.events", {"max"}),
-        ("memory.events", {"low", "high", "max", "oom", "oom_kill"}),
-    ):
-        try:
-            raw = os.pread(handles[name], 4097, 0)
-        except (OSError, KeyError):
-            raise NativeUnproven("OWNED_CGROUP_LOST") from None
-        _need(0 < len(raw) <= 4096, "OWNED_CGROUP_NOT_CLOSED")
-        rows = raw.splitlines()
-        fields = {}
-        for row in rows:
-            parts = row.split()
-            _need(
-                len(parts) == 2 and parts[1] == b"0" and parts[0] not in fields,
-                "OWNED_CGROUP_NOT_CLOSED",
-            )
-            fields[parts[0]] = 0
-        _need({key.encode() for key in keys} <= fields.keys(), "OWNED_CGROUP_NOT_CLOSED")
-
-
-def _await_owned_exit(child, control, handles, started):
-    """Observe owned wait status, heartbeat EOF and held recursive cgroup events."""
-    status = None
-    ready = closed = eof = False
-    count = 0
-    heartbeat_deadline = min(started + 180, started + 480)
-    while status is None or not eof:
-        now = time.monotonic()
-        _need(now < min(started + 480, heartbeat_deadline), "OWNED_MONITOR_TIMEOUT")
-        if status is None:
-            pid, actual = os.waitpid(child, os.WNOHANG)
-            if pid:
-                _need(
-                    pid == child and os.WIFEXITED(actual) and os.WEXITSTATUS(actual) == 0,
-                    "OWNED_EXIT_ABNORMAL",
-                )
-                status = actual
-        if eof:
-            if status is None:
-                time.sleep(0.01)
-            continue
-        readable, _, _ = select.select([control], [], [], min(0.25, heartbeat_deadline - now))
-        if not readable:
-            continue
-        msg = os.read(control, 1)
-        now = time.monotonic()
-        _need(now < min(started + 480, heartbeat_deadline), "OWNED_MONITOR_TIMEOUT")
-        if msg == b"R":
-            _need(not ready and not closed, "OWNED_MONITOR_PROTOCOL")
-            ready = True
-            heartbeat_deadline = now + 5
-        elif msg == b"S":
-            count += 1
-            _need(ready and not closed and count <= 97, "OWNED_MONITOR_PROTOCOL")
-            heartbeat_deadline = now + 7
-        elif msg == b"C":
-            _need(ready and count and not closed, "OWNED_MONITOR_PROTOCOL")
-            closed = True
-            heartbeat_deadline = min(now + 5, started + 480)
-        elif msg == b"":
-            _need(closed, "OWNED_MONITOR_LOST")
-            eof = True
-        else:
-            raise NativeUnproven("OWNED_MONITOR_FAILURE")
-    _observe_empty(handles)
-    elapsed = time.monotonic() - started
-    _need(0 <= elapsed <= 480, "OWNED_MONITOR_TIMEOUT")
-    return {
-        "helper_exit_code": 0,
-        "active_owned_processes": 0,
-        "watchdog_eof": True,
-        "force_killed": False,
-        "resource_limit_event": False,
-        "elapsed_seconds": elapsed,
-    }
 
 
 def _quote_settings(client_code, sdk_code, version):
@@ -490,6 +444,7 @@ def _protected_bytes(path, maximum):
             )
         return raw
     finally:
+        primary = sys.exc_info()[1]
         failed = False
         for _, handle, _ in reversed(held):
             try:
@@ -497,7 +452,7 @@ def _protected_bytes(path, maximum):
             except OSError:
                 failed = True
         if failed:
-            raise NativeUnproven("CONFIG_CONTROL_CLOSE")
+            raise _CleanupFailure("CONFIG_CONTROL_CLOSE", primary) from None
 
 
 _HISTORICAL_ROOT = "/opt/quantmesh/l90-20261023-183245/"
@@ -589,6 +544,7 @@ def _retained_channels(reader, producer, current_roles):
         for m in producer._visible_mounts(producer.parse_mountinfo(reader.mountinfo())).values()
     }
     endpoints = []
+    sockets = set()
     process_stats = {}
     for pid, (proc, *_) in reader.processes.items():
         process_stats[pid] = reader.read(proc, "stat", 4096)
@@ -634,6 +590,7 @@ def _retained_channels(reader, producer, current_roles):
                         )
                     else:
                         _need(kind == "SOCKET", "UNSUPPORTED_CHANNEL")
+                        sockets.add((pid, name, obj.st_ino))
                     _need(_stamp(obj) == _stamp(os.stat(name, dir_fd=directory)), "FD_RACE")
             _need(set(os.listdir(directory)) == set(names), "FD_RACE")
         maps = reader.read(proc, "maps", 262144)
@@ -653,7 +610,7 @@ def _retained_channels(reader, producer, current_roles):
                         and _stamp(item) == _stamp(os.stat(name, dir_fd=proc)),
                         "SHARED_MAPPING_RACE",
                     )
-    return _paired_pty(endpoints, process_stats, mounts)
+    return _paired_pty(endpoints, process_stats, mounts), sockets
 
 
 def _provider_controls(reader):
@@ -688,10 +645,11 @@ def _fresh_provider(reader, producer, plan, budget, series):
     for variable in ("G", "P"):
         _need(type(budget.get(variable)) is int and budget[variable] > 0, "BUDGET_UNKNOWN")
     incremental = series.sample(reader)
-    before = _retained_channels(reader, producer, series.current)
-    listeners = initial_socket_roles(reader)
-    after = _retained_channels(reader, producer, series.current)
-    _need(after == before, "PTY_RACE")
+    pair, prior_sockets = _retained_channels(reader, producer, series.current)
+    classified, listeners = _verified_socket_inventory(reader)
+    final_pair, final_sockets = _retained_channels(reader, producer, series.current)
+    _need(pair == final_pair, "PTY_RACE")
+    _need(prior_sockets == classified == final_sockets, "SOCKET_TABLE_RACE")
     resources = _provider_controls(reader)
     usage = os.statvfs(str(PurePosixPath(plan["receipt_root"]).parent))
     _need(
@@ -701,7 +659,7 @@ def _fresh_provider(reader, producer, plan, budget, series):
         "MONITOR_THRESHOLD",
     )
     reader.tick()
-    _require_holder_closure(before)
+    _require_holder_closure(pair)
     return (
         listeners,
         resources,
@@ -721,6 +679,8 @@ def _digest_public(value):
 
 
 def _failure_code(error, producer):
+    if isinstance(error, _CleanupFailure) and error.primary is not None:
+        return _failure_code(error.primary, producer) + "+" + error.args[0]
     if isinstance(error, (NativeUnproven, producer.FeasibilityRejected)) and error.args:
         value = error.args[0]
         if isinstance(value, str) and re.fullmatch(r"[A-Z_+]{1,256}", value):
@@ -773,8 +733,15 @@ class NativeSession:
             )
             _need(not reader.finish(), "PROVIDER_RACE")
         finally:
-            while len(reader.fds) > marker:
-                reader.release(reader.fds[-1])
+            primary = sys.exc_info()[1]
+            failed = False
+            for fd in reversed(reader.fds[marker:]):
+                try:
+                    reader.release(fd)
+                except OSError:
+                    failed = True
+            if failed:
+                raise _CleanupFailure("NATIVE_FD_CLOSE", primary) from None
         stamp = time.monotonic()
         _need(stamp - before < 2, "SAMPLE_TIMEOUT")
         baseline = _digest_public(
@@ -873,69 +840,3 @@ def prepare_provider(plan, producer, budget_ref):
             primary += "+" + str(cleanup)
         raise NativeUnproven(primary) from None
     return session
-
-
-@contextmanager
-def _owned_group():
-    """Own a fresh direct cgroup with no systemd cleanup or restart policy."""
-    name = "quantmesh-ivv-dev-e285.scope"
-    base_flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_DIRECTORY
-    owned = []
-
-    def keep(fd):
-        owned.append(fd)
-        return fd
-
-    parent = keep(os.open("/sys/fs/cgroup/system.slice", base_flags))
-    created = False
-    try:
-        p = os.fstat(parent)
-        _need(
-            stat.S_ISDIR(p.st_mode) and p.st_uid == 0 and not p.st_mode & 0o022,
-            "CAPTURE_CGROUP_PARENT",
-        )
-        os.mkdir(name, 0o700, dir_fd=parent)
-        created = True
-        directory = keep(os.open(name, base_flags, dir_fd=parent))
-        handles = {}
-        for key in ("cgroup.events", "memory.events", "pids.events", "cgroup.procs", "cgroup.kill"):
-            mode = (
-                os.O_RDWR
-                if key == "cgroup.procs"
-                else os.O_WRONLY
-                if key == "cgroup.kill"
-                else os.O_RDONLY
-            )
-            handles[key] = keep(os.open(key, mode | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory))
-        _observe_empty(handles)
-        for key, value in (
-            ("memory.max", b"536870912"),
-            ("memory.swap.max", b"0"),
-            ("pids.max", b"32"),
-            ("cpu.max", b"50000 100000"),
-        ):
-            fd = keep(os.open(key, os.O_RDWR | os.O_NOFOLLOW | os.O_CLOEXEC, dir_fd=directory))
-            _need(
-                os.write(fd, value) == len(value) and os.pread(fd, 128, 0).strip() == value,
-                "OWNED_KERNEL_LIMIT",
-            )
-        yield handles
-    finally:
-        # An occupied group cannot be removed. This function never kills a process to obtain normal.
-        failures = []
-        for handle in reversed(owned[1:]):
-            try:
-                os.close(handle)
-            except OSError:
-                failures.append("OWNED_HANDLE_CLOSE")
-        if created:
-            try:
-                os.rmdir(name, dir_fd=parent)
-            except OSError:
-                failures.append("OWNED_CGROUP_RETAINED")
-        try:
-            os.close(parent)
-        except OSError:
-            failures.append("OWNED_HANDLE_CLOSE")
-        if failures:
-            raise NativeUnproven("+".join(failures))

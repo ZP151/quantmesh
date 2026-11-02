@@ -194,10 +194,16 @@ def test_metadata_sample_uses_inode_high_water(monkeypatch, case):
         )
 
     def fstat(fd):
+        if fd == 501:
+            return st(stat.S_IFREG | 0o600, 501, state["size"])
         return st(stat.S_IFDIR | 0o700, fd % 100, stamp=state["stamp"])
 
     def open_dir(path, flags, *, dir_fd):
-        assert path == "." and flags == 7
+        if path != ".":
+            assert flags == 11
+            held.add(501)
+            return 501
+        assert flags == 7 and path == "."
         held.add(dir_fd + 100)
         return dir_fd + 100
 
@@ -227,6 +233,10 @@ def test_metadata_sample_uses_inode_high_water(monkeypatch, case):
     class Reader:
         root = 10
 
+        def read(self, parent, name, bound):
+            assert parent is None and name.startswith("/proc/self/fdinfo/")
+            return b"mnt_id: 1\n"
+
         def held_path(self, path, root):
             assert root == 10
             fd = directories[path]
@@ -248,6 +258,7 @@ def test_metadata_sample_uses_inode_high_water(monkeypatch, case):
             scandir=scandir,
             stat=file_stat,
             O_RDONLY=0,
+            O_PATH=8,
             O_NOFOLLOW=1,
             O_CLOEXEC=2,
             O_DIRECTORY=4,
@@ -277,71 +288,6 @@ def test_metadata_sample_uses_inode_high_water(monkeypatch, case):
                 sample()
     finally:
         assert not held
-
-
-@pytest.mark.parametrize(
-    "mode", ["normal", "signal_exit", "resources", "descendant", "stalled", "message", "late"]
-)
-def test_parent_observes_kernel_and_owned_watchdog(monkeypatch, mode):
-    m = native_module()
-    from types import SimpleNamespace as NS
-
-    now = [2.0]
-    waited = []
-    events = [b"R", b"S", b"C", b""]
-
-    def waitpid(child, options):
-        assert child == 789 and options == 1
-        waited.append(child)
-        if mode == "stalled" or events:
-            return (0, 0)
-        return (child, 9 if mode == "signal_exit" else 0)
-
-    def read(fd, size):
-        assert fd == 33 and size == 1
-        x = events.pop(0)
-        return b"X" if mode == "message" else x
-
-    def ready(r, w, x, timeout):
-        now[0] += 8 if mode == "stalled" else 0.1
-        if mode == "late":
-            now[0] = 482
-        return (r if mode != "stalled" else [], [], [])
-
-    def kernel(name):
-        values = {
-            "cgroup.events": b"populated 0\nfrozen 0\n",
-            "pids.events": b"max 0\n",
-            "memory.events": b"low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\n",
-        }
-        if mode == "descendant":
-            values["cgroup.events"] = b"populated 1\nfrozen 0\n"
-        if mode == "resources":
-            values["memory.events"] = values["memory.events"].replace(b"oom_kill 0", b"oom_kill 1")
-        return values[name]
-
-    handles = {"cgroup.events": 21, "pids.events": 22, "memory.events": 23}
-    monkeypatch.setattr(
-        m,
-        "os",
-        NS(
-            waitpid=waitpid,
-            WNOHANG=1,
-            read=read,
-            pread=lambda fd, size, offset: kernel({v: k for k, v in handles.items()}[fd]),
-            WIFEXITED=lambda s: s == 0,
-            WEXITSTATUS=lambda s: 0,
-        ),
-    )
-    monkeypatch.setattr(m, "select", NS(select=ready))
-    monkeypatch.setattr(m.time, "monotonic", lambda: now[0])
-    if mode == "normal":
-        value = m._await_owned_exit(789, 33, handles, 1.0)
-        assert value["helper_exit_code"] == value["active_owned_processes"] == 0
-        assert value["watchdog_eof"] and not value["force_killed"]
-    else:
-        with pytest.raises(m.NativeUnproven):
-            m._await_owned_exit(789, 33, handles, 1.0)
 
 
 @pytest.mark.parametrize(
@@ -585,7 +531,46 @@ def test_trusted_settings_joins_original_receipt_and_current_public_bytes(monkey
             m._trusted_configuration(plan)
 
 
-@pytest.mark.parametrize("case", ["good", "drift", "writable", "alias", "missing"])
+def _linux_source_file(monkeypatch, issuer, path, case):
+    import os
+
+    def info(*, named=False):
+        real = path.stat()
+        return SimpleNamespace(
+            st_dev=real.st_dev,
+            st_ino=real.st_ino + (named and case == "replaced"),
+            st_mode=stat.S_IFREG | 0o444,
+            st_uid=1 if case == "owner" else 0,
+            st_nlink=1,
+            st_size=real.st_size,
+            st_ctime_ns=real.st_ctime_ns,
+            st_mtime_ns=real.st_mtime_ns,
+        )
+
+    monkeypatch.setattr(
+        issuer,
+        "os",
+        SimpleNamespace(
+            open=os.open,
+            close=os.close,
+            pread=lambda fd, count, offset: os.read(fd, count),
+            stat=lambda p, **kwargs: info(named=True),
+            fstat=lambda fd: info(),
+            fstatvfs=lambda fd: SimpleNamespace(f_flag=int(case != "writable")),
+            ST_RDONLY=1,
+            O_RDONLY=os.O_RDONLY,
+            O_CLOEXEC=getattr(os, "O_CLOEXEC", 0),
+            O_NONBLOCK=getattr(os, "O_NONBLOCK", 0),
+            O_NOFOLLOW=getattr(os, "O_NOFOLLOW", 0),
+            getuid=lambda: 0,
+            geteuid=lambda: 0,
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "case", ["good", "drift", "writable", "alias", "missing", "owner", "replaced"]
+)
 def test_released_native_source_is_verified_before_compilation(tmp_path, monkeypatch, case):
     import hashlib
 
@@ -601,11 +586,7 @@ def test_released_native_source_is_verified_before_compilation(tmp_path, monkeyp
     source.write_bytes(b"FROZEN = 123\n")
     raw = source.read_bytes()
 
-    def fileinfo(path):
-        return SimpleNamespace(f_flag=0 if case == "writable" else 1)
-
-    monkeypatch.setattr(d.os, "statvfs", fileinfo, raising=False)
-    monkeypatch.setattr(d.os, "ST_RDONLY", 1, raising=False)
+    _linux_source_file(monkeypatch, d, source, case)
     if case == "alias":
         name = "../ivv_native_producer.py"
     pin = hashlib.sha256(raw).hexdigest()
@@ -635,7 +616,18 @@ def test_constructed_cohort_pair_cannot_seal_external_holders():
 
 
 @pytest.mark.parametrize(
-    "case", ["coherent", "fifo", "outside_reg", "shared_map", "extra_socket", "limits"]
+    "case",
+    [
+        "coherent",
+        "fifo",
+        "outside_reg",
+        "shared_map",
+        "extra_socket",
+        "late_socket",
+        "nested_bind",
+        "file_bind",
+        "limits",
+    ],
 )
 def test_real_six_role_and_retained_kernel_acquisition_reaches_precise_boundary(monkeypatch, case):
     import contextlib
@@ -728,19 +720,62 @@ def test_real_six_role_and_retained_kernel_acquisition_reaches_precise_boundary(
     io.readlink = lambda path: (
         f"socket:[{io.fstat(int(path.removeprefix('/proc/self/fd/'))).st_ino}]"
     )
+    if case == "late_socket":
+        old_listdir = io.listdir
+        passes = 0
+
+        def listing(handle):
+            nonlocal passes
+            if io.handles[handle][0] == "/proc/705711/fd":
+                passes += 1
+                if passes == 7:  # first list of the final retained-FD walk
+                    fd(705711, 19, stat.S_IFSOCK, 119999, 9, 90)
+            return old_listdir(handle)
+
+        io.listdir = listing
+    if case == "nested_bind":
+        directory("/root/var/lib/quantmesh-opend/foreign", uid=997, dev=66305)
+    if case == "file_bind":
+        add(
+            "/root/var/lib/quantmesh-opend/foreign",
+            stat.S_IFREG | 0o600,
+            uid=997,
+            dev=66305,
+            size=1,
+        )
     io.scandir = lambda handle: contextlib.nullcontext(
         iter(SimpleNamespace(name=n) for n in io.listdir(handle))
     )
+    original_scan = io.scandir
+
+    def scan(handle):
+        assert not io.handles[handle][0].endswith("/foreign"), "OUTSIDE_DIRECTORY_ENUMERATED"
+        return original_scan(handle)
+
+    io.scandir = scan
     io.statvfs = lambda path: SimpleNamespace(f_bavail=100000000000, f_frsize=1)
     io.makedev = lambda major, minor: (major << 8) | minor
     monkeypatch.setattr(m, "os", io)
     monkeypatch.setattr(p, "os", io)
     reader = p.PosixReader()
+    original_read = reader.read
+
+    def read(parent, name, bound):
+        if name.startswith("/proc/self/fdinfo/"):
+            handle = int(name.rsplit("/", 1)[1])
+            mount = 23 if io.handles[handle][0].endswith("/foreign") else 1
+            return f"flags: 02\nmnt_id: {mount}\n".encode()
+        return original_read(parent, name, bound)
+
+    reader.read = read
     reader.root = reader.directory("/root")
     reader.processes = {pid: (reader.directory(f"/proc/{pid}"),) for pid in p.PROCESSES}
     reader.manager_fields = {"ControlGroup": "/system.slice/" + p.UNIT}
     reasons = {
         "coherent": "PTY_EXTERNAL_HOLDER_UNPROVEN",
+        "late_socket": "SOCKET_TABLE_RACE",
+        "nested_bind": "ROLE_MOUNT_CROSSING",
+        "file_bind": "ROLE_MOUNT_CROSSING",
         "fifo": "UNSUPPORTED_CHANNEL",
         "outside_reg": "OUTSIDE_RETAINED_FILE",
         "shared_map": "UNPROVEN_SHARED_MAPPING",
@@ -783,21 +818,6 @@ def test_unclassified_pty_initial_preflight_preserves_primary_and_cleanup():
         m.prepare_provider({}, p, {})
 
 
-def test_kernel_close_requires_preheld_event_descriptions(monkeypatch):
-    m = native_module()
-    held = {"cgroup.events": 21, "pids.events": 22, "memory.events": 23}
-    reads = {
-        21: b"populated 0\nfrozen 0\n",
-        22: b"max 0\n",
-        23: b"low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\n",
-    }
-    monkeypatch.setattr(m, "os", SimpleNamespace(pread=lambda f, n, o: reads[f]))
-    assert m._observe_empty(held) is None
-    del reads[21]
-    with pytest.raises(m.NativeUnproven):
-        m._observe_empty(held)
-
-
 def test_snapshot_never_crosses_owner_lifetime_and_expiry(monkeypatch):
     m = native_module()
     sess = object.__new__(m.NativeSession)
@@ -821,74 +841,120 @@ def test_snapshot_never_crosses_owner_lifetime_and_expiry(monkeypatch):
         sess.snapshot()
 
 
-@pytest.mark.parametrize("case", ["bound", "populated", "drift", "foreign_parent"])
-def test_controller_creates_only_fixed_cgroup_and_preholds_kernel_files(monkeypatch, case):
-    m = native_module()
-    opened = {}
-    closed = []
-    values = {
-        "cgroup.events": b"populated 0\nfrozen 0\n",
-        "pids.events": b"max 0\n",
-        "memory.events": b"low 0\nhigh 0\nmax 0\noom 0\noom_kill 0\n",
-    }
-    if case == "populated":
-        values["cgroup.events"] = b"populated 1\nfrozen 0\n"
+def test_root_bootstrap_rejects_substituted_helper_before_compiling(tmp_path, monkeypatch):
+    from test_ivv_dev_diagnostic import dev_module
 
-    def op(name, flags, *, dir_fd=None):
-        if dir_fd is None:
-            assert name == "/sys/fs/cgroup/system.slice"
-        elif dir_fd == 100:
-            assert name == "quantmesh-ivv-dev-e285.scope"
-        else:
-            assert dir_fd == 101 and "/" not in name
-        n = 100 + len(opened)
-        opened[n] = name
-        return n
+    d = dev_module()
+    monkeypatch.setattr(d, "__file__", str(tmp_path / "ivv_dev_diagnostic.py"))
+    (tmp_path / "capture_opend_ivv_daily.py").write_bytes(
+        b"raise AssertionError('UNAUTHENTICATED_HELPER_WAS_EXECUTED')\n"
+    )
+    monkeypatch.setattr(d, "sys", SimpleNamespace(platform="linux", exc_info=d.sys.exc_info))
+    _linux_source_file(monkeypatch, d, tmp_path / "capture_opend_ivv_daily.py", "good")
+    with pytest.raises(RuntimeError, match="^DEV_NATIVE_SOURCE_PIN$"):
+        d.prepare_native_evidence({}, provenance={}, budget_ref={})
 
-    def write(fd, data):
-        values[opened[fd]] = data
-        return len(data)
 
-    def pread(fd, n, o):
-        key = opened[fd]
-        if case == "drift" and key == "memory.max":
-            return b"max\n"
-        return values[key]
+def test_channel_cleanup_keeps_safe_primary_and_cleanup_reasons():
+    from test_ivv_native_producer import producer
+
+    m, p = native_module(), producer()
+
+    class Reader:
+        def release(self, fd):
+            raise OSError("private payload must never leave reader")
+
+    with pytest.raises(Exception) as err, m._held(Reader(), 31):
+        raise p.FeasibilityRejected("FD_RACE")
+    assert m._failure_code(err.value, p) == "FD_RACE+NATIVE_FD_CLOSE"
+
+
+def test_root_read_preserves_refusal_if_all_closes_fail(monkeypatch):
+    from test_ivv_native_producer import producer
+
+    m, p = native_module(), producer()
+    releases = []
+
+    def close(fd):
+        releases.append(fd)
+        raise OSError("private")
+
+    def op(path, flags, *, dir_fd=None):
+        return {"/": 10, "etc": 11, "sample": 12}[path]
+
+    def info(fd):
+        return SimpleNamespace(
+            st_mode=stat.S_IFDIR | 0o755 if fd < 12 else stat.S_IFREG | 0o666,
+            st_uid=0,
+            st_nlink=1,
+            st_size=8,
+        )
 
     monkeypatch.setattr(
         m,
         "os",
         SimpleNamespace(
-            O_RDONLY=0,
-            O_DIRECTORY=4,
-            O_CLOEXEC=2,
-            O_NOFOLLOW=1,
-            O_RDWR=8,
-            O_WRONLY=16,
+            close=close,
             open=op,
-            close=closed.append,
-            write=write,
-            pread=pread,
-            fstat=lambda f: SimpleNamespace(
-                st_uid=1 if case == "foreign_parent" and f == 100 else 0,
-                st_mode=stat.S_IFDIR | 0o755,
-            ),
-            mkdir=lambda name, mode, dir_fd: None,
-            rmdir=lambda name, dir_fd: None,
+            fstat=info,
+            O_RDONLY=0,
+            O_CLOEXEC=1,
+            O_NOFOLLOW=2,
+            O_DIRECTORY=4,
+            O_NONBLOCK=8,
         ),
     )
-    if case == "bound":
-        with m._owned_group() as held:
-            assert values["pids.max"] == b"32" and values["memory.max"] == b"536870912"
-            assert set(held) >= {
-                "pids.events",
-                "memory.events",
-                "cgroup.events",
-                "cgroup.procs",
-                "cgroup.kill",
-            }
-            assert all(held[n] not in closed for n in held)
-    else:
-        with pytest.raises(m.NativeUnproven), m._owned_group():
-            pass
-    assert len(closed) == len(set(closed)) == len(opened)
+    with pytest.raises(m.NativeUnproven) as err:
+        m._protected_bytes("/etc/sample", 8)
+    assert m._failure_code(err.value, p) == "CONFIG_CONTROL_ORIGIN+CONFIG_CONTROL_CLOSE"
+    assert releases == [12, 11, 10]
+
+
+def test_real_frozen_helper_bootstraps_without_sdk(monkeypatch):
+    from test_ivv_dev_diagnostic import dev_module
+
+    d = dev_module()
+    _linux_source_file(
+        monkeypatch, d, Path(d.__file__).with_name("capture_opend_ivv_daily.py"), "good"
+    )
+    monkeypatch.setattr(d, "sys", SimpleNamespace(platform="linux", exc_info=d.sys.exc_info))
+    m = d._capture()
+    assert m.capture_dev_once.__module__ == m.__name__
+
+
+def test_sampling_releases_every_new_fd_and_preserves_kernel_primary(monkeypatch):
+    import hashlib
+
+    from test_ivv_native_producer import producer
+
+    m, p = native_module(), producer()
+    attempted = []
+
+    class Reader:
+        fds = [14]
+        root = 14
+
+        def held_path(self, path, root):
+            self.fds.extend((31, 32))
+            raise p.FeasibilityRejected("FD_RACE")
+
+        def release(self, fd):
+            self.fds.remove(fd)
+            attempted.append(fd)
+            raise OSError("private")
+
+    raw = b'{"G": 1, "P": 1}'
+    monkeypatch.setattr(m, "_protected_bytes", lambda path, maximum: raw)
+    session = m.NativeSession(
+        {"started_monotonic": m.time.monotonic()},
+        p,
+        {"path": "/fictional-budget", "sha256": hashlib.sha256(raw).hexdigest()},
+    )
+    session.reader = Reader()
+    monkeypatch.setattr(
+        m, "os", SimpleNamespace(O_DIRECTORY=4, O_RDONLY=0, O_CLOEXEC=2, O_NOFOLLOW=1)
+    )
+    with pytest.raises(m.NativeUnproven) as err:
+        session._sample()
+    assert m._failure_code(err.value, p) == "FD_RACE+NATIVE_FD_CLOSE"
+    assert attempted == [32, 31] and session.reader.fds == [14]

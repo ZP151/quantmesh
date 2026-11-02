@@ -21,12 +21,15 @@ PROVENANCE_KEYS = (
 )
 
 
+# The independently reviewed helper is fixed for this release. No code from the
+# plan, catalog, or helper runs to establish this initial trust anchor.
+_CAPTURE_HELPER_SHA256 = "95ac3c27c608d4e27b48fe95fa2a1191645afadb9f2fade9c13dbe7934f2396c"
+
+
 def _capture():
-    path = Path(__file__).with_name("capture_opend_ivv_daily.py")
-    module = types.ModuleType("ivv_dev_capture")
-    module.__file__ = str(path)
-    exec(compile(path.read_bytes(), str(path), "exec"), module.__dict__)
-    return module
+    if sys.platform != "linux" or os.getuid() != 0 or os.geteuid() != 0:
+        raise RuntimeError("dev_root_issuer")
+    return _released_module("capture_opend_ivv_daily.py", _CAPTURE_HELPER_SHA256)
 
 
 def validate_policy(m, value, plan, authorization_sha256):
@@ -53,19 +56,58 @@ def validate_policy(m, value, plan, authorization_sha256):
 
 def _released_module(name, expected):
     """Compile the checked bytes directly. Native authority never executes a .pyc file."""
-    if name not in ("ivv_dev_native.py", "ivv_native_producer.py"):
+    if name not in ("capture_opend_ivv_daily.py", "ivv_dev_native.py", "ivv_native_producer.py"):
         raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
     path = Path(__file__).with_name(name)
-    if path.resolve() != path or not os.statvfs(path).f_flag & os.ST_RDONLY:
+    if path.resolve(strict=True) != path:
         raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
-    with path.open("rb") as stream:
-        raw = stream.read(262145)
-    if (
-        len(raw) > 262144
-        or hashlib.sha256(raw).hexdigest() != expected
-        or not os.statvfs(path).f_flag & os.ST_RDONLY
-    ):
-        raise RuntimeError("DEV_NATIVE_SOURCE_PIN")
+
+    def stamp(info):
+        return (
+            info.st_dev,
+            info.st_ino,
+            info.st_mode,
+            info.st_uid,
+            info.st_nlink,
+            info.st_size,
+            info.st_ctime_ns,
+            info.st_mtime_ns,
+        )
+
+    fd = os.open(path, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(fd)
+        if not (
+            stat.S_ISREG(info.st_mode)
+            and info.st_uid == 0
+            and info.st_nlink == 1
+            and not info.st_mode & 0o022
+            and 0 < info.st_size <= 262144
+            and os.fstatvfs(fd).f_flag & os.ST_RDONLY
+            and stamp(info) == stamp(os.stat(path, follow_symlinks=False))
+        ):
+            raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
+        raw = os.pread(fd, info.st_size + 1, 0)
+        if not (
+            len(raw) == info.st_size
+            and hashlib.sha256(raw).hexdigest() == expected
+            and os.fstatvfs(fd).f_flag & os.ST_RDONLY
+            and stamp(os.fstat(fd)) == stamp(info) == stamp(os.stat(path, follow_symlinks=False))
+        ):
+            raise RuntimeError("DEV_NATIVE_SOURCE_PIN")
+    finally:
+        primary = sys.exc_info()[1]
+        try:
+            os.close(fd)
+        except OSError:
+            code = (
+                str(primary)
+                if type(primary) is RuntimeError
+                and primary.args in (("DEV_NATIVE_SOURCE_ORIGIN",), ("DEV_NATIVE_SOURCE_PIN",))
+                else "DEV_NATIVE_SOURCE_READ"
+            )
+            reason = code + "+DEV_NATIVE_SOURCE_CLOSE" if primary else "DEV_NATIVE_SOURCE_CLOSE"
+            raise RuntimeError(reason) from None
     mod = types.ModuleType("_qm_" + name[:-3] + "_" + expected)
     mod.__file__ = str(path)
     exec(compile(raw, str(path), "exec"), mod.__dict__)

@@ -394,7 +394,14 @@ def kernel_fixture(tmp_path, monkeypatch, *, registration=None):
     monkeypatch.setattr(os, "geteuid", lambda: 0, raising=False)
     monkeypatch.setattr(os, "fchmod", lambda fd, mode: None, raising=False)
     monkeypatch.setattr(os, "ST_RDONLY", 1, raising=False)
-    for name, value in (("O_NOFOLLOW", 0), ("O_CLOEXEC", 0), ("O_ACCMODE", 3), ("O_PATH", 2097152)):
+    monkeypatch.setattr(os, "fstatvfs", lambda fd: SimpleNamespace(f_flag=1), raising=False)
+    for name, value in (
+        ("O_NOFOLLOW", 0),
+        ("O_CLOEXEC", 0),
+        ("O_NONBLOCK", 0),
+        ("O_ACCMODE", 3),
+        ("O_PATH", 2097152),
+    ):
         monkeypatch.setattr(os, name, value, raising=False)
 
     def pread(fd, count, offset):
