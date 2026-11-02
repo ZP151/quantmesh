@@ -1,5 +1,10 @@
 # Iteration 0038 — IVV native producer
 
+## Task3 software review closed; normal publication next — 2026-11-02
+
+Same Spec reviewer R2 marks both original findings ADDRESSED; same Standards reviewer R2 marks both P1 findings ADDRESSED. Both read the complete located fix and identified no new Critical/Important regression on2cafc3d6b1ea7a364a05a265729aa4f9e83c8e18. Possible Data Clumps remains a recorded nonblocking maintenance judgment. Fresh R1 plus exactly one located R2 is closed; old Task1/preflight reviews are reused, not rerun. Parent115 final changed-file tests/36.78s, three-file static checks, all seven HEAD/file byte identities and private4158/0 closure are actual independent evidence. Actual physical14699112/20971520 before small final publication records, retaining every old failure and future.
+
+Next is the single naturally required matching-head CI, normal merge and full catalog, followed by actual volatile admission and only the original one-effect diagnostic if it passes. No branch-protection bypass, human implementation-review claim, provider restart or extra context/retry is authorized. R2 is static software review; Linux manager/kernel/runtime, actual original data/H1/H2/H3, independent accepted input and financial outcome remain unobserved. Root has the actual milestones and existing scope-specific workflow ruling; no repeat user approval is pending.
 ## Task3 located fix frozen for same-reviewer R2 — 2026-11-02 22:36 SGT
 
 The one known-fix wave completed in about25min from22:11. Parent independently verified all seven final source/test hashes: only runner/new test/direct-reference utility changed, the other four reviewed files are byte-identical. Parent reran both directly changed test files:115 passed/36.78s; three-file Ruff/format and whitespace pass. Original283 affected pre-fix proof and all failing/calibration evidence remain distinct, not added as unique test counts. Actual acquisition bodies now execute through mapped external kernel/provider/SDK boundaries in the shared capture/supervisor/consumer/cold chain; this remains software evidence.
