@@ -42,6 +42,8 @@ INPUT_CHECKS = (
     "parent_seal_verified",
 )
 _REAL_AUTHORITY = object()
+TRUSTED_AUTH = "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452"
+TRUSTED_SUFFIX = ".dev-trusted-environment.v1"
 
 
 def prepare_runtime(root, basis, store):
@@ -76,6 +78,8 @@ def _schema(proofs, kind):
         proofs.expected_authorization_sha256,
     )
     _require(all(v is not None for v in values) if dev else all(v is None for v in values))
+    if dev and proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        return "qm.ivv." + kind + TRUSTED_SUFFIX
     return "qm.ivv." + kind + (".dev-diagnostic.v1" if dev else ".v1")
 
 
@@ -89,6 +93,11 @@ def _dev_binding(proofs, value):
         "hard_limit_enforced": False,
         "provider_tail_max": "UNKNOWN",
     }
+    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        expected.update(
+            diagnostic_mode="DEV_TRUSTED_ENVIRONMENT",
+            channel_assurance="UNVERIFIED_TRUSTED_EXTERNAL",
+        )
     _require(all(value.get(k) == v for k, v in expected.items()))
     _require(value.get("hard_limit_enforced") is False)
     return expected
@@ -117,6 +126,13 @@ def _verify_dev_policy(store, proofs, go, acceptance, reviews):
         "exceptions": ["provider_32MiB_fullRO_sixRW", "legacy_loaded_guard_provenance"],
         "thresholds": {"G": 10500000000, "P": 4500000000, "free": 53687091200},
     }
+    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        expected.update(
+            schema_id=_schema(proofs, "capture-policy"),
+            diagnostic_mode="DEV_TRUSTED_ENVIRONMENT",
+            channel_assurance="UNVERIFIED_TRUSTED_EXTERNAL",
+        )
+        expected["exceptions"].append("external_provider_terminal_ipc_socket_environment")
     _require(policy == expected and policy["hard_limit_enforced"] is False)
     _dev_binding(proofs, acceptance)
     return _dev_binding(proofs, go)
@@ -233,6 +249,39 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     evidence = [daily.ObjectRef.model_validate(r) for r in acceptance["parent_evidence_refs"]]
     _require(1 <= len(evidence) <= 8 and len(evidence) == len(parent["evidence_refs"]))
     _require([r.digest for r in evidence] == [r["sha256"] for r in parent["evidence_refs"]])
+    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        _require(len(evidence) == len({r.digest for r in evidence}) == 8)
+        _require(
+            [r.digest for r in evidence[:5]]
+            == [
+                binding["plan_sha256"],
+                binding["root_permit_sha256"],
+                binding["provider_evidence_ref"]["sha256"],
+                binding["catalog_sha256"],
+                binding["sdk_pins_sha256"],
+            ]
+        )
+        plan, permit, provider = (_load(store, ref) for ref in evidence[:3])
+        for obj, kind in (
+            (plan, "capture-plan"),
+            (permit, "root-permit"),
+            (provider, "provider-evidence"),
+        ):
+            _require(obj.get("schema_id") == _schema(proofs, kind))
+        _require(plan["policy_ref"]["sha256"] == proofs.expected_policy_sha256)
+        _dev_binding(proofs, permit)
+        _dev_binding(proofs, provider)
+        _require(permit["actor"] == parent["capture_actor"] == go["capture_actor"])
+        _require(permit["root_go_sha256"] == proofs.expected_go_sha256)
+        _require(provider["provider_actor"] == binding["provider_actor"])
+        _require(
+            [r.digest for r in evidence[5:]]
+            == [
+                parent["configuration_sha256"],
+                parent["monitor_sha256"],
+                parent["kernel_close_sha256"],
+            ]
+        )
     refs = [parent_ref, *evidence, *_capture_refs(raw)]
     for ref in refs:
         daily.NativeDailyService._from_store(store, ref)

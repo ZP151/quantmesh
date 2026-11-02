@@ -538,7 +538,9 @@ def test_actual_issuer_held_admission_and_public_dev_capture(tmp_path, monkeypat
         os.close(fd)
 
 
-def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypatch, registration):
+def _consume_real_capture_artifacts(
+    m, root, result, kwargs, tmp_path, monkeypatch, registration, *, produced_parent=None
+):
     """Actual helper artifact bytes through the existing consumer's parent gate.
 
     Parent exit is an authored independent observation in this software model,
@@ -573,13 +575,21 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         "pins": binding["sdk_pins_sha256"],
     }
     for name, observation in (
-        ("native-config", {"configuration_binding_sha256": "9" * 64}),
-        ("monitor", {"sample_count": 2, "observed_incremental_bytes": 0}),
-        ("parent-kernel-close", {"return_code": 0, "cgroup_populated": 0}),
+        ()
+        if produced_parent is not None
+        else (
+            ("native-config", {"configuration_binding_sha256": "9" * 64}),
+            ("monitor", {"sample_count": 2, "observed_incremental_bytes": 0}),
+            ("parent-kernel-close", {"return_code": 0, "cgroup_populated": 0}),
+        )
     ):
         body = m._canonical({"software_only": True, "observation": name, **observation})
         (tmp_path / name).write_bytes(body)
         controls[name] = hashlib.sha256(body).hexdigest()
+    if produced_parent is not None:
+        controls = {
+            Path(ref["path"]).name: ref["sha256"] for ref in produced_parent["evidence_refs"]
+        }
     parent_roots = [
         {"path": str(tmp_path / name), "sha256": digest} for name, digest in controls.items()
     ]
@@ -598,6 +608,8 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
             "provider_tail_max",
         )
     }
+    if "channel_assurance" in result:
+        provenance["channel_assurance"] = result["channel_assurance"]
     parent = {
         "schema_id": "qm.ivv.capture-parent-close.dev-diagnostic.v1",
         **provenance,
@@ -620,13 +632,20 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         "elapsed_seconds": 1,
         "evidence_refs": parent_roots,
     }
+    if produced_parent is not None:
+        parent = produced_parent
     accepted = {
         "parent_close_ref": put(parent).model_dump(),
         "parent_evidence_refs": [ref.model_dump() for ref in parent_objects],
     }
 
     def original(name):
-        return store.put_bytes("application/json", (tmp_path / name).read_bytes())
+        path = (
+            Path(kwargs["go_ref"]["path"])
+            if produced_parent is not None and name == "go"
+            else tmp_path / name
+        )
+        return store.put_bytes("application/json", path.read_bytes())
 
     source_facts = {
         "schema_id": "qm.ivv.source-facts.v1",
@@ -674,7 +693,9 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
     )
     accepted.update(
         {
-            "schema_id": "qm.ivv.input-acceptance.dev-diagnostic.v1",
+            "schema_id": result["schema_id"].replace(
+                "qm.ivv.capture", "qm.ivv.input-acceptance", 1
+            ),
             **provenance,
             "decision": "ACCEPT_FOR_ONE_DECLARED_RETROSPECTIVE_RESEARCH",
             "reviewer": v.REVIEWER,
@@ -787,7 +808,7 @@ def _consume_real_capture_artifacts(m, root, result, kwargs, tmp_path, monkeypat
         assert daily.NativeDailyService._from_store(cold, ref) == (tmp_path / name).read_bytes()
     assert set(controls.values()).isdisjoint(ref["digest"] for ref in package["review_refs"])
     for ref, path in (
-        (proofs.go_ref, tmp_path / "go"),
+        (proofs.go_ref, Path(kwargs["go_ref"]["path"])),
         (proofs.capture_policy_ref, tmp_path / "policy"),
         (proofs.authorization_ref, tmp_path / "authorization"),
     ):

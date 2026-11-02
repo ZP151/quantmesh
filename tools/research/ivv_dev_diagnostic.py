@@ -23,7 +23,7 @@ PROVENANCE_KEYS = (
 
 # The independently reviewed helper is fixed for this release. No code from the
 # plan, catalog, or helper runs to establish this initial trust anchor.
-_CAPTURE_HELPER_SHA256 = "95ac3c27c608d4e27b48fe95fa2a1191645afadb9f2fade9c13dbe7934f2396c"
+_CAPTURE_HELPER_SHA256 = "68c75f81ace02c9b09c914ec919feeaeaf43a979e1a0ba465dc14f7ec9d2f49f"
 
 
 def _capture():
@@ -52,6 +52,29 @@ def validate_policy(m, value, plan, authorization_sha256):
         and value.get("hard_limit_enforced") is False,
         "dev_policy_contract",
     )
+
+
+def validate_trusted_policy(m, value, plan, authorization_sha256):
+    m._require(authorization_sha256 == m.TRUSTED_AUTH, "trusted_external_authorization")
+    expected = dict(value)
+    m._require(
+        expected.pop("channel_assurance", None) == m.CHANNEL_ASSURANCE
+        and expected.get("schema_id") == "qm.ivv.capture-policy" + m.TRUSTED_SUFFIX
+        and expected.get("diagnostic_mode") == "DEV_TRUSTED_ENVIRONMENT"
+        and expected.get("exceptions")
+        == [
+            "provider_32MiB_fullRO_sixRW",
+            "legacy_loaded_guard_provenance",
+            "external_provider_terminal_ipc_socket_environment",
+        ],
+        "trusted_external_policy",
+    )
+    expected.update(
+        schema_id="qm.ivv.capture-policy" + SUFFIX,
+        diagnostic_mode="DEV_DIAGNOSTIC",
+        exceptions=expected["exceptions"][:-1],
+    )
+    validate_policy(m, expected, plan, authorization_sha256)
 
 
 def _released_module(name, expected):
@@ -222,7 +245,9 @@ def native_provider_snapshot(m, plan, evidence):
         "provider_actor",
         "endpoint",
         "identity_binding_sha256",
-        "channels_binding_sha256",
+        "listener_binding_sha256"
+        if plan["schema_id"] == "qm.ivv.capture-plan" + m.TRUSTED_SUFFIX
+        else "channels_binding_sha256",
         "configuration_binding_sha256",
     ):
         m._require(actual.get(key) == evidence.get(key), "dev_native_binding")
@@ -259,6 +284,7 @@ def _context(
     authorization_ref,
     catalog_ref,
     *,
+    suffix=SUFFIX,
     expected_policy_sha256,
     expected_authorization_sha256,
     expected_go_sha256,
@@ -272,23 +298,24 @@ def _context(
         "dev_trusted_startup_pin",
     )
     plan = m._strict_json(m._read_root_ref(plan_ref, maximum=32768, exact_mode=True))
-    m._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + SUFFIX)
-    m._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + SUFFIX)
+    m._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + suffix)
+    m._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
     m._require(plan["policy_ref"]["sha256"] == expected_policy_sha256, "dev_policy_pin")
     policy = m._strict_json(m._read_root_ref(plan["policy_ref"], maximum=32768, exact_mode=True))
-    validate_policy(m, policy, plan, expected_authorization_sha256)
+    validator = validate_trusted_policy if suffix == m.TRUSTED_SUFFIX else validate_policy
+    validator(m, policy, plan, expected_authorization_sha256)
     # Authorization is independently pinned actual human bytes, never inferred
     # from a decision string supplied by the capture caller.
     m._read_root_ref(authorization_ref, maximum=32768, exact_mode=True)
     go = m._strict_json(m._read_root_ref(go_ref, maximum=32768, exact_mode=True))
-    provenance = m._dev_provenance(go)
+    provenance = m._dev_provenance(go, suffix)
     m._require(
         provenance["policy_sha256"] == expected_policy_sha256
         and provenance["authorization_sha256"] == expected_authorization_sha256,
         "dev_go_policy",
     )
     m._require(
-        go.get("schema_id") == "qm.ivv.root-go" + SUFFIX
+        go.get("schema_id") == "qm.ivv.root-go" + suffix
         and go.get("decision") == "GO_ONCE_AFTER_INPUT_ACCEPTANCE"
         and go.get("capture_effect_id") == plan["effect_id"]
         and go.get("scope_id") == plan["scope_id"]
@@ -322,13 +349,13 @@ def _context(
         m._read_root_ref(plan["provider_evidence_ref"], maximum=32768, exact_mode=True)
     )
     m._require(
-        evidence.get("schema_id") == "qm.ivv.provider-evidence" + SUFFIX
-        and evidence.get("state") == "DEV_DIAGNOSTIC"
+        evidence.get("schema_id") == "qm.ivv.provider-evidence" + suffix
+        and evidence.get("state") == provenance["diagnostic_mode"]
         and evidence.get("scope_id") == plan["scope_id"]
         and evidence.get("execution_sha256") == plan["execution_sha256"]
         and evidence.get("effect_id") == plan["effect_id"]
         and evidence.get("endpoint") == plan["endpoint"]
-        and m._dev_provenance(evidence) == provenance
+        and m._dev_provenance(evidence, suffix) == provenance
         and go.get("provider_evidence_sha256") == plan["provider_evidence_ref"]["sha256"],
         "dev_provider_evidence",
     )
@@ -346,7 +373,7 @@ def _context(
     m._require(plan["endpoint"]["is_encrypt"] is False, "dev_encrypted_config_unsupported")
     for key in (
         "identity_binding_sha256",
-        "channels_binding_sha256",
+        "listener_binding_sha256" if suffix == m.TRUSTED_SUFFIX else "channels_binding_sha256",
         "configuration_binding_sha256",
     ):
         m._require(m._digest(evidence.get(key)), "dev_evidence_binding")
@@ -369,7 +396,7 @@ def _permit_value(plan, plan_ref, go, go_ref, authorization_ref, catalog_ref, pr
         "execution_sha256",
     )
     return {
-        "schema_id": "qm.ivv.root-permit" + SUFFIX,
+        "schema_id": go["schema_id"].replace("qm.ivv.root-go", "qm.ivv.root-permit", 1),
         "state": "ROOT_INTERNAL_GO",
         **{key: plan[key] for key in keys},
         **provenance,
@@ -395,8 +422,33 @@ def admit_dev(
     expected_authorization_sha256,
     expected_go_sha256,
 ):
+    return _admit_family(
+        m,
+        plan_path,
+        receipt_root,
+        fd,
+        expected_sha256,
+        SUFFIX,
+        expected_policy_sha256=expected_policy_sha256,
+        expected_authorization_sha256=expected_authorization_sha256,
+        expected_go_sha256=expected_go_sha256,
+    )
+
+
+def _admit_family(
+    m,
+    plan_path,
+    receipt_root,
+    fd,
+    expected_sha256,
+    suffix,
+    *,
+    expected_policy_sha256,
+    expected_authorization_sha256,
+    expected_go_sha256,
+):
     permit = m._read_held_json(fd, expected_sha256)
-    m._require(permit.get("schema_id") == "qm.ivv.root-permit" + SUFFIX, "dev_permit_schema")
+    m._require(permit.get("schema_id") == "qm.ivv.root-permit" + suffix, "dev_permit_schema")
     plan_ref = {"path": str(plan_path), "sha256": permit["plan_sha256"]}
     plan, go, evidence, provenance = _context(
         m,
@@ -405,6 +457,7 @@ def admit_dev(
         permit["go_ref"],
         permit["authorization_ref"],
         permit["catalog_ref"],
+        suffix=suffix,
         expected_policy_sha256=expected_policy_sha256,
         expected_authorization_sha256=expected_authorization_sha256,
         expected_go_sha256=expected_go_sha256,
@@ -449,7 +502,13 @@ def admit_dev(
     return plan, dates, permit
 
 
-def issue_dev_permit(
+def issue_dev_permit(plan_ref, receipt_root, **pins):
+    return _issue_family(_capture(), SUFFIX, plan_ref, receipt_root, **pins)
+
+
+def _issue_family(
+    m,
+    suffix,
     plan_ref,
     receipt_root,
     *,
@@ -461,15 +520,7 @@ def issue_dev_permit(
     expected_go_sha256,
     permit_path,
 ):
-    """Issue inside the actual bounded Root capture actor; caller owns returned FD.
-
-    Creating a permit does not reserve another effect. Capture always reserves
-    the same canonical scope/execution/effect marker before constructing SDK.
-    """
-    m = _capture()
-    m._require(
-        sys.platform == "linux" and os.getuid() == 0 and os.geteuid() == 0, "dev_root_issuer"
-    )
+    m._require(sys.platform == "linux" and os.getuid() == os.geteuid() == 0, "dev_root_issuer")
     plan, go, evidence, provenance = _context(
         m,
         plan_ref,
@@ -477,6 +528,7 @@ def issue_dev_permit(
         go_ref,
         authorization_ref,
         catalog_ref,
+        suffix=suffix,
         expected_policy_sha256=expected_policy_sha256,
         expected_authorization_sha256=expected_authorization_sha256,
         expected_go_sha256=expected_go_sha256,
@@ -512,12 +564,13 @@ def issue_dev_permit(
     try:
         m._require(m._read_held_json(fd, digest) == permit, "dev_issued_held_binding")
         m._require(m._fd_stamp(os.fstat(fd)) == m._fd_stamp(path.stat()), "dev_issued_inode")
-        admit_dev(
+        _admit_family(
             m,
             plan_ref["path"],
             receipt_root,
             fd,
             digest,
+            suffix,
             expected_policy_sha256=expected_policy_sha256,
             expected_authorization_sha256=expected_authorization_sha256,
             expected_go_sha256=expected_go_sha256,

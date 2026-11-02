@@ -37,6 +37,9 @@ DATES_SHA = "50e126ad528c49c458517407fda23ca4dcd6205d663ea4b44d49836e183f016a"
 MIB = 1024 * 1024
 ONCE_LEDGER = Path("/var/lib/quantmesh/ivv-capture-once")
 DEV_SUFFIX = ".dev-diagnostic.v1"
+TRUSTED_SUFFIX = ".dev-trusted-environment.v1"
+TRUSTED_AUTH = "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452"
+CHANNEL_ASSURANCE = "UNVERIFIED_TRUSTED_EXTERNAL"
 
 
 class CaptureRejected(ValueError):
@@ -332,7 +335,7 @@ def _validate_production_plan_keys(plan, *, schema="qm.ivv.capture-plan.v1"):
         "window_ref",
         "schedule_ref",
     }
-    if schema == "qm.ivv.capture-plan" + DEV_SUFFIX:
+    if schema in ("qm.ivv.capture-plan" + DEV_SUFFIX, "qm.ivv.capture-plan" + TRUSTED_SUFFIX):
         allowed = (allowed - {"provider_bounds_ref"}) | {"provider_evidence_ref", "policy_ref"}
     _require(type(plan) is dict and set(plan) <= allowed, "unknown_plan_fields")
     _require(set(plan) == allowed, "missing_plan_fields")
@@ -376,7 +379,7 @@ def _validate_fixed_plan(plan, *, schema="qm.ivv.capture-plan.v1"):
     )
 
 
-def _dev_provenance(value):
+def _dev_provenance(value, suffix=DEV_SUFFIX):
     keys = (
         "policy_sha256",
         "authorization_sha256",
@@ -384,10 +387,19 @@ def _dev_provenance(value):
         "hard_limit_enforced",
         "provider_tail_max",
     )
+    trusted = suffix == TRUSTED_SUFFIX
+    if trusted:
+        _require(
+            value.get("channel_assurance") == CHANNEL_ASSURANCE
+            and value.get("authorization_sha256") == TRUSTED_AUTH,
+            "trusted_external_boundary",
+        )
+        keys += ("channel_assurance",)
     _require(
         _digest(value.get("policy_sha256"))
         and _digest(value.get("authorization_sha256"))
-        and value.get("diagnostic_mode") == "DEV_DIAGNOSTIC"
+        and value.get("diagnostic_mode")
+        == ("DEV_TRUSTED_ENVIRONMENT" if trusted else "DEV_DIAGNOSTIC")
         and value.get("hard_limit_enforced") is False
         and value.get("provider_tail_max") == "UNKNOWN",
         "dev_provenance",
@@ -730,8 +742,10 @@ def _failure(stage, error):
 
 def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=False, dates=None):
     suffix = DEV_SUFFIX if plan.get("schema_id") == "qm.ivv.capture-plan" + DEV_SUFFIX else ".v1"
+    if plan.get("schema_id") == "qm.ivv.capture-plan" + TRUSTED_SUFFIX:
+        suffix = TRUSTED_SUFFIX
     _validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
-    provenance = _dev_provenance(plan["_verified_binding"]) if suffix == DEV_SUFFIX else {}
+    provenance = _dev_provenance(plan["_verified_binding"], suffix) if suffix != ".v1" else {}
     _require(
         type(dates) is list
         and len(dates) == 121
@@ -1659,6 +1673,49 @@ def capture_dev_once(
         expected_authorization_sha256=expected_authorization_sha256,
         expected_go_sha256=expected_go_sha256,
     )
+    _reserve_once(plan)
+    clock = _NativeClock()
+    with clock.phase(plan["started_monotonic"] + 480):
+        return _run_capture(
+            plan,
+            receipt_root,
+            backend_factory=_OfficialBackend,
+            clock=clock,
+            sync_dir=_sync_dir,
+            dates=dates,
+        )
+
+
+def capture_trusted_once(
+    plan_path,
+    receipt_root,
+    *,
+    permit_fd,
+    expected_sha256,
+    expected_policy_sha256,
+    expected_authorization_sha256,
+    expected_go_sha256,
+):
+    """Only the newly forked actor holds the authenticated parent channel and admitted bytes."""
+    state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
+    _require(
+        state is not None
+        and expected_authorization_sha256 == TRUSTED_AUTH
+        and getattr(state, "trusted_issuer", None) is not None,
+        "trusted_owned_actor_required",
+    )
+    plan, dates, _ = state.trusted_issuer._admit_family(
+        state.helper,
+        plan_path,
+        receipt_root,
+        permit_fd,
+        expected_sha256,
+        TRUSTED_SUFFIX,
+        expected_policy_sha256=expected_policy_sha256,
+        expected_authorization_sha256=expected_authorization_sha256,
+        expected_go_sha256=expected_go_sha256,
+    )
+    state.session.before_effect()
     _reserve_once(plan)
     clock = _NativeClock()
     with clock.phase(plan["started_monotonic"] + 480):

@@ -464,6 +464,14 @@ _VALIDATOR_SHA = "53fb2821b21dc695a2934dd20d6822f69714e960585e371181d20d0b814417
 
 
 def _trusted_configuration(plan):
+    return _project_client(plan, legacy_public_xml=True)
+
+
+def trusted_quote_configuration(plan):
+    return _project_client(plan, legacy_public_xml=False)
+
+
+def _project_client(plan, *, legacy_public_xml):
     """Project the original client's settings from the reviewed public sources."""
     _need(sys.platform == "linux" and os.getuid() == os.geteuid() == 0, "CONFIG_ROOT")
 
@@ -483,11 +491,12 @@ def _trusted_configuration(plan):
         validator["validate_profile"](profile)
     except (KeyError, TypeError, ValueError):
         raise NativeUnproven("CONFIG_PROFILE_UNKNOWN") from None
-    expected = validator["reviewed_configuration"]()
-    _need(
-        _protected_bytes("/etc/quantmesh/opend/OpenD.xml", len(expected)) == expected,
-        "CONFIG_PUBLIC_CONFIGURATION_DRIFT",
-    )
+    if legacy_public_xml:
+        expected = validator["reviewed_configuration"]()
+        _need(
+            _protected_bytes("/etc/quantmesh/opend/OpenD.xml", len(expected)) == expected,
+            "CONFIG_PUBLIC_CONFIGURATION_DRIFT",
+        )
     evidence = json.loads(
         code(_HISTORICAL_ROOT + "cb2-vb2-sdk-exact-stdout.json", 16384, _HISTORICAL_RAW)
     )
