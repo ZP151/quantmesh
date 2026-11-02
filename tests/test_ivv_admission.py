@@ -806,9 +806,9 @@ def test_private_startup_composes_ordinary_workstation_api_and_cold_originals(
     import runpy
 
     from fastapi.testclient import TestClient
+
     from quantmesh.api.watchlist import WatchlistStore
     from quantmesh.api.workstation import create_workstation_app
-
     from quantmesh.execution.accounting import PaperAccount
 
     v, m, store, study, job_id, kwargs = scripted_registration(tmp_path, monkeypatch)
