@@ -16,6 +16,33 @@ const artifacts: Record<string, string> = {}
 let options: Record<string, unknown>
 let current: Record<string, unknown>
 const fetcher = vi.fn()
+
+// Browser-only scripted originals, never actual provider/input authority.
+function declaredDev(state: 'succeeded' | 'failed' | 'interrupted' | 'running' = 'failed') {
+  vi.mocked(crypto.randomUUID).mockReset().mockReturnValue(decisionKey)
+  const reference = objectRef('{}')
+  const registered = { candidate: request.candidate, package_ref: reference, grant_ref: reference, approved_scope_ref: reference, protocol_ref: reference }
+  const policy = objectRef('scripted-policy'); const authorization = objectRef('scripted-authorization')
+  const basis = { scope_id: sha('scripted-ui-scope'), scope_trial_key: sha('scripted-ui-trial'), job_id: key, output_root_digest: sha('scripted-root'),
+    proofs: { scope_ref: reference, effect_ref: reference, execution_ref: reference, windows_policy_ref: reference, go_ref: reference, acceptance_ref: reference, expected_go_sha256: reference.digest, expected_acceptance_sha256: reference.digest,
+      capture_policy_ref: policy, authorization_ref: authorization, expected_policy_sha256: policy.digest, expected_authorization_sha256: authorization.digest },
+    source_facts_ref: reference, capture_ref: reference, parent_close_ref: reference, source_use: 'private_diagnostic_internal_once_external_retention_unknown', provider_permission_verified: false, external_API_retention_applicability: 'UNKNOWN',
+    diagnostic_mode: 'DEV_DIAGNOSTIC', policy_sha256: policy.digest, authorization_sha256: authorization.digest, hard_limit_enforced: false, provider_tail_max: 'UNKNOWN' }
+  current = { ...makeJob(registered, true), state, completed_at: state === 'running' ? null : '2026-10-30T00:00:00Z', admission_status: 'ACCEPTED_DECLARED_RESEARCH', admission_reasons: [], trial_consumed: true }
+  artifacts.admission = JSON.stringify({ ...JSON.parse(artifacts.admission), schema_id: 'qm.native-daily.admission.v2', status: 'ACCEPTED_DECLARED_RESEARCH', reasons: [], use_basis: basis })
+  current = { ...current, admission: objectRef(artifacts.admission) }
+  if (state === 'succeeded') {
+    const scenario = (bps: number) => Object.fromEntries(['T', 'TO', 'B50', 'B100', 'C'].map(arm => {
+      const binding = { schema_id: 'qm.native-daily.candidate.arm.v1', request_digest: reference.digest, arm, cost_bps: bps }
+      return [arm, { binding, child_id: sha(canonical(binding)), metrics: { sessions: 21, terminal_equity: 100000, total_return: 0, max_drawdown: 0, friction_usd: bps, fills: 0 }, daily: [], trades: [], trace: [] }]
+    }))
+    artifacts.report = JSON.stringify({ schema_id: 'qm.native-daily.real-report.v2', job_id: key, request_digest: current.request_digest, protocol_ref: reference, package_ref: reference, grant_ref: reference, evidence_kind: 'reviewed_real', use_basis: basis,
+      runtime_receipt: { schema_id: 'qm.ivv.numeric-close.v1', job_commit_bytes: 536870912, affinity: 1, process_affinity: 1, kernel_flags: 0x2210, child_membership_verified: true, returncode: 0, active_processes: 0, owned_fds_closed: true, wall_seconds: 0.1, code: { test: reference.digest } }, calculation: { base5: scenario(5), stress10: scenario(10) }, ...safety })
+    current = { ...current, report: objectRef(artifacts.report) }
+  }
+  history.replaceState(null, '', `/app/research/jobs?engine=native-daily-v2&native_job=${key}`)
+  return basis
+}
 function makeJob(body: unknown = request, engineering = false) {
   const request_digest = sha(canonical(body))
   const admission = { schema_id: 'qm.native-daily.admission.v1', job_id: key, request: body, request_digest, status: engineering ? 'ACCEPTED_ENGINEERING' : 'INSUFFICIENT', reasons: engineering ? ['engineering_fixture_only'] : ['package_missing', 'candidate_grant_missing'], ...safety }
@@ -50,7 +77,7 @@ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
 it('saves visible insufficient evidence and cold reopens the same ID without a POST', async () => {
   const view = await mount()
   await submit()
-  expect(screen.getByText('No report was calculated. No trial was consumed.')).toBeVisible()
+  expect(screen.getByText('No report was calculated. No research trial was consumed.')).toBeVisible()
   expect(screen.getByText('Package missing')).toBeVisible()
   expect(screen.getByRole('button', { name: 'Download admission' })).toBeVisible()
   expect(posts()).toHaveLength(1)
@@ -217,14 +244,14 @@ it.each([{ forced: false, incompleteFirst: false, refusedFirst: false }, { force
     await waitFor(() => expect(posts()).toHaveLength(1))
     expect(posts()[0][1].headers['Idempotency-Key']).toBe(ordinaryId)
     await screen.findByText('Not run · evidence insufficient')
-    fireEvent.click(screen.getByRole('button', { name: 'Start another study' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Return to study input' }))
     current = completeJob; artifacts.admission = completeAdmission
     fireEvent.change(await screen.findByLabelText('Registered package'), { target: { value: reference.digest } })
   }
   fireEvent.change(screen.getByLabelText('Candidate grant'), { target: { value: reference.digest } })
   fireEvent.click(screen.getByRole('button', { name: 'Submit fixed study' }))
   if (refusedFirst) {
-    expect(await screen.findByRole('alert')).toHaveTextContent('Study was not admitted. No trial was consumed; resolve admission checks and retry this saved request.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Study was not admitted. No research trial was consumed; resolve admission checks and retry this saved request.')
     fireEvent.click(screen.getByRole('button', { name: 'Retry saved submission' }))
   }
   expect(await screen.findByText('Report ready · retrospective research')).toBeVisible()
@@ -259,7 +286,7 @@ it('uses the operator locale for input, safety and missing-evidence controls', a
   await mount()
   fireEvent.click(await screen.findByRole('button', { name: '保存证据不足记录' }))
   expect(await screen.findByText('未运行 · 证据不足')).toBeVisible()
-  expect(await screen.findByText('未计算报告，未消耗试验额度。')).toBeVisible()
+  expect(await screen.findByText('未计算报告，未消耗研究计算试验额度。')).toBeVisible()
   expect(screen.getByRole('button', { name: '下载准入原件' })).toBeVisible()
 })
 
@@ -272,9 +299,113 @@ it('can reopen after abandoning a terminal study with a pending read', async () 
     ? new Promise<Response>(resolve => { release = resolve }) : original(url, init))
   fireEvent.click(screen.getByRole('button', { name: 'Read saved study' }))
   await waitFor(() => expect(screen.getByRole('button', { name: 'Read saved study' })).toBeDisabled())
-  fireEvent.click(screen.getByRole('button', { name: 'Start another study' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Return to study input' }))
   fireEvent.change(screen.getByLabelText('Saved study ID'), { target: { value: key } })
   try {
     expect(screen.getByRole('button', { name: 'Open study' })).toBeEnabled()
   } finally { release(response(current)) }
+})
+
+it.each(['succeeded', 'failed', 'interrupted'] as const)('shows verified DEV provenance for %s; cold reads and decisions retain originals', async state => {
+  const basis = declaredDev(state)
+  const view = await mount()
+  expect(await screen.findByText('DEV_DIAGNOSTIC · capture policy exception')).toBeVisible()
+  expect(screen.getByText(/Provider storage hard limit not enforced; provider tail maximum UNKNOWN/)).toBeVisible()
+  expect(screen.getByText(/Diagnostic capture alone is unreviewed/)).toBeVisible()
+  fireEvent.click(screen.getByText('Capture policy and authorization originals'))
+  expect(screen.getByText(basis.policy_sha256)).toBeVisible()
+  expect(screen.getByText(basis.authorization_sha256)).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Submit fixed study' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Retry saved submission' })).not.toBeInTheDocument()
+  if (state !== 'succeeded') {
+    expect(screen.getByText(/The reserved research trial remains consumed/)).toBeVisible()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  }
+  fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'Await stronger independent evidence.' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Save research decision' }))
+  expect(await screen.findByText('Watch · Await stronger independent evidence.')).toBeVisible()
+  const sent = JSON.parse(String(posts()[0][1].body))
+  expect(sent.admission_digest).toBe((current.admission as { digest: string }).digest)
+  expect(sent.report_digest).toBe((current.report as { digest: string } | null)?.digest ?? null)
+  view.unmount(); await mount()
+  expect(await screen.findByText('DEV_DIAGNOSTIC · capture policy exception')).toBeVisible()
+  expect(await screen.findByText('Watch · Await stronger independent evidence.')).toBeVisible()
+  expect(posts()).toHaveLength(1) // decision only, no submission/recalculation
+})
+
+it('explains DEV guarantees in Chinese without authorizing Paper or live', async () => {
+  preferences.locale = 'zh-CN'; declaredDev('failed')
+  await mount()
+  expect(await screen.findByText('DEV_DIAGNOSTIC · 采集政策例外')).toBeVisible()
+  expect(screen.getByText(/未强制实施供应商存储硬上限/)).toBeVisible()
+  expect(screen.getByText(/诊断采集原件本身仍未审核/)).toBeVisible()
+  expect(posts()).toHaveLength(0)
+})
+
+it('explains why captured-unreviewed originals do not enable submission or computation', async () => {
+  await mount()
+  expect(await screen.findByText(/Captured originals remain unreviewed until independent input acceptance/)).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Submit fixed study' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+it('refuses a captured-unreviewed package advertised as selectable without treating its label as authority', async () => {
+  const reference = objectRef('{}')
+  options.packages = [{ label: 'DEV_DIAGNOSTIC captured originals', evidence_kind: 'CAPTURED_UNREVIEWED', package_ref: reference, approved_scope_ref: reference, protocol_ref: reference }]
+  await mount()
+  expect(await screen.findByText('The server response did not match the fixed study contract. Reopen the saved ID.')).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Submit fixed study' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+it.each(['policy_digest', 'authorization_ref', 'missing_mode', 'partial_proof', 'hard_limit', 'tail', 'unknown_mode'])('refuses malformed DEV provenance (%s) before exposing originals or decisions', async defect => {
+  declaredDev()
+  const admission = JSON.parse(artifacts.admission); const b = admission.use_basis
+  if (defect === 'policy_digest') b.policy_sha256 = sha('wrong')
+  if (defect === 'authorization_ref') b.proofs.authorization_ref = objectRef('wrong')
+  if (defect === 'missing_mode') delete b.diagnostic_mode
+  if (defect === 'partial_proof') delete b.proofs.expected_policy_sha256
+  if (defect === 'hard_limit') b.hard_limit_enforced = true
+  if (defect === 'tail') b.provider_tail_max = 33554432
+  if (defect === 'unknown_mode') b.diagnostic_mode = 'QUALIFIED'
+  artifacts.admission = JSON.stringify(admission); current = { ...current, admission: objectRef(artifacts.admission) }
+  await mount()
+  expect(await screen.findByText('Original evidence could not be verified. Reopen this ID to try again.')).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Download admission' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Save research decision' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+it('refuses individually valid DEV originals with mismatching policies before report/decision display', async () => {
+  declaredDev('succeeded')
+  const report = JSON.parse(artifacts.report); const other = objectRef('other-scripted-policy')
+  report.use_basis.policy_sha256 = other.digest
+  report.use_basis.proofs.capture_policy_ref = other
+  report.use_basis.proofs.expected_policy_sha256 = other.digest
+  artifacts.report = JSON.stringify(report); current = { ...current, report: objectRef(artifacts.report) }
+  await mount()
+  expect(await screen.findByText('Original evidence could not be verified. Reopen this ID to try again.')).toBeVisible()
+  expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Save research decision' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+
+it('keeps verified DEV source visible while running without offering a decision or report', async () => {
+  declaredDev('running'); await mount()
+  expect(await screen.findByText('DEV_DIAGNOSTIC · capture policy exception')).toBeVisible()
+  expect(screen.getByText('Running · retrospective research')).toBeVisible()
+  expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Save research decision' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+it('does not infer capture-once usage from empty options or restore authority by returning to input', async () => {
+  declaredDev('failed'); await mount()
+  expect(await screen.findByText(/Capture-once usage: UNKNOWN on this page/)).toBeVisible()
+  expect(screen.getByText(/read this ID instead of rerunning it/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Return to study input' }))
+  expect(await screen.findByText(/DEV capture and review status: UNKNOWN in this input list/)).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'Submit fixed study' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
 })
