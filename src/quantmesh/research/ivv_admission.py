@@ -42,6 +42,8 @@ INPUT_CHECKS = (
     "parent_seal_verified",
 )
 _REAL_AUTHORITY = object()
+TRUSTED_AUTH = "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452"
+TRUSTED_SUFFIX = ".dev-trusted-environment.v1"
 
 
 def prepare_runtime(root, basis, store):
@@ -61,6 +63,79 @@ class TrustedIVVProofs(daily.Contract):
     windows_policy_ref: daily.ObjectRef
     expected_go_sha256: daily.Digest
     expected_acceptance_sha256: daily.Digest
+    capture_policy_ref: daily.ObjectRef | None = None
+    authorization_ref: daily.ObjectRef | None = None
+    expected_policy_sha256: daily.Digest | None = None
+    expected_authorization_sha256: daily.Digest | None = None
+
+
+def _schema(proofs, kind):
+    dev = proofs.capture_policy_ref is not None
+    values = (
+        proofs.capture_policy_ref,
+        proofs.authorization_ref,
+        proofs.expected_policy_sha256,
+        proofs.expected_authorization_sha256,
+    )
+    _require(all(v is not None for v in values) if dev else all(v is None for v in values))
+    if dev and proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        return "qm.ivv." + kind + TRUSTED_SUFFIX
+    return "qm.ivv." + kind + (".dev-diagnostic.v1" if dev else ".v1")
+
+
+def _dev_binding(proofs, value):
+    if proofs.capture_policy_ref is None:
+        return {}
+    expected = {
+        "policy_sha256": proofs.expected_policy_sha256,
+        "authorization_sha256": proofs.expected_authorization_sha256,
+        "diagnostic_mode": "DEV_DIAGNOSTIC",
+        "hard_limit_enforced": False,
+        "provider_tail_max": "UNKNOWN",
+    }
+    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        expected.update(
+            diagnostic_mode="DEV_TRUSTED_ENVIRONMENT",
+            channel_assurance="UNVERIFIED_TRUSTED_EXTERNAL",
+        )
+    _require(all(value.get(k) == v for k, v in expected.items()))
+    _require(value.get("hard_limit_enforced") is False)
+    return expected
+
+
+def _verify_dev_policy(store, proofs, go, acceptance, reviews):
+    if proofs.capture_policy_ref is None:
+        return {}
+    _require(proofs.capture_policy_ref.digest == proofs.expected_policy_sha256)
+    _require(proofs.authorization_ref.digest == proofs.expected_authorization_sha256)
+    _require(
+        proofs.capture_policy_ref.digest in reviews and proofs.authorization_ref.digest in reviews
+    )
+    _load(store, proofs.authorization_ref)
+    policy = _load(store, proofs.capture_policy_ref)
+    expected = {
+        "schema_id": "qm.ivv.capture-policy.dev-diagnostic.v1",
+        "scope_id": SCOPE_ID,
+        "execution_sha256": proofs.execution_ref.digest,
+        "effect_id": go["capture_effect_id"],
+        "authorization_sha256": proofs.expected_authorization_sha256,
+        "diagnostic_mode": "DEV_DIAGNOSTIC",
+        "hard_limit_enforced": False,
+        "provider_tail_max": "UNKNOWN",
+        "legacy_loaded_guard_provenance": "UNKNOWN",
+        "exceptions": ["provider_32MiB_fullRO_sixRW", "legacy_loaded_guard_provenance"],
+        "thresholds": {"G": 10500000000, "P": 4500000000, "free": 53687091200},
+    }
+    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        expected.update(
+            schema_id=_schema(proofs, "capture-policy"),
+            diagnostic_mode="DEV_TRUSTED_ENVIRONMENT",
+            channel_assurance="UNVERIFIED_TRUSTED_EXTERNAL",
+        )
+        expected["exceptions"].append("external_provider_terminal_ipc_socket_environment")
+    _require(policy == expected and policy["hard_limit_enforced"] is False)
+    _dev_binding(proofs, acceptance)
+    return _dev_binding(proofs, go)
 
 
 def input_set_digest(package):
@@ -116,7 +191,9 @@ def _capture_refs(raw):
 
 def _capture_close(store, raw_ref, acceptance, go, proofs):
     raw = _load(store, raw_ref)
-    _require(raw["schema_id"] == "qm.ivv.capture.v1" and raw["state"] == "CAPTURED_UNREVIEWED")
+    _require(
+        raw["schema_id"] == _schema(proofs, "capture") and raw["state"] == "CAPTURED_UNREVIEWED"
+    )
     _require(raw["scope_id"] == SCOPE_ID and raw["symbol"] == "US.IVV")
     _require(
         raw["window_digest"] == go["input_window_digest"]
@@ -130,7 +207,9 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
             for k in ("context_closed", "callbacks_stopped", "data_socket_closed")
         )
     )
+    _dev_binding(proofs, raw)
     binding = raw["source_binding"]
+    _dev_binding(proofs, binding)
     _require(binding["root_go_sha256"] == proofs.go_ref.digest)
     _require(
         binding["approval_sha256"] == proofs.effect_ref.digest
@@ -142,7 +221,8 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     )
     parent_ref = daily.ObjectRef.model_validate(acceptance["parent_close_ref"])
     parent = _load(store, parent_ref)
-    _require(parent["schema_id"] == "qm.ivv.capture-parent-close.v1")
+    _require(parent["schema_id"] == _schema(proofs, "capture-parent-close"))
+    _dev_binding(proofs, parent)
     _require(parent["state"] == "NORMAL_EXIT" and parent["termination"] == "NORMAL")
     expected = {
         "scope_id": SCOPE_ID,
@@ -169,9 +249,60 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     evidence = [daily.ObjectRef.model_validate(r) for r in acceptance["parent_evidence_refs"]]
     _require(1 <= len(evidence) <= 8 and len(evidence) == len(parent["evidence_refs"]))
     _require([r.digest for r in evidence] == [r["sha256"] for r in parent["evidence_refs"]])
+    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+        _require(len(evidence) == len({r.digest for r in evidence}) == 8)
+        _require(
+            [r.digest for r in evidence[:5]]
+            == [
+                binding["plan_sha256"],
+                binding["root_permit_sha256"],
+                binding["provider_evidence_ref"]["sha256"],
+                binding["catalog_sha256"],
+                binding["sdk_pins_sha256"],
+            ]
+        )
+        plan, permit, provider = (_load(store, ref) for ref in evidence[:3])
+        for obj, kind in (
+            (plan, "capture-plan"),
+            (permit, "root-permit"),
+            (provider, "provider-evidence"),
+        ):
+            _require(obj.get("schema_id") == _schema(proofs, kind))
+        _require(plan["policy_ref"]["sha256"] == proofs.expected_policy_sha256)
+        _dev_binding(proofs, permit)
+        _dev_binding(proofs, provider)
+        _require(permit["actor"] == parent["capture_actor"] == go["capture_actor"])
+        _require(permit["root_go_sha256"] == proofs.expected_go_sha256)
+        _require(provider["provider_actor"] == binding["provider_actor"])
+        _require(
+            [r.digest for r in evidence[5:]]
+            == [
+                parent["configuration_sha256"],
+                parent["monitor_sha256"],
+                parent["kernel_close_sha256"],
+            ]
+        )
     refs = [parent_ref, *evidence, *_capture_refs(raw)]
     for ref in refs:
         daily.NativeDailyService._from_store(store, ref)
+    if proofs.capture_policy_ref is not None:
+        intent_ref = raw["intent_ref"]
+        intent = _load(
+            store,
+            daily.ObjectRef(
+                digest=intent_ref["sha256"],
+                byte_length=intent_ref["bytes"],
+                media_type="application/json",
+            ),
+        )
+        _require(intent["schema_id"] == _schema(proofs, "capture-intent"))
+        _dev_binding(proofs, intent)
+        _require(intent["scope_id"] == SCOPE_ID and intent["effect_id"] == raw["effect_id"])
+        _require(
+            intent["execution_sha256"] == proofs.execution_ref.digest
+            and intent["approval_sha256"] == proofs.effect_ref.digest
+        )
+        _require(intent["state"] == "ATTEMPTED" and intent["synthetic"] is False)
     return parent_ref, refs
 
 
@@ -222,7 +353,8 @@ def _verify(store, package_ref, proofs, *, executing):
             )
         )
     )
-    _require(go["schema_id"] == "qm.ivv.root-go.v1")
+    _require(go["schema_id"] == _schema(proofs, "root-go"))
+    provenance = _verify_dev_policy(store, proofs, go, acceptance, reviews)
     _require(go["decision"] == "GO_ONCE_AFTER_INPUT_ACCEPTANCE" and go["scope_id"] == SCOPE_ID)
     _require(go["execution_sha256"] == proofs.execution_ref.digest)
     _require(go["input_window_digest"] == fixed["input_window_digest"])
@@ -232,9 +364,15 @@ def _verify(store, package_ref, proofs, *, executing):
     _require(
         all(
             go["controls"].get(key) is True
-            for key in ("released", "resource_bounds", "provider_log_cache_bounds")
+            for key in (
+                ("released", "resource_bounds")
+                if proofs.capture_policy_ref is not None
+                else ("released", "resource_bounds", "provider_log_cache_bounds")
+            )
         )
     )
+    if proofs.capture_policy_ref is not None:
+        _require(go["controls"].get("provider_log_cache_bounds") is False)
     daily._uuid(go["job_id"])
     _require(policy["planning_job_uuid"] == go["job_id"])
     _require(go["windows_policy_sha256"] == proofs.windows_policy_ref.digest)
@@ -243,7 +381,7 @@ def _verify(store, package_ref, proofs, *, executing):
         _require(go["adapter_sha256"] == daily.digest(Path(daily.__file__).read_bytes()))
         _require(go["gate_sha256"] == daily.digest(Path(__file__).read_bytes()))
         _require(go["runtime"] == daily.runtime_versions())
-    _require(acceptance["schema_id"] == "qm.ivv.input-acceptance.v1")
+    _require(acceptance["schema_id"] == _schema(proofs, "input-acceptance"))
     _require(acceptance["decision"] == "ACCEPT_FOR_ONE_DECLARED_RETROSPECTIVE_RESEARCH")
     _require(acceptance["reviewer"] == REVIEWER and acceptance["scope_id"] == SCOPE_ID)
     _require(acceptance["input_set_digest"] == input_set_digest(package))
@@ -268,6 +406,7 @@ def _verify(store, package_ref, proofs, *, executing):
     _require(type(ledger["max_trials"]) is int and ledger["max_trials"] == 1)
     _require(ledger["state"] == "UNRESERVED")
     return {
+        **provenance,
         "scope_id": SCOPE_ID,
         "scope_trial_key": daily.digest(
             daily.canonical(
@@ -280,7 +419,7 @@ def _verify(store, package_ref, proofs, *, executing):
         ),
         "job_id": go["job_id"],
         "output_root_digest": go["output_root_digest"],
-        "proofs": proofs.model_dump(mode="json"),
+        "proofs": proofs.model_dump(mode="json", exclude_none=True),
         "source_facts_ref": acceptance["source_facts_ref"],
         "capture_ref": raw_ref.model_dump(),
         "parent_close_ref": parent_ref.model_dump(),
@@ -303,7 +442,10 @@ def register_ivv_input(store, *, package_ref, grant_ref, approved_scope_ref, aut
             approved_scope_ref=approved_scope_ref,
             authority_ref=authority_ref,
         )
-        record = {"schema_id": "qm.ivv.registration.v1", **evidence}
+        record = {
+            "schema_id": _schema(TrustedIVVProofs.model_validate(proofs), "registration"),
+            **evidence,
+        }
         binding = store.put_bytes("application/json", daily.canonical(record))
         return replace(registration, _authority=_REAL_AUTHORITY, real_binding=binding)
     except (KeyError, TypeError, ValueError, OSError, RecursionError):
@@ -313,7 +455,10 @@ def register_ivv_input(store, *, package_ref, grant_ref, approved_scope_ref, aut
 def verify_saved_binding(store, package_ref, binding_ref, *, executing):
     """Cold reads validate stored authority bytes, not today's runtime/calendar."""
     record = _load(store, binding_ref)
-    _require(record.pop("schema_id") == "qm.ivv.registration.v1")
+    _require(
+        record.pop("schema_id")
+        == _schema(TrustedIVVProofs.model_validate(record["proofs"]), "registration")
+    )
     checked = _verify(store, package_ref, record["proofs"], executing=executing)
     _require(record == checked)
     return checked
@@ -345,6 +490,8 @@ def binding_objects(store, binding_ref):
         daily.ObjectRef.model_validate(record["source_facts_ref"]),
         *capture_refs,
     ]
+    if proofs.capture_policy_ref is not None:
+        refs.extend((proofs.capture_policy_ref, proofs.authorization_ref))
     return [(ref, daily.NativeDailyService._from_store(store, ref)) for ref in refs]
 
 
@@ -437,6 +584,11 @@ def bind_reviewed_ivv_input(store, *, input_set_ref, proofs, output_root):
                 "windows_policy_ref",
             )
         ]
+        facts["review_refs"].extend(
+            ref.model_dump()
+            for ref in (proofs.capture_policy_ref, proofs.authorization_ref)
+            if ref is not None
+        )
         package_ref = _put(store, facts)
         checked = _verify(store, package_ref, proofs, executing=True)
         _require(checked["output_root_digest"] == daily._root_pin(output_root))
