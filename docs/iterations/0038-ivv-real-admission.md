@@ -75,3 +75,40 @@ Reviewer: sole known-fix APP-REVIEW-R2.md10455B SHA5aa509f9f38b22658aa7750a2c643
 Serving evidence: with legacy_ui=false, launcher composes ordinary workstation and `/app/...` serves package static/app/index.html SHA065dd8ab1a0b5c083fdccac24181d281bfe2bb1124e6551bd7df1d2691f7043a; entry `/app/assets/index-CPz_cEFU.js` SHA3c0fba1121df1ce819a8aaa50f71c62f47a38bf200e00ea59fb694e9b904274b and InstrumentWorkspace-D_H-mGvl.js SHA0e87d1912eb2292d5722aa2dfe4c662be970d3083d2c74c905f1ebc96f173aeb independently read back by R2. These include new refusal guards/labels. Actual18954 response equality, loaded module path and merged/catalog tree remain future Root-owned witnesses; static path/hash verification is not a running-browser claim. Old preview/dist and first stage originals retained.
 
 Planner/Verifier: code and package stay byte-identical to reviewed3124c62; final tracked delta records only review/plan/roadmap evidence. Final exact source head/tree, original source/code/runtime/policy pins, typed RootGO/input-acceptance/startup interfaces, evidence manifest and footprint are sealed in ignored implementation HANDOFF/EXEC originals for Root and the sole Publisher. Source releases tracked/index writer after this checkpoint: no push/PR/CI watch/earlySDK. Publisher must perform normal exact-source CI/review/merge/fulltree catalog; issue259 stays open until its actual loop acceptance, not auto-closed by software green. Root internal GO/control readiness then original executor capture, independent Quant actual input-set acceptance, and one actual UI trial/report/decision/cold3 originals are still pending. FinancialINSUFFICIENT/Paper-livefalse; original long Goal UNMET.
+
+## DEV diagnostic provenance on the ordinary workstation — 2026-11-02
+
+Issue [272](https://github.com/ZP151/quantmesh/issues/272) supplies DEV
+diagnostic context for the original [259](https://github.com/ZP151/quantmesh/issues/259)
+research path. **Planner.** The operator can inspect verified saved DEV capture
+provenance on the native-daily-v2 page even when a running or consumed study has
+no report. Success is honest source and authority language on the same saved
+ID; actual capture, grant, input acceptance and a research calculation are
+outside this UI publication.
+
+**Quant researcher.** Diagnostic provenance does not qualify the input set or
+establish profitability, out-of-sample validity, Paper readiness or live order
+authority. Unknown capture/review/once state stays UNKNOWN, and returning to
+input does not restore spent authority.
+
+**Implementer.** The independently reviewed frontend commit
+`dbd2707027765615cfbe50e296d3e85fd6b61585` is based exactly on
+`b70cbe8ea96f12e926bcb90474947242c2b53f25` and changes three frontend
+files. The publisher fast-forwarded to that exact commit and rebuilt the
+standard package-served SPA from it. The 11 `frontend/dist` and package SPA
+files match by relative path and SHA-256. No A backend collector or native
+provider change is included.
+
+**Reviewer.** The original frontend R1 was READY; the sole located UX known-fix
+R2 was READY/ADDRESSED, with no new actionable finding. Receipts and source
+hashes are retained under `output/A-workstation-policy-ui-20261102/` in the
+Product owner's worktree. This publication does not invent a third whole-slice
+review or a real-data qualification.
+
+**Verifier.** On this integration branch, the affected component file passed
+32/32 tests; TypeScript noEmit/no incremental, scoped oxlint, standard SPA
+build, package/dist hash comparison and whitespace check passed. The local
+reused node_modules contains Vitest 3.2.7 while package metadata declares
+4.1.11; ordinary exact-head release CI remains the applicable lock-matched
+gate. The existing 500 kB chunk warning remains. No old full suite, actual
+provider, capture, grant, trial, host or trading action was run.
