@@ -91,14 +91,20 @@ function realUseBasis(v: unknown, id: string): boolean {
 }
 // Presentation contract only. The server authenticates policy/authorization and
 // independent input acceptance; these fields never authorize browser submission.
+// This public digest discriminates the frozen schema branch, not browser authority.
+const TRUSTED_ENVIRONMENT_AUTHORIZATION = '3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452'
 function diagnosticUseBasis(v: Record<string, unknown>, proof: Record<string, unknown>): boolean {
-  const fields = ['diagnostic_mode', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max']
+  const fields = ['diagnostic_mode', 'channel_assurance', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max']
   const refs = ['capture_policy_ref', 'authorization_ref', 'expected_policy_sha256', 'expected_authorization_sha256']
   if (!fields.some(key => key in v) && !refs.some(key => key in proof)) return true // archived strict originals
-  return v.diagnostic_mode === 'DEV_DIAGNOSTIC' && v.hard_limit_enforced === false && v.provider_tail_max === 'UNKNOWN'
+  const binding = v.hard_limit_enforced === false && v.provider_tail_max === 'UNKNOWN'
     && nativeRef(proof.capture_policy_ref) && nativeRef(proof.authorization_ref)
     && v.policy_sha256 === proof.capture_policy_ref.digest && proof.expected_policy_sha256 === v.policy_sha256
     && v.authorization_sha256 === proof.authorization_ref.digest && proof.expected_authorization_sha256 === v.authorization_sha256
+  if (!binding) return false
+  return v.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
+    ? v.channel_assurance === 'UNVERIFIED_TRUSTED_EXTERNAL' && v.authorization_sha256 === TRUSTED_ENVIRONMENT_AUTHORIZATION
+    : v.diagnostic_mode === 'DEV_DIAGNOSTIC' && v.channel_assurance === undefined && v.authorization_sha256 !== TRUSTED_ENVIRONMENT_AUTHORIZATION
 }
 function numericClose(v: unknown): boolean {
   if (!object(v) || v.schema_id !== 'qm.ivv.numeric-close.v1' || v.job_commit_bytes !== 536870912

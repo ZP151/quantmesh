@@ -409,3 +409,99 @@ it('does not infer capture-once usage from empty options or restore authority by
   expect(screen.queryByRole('button', { name: 'Submit fixed study' })).not.toBeInTheDocument()
   expect(posts()).toHaveLength(0)
 })
+
+
+// Frozen public fragment: only authorization digest is a real schema discriminator.
+// Every other reference is fictional UI evidence, not an input/GO/store object.
+const trustedFragment = {
+  "authorization_sha256": "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452",
+  "channel_assurance": "UNVERIFIED_TRUSTED_EXTERNAL",
+  "diagnostic_mode": "DEV_TRUSTED_ENVIRONMENT",
+  "hard_limit_enforced": false,
+  "policy_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "proofs": {
+    "authorization_ref": {
+      "algorithm": "sha256",
+      "byte_length": 3022,
+      "digest": "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452",
+      "media_type": "application/json"
+    },
+    "capture_policy_ref": {
+      "algorithm": "sha256",
+      "byte_length": 2,
+      "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "media_type": "application/json"
+    },
+    "expected_authorization_sha256": "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452",
+    "expected_policy_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "provider_tail_max": "UNKNOWN"
+} as const
+
+function declaredTrusted(state: Parameters<typeof declaredDev>[0] = 'failed') {
+  const original = declaredDev(state)
+  const basis = { ...original, ...trustedFragment, proofs: { ...original.proofs, ...trustedFragment.proofs } }
+  for (const kind of (state === 'succeeded' ? ['admission', 'report'] : ['admission'])) {
+    artifacts[kind] = JSON.stringify({ ...JSON.parse(artifacts[kind]), use_basis: basis })
+    current = { ...current, [kind]: objectRef(artifacts[kind]) }
+  }
+  return basis
+}
+
+it.each(['failed', 'interrupted', 'running', 'succeeded'] as const)('displays frozen DEV trusted-environment %s without downcasting; same-ID cold reads add no POST', async state => {
+  const basis = declaredTrusted(state); const view = await mount()
+  expect(await screen.findByText('DEV_TRUSTED_ENVIRONMENT · unverified external environment')).toBeVisible()
+  expect(screen.getByText(/UNVERIFIED_TRUSTED_EXTERNAL/)).toBeVisible()
+  expect(screen.getByText(/Provider storage hard limit not enforced; provider tail maximum UNKNOWN/)).toBeVisible()
+  expect(screen.queryByText('DEV_DIAGNOSTIC · capture policy exception')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByText('Capture policy and authorization originals'))
+  expect(screen.getByText(basis.policy_sha256)).toBeVisible()
+  expect(screen.getByText(basis.authorization_sha256)).toBeVisible()
+  if (state !== 'succeeded') expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  if (state === 'running') expect(screen.queryByRole('button', { name: 'Save research decision' })).not.toBeInTheDocument()
+  if (state === 'failed' || state === 'interrupted') expect(screen.getByText(/The reserved research trial remains consumed/)).toBeVisible()
+  view.unmount(); await mount()
+  expect(await screen.findByText('DEV_TRUSTED_ENVIRONMENT · unverified external environment')).toBeVisible()
+  expect(posts()).toHaveLength(0)
+})
+
+it('keeps trusted-external mode explicit in Chinese and a decision bound to the original admission', async () => {
+  preferences.locale = 'zh-CN'; declaredTrusted()
+  await mount()
+  expect(await screen.findByText('DEV_TRUSTED_ENVIRONMENT · 外部环境未核验')).toBeVisible()
+  expect(screen.getByText(/UNVERIFIED_TRUSTED_EXTERNAL/)).toBeVisible()
+  expect(screen.getByText(/未强制实施供应商存储硬上限/)).toBeVisible()
+  fireEvent.change(screen.getByLabelText('理由'), { target: { value: '离线UI替身；等待真实独立证据。' } })
+  fireEvent.click(screen.getByRole('button', { name: '保存研究决定' }))
+  expect(await screen.findByText('观察 · 离线UI替身；等待真实独立证据。')).toBeVisible()
+  const sent = JSON.parse(String(posts()[0][1].body))
+  expect(sent.admission_digest).toBe((current.admission as { digest: string }).digest)
+  expect(sent.report_digest).toBeNull()
+})
+
+it.each(['missing_channel', 'wrong_channel', 'missing_mode', 'policy_digest', 'policy_pin', 'authorization_ref', 'wrong_authorization', 'hard_limit', 'known_tail', 'downcast_to_A', 'channel_only_strict', 'channel_on_A'])('refuses partial/mismatched/wrong-identity trusted fragment (%s)', async defect => {
+  if (defect === 'channel_on_A') declaredDev(); else declaredTrusted()
+  const raw = JSON.parse(artifacts.admission); const basis = raw.use_basis
+  if (defect === 'missing_channel') delete basis.channel_assurance
+  if (defect === 'wrong_channel') basis.channel_assurance = 'VERIFIED'
+  if (defect === 'missing_mode') delete basis.diagnostic_mode
+  if (defect === 'policy_digest') basis.policy_sha256 = sha('wrong')
+  if (defect === 'policy_pin') basis.proofs.expected_policy_sha256 = sha('wrong')
+  if (defect === 'authorization_ref') basis.proofs.authorization_ref = objectRef('wrong')
+  if (defect === 'wrong_authorization') {
+    const wrong = objectRef('A-or-other-authorization')
+    basis.authorization_sha256 = wrong.digest; basis.proofs.authorization_ref = wrong; basis.proofs.expected_authorization_sha256 = wrong.digest
+  }
+  if (defect === 'hard_limit') basis.hard_limit_enforced = true
+  if (defect === 'known_tail') basis.provider_tail_max = 0
+  if (defect === 'downcast_to_A') { basis.diagnostic_mode = 'DEV_DIAGNOSTIC'; delete basis.channel_assurance }
+  if (defect === 'channel_on_A') basis.channel_assurance = 'UNVERIFIED_TRUSTED_EXTERNAL'
+  if (defect === 'channel_only_strict') {
+    for (const name of ['diagnostic_mode', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max']) delete basis[name]
+    for (const name of ['capture_policy_ref', 'authorization_ref', 'expected_policy_sha256', 'expected_authorization_sha256']) delete basis.proofs[name]
+  }
+  artifacts.admission = JSON.stringify(raw); current = { ...current, admission: objectRef(artifacts.admission) }
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  await expect(api.artifact(await api.get(key), 'admission')).rejects.toMatchObject({ code: 'artifact_invalid' })
+  expect(posts()).toHaveLength(0)
+})
