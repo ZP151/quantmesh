@@ -4,6 +4,10 @@ Reuse current native-daily-v2 cashbook/matrix and ordinary workstation; scoped o
 
 # QuantMesh Reuse Matrix
 
+## Original IVV trusted-environment runner — issue272, 2026-11-02
+
+Reuse the reviewed shared capture/normalizer/once ledger, authenticated held-source loader, PosixReader and existing consumer/ObjectStore/cold archive. The approved new external trust family removes only provider-wide holder proof; it preserves actual provider identity and our runtime/FD/resource/normal-close gates. Use existing Python stdlib/Linux fork, namespace, cgroup2 and process/descriptor primitives in one owned runner; no upstream code copying, SDK fork, dependency install or new observer platform. Software and real native/input acceptance remain separate.
+
 ## Original IVV DEV preflight support — issue272, 2026-11-02
 
 Reuse the existing strict PosixReader/proc/mount parsers, shared capture and ObjectStore/parent-ref/archive contracts. New stdlib-only metadata/configuration/role-growth helpers are purpose-limited and refuse an unproved PTY holder boundary; no SDK/third-party code is copied or dependency installed. Root source loaders compile authenticated readonly source bytes, preserving historical failures and existing strict default. Unconnected cgroup mutation/positive-parent helpers were withdrawn during located R1 correction. Normal-route/native/input acceptance remains incomplete; see the [iteration](iterations/0038-ivv-native-producer.md).

@@ -1,5 +1,9 @@
 # QuantMesh Product Roadmap
 
+## Original IVV trusted-environment successor — issue272, 2026-11-02
+
+Actual new human approval accepts the existing provider/host terminal/IPC/socket environment as an external trusted dependency for only the original diagnostic. One source writer is implementing the complete owned runner, new explicit versioned provenance and independent parent close; reviewed Task1/preflight support is reused. Strict/A defaults and the original once/data/math remain; actual own runtime/identity/resources, normal release/catalog and independent real-input acceptance remain incomplete. No relogin/restart or outside-holder scan is added. See the [current plan](../superpowers/plans/2026-11-02-ivv-dev-diagnostic.md) and [checkpoint](../iterations/0038-ivv-native-producer.md).
+
 ## Explicit original IVV DEV diagnostic route A — issue272, 2026-11-02
 
 The bounded Task2 adapter has final136-pass Parent verification after withdrawing unbound mutation/parent-success APIs, and two-axis known-fix R2 addressed with no new Critical/Important findings. Its precise disposition remains pre-admission PTY_EXTERNAL_HOLDER_UNPROVEN. This is reusable kernel/config/metadata software, not complete native readiness: allowed metadata cannot exclude prior transferred external holders, and post-connect peer/readonly namespace/connected runner and real parent seal remain separately incomplete. Root declined expanded scans/probes/waivers; no actual capture attempt is spent. The unchanged source/data/once and independent input gates stay open.

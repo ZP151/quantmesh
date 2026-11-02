@@ -1,5 +1,13 @@
 # Iteration 0038 — IVV native producer
 
+## Current approved trusted-environment runner — 2026-11-02
+
+Planner: actual immutable human event3022B SHA3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452 accepts external-provider/host-terminal IPC/socket risks for only the original diagnostic. Prior unapproved assessment and old strict/A source/events stay historical. New explicit family retains22-key set/five-field provider actor/original37e once. The current plan records the narrowed trust boundary and unchanged own runtime/resources/identity/config/output/normal-close/data/math gates. One user action remains original diagnostic handoff; success is real originals plus independent normal closure ready for independent input review, not a test count or guaranteed financial report. Quant's unchanged H1/H2/H3/independent acceptance and eight-direct-ref cold-import handoff remain; no new perfect semantic pre-send gate.
+
+Implementer: sole fresh /root/trusted_runner_implementer ACKed exact Python/test ownership; first complete connected increment estimate2–4engineering hours, not original clock reset or delivery promise. Parent owns docs/Git/host. Normal published frontend mainae01df5 merged once as81fdf2f90fd441b6a3e66210866114515157c40d, no repeated UI checks/publication. Full purpose20MiB centrally registered net8388608 once; complete forecast retains old11539512 actual plus failures/reviews/CI/catalog/closure and contingency. All old source/capture/N/O holds retained. No host/GO/permit/intent/SDK/accepted input/trial was performed.
+
+Reviewer/Verifier pending: fresh two-axis R1 for the new complete runner, max one located-fixR2, Parent independent targeted source verification and normal exact-head CI/merge/full catalog before conditional actual admission. Browser-only user correction applied: extension confirms current Tailscale login +staging-8gb Connected; no OpenD tab visible. This does not certify OpenD authentication. Preserve user's existing login without restart or relogin.
+
 ## Approved DEV route A — 2026-11-02, active implementation
 
 ### Task2 bounded preflight checkpoint — known pre-admission INSUFFICIENT

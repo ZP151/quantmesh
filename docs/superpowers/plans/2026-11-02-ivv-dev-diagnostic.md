@@ -1,5 +1,23 @@
 # IVV DEV diagnostic implementation plan
 
+## Approved trusted-environment successor — current execution, 2026-11-02
+
+Actual human event `trusted-opend-environment-approval-event-20261102.json` (3022 bytes, SHA256 `3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452`) approves the existing provider/host terminal/IPC/socket environment as a trusted external dependency for only the original diagnostic. This supersedes the provider-wide holder/unknown-external-writer closure requirement **only in the new explicit `.dev-trusted-environment.v1` family**. It accepts unproved outside observation/copy/retention/forwarding/interference and outside-actor side-effect/growth/confidentiality bounds. Old strict/A defaults, events and failures stay unchanged. No raw credential/XML/key/env/argv/terminal payload access is added. The immutable human event is neither runtime GO nor a held permit.
+
+The original scope/execution/effect/22-key set/five-field provider identity/once ledger/data/math remain. Retain actual provider identity/owned11112, applicable typed config, our readonly SDK/runtime/source origin and namespace/inheritedFD closure, TOTAL512MiB/swap0/CPU50/Tasks32, original output/deadlines and independent parent normal seal. No restart/B/supplier/new allowance. Provider hard-limit false/tailUNKNOWN/loaded-guardUNKNOWN remain. Input may still be UNREVIEWED/INSUFFICIENT.
+
+Task3 is one complete connected owned runner, not another preflight increment. Sole implementer owns the four helper/issuer/native/new `tools/research/ivv_trusted_runner.py` files, `src/quantmesh/research/ivv_admission.py` and directly affected tests/new `tests/test_ivv_trusted_runner.py`; Parent owns docs/Git/host/publication. Exact task brief and test cases are in private `dev-A-01/trusted-runner-brief.md`. Native execution remains Parent-only after normal release/catalog and fresh actual admission. Approved capacity is now **20971520 bytes**, net8388608 registered once centrally; forecast includes all old11539512 bytes and every remaining failure/review/CI/catalog/closure. No hold borrowing or deletion credit.
+
+- [ ] RED: connected new-family issuer/capture/parent-close/consumer/cold chain; reject mixed families and preserve cross-policy spent original effect.
+- [ ] RED: bind owned fork/gate PID/start/pidfd/controlFD and created cgroup2 inode/events; reject swapped targets/FDs, namespace/runtime/source drift and missing log prerequisite before once.
+- [ ] Implement actual readonly actor setup, safe owned-only cleanup, actual GO/held-permit choreography and independent parent monitor/wait/reap/recursive-empty/resource/FD/socket/callback normal seal.
+- [ ] GREEN: targeted production-function tests with external syscall/provider seams only; Parent independently verifies, scoped static checks and exact source evidence.
+- [ ] Fresh two-axis R1 for new range, at most one located-fixR2; normal CI/merge/full catalog before conditional original diagnostic. No third structural patch cycle.
+
+Preflight conflict scan: Task1's strict/A issuer/consumer is reused via explicit new family, never silently altered; Task2's unproved holder gate remains old-family-only, never converted to fake proof; Task3 owns the same Python paths sequentially with no other writer. Frontend PR274/mainae01df5 is already published and normally merged as81fdf2f; no frontend work/checks repeated. Actor512MiB total differs intentionally from unchanged provider1GiB/128 controls. Parent closes actual child and cannot accept child-returned future-exit facts. New source/permit policy cannot renew original37e effect. Existing unbound mutation/parent-success APIs stay withdrawn.
+
+Ruling: use approved new external trust boundary with explicit assurance `UNVERIFIED_TRUSTED_EXTERNAL`, and retain every own-actor/data gate. This resolves old external-holder impossibility without expanding provider permissions; if our actual runtime or data gates fail, stop with precise evidence and no automatic allowance.
+
 > **For agentic workers:** Use subagent-driven-development and test-driven-development. Parent owns integration and native execution.
 
 **Goal:** Deliver the one already-approved DEV diagnostic capture route without restarting eabdda, then hand actual originals to independent input review.
