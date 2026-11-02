@@ -47,6 +47,8 @@ const copy = {
     real: 'Declared retrospective research. Private diagnostic once; external API retention applicability UNKNOWN. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
     realRunning: 'Running · retrospective research', realSucceeded: 'Report ready · retrospective research',
     dev: 'DEV_DIAGNOSTIC · capture policy exception',
+    trustedDev: 'DEV_TRUSTED_ENVIRONMENT · unverified external environment',
+    trustedLimits: 'External environment and channels are unverified (UNVERIFIED_TRUSTED_EXTERNAL). Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Monitoring is not a hard limit.',
     devLimits: 'Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Full read-only/six-writable enforcement and legacy loaded-guard provenance are unproved. Monitoring is not a hard limit.',
     devQualification: 'Diagnostic capture alone is unreviewed. Only independently accepted input and a registered grant allow this fixed study; neither the capture exception nor a report proves profitability, out-of-sample validity, or Paper/live eligibility.',
     captureAuthority: 'Capture-once usage: UNKNOWN on this page. Research-trial status is separate; an uncomputed result or returning to input does not restore capture authority.',
@@ -72,6 +74,8 @@ const copy = {
     real: '已声明的真实回溯研究，仅一次私人开发诊断；外部 API 留存适用性 UNKNOWN。金融证据仍为 INSUFFICIENT，Paper 与实盘不可用。',
     realRunning: '运行中 · 回溯研究', realSucceeded: '报告就绪 · 回溯研究',
     dev: 'DEV_DIAGNOSTIC · 采集政策例外',
+    trustedDev: 'DEV_TRUSTED_ENVIRONMENT · 外部环境未核验',
+    trustedLimits: '外部环境及通道未核验（UNVERIFIED_TRUSTED_EXTERNAL）。未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。监测不等于硬上限。',
     devLimits: '未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。完整只读/六个可写路径约束与旧版已加载防护的来源仍未证明。监测不等于硬上限。',
     devQualification: '诊断采集原件本身仍未审核。只有独立验收的输入与已注册授权才允许本次固定研究；采集例外或报告均不能证明盈利、样本外有效性，也不授予 Paper 或实盘资格。',
     captureAuthority: '本页未提供采集 once 使用状态，仍为 UNKNOWN。研究计算试验是另一项状态；未计算或返回输入均不恢复采集权限。',
@@ -200,7 +204,9 @@ export function NativeDailyPanel() {
   const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? (real ? w.realRunning : w.running) : job?.state === 'succeeded' ? (real ? w.realSucceeded : w.succeeded) : job?.state === 'failed' ? w.failed : w.interrupted
   const verified = evidence?.jobId === job?.job_id ? evidence : null
   const useBasis = real && verified ? verified.admission.value.use_basis as Record<string, unknown> : null
-  const diagnostic = useBasis?.diagnostic_mode === 'DEV_DIAGNOSTIC'
+  const trustedEnvironment = useBasis?.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
+  const diagnostic = trustedEnvironment || useBasis?.diagnostic_mode === 'DEV_DIAGNOSTIC'
+  const diagnosticLabel = trustedEnvironment ? w.trustedDev : w.dev
   const pendingDecision = intent?.decision
   const usd = (v: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(v)
   const percent = (v: number) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(v)
@@ -237,9 +243,9 @@ export function NativeDailyPanel() {
         {!verified && error !== 'artifact' && <p className="text-sm text-muted-foreground">{w.verify}</p>}
         {verified && <>
           {real && <><p className="text-sm text-muted-foreground">{evidenceNote}</p><p className="text-sm text-muted-foreground">{w.captureAuthority}</p></>}
-          {diagnostic && <div className="space-y-2 text-sm" role="note" aria-label={w.dev}>
-            <p className="font-medium">{w.dev}</p>
-            <p>{w.devLimits}</p><p>{w.devQualification}</p>
+          {diagnostic && <div className="space-y-2 text-sm" role="note" aria-label={diagnosticLabel}>
+            <p className="font-medium">{diagnosticLabel}</p>
+            <p>{trustedEnvironment ? w.trustedLimits : w.devLimits}</p><p>{w.devQualification}</p>
             <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{w.devBinding}</summary>
               <dl className="space-y-2">{[[w.devPolicy, useBasis!.policy_sha256], [w.devAuthorization, useBasis!.authorization_sha256]].map(([label, value]) => <div key={String(label)}><dt className="text-muted-foreground">{String(label)}</dt><dd className="break-all font-mono">{String(value)}</dd></div>)}</dl>
             </details>
