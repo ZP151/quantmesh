@@ -44,6 +44,14 @@ INPUT_CHECKS = (
 _REAL_AUTHORITY = object()
 TRUSTED_AUTH = "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452"
 TRUSTED_SUFFIX = ".dev-trusted-environment.v1"
+ADDITIONAL_AUTH = "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832"
+ADDITIONAL_DESCRIPTOR = "76944da09e615b0fec9c60a6ed7ea78d7fa364543684b4d4e5832618860dfa12"
+ADDITIONAL_SUFFIX = ".dev-additional-task.v1"
+ADDITIONAL_RESEARCH_SCOPE = "75bdbea142ca73c3c7964fd2fbcb7d2ded82aded73788c903a0d57d9528ebd0a"
+ADDITIONAL_STUDY_ROOT = (
+    "C:/Users/15492/.codex-clean/worktrees/latest-bootstrap/QuantMesh/output/"
+    "ivv-additional-study-20261103-01"
+)
 
 
 def prepare_runtime(root, basis, store):
@@ -78,6 +86,16 @@ def _schema(proofs, kind):
         proofs.expected_authorization_sha256,
     )
     _require(all(v is not None for v in values) if dev else all(v is None for v in values))
+    if dev and proofs.expected_authorization_sha256 == ADDITIONAL_AUTH:
+        # These slots hold immutable file digests, never logical effect IDs.
+        _require(proofs.scope_ref.digest == ADDITIONAL_DESCRIPTOR)
+        _require(
+            proofs.effect_ref.digest
+            == proofs.execution_ref.digest
+            == proofs.authorization_ref.digest
+            == ADDITIONAL_AUTH
+        )
+        return "qm.ivv." + kind + ADDITIONAL_SUFFIX
     if dev and proofs.expected_authorization_sha256 == TRUSTED_AUTH:
         return "qm.ivv." + kind + TRUSTED_SUFFIX
     return "qm.ivv." + kind + (".dev-diagnostic.v1" if dev else ".v1")
