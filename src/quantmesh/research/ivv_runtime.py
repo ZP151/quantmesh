@@ -19,6 +19,7 @@ from quantmesh.research.jobs import RunBudget
 
 COMMIT_BYTES = 536870912
 ARTIFACT_BYTES = 8388608
+ADDITIONAL_WINDOWS_POLICY_SHA = "22f6cb798c94c436759f4ff85d16b6101010ae5e550e5e7d4dc155c71ca54179"
 WINDOWS_POLICY_SHA = "eba49b57044c1883c185fd3d844a8f645cfd64dc058104c63b820d34c65abb63"
 
 
@@ -126,20 +127,39 @@ class IVVRuntime:
         ref = basis["proofs"]["windows_policy_ref"]
         policy = gate._load(store, ref)
         go = gate._load(store, basis["proofs"]["go_ref"])
+        proofs = gate.TrustedIVVProofs.model_validate(basis["proofs"])
+        additional = proofs.expected_authorization_sha256 == gate.ADDITIONAL_AUTH
+        expected_policy = ADDITIONAL_WINDOWS_POLICY_SHA if additional else WINDOWS_POLICY_SHA
+        if additional:
+            gate._schema(proofs, "windows-policy")
+            if (
+                basis["scope_id"] != gate.ADDITIONAL_RESEARCH_SCOPE
+                or basis["job_id"] != gate.ADDITIONAL_JOB_ID
+                or policy.get("research_effect_sha256")
+                != gate.ADDITIONAL_PROVENANCE["research_effect_sha256"]
+            ):
+                raise ValueError("windows_runtime_authority")
         if (
             os.name != "nt"
             or sys.platform != "win32"
-            or ref["digest"] != WINDOWS_POLICY_SHA
+            or ref["digest"] != expected_policy
             or policy["planning_scope_id"] != basis["scope_id"]
             or policy["planning_job_uuid"] != basis["job_id"]
             or policy["full_execution_approval_sha256"] != basis["proofs"]["effect_ref"]["digest"]
-            or go["windows_policy_sha256"] != WINDOWS_POLICY_SHA
+            or go["windows_policy_sha256"] != expected_policy
             or go["numeric_runtime_sha256"] != gate.daily.digest(Path(__file__).read_bytes())
         ):
             raise ValueError("windows_runtime_authority")
         controls = policy["windows_controls"]
         if (
-            controls["job_wide_committed_memory_max"] != COMMIT_BYTES
+            (
+                additional
+                and (
+                    type(controls.get("affinity_cores")) is not int
+                    or controls["affinity_cores"] != 1
+                )
+            )
+            or controls["job_wide_committed_memory_max"] != COMMIT_BYTES
             or controls["absolute_seconds"] != 80
             or controls["paging"] != "ORDINARY_WINDOWS_OS_MANAGED_ALLOWED"
             or controls["owned_study_artifacts"] != 8388608

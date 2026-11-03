@@ -48,6 +48,10 @@ const copy = {
     realRunning: 'Running · retrospective research', realSucceeded: 'Report ready · retrospective research',
     dev: 'DEV_DIAGNOSTIC · capture policy exception',
     trustedDev: 'DEV_TRUSTED_ENVIRONMENT · unverified external environment',
+    additional: 'Additional IVV task · unverified external environment',
+    additionalLegacy: 'Old task: UNKNOWN_LOCKED; nominal allowance consumed (1 context / 7 business requests). Historical actual cumulative usage: UNKNOWN.',
+    additionalLimits: 'This task limits: 1 carrier, 1 context, 7 business requests; InitConnect ≤1 and KeepAlive ≤96 counted separately. Capture submission is SPENT; returning to input restores no authority.',
+    observed: 'Observed',
     trustedLimits: 'External environment and channels are unverified (UNVERIFIED_TRUSTED_EXTERNAL). Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Monitoring is not a hard limit.',
     devLimits: 'Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Full read-only/six-writable enforcement and legacy loaded-guard provenance are unproved. Monitoring is not a hard limit.',
     devQualification: 'Diagnostic capture alone is unreviewed. Only independently accepted input and a registered grant allow this fixed study; neither the capture exception nor a report proves profitability, out-of-sample validity, or Paper/live eligibility.',
@@ -75,6 +79,10 @@ const copy = {
     realRunning: '运行中 · 回溯研究', realSucceeded: '报告就绪 · 回溯研究',
     dev: 'DEV_DIAGNOSTIC · 采集政策例外',
     trustedDev: 'DEV_TRUSTED_ENVIRONMENT · 外部环境未核验',
+    additional: '新增 IVV 任务 · 外部环境未核验',
+    additionalLegacy: '旧任务：UNKNOWN_LOCKED；名义额度已消费（1 个 context / 7 次业务请求）。历史实际累计使用量：UNKNOWN。',
+    additionalLimits: '本次上限：1 次 carrier 提交、1 个 context、7 次业务请求；InitConnect ≤1、KeepAlive ≤96 另计。采集提交权已消费；返回输入不恢复权限。',
+    observed: '实际观察',
     trustedLimits: '外部环境及通道未核验（UNVERIFIED_TRUSTED_EXTERNAL）。未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。监测不等于硬上限。',
     devLimits: '未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。完整只读/六个可写路径约束与旧版已加载防护的来源仍未证明。监测不等于硬上限。',
     devQualification: '诊断采集原件本身仍未审核。只有独立验收的输入与已注册授权才允许本次固定研究；采集例外或报告均不能证明盈利、样本外有效性，也不授予 Paper 或实盘资格。',
@@ -204,9 +212,12 @@ export function NativeDailyPanel() {
   const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? (real ? w.realRunning : w.running) : job?.state === 'succeeded' ? (real ? w.realSucceeded : w.succeeded) : job?.state === 'failed' ? w.failed : w.interrupted
   const verified = evidence?.jobId === job?.job_id ? evidence : null
   const useBasis = real && verified ? verified.admission.value.use_basis as Record<string, unknown> : null
-  const trustedEnvironment = useBasis?.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
+  const additional = useBasis?.diagnostic_mode === 'DEV_ADDITIONAL_TRUSTED_ENVIRONMENT'
+  const usage = additional ? useBasis!.capture_usage as Record<string, unknown> : null
+  const observed = (key: string) => typeof usage?.[key] === 'number' ? String(usage[key]) : 'UNKNOWN'
+  const trustedEnvironment = additional || useBasis?.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
   const diagnostic = trustedEnvironment || useBasis?.diagnostic_mode === 'DEV_DIAGNOSTIC'
-  const diagnosticLabel = trustedEnvironment ? w.trustedDev : w.dev
+  const diagnosticLabel = additional ? w.additional : trustedEnvironment ? w.trustedDev : w.dev
   const pendingDecision = intent?.decision
   const usd = (v: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(v)
   const percent = (v: number) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(v)
@@ -242,9 +253,13 @@ export function NativeDailyPanel() {
         <p className="text-xs text-muted-foreground">{w.trial}: {job.trial_consumed ? w.yes : w.no}</p>
         {!verified && error !== 'artifact' && <p className="text-sm text-muted-foreground">{w.verify}</p>}
         {verified && <>
-          {real && <><p className="text-sm text-muted-foreground">{evidenceNote}</p><p className="text-sm text-muted-foreground">{w.captureAuthority}</p></>}
+          {real && <><p className="text-sm text-muted-foreground">{evidenceNote}</p>{!additional && <p className="text-sm text-muted-foreground">{w.captureAuthority}</p>}</>}
           {diagnostic && <div className="space-y-2 text-sm" role="note" aria-label={diagnosticLabel}>
             <p className="font-medium">{diagnosticLabel}</p>
+            {additional && <>
+              <p>{w.additionalLegacy}</p><p>{w.additionalLimits}</p>
+              <p className="tabular-nums">{w.observed}{zh ? `：${observed('actual_contexts')} 个 context、${observed('actual_business_requests')} 次业务请求、${observed('actual_init_connect')} 次 InitConnect、${observed('actual_keepalive')} 次 KeepAlive。` : `: ${observed('actual_contexts')} context, ${observed('actual_business_requests')} business requests, ${observed('actual_init_connect')} InitConnect, ${observed('actual_keepalive')} KeepAlive.`}</p>
+            </>}
             <p>{trustedEnvironment ? w.trustedLimits : w.devLimits}</p><p>{w.devQualification}</p>
             <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{w.devBinding}</summary>
               <dl className="space-y-2">{[[w.devPolicy, useBasis!.policy_sha256], [w.devAuthorization, useBasis!.authorization_sha256]].map(([label, value]) => <div key={String(label)}><dt className="text-muted-foreground">{String(label)}</dt><dd className="break-all font-mono">{String(value)}</dd></div>)}</dl>

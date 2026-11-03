@@ -47,6 +47,32 @@ TRUSTED_SUFFIX = ".dev-trusted-environment.v1"
 ADDITIONAL_AUTH = "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832"
 ADDITIONAL_DESCRIPTOR = "76944da09e615b0fec9c60a6ed7ea78d7fa364543684b4d4e5832618860dfa12"
 ADDITIONAL_SUFFIX = ".dev-additional-task.v1"
+ADDITIONAL_POLICY = "c784651ae76033a3a3695fad97d19d7721d7de5c28dc4a901408f101c6ae1e55"
+ADDITIONAL_DESCRIPTOR_OBJECT = "06f192d60c76a95e91f150e4e4b867218f243759996442abeb58290f7faf6a25"
+ADDITIONAL_JOB_ID = "1d05c58d-b536-4b64-b2c3-89e4217cc4ad"
+ADDITIONAL_PROVENANCE = {
+    "additional_task_id": "ivv-additional-20261103-01",
+    "authorization_sha256": "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832",
+    "capture_budget": {
+        "business_requests": 7,
+        "carrier_submissions": 1,
+        "contexts": 1,
+        "init_connect": 1,
+        "keepalive": 96,
+    },
+    "capture_effect_sha256": "a6681407439408a9d01baecedb3026f16f8e9513d601b2edd56910b0228eee17",
+    "capture_once_key": "189ac10caf73ef7fd31fa01fb4691bb4b00f19a371cc7792330df60bc6d7ac2c",
+    "capture_scope_id": "53badf05a10d955cc0826dccc592d1807bfbcfec8abcd4f9e3a194857e3d1858",
+    "channel_assurance": "UNVERIFIED_TRUSTED_EXTERNAL",
+    "descriptor_sha256": "06f192d60c76a95e91f150e4e4b867218f243759996442abeb58290f7faf6a25",
+    "diagnostic_mode": "DEV_ADDITIONAL_TRUSTED_ENVIRONMENT",
+    "hard_limit_enforced": False,
+    "historical_actual_cumulative": "UNKNOWN",
+    "legacy_capture_charge": {"business_requests": 7, "contexts": 1},
+    "provider_tail_max": "UNKNOWN",
+    "research_effect_sha256": "03cade7368127b1ed36425ff9f7334892aba51fbbf516376a65b4da992dabbda",
+    "research_scope_id": "75bdbea142ca73c3c7964fd2fbcb7d2ded82aded73788c903a0d57d9528ebd0a",
+}
 ADDITIONAL_RESEARCH_SCOPE = "75bdbea142ca73c3c7964fd2fbcb7d2ded82aded73788c903a0d57d9528ebd0a"
 ADDITIONAL_STUDY_ROOT = (
     "C:/Users/15492/.codex-clean/worktrees/latest-bootstrap/QuantMesh/output/"
@@ -104,6 +130,15 @@ def _schema(proofs, kind):
 def _dev_binding(proofs, value):
     if proofs.capture_policy_ref is None:
         return {}
+    if proofs.expected_authorization_sha256 == ADDITIONAL_AUTH:
+        _schema(proofs, "provenance")
+        expected = {**ADDITIONAL_PROVENANCE, "policy_sha256": ADDITIONAL_POLICY}
+        _require(proofs.expected_policy_sha256 == ADDITIONAL_POLICY)
+        _require(proofs.capture_policy_ref.digest == ADDITIONAL_POLICY)
+        _require(
+            all(daily.canonical(value.get(k)) == daily.canonical(v) for k, v in expected.items())
+        )
+        return expected
     expected = {
         "policy_sha256": proofs.expected_policy_sha256,
         "authorization_sha256": proofs.expected_authorization_sha256,
@@ -131,6 +166,16 @@ def _verify_dev_policy(store, proofs, go, acceptance, reviews):
     )
     _load(store, proofs.authorization_ref)
     policy = _load(store, proofs.capture_policy_ref)
+    if proofs.expected_authorization_sha256 == ADDITIONAL_AUTH:
+        _require(proofs.expected_policy_sha256 == ADDITIONAL_POLICY)
+        _require(policy["schema_id"] == _schema(proofs, "capture-policy"))
+        # The policy does not embed its own file digest.
+        _dev_binding(proofs, {**policy, "policy_sha256": proofs.expected_policy_sha256})
+        _require(policy["scope_id"] == ADDITIONAL_PROVENANCE["capture_scope_id"])
+        _require(policy["execution_sha256"] == proofs.execution_ref.digest)
+        _require(policy["effect_id"] == go["capture_effect_id"])
+        _dev_binding(proofs, acceptance)
+        return _dev_binding(proofs, go)
     expected = {
         "schema_id": "qm.ivv.capture-policy.dev-diagnostic.v1",
         "scope_id": SCOPE_ID,
@@ -209,10 +254,15 @@ def _capture_refs(raw):
 
 def _capture_close(store, raw_ref, acceptance, go, proofs):
     raw = _load(store, raw_ref)
+    additional = proofs.expected_authorization_sha256 == ADDITIONAL_AUTH
+    capture_scope = ADDITIONAL_PROVENANCE["capture_scope_id"] if additional else SCOPE_ID
+    approval = (
+        ADDITIONAL_PROVENANCE["capture_effect_sha256"] if additional else proofs.effect_ref.digest
+    )
     _require(
         raw["schema_id"] == _schema(proofs, "capture") and raw["state"] == "CAPTURED_UNREVIEWED"
     )
-    _require(raw["scope_id"] == SCOPE_ID and raw["symbol"] == "US.IVV")
+    _require(raw["scope_id"] == capture_scope and raw["symbol"] == "US.IVV")
     _require(
         raw["window_digest"] == go["input_window_digest"]
         and raw["full_window_sha256"] == WINDOW_SHA
@@ -230,7 +280,7 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     _dev_binding(proofs, binding)
     _require(binding["root_go_sha256"] == proofs.go_ref.digest)
     _require(
-        binding["approval_sha256"] == proofs.effect_ref.digest
+        binding["approval_sha256"] == approval
         and binding["execution_sha256"] == proofs.execution_ref.digest
     )
     _require(
@@ -243,7 +293,7 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     _dev_binding(proofs, parent)
     _require(parent["state"] == "NORMAL_EXIT" and parent["termination"] == "NORMAL")
     expected = {
-        "scope_id": SCOPE_ID,
+        "scope_id": capture_scope,
         "effect_id": raw["effect_id"],
         "capture_manifest_sha256": raw_ref.digest,
         "intent_sha256": raw["intent_ref"]["sha256"],
@@ -267,7 +317,7 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     evidence = [daily.ObjectRef.model_validate(r) for r in acceptance["parent_evidence_refs"]]
     _require(1 <= len(evidence) <= 8 and len(evidence) == len(parent["evidence_refs"]))
     _require([r.digest for r in evidence] == [r["sha256"] for r in parent["evidence_refs"]])
-    if proofs.expected_authorization_sha256 == TRUSTED_AUTH:
+    if proofs.expected_authorization_sha256 in (TRUSTED_AUTH, ADDITIONAL_AUTH):
         _require(len(evidence) == len({r.digest for r in evidence}) == 8)
         _require(
             [r.digest for r in evidence[:5]]
@@ -315,37 +365,80 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
         )
         _require(intent["schema_id"] == _schema(proofs, "capture-intent"))
         _dev_binding(proofs, intent)
-        _require(intent["scope_id"] == SCOPE_ID and intent["effect_id"] == raw["effect_id"])
+        _require(intent["scope_id"] == capture_scope and intent["effect_id"] == raw["effect_id"])
         _require(
             intent["execution_sha256"] == proofs.execution_ref.digest
-            and intent["approval_sha256"] == proofs.effect_ref.digest
+            and intent["approval_sha256"] == approval
         )
         _require(intent["state"] == "ATTEMPTED" and intent["synthetic"] is False)
     return parent_ref, refs
+
+
+def _capture_usage(raw_ref, counts):
+    """Accepted originals need actual counts; nominal charge is not observation."""
+    controls = counts["control_sends"]
+    _require(set(controls) == {"1001", "1004"})
+    _require(type(counts["contexts"]) is int and counts["contexts"] == 1)
+    _require(type(counts["application_sends"]) is int and counts["application_sends"] == 7)
+    _require(type(controls["1001"]) is int and 0 <= controls["1001"] <= 1)
+    _require(type(controls["1004"]) is int and 0 <= controls["1004"] <= 96)
+    return {
+        "capture_usage_ref": raw_ref.model_dump(),
+        "capture_usage": {
+            "logical_state": "SPENT",
+            "actual_contexts": counts["contexts"],
+            "actual_business_requests": counts["application_sends"],
+            "actual_init_connect": controls["1001"],
+            "actual_keepalive": controls["1004"],
+        },
+    }
+
+
+def _verify_additional_originals(store, proofs):
+    """Authenticate immutable new authority files without minting a registration."""
+    _require(proofs.expected_authorization_sha256 == ADDITIONAL_AUTH)
+    _schema(proofs, "registration")
+    descriptor = _load(store, proofs.scope_ref)
+    _require(daily.digest(daily.canonical(descriptor)) == ADDITIONAL_DESCRIPTOR_OBJECT)
+    _load(store, proofs.effect_ref)
+    _load(store, proofs.execution_ref)
 
 
 def _verify(store, package_ref, proofs, *, executing):
     from quantmesh.research import native_daily_candidate as native
 
     proofs = TrustedIVVProofs.model_validate(proofs)
-    originals = {}
-    for key in ORIGINAL_PINS:
-        ref = getattr(proofs, key + "_ref")
-        _require(ref.digest == ORIGINAL_PINS[key])
-        originals[key] = _load(store, ref)
-    _require(originals["scope"]["selection"]["asset"] == "US.IVV")
-    _require(originals["effect"]["scope_approval_sha256"] == proofs.scope_ref.digest)
-    _require(originals["effect"]["paper_live"] is False)
-    _require(originals["execution"]["approval_sha256"] == proofs.effect_ref.digest)
-    fixed = originals["execution"]["fixed_scope"]
-    _require(fixed["asset"] == "US.IVV" and fixed["scope_id"] == SCOPE_ID)
-    _require(fixed["input_window_digest"] == daily.digest(daily.canonical(WINDOW)))
-    from quantmesh.research.ivv_runtime import WINDOWS_POLICY_SHA
+    additional = proofs.expected_authorization_sha256 == ADDITIONAL_AUTH
+    _schema(proofs, "registration")
+    scope_id = ADDITIONAL_RESEARCH_SCOPE if additional else SCOPE_ID
+    from quantmesh.research.ivv_runtime import ADDITIONAL_WINDOWS_POLICY_SHA, WINDOWS_POLICY_SHA
 
+    if additional:
+        _verify_additional_originals(store, proofs)
+        fixed = {"input_window_digest": daily.digest(daily.canonical(WINDOW))}
+        expected_policy = ADDITIONAL_WINDOWS_POLICY_SHA
+    else:
+        originals = {}
+        for key in ORIGINAL_PINS:
+            ref = getattr(proofs, key + "_ref")
+            _require(ref.digest == ORIGINAL_PINS[key])
+            originals[key] = _load(store, ref)
+        _require(originals["scope"]["selection"]["asset"] == "US.IVV")
+        _require(originals["effect"]["scope_approval_sha256"] == proofs.scope_ref.digest)
+        _require(originals["effect"]["paper_live"] is False)
+        _require(originals["execution"]["approval_sha256"] == proofs.effect_ref.digest)
+        fixed = originals["execution"]["fixed_scope"]
+        _require(fixed["asset"] == "US.IVV" and fixed["scope_id"] == SCOPE_ID)
+        _require(fixed["input_window_digest"] == daily.digest(daily.canonical(WINDOW)))
+        expected_policy = WINDOWS_POLICY_SHA
     policy = _load(store, proofs.windows_policy_ref)
-    _require(proofs.windows_policy_ref.digest == WINDOWS_POLICY_SHA)
-    _require(policy["planning_scope_id"] == SCOPE_ID)
+    _require(proofs.windows_policy_ref.digest == expected_policy)
+    _require(policy["planning_scope_id"] == scope_id)
     _require(policy["full_execution_approval_sha256"] == proofs.effect_ref.digest)
+    if additional:
+        _require(
+            policy["research_effect_sha256"] == ADDITIONAL_PROVENANCE["research_effect_sha256"]
+        )
     _require(proofs.go_ref.digest == proofs.expected_go_sha256)
     _require(proofs.acceptance_ref.digest == proofs.expected_acceptance_sha256)
     go, acceptance = _load(store, proofs.go_ref), _load(store, proofs.acceptance_ref)
@@ -373,7 +466,16 @@ def _verify(store, package_ref, proofs, *, executing):
     )
     _require(go["schema_id"] == _schema(proofs, "root-go"))
     provenance = _verify_dev_policy(store, proofs, go, acceptance, reviews)
-    _require(go["decision"] == "GO_ONCE_AFTER_INPUT_ACCEPTANCE" and go["scope_id"] == SCOPE_ID)
+    _require(go["decision"] == "GO_ONCE_AFTER_INPUT_ACCEPTANCE")
+    _require(
+        go["scope_id"] == (ADDITIONAL_PROVENANCE["capture_scope_id"] if additional else scope_id)
+    )
+    if additional:
+        _require(go["research_scope_id"] == scope_id)
+        _require(go["research_effect_sha256"] == ADDITIONAL_PROVENANCE["research_effect_sha256"])
+        _require(go["approval_sha256"] == ADDITIONAL_PROVENANCE["capture_effect_sha256"])
+        _require(go["job_id"] == ADDITIONAL_JOB_ID)
+        _require(go["output_root_digest"] == daily._root_pin(ADDITIONAL_STUDY_ROOT))
     _require(go["execution_sha256"] == proofs.execution_ref.digest)
     _require(go["input_window_digest"] == fixed["input_window_digest"])
     _require(go["full_window_sha256"] == WINDOW_SHA)
@@ -395,13 +497,22 @@ def _verify(store, package_ref, proofs, *, executing):
     _require(policy["planning_job_uuid"] == go["job_id"])
     _require(go["windows_policy_sha256"] == proofs.windows_policy_ref.digest)
     if executing:
+        if additional:
+            from quantmesh.research import ivv_runtime
+
+            _require(
+                go["numeric_runtime_sha256"]
+                == daily.digest(Path(ivv_runtime.__file__).read_bytes())
+            )
         _require(go["code"] == native._code())
         _require(go["adapter_sha256"] == daily.digest(Path(daily.__file__).read_bytes()))
         _require(go["gate_sha256"] == daily.digest(Path(__file__).read_bytes()))
         _require(go["runtime"] == daily.runtime_versions())
     _require(acceptance["schema_id"] == _schema(proofs, "input-acceptance"))
     _require(acceptance["decision"] == "ACCEPT_FOR_ONE_DECLARED_RETROSPECTIVE_RESEARCH")
-    _require(acceptance["reviewer"] == REVIEWER and acceptance["scope_id"] == SCOPE_ID)
+    _require(acceptance["reviewer"] == REVIEWER and acceptance["scope_id"] == scope_id)
+    if additional:
+        _require(acceptance["capture_scope_id"] == ADDITIONAL_PROVENANCE["capture_scope_id"])
     _require(acceptance["input_set_digest"] == input_set_digest(package))
     _require(all(acceptance["checks"].get(key) is True for key in INPUT_CHECKS))
     _require(acceptance["financial_qualification"] == "INSUFFICIENT")
@@ -418,19 +529,22 @@ def _verify(store, package_ref, proofs, *, executing):
     _require(source["action_coverage"] == manifest.action_coverage)
     _require(isinstance(source["basis"], str) and bool(source["basis"].strip()))
     exposure, ledger = _load(store, manifest.exposure_ref), _load(store, manifest.trial_ledger_ref)
-    _require(exposure["scope_id"] == SCOPE_ID and exposure["unseen_oos"] is False)
+    _require(exposure["scope_id"] == scope_id and exposure["unseen_oos"] is False)
     _require(exposure["sample_role"] == manifest.sample_role)
-    _require(ledger["scope_id"] == SCOPE_ID and ledger["trial_id"] == "qm-ivv-trial-" + SCOPE_ID)
+    _require(ledger["scope_id"] == scope_id and ledger["trial_id"] == "qm-ivv-trial-" + scope_id)
     _require(type(ledger["max_trials"]) is int and ledger["max_trials"] == 1)
     _require(ledger["state"] == "UNRESERVED")
+    if additional:
+        raw = _load(store, raw_ref)
+        provenance.update(_capture_usage(raw_ref, raw["counts"]))
     return {
         **provenance,
-        "scope_id": SCOPE_ID,
+        "scope_id": scope_id,
         "scope_trial_key": daily.digest(
             daily.canonical(
                 {
                     "execution": proofs.execution_ref.digest,
-                    "scope": SCOPE_ID,
+                    "scope": scope_id,
                     "trial": 1,
                 }
             )
