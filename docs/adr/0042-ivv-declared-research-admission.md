@@ -1,5 +1,51 @@
 # ADR0042 — one internally approved IVV retrospective admission
 
+## Independent additional task — actual approval2026-11-04
+
+Actual human approved new event7912B SHA256595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832,
+descriptor06f192d6, distinct captureC53badf05/effecta6681407/K189ac10c and
+researchR75bdbea1/effect03cade73/fixed job1d05c58d-b536-4b64-b2c3-89e4217cc4ad.
+This is new additional exposure and one conditional study, not recovery or
+migration of the old e285/37e/3602 authority. OldUNKNOWN_LOCKED and nominal1/7 charge
+remain immutable, historical actual totals UNKNOWN, no old-flow investigation.
+The new closed `.dev-additional-task.v1`/DEV_ADDITIONAL_TRUSTED_ENVIRONMENT branch
+is explicit; mixed-family authority is rejected rather than downcast to old A.
+
+The actual approval authenticates the descriptor and separately derived logical
+effects/scopes. Its ObjectRef digest is not either logical effect ID. New raw,
+intent, held permit and actual parent closure retain captureC and an authenticated
+mapping to researchR/job; consumer validates this mapping instead of pretending
+the scopes are equal or relabelling old data. The new Windows policy is an exact
+projection of this actual approval and new identity, preserving512MiB Job commit,
+one affinity core/80s/8MiB/ordinary paging; its existence is not numerical admission.
+
+New Root backing is fixed `/var/lib/quantmesh-ivv-additional`, task subtree
+tasks/20261103-01 and ledger once/K. It never changes shared old ancestors. One
+SDK-free ordinary preparation precedes AUTH_READY; only then is the unique local
+carrier claim create-exclusive/fsynced (file+directory). Remote once reservation
+precedes any SDK import/context. Zero/partial/unknown after claimed carrier cannot
+mint another submission; nominalSPENT differs from actual0/1/UNKNOWN. Capture
+context<=1/business7, Init<=1/KeepAlive<=96, no reconnect/health context/pagination.
+Existing own identity/readonly/source/FD/namespace/resource/480s normal close and
+H1/H2/H3 independent actual input acceptance remain. A fixed study/trial is
+durably reserved before compute and never refunded; one owned viewer restart
+reads the same three originals without computation. Old defaults/archives retain
+their original interpretation. No public path/qualified/permission field is added.
+
+The new public use_basis retains the distinct task/scopes/effects/approval,
+historicalUNKNOWN and nominal old charge, limits and verified actual usage refs.
+Usage refers to the already authenticated capture ObjectRef, never a self-hash
+of a future manifest. Outside-provider/terminal/IPC/socket retention/growth and
+interference remain accepted, UNVERIFIED_TRUSTED_EXTERNAL, hardfalse/tailUNKNOWN;
+no provider restart, purchase, model call, new environment or trading authority.
+
+Actual72MiB was registered once (local54/remote18); software24 is one shared
+Server/Product/integration purpose. Versioned TDD, independent two-axis R1/maxone
+known-fixR2, normal required CI/matching-head merge/full catalog and fresh runtime
+gates precede actual execution. Approval authorizes that workflow, not a claim
+the human reviewed future implementation or a waiver of general branch policy.
+See [issue277 iteration](../iterations/0038-ivv-additional-task.md).
+
 ## Approved external-environment trust amendment — 2026-11-02
 
 For the original one diagnostic only, the actual human accepted the current OpenD/provider and host terminal/IPC/socket environment as a trusted external dependency. Immutable event3022B SHA2563fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452 preserves the exact new answer and links the old A event9da; neither is runtime GO. The new explicit `.dev-trusted-environment.v1` family preserves the22-key plan set, five-field provider identity, original37e canonical once key and strict/A defaults. It names `UNVERIFIED_TRUSTED_EXTERNAL` assurance instead of asserting provider-wide holder closure. Outside observation/copy/retention/forwarding/interference and outside-actor confidentiality/growth/side-effect bounds are unproved and accepted only for this purpose. Existing hard-limit false/tailUNKNOWN/loaded-guardUNKNOWN limits continue.

@@ -273,7 +273,7 @@ def _connected_capture(tmp_path, monkeypatch, pidfd_first, extra, *, private=Fal
     if extra:
         from test_ivv_additional_task import private_inputs, window_controls
 
-        from quantmesh.research import native_daily_candidate
+        from quantmesh.research import ivv_runtime, native_daily_candidate
         from quantmesh.research import native_daily_real as daily
 
         if private:
@@ -282,9 +282,9 @@ def _connected_capture(tmp_path, monkeypatch, pidfd_first, extra, *, private=Fal
         registration = {
             "go_fields": {
                 "code": native_daily_candidate._code(),
-                "adapter_sha256": "a" * 64,
-                "gate_sha256": "b" * 64,
-                "output_root_digest": daily._root_pin(tmp_path / "study"),
+                "adapter_sha256": daily.digest(Path(daily.__file__).read_bytes()),
+                "gate_sha256": daily.digest(Path(v.__file__).read_bytes()),
+                "output_root_digest": daily._root_pin(v.ADDITIONAL_STUDY_ROOT),
                 "runtime": daily.runtime_versions(),
             }
         }
@@ -445,7 +445,7 @@ def _connected_capture(tmp_path, monkeypatch, pidfd_first, extra, *, private=Fal
             **values["go_fields_ref"],
             "job_id": extra.APPROVED.job_id,
             "windows_policy_sha256": extra.WINDOWS,
-            "numeric_runtime_sha256": "8" * 64,
+            "numeric_runtime_sha256": daily.digest(Path(ivv_runtime.__file__).read_bytes()),
         }
         r._validate_windows_fields(values["go_fields_ref"], extra)
     from test_ivv_native_producer import producer
@@ -498,6 +498,8 @@ def _connected_capture(tmp_path, monkeypatch, pidfd_first, extra, *, private=Fal
             assert json.loads((root / "capture-intent.json").read_bytes())["synthetic"] is False
             self.o.context_created()
             self.o.initializing()
+            if extra:
+                self.o.before_send(1001, 1)
 
         def close(self):
             self.clock.value = 389.9

@@ -169,7 +169,6 @@ def test_additional_windows_runtime_accepts_only_new_policy_and_normal_budget(
     from types import SimpleNamespace
 
     from quantmesh.data.objects import ObjectStore
-
     from quantmesh.research import ivv_runtime as runtime
 
     monkeypatch.setattr(runtime, "os", SimpleNamespace(name="nt"))

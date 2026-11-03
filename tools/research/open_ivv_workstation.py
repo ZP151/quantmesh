@@ -9,7 +9,6 @@ import argparse
 from pathlib import Path
 
 from quantmesh.data.objects import ObjectStore, is_reparse_point
-
 from quantmesh.research import ivv_admission as gate
 from quantmesh.research import native_daily_real as daily
 
@@ -67,6 +66,7 @@ def main():
     service = service_from_config(args.config, args.config_sha256)
     try:
         import uvicorn
+
         from quantmesh.api.watchlist import WatchlistStore
         from quantmesh.api.workstation import create_workstation_app
         from quantmesh.execution.accounting import PaperAccount

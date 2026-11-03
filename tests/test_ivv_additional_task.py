@@ -108,6 +108,8 @@ def test_additional_uncertain_context_fsync_remains_spent(tmp_path, monkeypatch)
 def test_connected_additional_capture_keeps_C_R_and_normal_parent_seal(tmp_path, monkeypatch):
     from test_ivv_trusted_runner import connected_additional_capture
 
+    from quantmesh.research import ivv_runtime
+
     raw, intent, parent, go = connected_additional_capture(tmp_path, monkeypatch)
     for obj in (raw, intent, parent, go):
         assert obj["scope_id"] == obj["capture_scope_id"] == C
@@ -116,7 +118,10 @@ def test_connected_additional_capture_keeps_C_R_and_normal_parent_seal(tmp_path,
     assert raw["counts"]["application_sends"] == 7 and raw["counts"]["contexts"] == 1
     assert parent["state"] == "NORMAL_EXIT" and len(parent["evidence_refs"]) == 8
     assert go["job_id"] == "1d05c58d-b536-4b64-b2c3-89e4217cc4ad"
-    assert go["numeric_runtime_sha256"] == "8" * 64
+    assert (
+        go["numeric_runtime_sha256"]
+        == hashlib.sha256(Path(ivv_runtime.__file__).read_bytes()).hexdigest()
+    )
 
 
 def test_portable_connected_additional_capture(tmp_path, monkeypatch):

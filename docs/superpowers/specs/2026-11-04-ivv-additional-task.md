@@ -66,7 +66,7 @@ reference-only; no arbitrary scope, path, native proof or qualified boolean.
 - Windows new task identity only:512MiB whole-Job commit/one affinity core/80s,
   owned study8MiB, ordinary paging allowed; not Linuxswap0 or numerical admission.
 - All old holds/failures/futures retained. New registered72MiB: local54/remote18;
-  software24MiB is shared Server12/Product8/integration+commonGit4, not per-writer.
+  software24MiB is shared Server7.5/Product10/integration+commonGit6.5, not per-writer.
 
 ## Ownership and delivery
 
