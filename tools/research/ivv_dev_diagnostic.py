@@ -23,7 +23,7 @@ PROVENANCE_KEYS = (
 
 # The independently reviewed helper is fixed for this release. No code from the
 # plan, catalog, or helper runs to establish this initial trust anchor.
-_CAPTURE_HELPER_SHA256 = "68c75f81ace02c9b09c914ec919feeaeaf43a979e1a0ba465dc14f7ec9d2f49f"
+_CAPTURE_HELPER_SHA256 = "daa413cc391906f9a018f4662d93f9ba1301358124686061c1354a4139650cc1"
 
 
 def _capture():
@@ -79,7 +79,12 @@ def validate_trusted_policy(m, value, plan, authorization_sha256):
 
 def _released_module(name, expected):
     """Compile the checked bytes directly. Native authority never executes a .pyc file."""
-    if name not in ("capture_opend_ivv_daily.py", "ivv_dev_native.py", "ivv_native_producer.py"):
+    if name not in (
+        "capture_opend_ivv_daily.py",
+        "ivv_dev_native.py",
+        "ivv_native_producer.py",
+        "ivv_additional_task.py",
+    ):
         raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
     path = Path(__file__).with_name(name)
     if path.resolve(strict=True) != path:
@@ -246,7 +251,8 @@ def native_provider_snapshot(m, plan, evidence):
         "endpoint",
         "identity_binding_sha256",
         "listener_binding_sha256"
-        if plan["schema_id"] == "qm.ivv.capture-plan" + m.TRUSTED_SUFFIX
+        if plan["schema_id"]
+        in {"qm.ivv.capture-plan" + x for x in (m.TRUSTED_SUFFIX, m.ADDITIONAL_SUFFIX)}
         else "channels_binding_sha256",
         "configuration_binding_sha256",
     ):
@@ -302,8 +308,21 @@ def _context(
     m._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
     m._require(plan["policy_ref"]["sha256"] == expected_policy_sha256, "dev_policy_pin")
     policy = m._strict_json(m._read_root_ref(plan["policy_ref"], maximum=32768, exact_mode=True))
-    validator = validate_trusted_policy if suffix == m.TRUSTED_SUFFIX else validate_policy
-    validator(m, policy, plan, expected_authorization_sha256)
+    if suffix == m.ADDITIONAL_SUFFIX:
+        state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
+        extra = getattr(state, "additional_task", None)
+        m._require(
+            extra is not None
+            and expected_authorization_sha256 == extra.APPROVED.authorization_sha256
+            and expected_policy_sha256 == extra.POLICY,
+            "additional_owned_authority",
+        )
+        m._require(
+            hashlib.sha256(m._canonical(policy)).hexdigest() == extra.POLICY, "additional_policy"
+        )
+    else:
+        validator = validate_trusted_policy if suffix == m.TRUSTED_SUFFIX else validate_policy
+        validator(m, policy, plan, expected_authorization_sha256)
     # Authorization is independently pinned actual human bytes, never inferred
     # from a decision string supplied by the capture caller.
     m._read_root_ref(authorization_ref, maximum=32768, exact_mode=True)
@@ -345,6 +364,15 @@ def _context(
         "dev_released_source",
     )
     _native_sources(m, catalog, go)
+    if suffix == m.ADDITIONAL_SUFFIX:
+        m._require(
+            catalog["additional_task_sha256"] == go.get("additional_task_sha256")
+            and go.get("job_id") == extra.APPROVED.job_id
+            and go.get("windows_policy_sha256") == extra.WINDOWS
+            and m._digest(go.get("numeric_runtime_sha256")),
+            "additional_go_binding",
+        )
+        _released_module("ivv_additional_task.py", catalog["additional_task_sha256"])
     evidence = m._strict_json(
         m._read_root_ref(plan["provider_evidence_ref"], maximum=32768, exact_mode=True)
     )
@@ -373,7 +401,9 @@ def _context(
     m._require(plan["endpoint"]["is_encrypt"] is False, "dev_encrypted_config_unsupported")
     for key in (
         "identity_binding_sha256",
-        "listener_binding_sha256" if suffix == m.TRUSTED_SUFFIX else "channels_binding_sha256",
+        "listener_binding_sha256"
+        if suffix in (m.TRUSTED_SUFFIX, m.ADDITIONAL_SUFFIX)
+        else "channels_binding_sha256",
         "configuration_binding_sha256",
     ):
         m._require(m._digest(evidence.get(key)), "dev_evidence_binding")

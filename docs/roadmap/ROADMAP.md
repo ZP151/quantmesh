@@ -1,5 +1,18 @@
 # QuantMesh Product Roadmap
 
+## Independent additional IVV capture-to-study task — issue277,2026-11-04
+
+Actual human approved a new independent additional1context/7business acquisition,
+distinct capture/research authority and fixed newjob, input acceptance before one
+study, and72MiB newly registered holds. OldUNKNOWN_LOCKED and nominal spent old
+allowance stay immutable; historical actual totalsUNKNOWN. File-exclusive Server
+and Product leaves reuse existing core behind an explicit additional-task branch,
+new Root backing and truthful task/usage provenance. Independent review, normal
+publication/catalog and real runtime/data acceptance remain before the actual
+ordinary-page report/decision/same-ID cold-originals outcome. No new source,
+environment, paid resource, strategy math or Paper/live permission. See
+[current checkpoint](../iterations/0038-ivv-additional-task.md).
+
 ## Original IVV trusted-environment successor — issue272, 2026-11-02
 
 Actual new human approval accepts the existing provider/host terminal/IPC/socket environment as an external trusted dependency for only the original diagnostic. One source writer is implementing the complete owned runner, new explicit versioned provenance and independent parent close; reviewed Task1/preflight support is reused. Strict/A defaults and the original once/data/math remain; actual own runtime/identity/resources, normal release/catalog and independent real-input acceptance remain incomplete. No relogin/restart or outside-holder scan is added. See the [current plan](../superpowers/plans/2026-11-02-ivv-dev-diagnostic.md) and [checkpoint](../iterations/0038-ivv-native-producer.md).

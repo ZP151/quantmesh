@@ -7,6 +7,7 @@ PID, cgroup, control descriptor, executable, callback or shell command is input.
 
 import contextlib
 import ctypes
+import functools
 import hashlib
 import importlib.machinery
 import importlib.util
@@ -49,6 +50,35 @@ SOURCES = {
     "native_producer_sha256": "ivv_native_producer.py",
     "trusted_runner_sha256": "ivv_trusted_runner.py",
 }
+
+
+ADDITIONAL_ROOT = Path("/var/lib/quantmesh-ivv-additional")
+
+
+def _locations(additional):
+    if additional:
+        base = ADDITIONAL_ROOT / "tasks/20261103-01"
+        return types.SimpleNamespace(
+            control=base / "parent",
+            child=base / "child",
+            receipt=base / "child/capture",
+            ledger=ADDITIONAL_ROOT / "once",
+            release=base / "release",
+        )
+    return types.SimpleNamespace(
+        control=CONTROL, child=CHILD, receipt=RECEIPT, ledger=LEDGER, release=RELEASE
+    )
+
+
+def _sources(additional):
+    return (
+        {**SOURCES, "additional_task_sha256": "ivv_additional_task.py"} if additional else SOURCES
+    )
+
+
+def _for_task(fn, additional):
+    # Preserve the existing trusted entry and the shape of its syscall seams.
+    return functools.partial(fn, additional=True) if additional else fn
 
 
 class Refused(ValueError):
@@ -225,7 +255,8 @@ def _bind(path):
     )
 
 
-def _bootstrap(startup_ref):
+def _bootstrap(startup_ref, *, additional=False):
+    loc = _locations(additional)
     need(sys.platform == "linux" and os.getuid() == os.geteuid() == 0, "LINUX_ROOT")
     need(
         sys.flags.isolated
@@ -234,7 +265,7 @@ def _bootstrap(startup_ref):
         and not any(k == "moomoo" or k.startswith("moomoo.") for k in sys.modules),
         "ISOLATED_INTERPRETER",
     )
-    startup = json.loads(read_ref(startup_ref, CONTROL / "startup.json", 8192))
+    startup = json.loads(read_ref(startup_ref, loc.control / "startup.json", 8192))
     names = {
         "catalog_ref": "release-catalog.json",
         "seed_ref": "plan-seed.json",
@@ -242,25 +273,51 @@ def _bootstrap(startup_ref):
         "authorization_ref": "authorization.json",
         "go_fields_ref": "windows-go-fields.json",
     }
+    if additional:
+        names.update(
+            descriptor_ref="descriptor.json",
+            windows_policy_ref="windows-policy.json",
+            capture_policy_ref="policy.json",
+        )
+        need(
+            Path(__file__).resolve(strict=True) == loc.release / "ivv_trusted_runner.py",
+            "ADDITIONAL_RUNNER_ORIGIN",
+        )
     need(set(startup) == set(names), "STARTUP_REFS")
     _private_mounts()
-    for path in (RELEASE, SDK, Path("/usr/lib"), Path("/usr/bin")):
+    for path in (loc.release, SDK, Path("/usr/lib"), Path("/usr/bin")):
         _bind(path)
         _attr(path, True, True)
-    values = {
-        k: json.loads(read_ref(startup[k], (RELEASE if k == "catalog_ref" else CONTROL) / v))
+    originals = {
+        k: read_ref(startup[k], (loc.release if k == "catalog_ref" else loc.control) / v)
         for k, v in names.items()
     }
-    need(startup["authorization_ref"]["sha256"] == AUTH, "AUTHORIZATION_PIN")
+    values = {key: json.loads(raw) for key, raw in originals.items()}
+    if not additional:
+        need(startup["authorization_ref"]["sha256"] == AUTH, "AUTHORIZATION_PIN")
     catalog = values["catalog_ref"]
-    need(set(SOURCES) <= set(catalog), "CATALOG_SOURCES")
-    for key, filename in SOURCES.items():
-        path = RELEASE / filename
+    need(set(_sources(additional)) <= set(catalog), "CATALOG_SOURCES")
+    for key, filename in _sources(additional).items():
+        path = loc.release / filename
         raw = read_ref({"path": str(path), "sha256": catalog[key]}, path, 262144, True)
         if key == "dev_issuer_sha256":
             issuer = types.ModuleType("_qm_trusted_issuer")
             issuer.__file__ = str(path)
             exec(compile(raw, str(path), "exec"), issuer.__dict__)
+    if additional:
+        extra = issuer._released_module("ivv_additional_task.py", catalog["additional_task_sha256"])
+        extra.authenticate(
+            *(
+                originals[k]
+                for k in (
+                    "authorization_ref",
+                    "descriptor_ref",
+                    "capture_policy_ref",
+                    "windows_policy_ref",
+                )
+            )
+        )
+        values["_additional"] = extra
     helper = issuer._capture()
     native, producer = issuer._native_sources(helper, catalog)
     need(
@@ -405,7 +462,7 @@ def _manager_contract(parent):
 class _Scope:
     """Handles are created internally and retained until the final resource observation."""
 
-    def __init__(self, stack):
+    def __init__(self, stack, *, additional=False):
         self.stack = stack
         self.pid = None
         self.pidfd = None
@@ -415,6 +472,14 @@ class _Scope:
         self.leaf = None
         self.mount = _cgroup_mount()
         self.parent, _ = _process(os.getpid())
+        if additional:
+            need(
+                self.parent["uid"] == 0
+                and self.parent["pid"] == os.getpid()
+                and self.parent["cgroup"]
+                == "/system.slice/qm-ivv-additional-20261103-01.service/manager",
+                "ADDITIONAL_OWNED_UNIT",
+            )
         self.manager_contract = _manager_contract(self.parent)
         self.manager = Path(self.parent["cgroup"]).name
         self.unitpath = CG / self.parent["cgroup"].strip("/")
@@ -428,6 +493,8 @@ class _Scope:
             "UNIT_NOT_EXCLUSIVE",
         )
         self.controls(self.group)
+        if additional:
+            self.enable_controllers()
         self.total_events = self.event_files(self.group)
         self.name = "ivv-owned-" + str(os.getpid()) + "-" + str(self.parent["start_ticks"])
         # mkdir must win exclusively before any cleanup or write is registered.
@@ -442,6 +509,44 @@ class _Scope:
         self.pop = self.open_file("cgroup.events", self.leaf)
         self.events = [*self.total_events, *self.leaf_events]
         self.initial = [_events(fd) for fd in self.events]
+
+    def enable_controllers(self):
+        started = time.monotonic()
+        required = {"memory", "cpu", "pids"}
+        protected(self.unitpath)
+        self.verify_manager()
+        self.verify_unit()
+        need(
+            not self.dirs(self.man)
+            and required <= set(_kread(self.group, "cgroup.controllers").split()),
+            "ADDITIONAL_CONTROLLERS_UNAVAILABLE",
+        )
+        before = set(_kread(self.group, "cgroup.subtree_control").split())
+        fd = self.open_file("cgroup.subtree_control", self.group, os.O_WRONLY)
+        info = os.fstat(fd)
+        need(
+            stat.S_ISREG(info.st_mode)
+            and info.st_uid == 0
+            and not info.st_mode & 0o022
+            and info.st_dev == os.fstat(self.group).st_dev,
+            "ADDITIONAL_CONTROLLER_FD",
+        )
+        msg = b"+cpu +memory +pids"
+        need(os.write(fd, msg) == len(msg), "ADDITIONAL_CONTROLLER_WRITE")
+        need(
+            set(_kread(self.group, "cgroup.subtree_control").split()) == before | required,
+            "ADDITIONAL_CONTROLLER_READBACK",
+        )
+        self.verify_manager()
+        self.verify_unit()
+        need(
+            _kread(self.group, "cgroup.procs") == ""
+            and _kread(self.man, "cgroup.procs") == str(os.getpid())
+            and self.dirs(self.group) == {self.manager}
+            and not self.dirs(self.man)
+            and time.monotonic() - started <= 5,
+            "ADDITIONAL_UNIT_DRIFT",
+        )
 
     def open_file(self, name, where, flags=None):
         fd = os.open(
@@ -666,7 +771,8 @@ def _stdio():
         need(stat.S_ISCHR(s.st_mode) and s.st_rdev == os.makedev(1, 3), "UNEXPECTED_STDIO")
 
 
-def _landlock():
+def _landlock(*, additional=False):
+    loc = _locations(additional)
     """Restrict reads, writes and exec, including access through proc magic links."""
     libc = ctypes.CDLL(None, use_errno=True)
 
@@ -689,11 +795,11 @@ def _landlock():
         need(PurePosixPath(actor["cgroup"]).name.startswith("ivv-owned-"), "LANDLOCK_OWNED_CGROUP")
         paths = [
             (Path("/usr"), read),
-            (RELEASE, read),
+            (loc.release, read),
             (SDK, read),
-            (CONTROL, read),
-            (CHILD, read | (1 << 1) | (1 << 7) | (1 << 8) | (1 << 14)),
-            (LEDGER, read | (1 << 1) | (1 << 8)),
+            (loc.control, read),
+            (loc.child, read | (1 << 1) | (1 << 7) | (1 << 8) | (1 << 14)),
+            (loc.ledger, read | (1 << 1) | (1 << 8)),
             (CG / actor["cgroup"].lstrip("/"), read),
         ]
         paths.extend(
@@ -747,16 +853,19 @@ def _drop_caps():
     )
 
 
-def _writable_mounts(producer):
+def _writable_mounts(producer, *, additional=False):
+    loc = _locations(additional)
     raw = Path("/proc/self/mountinfo").read_bytes()
     mounts = producer._visible_mounts(producer.parse_mountinfo(raw))
     need(
-        {m.target for m in mounts.values() if "rw" in m.options} == {str(CHILD), str(LEDGER)},
+        {m.target for m in mounts.values() if "rw" in m.options}
+        == {str(loc.child), str(loc.ledger)},
         "CHILD_WRITE_MOUNTS",
     )
 
 
-def _child_namespace(channel, producer):
+def _child_namespace(channel, producer, *, additional=False):
+    loc = _locations(additional)
     for fd in _fds() - {channel.s.fileno(), 0, 1, 2}:
         os.close(fd)
     null = os.open("/dev/null", os.O_RDWR | os.O_NOFOLLOW)
@@ -769,20 +878,21 @@ def _child_namespace(channel, producer):
     channel.check()
     need(_fds() == {0, 1, 2, channel.s.fileno()}, "INHERITED_FD")
     ns = _private_mounts()
-    for path in (CHILD, LEDGER):
+    for path in (loc.child, loc.ledger):
         _bind(path)
     _attr(Path("/"), True, True)
-    for path in (CHILD, LEDGER):
+    for path in (loc.child, loc.ledger):
         _attr(path, False, False)
-    _writable_mounts(producer)
-    _landlock()
+    _for_task(_writable_mounts, additional)(producer)
+    _for_task(_landlock, additional)()
     _drop_caps()
     return ns
 
 
-def _runtime(plan, helper, ns, catalog, producer):
+def _runtime(plan, helper, ns, catalog, producer, *, additional=False):
+    loc = _locations(additional)
     need(os.stat("/proc/self/ns/mnt").st_ino == ns, "OWN_NAMESPACE_DRIFT")
-    _writable_mounts(producer)
+    _for_task(_writable_mounts, additional)(producer)
     need(
         plan["sdk_root"] == str(SDK)
         and sys.version_info[:2] == (3, 12)
@@ -798,8 +908,8 @@ def _runtime(plan, helper, ns, catalog, producer):
         and os.statvfs(log).f_flag & os.ST_RDONLY,
         "HOME_LOG_PREREQUISITE",
     )
-    for key, name in SOURCES.items():
-        path = RELEASE / name
+    for key, name in _sources(additional).items():
+        path = loc.release / name
         read_ref({"path": str(path), "sha256": catalog[key]}, path, 262144, True)
     for path in sys.path:
         if Path(path).exists():
@@ -813,7 +923,7 @@ def _runtime(plan, helper, ns, catalog, producer):
     need(Path(sys.executable).resolve() == Path("/usr/bin/python3.12"), "PYTHON_EXECUTABLE")
     exe = Path("/usr/bin/python3.12")
     read_ref({"path": str(exe), "sha256": catalog["python_sha256"]}, exe, 32 * 1024 * 1024, True)
-    source_pins = json.loads(read_ref(plan["sdk_pins_ref"], CONTROL / "sdk-pins.json"))
+    source_pins = json.loads(read_ref(plan["sdk_pins_ref"], loc.control / "sdk-pins.json"))
     rows = source_pins["pins"]
     need(type(rows) is list and 12 <= len(rows) <= 128, "SDK_PINS_COUNT")
     names = set()
@@ -872,7 +982,8 @@ def _environment():
 class _Provider:
     """Single independently sampled provider, with monotonic per-inode growth."""
 
-    def __init__(self, native, producer, helper, plan, budget_ref):
+    def __init__(self, native, producer, helper, plan, budget_ref, *, additional=False):
+        self.locations = _locations(additional)
         self.native = native
         self.producer = producer
         self.helper = helper
@@ -910,13 +1021,13 @@ class _Provider:
             endpoint, configuration = self.native.trusted_quote_configuration(self.plan)
             increment = self.series.sample(reader)
             resources = self.native._provider_controls(reader)
-            budget = json.loads(read_ref(self.budget_ref, CONTROL / "budget.json"))
+            budget = json.loads(read_ref(self.budget_ref, self.locations.control / "budget.json"))
             need(
                 set(budget) == {"G", "P"}
                 and all(type(v) is int and v > 0 for v in budget.values()),
                 "BUDGET_SHAPE",
             )
-            fs = os.statvfs(CHILD)
+            fs = os.statvfs(self.locations.child)
             sample = {
                 "incremental_bytes": increment,
                 "G": budget["G"] + increment,
@@ -966,7 +1077,8 @@ class _Provider:
         return self.last
 
 
-def _child_kernel(scope, producer, endpoint, initial):
+def _child_kernel(scope, producer, endpoint, initial, *, additional=False):
+    loc = _locations(additional)
     scope.check_pid()
     path = Path("/proc") / str(scope.pid)
     ns = (path / "ns/mnt").stat().st_ino
@@ -974,7 +1086,8 @@ def _child_kernel(scope, producer, endpoint, initial):
     raw = (path / "mountinfo").read_bytes()
     visible = producer._visible_mounts(producer.parse_mountinfo(raw))
     need(
-        {m.target for m in visible.values() if "rw" in m.options} == {str(CHILD), str(LEDGER)},
+        {m.target for m in visible.values() if "rw" in m.options}
+        == {str(loc.child), str(loc.ledger)},
         "CHILD_WRITE_MOUNTS",
     )
     status = (path / "status").read_text().splitlines()
@@ -1042,38 +1155,12 @@ def _owned_peer(pid):
     return pairs[0] if pairs else None
 
 
-def _seed(values, startup, helper, issuer):
-    plan = dict(values["seed_ref"])
-    helper._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + FAMILY)
-    plan["started_monotonic"] = time.monotonic()
-    helper._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + FAMILY)
+def _validate_windows_fields(fields, extra):
+    additional = extra is not None
     need(
-        plan["sdk_root"] == str(SDK)
-        and plan["receipt_root"] == str(RECEIPT)
-        and plan["catalog_sha256"] == startup["catalog_ref"]["sha256"]
-        and plan["capture_helper_sha256"] == values["catalog_ref"]["capture_helper_sha256"],
-        "FIXED_PLAN_PATH",
-    )
-    need(
-        plan["provider_evidence_ref"]
-        == {"path": str(CONTROL / "provider.json"), "sha256": "0" * 64},
-        "PROVIDER_PENDING",
-    )
-    for key, name in (
-        ("dates_ref", "dates.txt"),
-        ("input_window_ref", "input-window.json"),
-        ("window_ref", "window.json"),
-        ("schedule_ref", "schedule.json"),
-        ("sdk_pins_ref", "sdk-pins.json"),
-        ("policy_ref", "policy.json"),
-    ):
-        read_ref(plan[key], CONTROL / name)
-    policy = json.loads(read_ref(plan["policy_ref"], CONTROL / "policy.json"))
-    issuer.validate_trusted_policy(helper, policy, plan, AUTH)
-    extra = values["go_fields_ref"]
-    need(
-        set(extra)
-        == {
+        set(fields)
+        == ({"numeric_runtime_sha256"} if additional else set())
+        | {
             "job_id",
             "windows_policy_sha256",
             "output_root_digest",
@@ -1084,10 +1171,96 @@ def _seed(values, startup, helper, issuer):
         },
         "WINDOWS_GO_FIELDS",
     )
-    for path in (CONTROL, CHILD, LEDGER):
+    if additional:
+        need(
+            fields["job_id"] == extra.APPROVED.job_id
+            and fields["windows_policy_sha256"] == extra.WINDOWS
+            and all(
+                _digest_pin(fields[k])
+                for k in (
+                    "numeric_runtime_sha256",
+                    "adapter_sha256",
+                    "gate_sha256",
+                    "output_root_digest",
+                )
+            ),
+            "ADDITIONAL_WINDOWS_BINDING",
+        )
+
+        code, runtime = fields["code"], fields["runtime"]
+        need(
+            type(code) is dict
+            and set(code)
+            == {
+                "kernel_version",
+                "kernel_sha256",
+                "policy_sha256",
+                "adapter_sha256",
+                "legacy_packaged_ancestor",
+            }
+            and code["kernel_version"] == "native-daily-v2"
+            and all(_digest_pin(v) for k, v in code.items() if k != "kernel_version")
+            and type(runtime) is dict
+            and set(runtime) == {"python", "calendar", "numpy", "pandas"}
+            and all(type(v) is str and 0 < len(v) <= 256 for v in runtime.values()),
+            "ADDITIONAL_WINDOWS_RUNTIME",
+        )
+
+
+def _digest_pin(value):
+    return type(value) is str and re.fullmatch("[0-9a-f]{64}", value) and value != "0" * 64
+
+
+def _seed(values, startup, helper, issuer, *, started=None):
+    extra = values.get("_additional")
+    additional = extra is not None
+    loc = _locations(additional)
+    family = extra.FAMILY if additional else FAMILY
+    plan = dict(values["seed_ref"])
+    helper._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + family)
+    plan["started_monotonic"] = time.monotonic() if started is None else started
+    helper._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + family)
+    need(
+        plan["sdk_root"] == str(SDK)
+        and plan["receipt_root"] == str(loc.receipt)
+        and plan["catalog_sha256"] == startup["catalog_ref"]["sha256"]
+        and plan["capture_helper_sha256"] == values["catalog_ref"]["capture_helper_sha256"],
+        "FIXED_PLAN_PATH",
+    )
+    need(
+        plan["provider_evidence_ref"]
+        == {"path": str(loc.control / "provider.json"), "sha256": "0" * 64},
+        "PROVIDER_PENDING",
+    )
+    for key, name in (
+        ("dates_ref", "dates.txt"),
+        ("input_window_ref", "input-window.json"),
+        ("window_ref", "window.json"),
+        ("schedule_ref", "schedule.json"),
+        ("sdk_pins_ref", "sdk-pins.json"),
+        ("policy_ref", "policy.json"),
+    ):
+        read_ref(plan[key], loc.control / name)
+    policy = json.loads(read_ref(plan["policy_ref"], loc.control / "policy.json"))
+    if additional:
+        need(
+            plan["policy_ref"] == startup["capture_policy_ref"]
+            and digest(raw_json(policy)) == extra.POLICY,
+            "ADDITIONAL_POLICY_PIN",
+        )
+    else:
+        issuer.validate_trusted_policy(helper, policy, plan, AUTH)
+    _validate_windows_fields(values["go_fields_ref"], extra)
+    if additional:
+        home = loc.child.parent / "home"
+        need(os.environ.get("HOME") == str(home), "ADDITIONAL_HOME")
+        protected(home)
+        protected(ADDITIONAL_ROOT)
+        need(stat.S_IMODE(ADDITIONAL_ROOT.stat().st_mode) == 0o700, "ADDITIONAL_PRIVATE_ROOT")
+    for path in (loc.control, loc.child, loc.ledger):
         protected(path)
         need(stat.S_IMODE(path.stat().st_mode) == 0o700, "PRIVATE_CONTROL_DIRECTORY")
-    need(not any(CHILD.iterdir()), "OUTPUT_ALREADY_USED")
+    need(not any(loc.child.iterdir()), "OUTPUT_ALREADY_USED")
     return plan
 
 
@@ -1114,36 +1287,47 @@ class _ChildSession:
 
 def _child(channel, parent, context, plan):
     startup, values, issuer, m, native, producer = context
+    extra = values.get("_additional")
+    additional = extra is not None
+    loc = _locations(additional)
     _bind_parent(parent)
     need(channel.recv(parent) == {"op": "enter"}, "CHILD_GATE")
-    ns = _child_namespace(channel, producer)
+    ns = _for_task(_child_namespace, additional)(channel, producer)
     _environment()
     if str(SDK) not in sys.path:
         sys.path.append(str(SDK))
 
     def runtime():
-        return _runtime(plan, m, ns, values["catalog_ref"], producer)
+        return _for_task(_runtime, additional)(plan, m, ns, values["catalog_ref"], producer)
 
     runtime()
     # Validate all immutable material, actor limits and available space before parent GO.
     actor = m._native_actor()
     m._admit_material(
-        plan, None, RECEIPT, {**plan, "actor": actor, "budget": values["budget_ref"]}, None, None
+        plan,
+        None,
+        loc.receipt,
+        {**plan, "actor": actor, "budget": values["budget_ref"]},
+        None,
+        None,
     )
     channel.send({"op": "ready"})
     grant = channel.recv(parent)
     need(set(grant) == {"op", "plan_ref", "go_ref"} and grant["op"] == "go", "CHILD_GO_GATE")
-    final = m._strict_json(read_ref(grant["plan_ref"], CONTROL / "plan.json"))
+    final = m._strict_json(read_ref(grant["plan_ref"], loc.control / "plan.json"))
     need(
         {k: v for k, v in final.items() if k != "provider_evidence_ref"}
         == {k: v for k, v in plan.items() if k != "provider_evidence_ref"},
         "PARENT_PLAN_CHANGED",
     )
-    evidence = m._strict_json(read_ref(final["provider_evidence_ref"], CONTROL / "provider.json"))
+    evidence = m._strict_json(
+        read_ref(final["provider_evidence_ref"], loc.control / "provider.json")
+    )
     state = types.ModuleType("_qm_live_ivv_native_" + str(os.getpid()))
     state.session = _ChildSession(channel, parent, runtime)
     state.helper = m
     state.trusted_issuer = issuer
+    state.additional_task = extra
     state.plan = m._canonical({k: v for k, v in final.items() if k != "provider_evidence_ref"})
     state.evidence = m._canonical(evidence)
     need(state.__name__ not in sys.modules, "NATIVE_BUSY")
@@ -1151,10 +1335,12 @@ def _child(channel, parent, context, plan):
     try:
         pins = {
             "expected_policy_sha256": final["policy_ref"]["sha256"],
-            "expected_authorization_sha256": AUTH,
+            "expected_authorization_sha256": extra.APPROVED.authorization_sha256
+            if additional
+            else AUTH,
             "expected_go_sha256": grant["go_ref"]["sha256"],
         }
-        go = m._strict_json(read_ref(grant["go_ref"], CONTROL / "go.json"))
+        go = m._strict_json(read_ref(grant["go_ref"], loc.control / "go.json"))
         need(
             go["capture_actor"] == actor
             and go["trusted_runner_sha256"] == values["catalog_ref"]["trusted_runner_sha256"],
@@ -1162,18 +1348,19 @@ def _child(channel, parent, context, plan):
         )
         fd, sha = issuer._issue_family(
             m,
-            FAMILY,
+            extra.FAMILY if additional else FAMILY,
             grant["plan_ref"],
-            RECEIPT,
+            loc.receipt,
             go_ref=grant["go_ref"],
             authorization_ref=startup["authorization_ref"],
             catalog_ref=startup["catalog_ref"],
-            permit_path=CHILD / "permit.json",
+            permit_path=loc.child / "permit.json",
             **pins,
         )
         try:
-            result = m.capture_trusted_once(
-                grant["plan_ref"]["path"], RECEIPT, permit_fd=fd, expected_sha256=sha, **pins
+            capture = m.capture_additional_once if additional else m.capture_trusted_once
+            result = capture(
+                grant["plan_ref"]["path"], loc.receipt, permit_fd=fd, expected_sha256=sha, **pins
             )
         finally:
             _close_fd(fd)
@@ -1182,7 +1369,7 @@ def _child(channel, parent, context, plan):
             {
                 "op": "terminal",
                 "permit_sha256": sha,
-                "manifest_sha256": digest((RECEIPT / "capture-manifest.json").read_bytes()),
+                "manifest_sha256": digest((loc.receipt / "capture-manifest.json").read_bytes()),
             }
         )
     finally:
@@ -1199,26 +1386,34 @@ def _bind_parent(parent):
 
 def _authorize(context, plan, scope, monitor):
     startup, values, issuer, m, native, producer = context
-    prov = {
-        "policy_sha256": plan["policy_ref"]["sha256"],
-        "authorization_sha256": AUTH,
-        "diagnostic_mode": "DEV_TRUSTED_ENVIRONMENT",
-        "channel_assurance": ASSURANCE,
-        "provider_tail_max": "UNKNOWN",
-        "hard_limit_enforced": False,
-    }
+    extra = values.get("_additional")
+    additional = extra is not None
+    loc = _locations(additional)
+    family = extra.FAMILY if additional else FAMILY
+    prov = (
+        extra.provenance()
+        if additional
+        else {
+            "policy_sha256": plan["policy_ref"]["sha256"],
+            "authorization_sha256": AUTH,
+            "diagnostic_mode": "DEV_TRUSTED_ENVIRONMENT",
+            "channel_assurance": ASSURANCE,
+            "provider_tail_max": "UNKNOWN",
+            "hard_limit_enforced": False,
+        }
+    )
     actual = monitor.first
     evidence = {
-        "schema_id": "qm.ivv.provider-evidence" + FAMILY,
-        "state": "DEV_TRUSTED_ENVIRONMENT",
+        "schema_id": "qm.ivv.provider-evidence" + family,
+        "state": prov["diagnostic_mode"],
         **{k: plan[k] for k in ("scope_id", "execution_sha256", "effect_id")},
         **prov,
         **actual,
     }
-    plan = {**plan, "provider_evidence_ref": put(CONTROL / "provider.json", evidence)}
-    plan_ref = put(CONTROL / "plan.json", plan)
+    plan = {**plan, "provider_evidence_ref": put(loc.control / "provider.json", evidence)}
+    plan_ref = put(loc.control / "plan.json", plan)
     go = {
-        "schema_id": "qm.ivv.root-go" + FAMILY,
+        "schema_id": "qm.ivv.root-go" + family,
         "decision": "GO_ONCE_AFTER_INPUT_ACCEPTANCE",
         **prov,
         **values["go_fields_ref"],
@@ -1236,9 +1431,9 @@ def _authorize(context, plan, scope, monitor):
         "input_window_digest": plan["input_window_digest"],
         "full_window_sha256": plan["full_window_sha256"],
         "controls": {"released": True, "resource_bounds": True, "provider_log_cache_bounds": False},
-        **{k: values["catalog_ref"][k] for k in SOURCES},
+        **{k: values["catalog_ref"][k] for k in _sources(additional)},
     }
-    return plan_ref, put(CONTROL / "go.json", go), plan, prov
+    return plan_ref, put(loc.control / "go.json", go), plan, prov
 
 
 def _manifest(ref, path):
@@ -1269,11 +1464,15 @@ def _manifest(ref, path):
 
 def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
     startup, values, issuer, m, native, producer = context
+    extra = values.get("_additional")
+    additional = extra is not None
+    loc = _locations(additional)
+    family = extra.FAMILY if additional else FAMILY
     plan_ref, go_ref, plan, prov = grant
-    raw = _manifest(terminal["manifest_sha256"], RECEIPT / "capture-manifest.json")
+    raw = _manifest(terminal["manifest_sha256"], loc.receipt / "capture-manifest.json")
     binding = raw["source_binding"]
     need(
-        raw["schema_id"] == "qm.ivv.capture" + FAMILY
+        raw["schema_id"] == "qm.ivv.capture" + family
         and raw["state"] == "CAPTURED_UNREVIEWED"
         and raw["synthetic"] is False
         and raw["primary_failure"] is None
@@ -1286,25 +1485,33 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
         and binding["root_go_sha256"] == go_ref["sha256"]
         and binding["root_permit_sha256"] == terminal["permit_sha256"]
         and binding["plan_sha256"] == plan_ref["sha256"]
-        and m._dev_provenance(raw, FAMILY) == prov
+        and m._dev_provenance(raw, family) == prov
         and peer is not None,
         "CAPTURE_TERMINAL_EVIDENCE",
     )
-    intent = _manifest(raw["intent_ref"]["sha256"], RECEIPT / "capture-intent.json")
+    if additional:
+        need(
+            raw.get("scope_id") == plan["scope_id"]
+            and raw.get("approval_sha256") == plan["approval_sha256"]
+            and raw.get("execution_sha256") == plan["execution_sha256"]
+            and raw["counts"]["contexts"] == 1,
+            "ADDITIONAL_TERMINAL_BINDING",
+        )
+    intent = _manifest(raw["intent_ref"]["sha256"], loc.receipt / "capture-intent.json")
     need(
-        intent["schema_id"] == "qm.ivv.capture-intent" + FAMILY
+        intent["schema_id"] == "qm.ivv.capture-intent" + family
         and intent["state"] == "ATTEMPTED"
-        and m._dev_provenance(intent, FAMILY) == prov,
+        and m._dev_provenance(intent, family) == prov,
         "CAPTURE_INTENT",
     )
-    permit_ref = {"path": str(CHILD / "permit.json"), "sha256": terminal["permit_sha256"]}
-    permit = json.loads(read_ref(permit_ref, CHILD / "permit.json"))
+    permit_ref = {"path": str(loc.child / "permit.json"), "sha256": terminal["permit_sha256"]}
+    permit = json.loads(read_ref(permit_ref, loc.child / "permit.json"))
     need(
         permit["actor"] == scope.child and permit["root_go_sha256"] == go_ref["sha256"],
         "SEAL_PERMIT_BINDING",
     )
     config_ref = put(
-        CONTROL / "configuration.json",
+        loc.control / "configuration.json",
         {
             "endpoint": monitor.first["endpoint"],
             "configuration_binding_sha256": monitor.first["configuration_binding_sha256"],
@@ -1312,7 +1519,7 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
         },
     )
     monitor_ref = put(
-        CONTROL / "monitor.json",
+        loc.control / "monitor.json",
         {
             "samples": monitor.series.samples,
             "growth_highwater": monitor.peak,
@@ -1322,7 +1529,7 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
         },
     )
     close_ref = put(
-        CONTROL / "kernel-close.json",
+        loc.control / "kernel-close.json",
         {
             **kernel,
             "child_reaped": True,
@@ -1345,8 +1552,16 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
     for ref in refs:
         m._read_root_ref(ref, maximum=32768, exact_mode=True)
     return {
-        "schema_id": "qm.ivv.capture-parent-close" + FAMILY,
+        "schema_id": "qm.ivv.capture-parent-close" + family,
         **prov,
+        **(
+            {
+                "approval_sha256": plan["approval_sha256"],
+                "execution_sha256": plan["execution_sha256"],
+            }
+            if additional
+            else {}
+        ),
         "state": "NORMAL_EXIT",
         "termination": "NORMAL",
         "scope_id": plan["scope_id"],
@@ -1373,7 +1588,9 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
 
 def _supervise(scope, channel, endpoint, context, plan):
     startup, values, issuer, m, native, producer = context
-    monitor = _Provider(native, producer, m, plan, startup["budget_ref"])
+    extra = values.get("_additional")
+    additional = extra is not None
+    monitor = _for_task(_Provider, additional)(native, producer, m, plan, startup["budget_ref"])
     start = plan["started_monotonic"]
     kernel = grant = terminal = peer = None
     scope.check_pid()
@@ -1402,14 +1619,15 @@ def _supervise(scope, channel, endpoint, context, plan):
                 # EOF is verified again after actual wait/recursive empty below.
                 packet = None
             if packet == {"op": "ready"} and grant is None:
-                kernel = _child_kernel(scope, producer, endpoint, True)
+                kernel = _for_task(_child_kernel, additional)(scope, producer, endpoint, True)
                 need(time.monotonic() - start < 180, "ROOT_GO_EXPIRED")
                 grant = _authorize(context, plan, scope, monitor)
                 scope.check_pid()
                 channel.send({"op": "go", "plan_ref": grant[0], "go_ref": grant[1]})
             elif packet == {"op": "observe"} and grant and not terminal:
                 need(
-                    _child_kernel(scope, producer, endpoint, False) == kernel,
+                    _for_task(_child_kernel, additional)(scope, producer, endpoint, False)
+                    == kernel,
                     "CHILD_NAMESPACE_DRIFT",
                 )
                 pair = _owned_peer(scope.pid)
@@ -1479,37 +1697,58 @@ def _supervise(scope, channel, endpoint, context, plan):
     )
 
 
-def _commit_close(ref):
-    source = CONTROL / "parent-close.pending.json"
+def _commit_close(ref, *, additional=False):
+    loc = _locations(additional)
+    source = loc.control / "parent-close.pending.json"
     read_ref(ref, source)
     _libcall(
-        "renameat2", -100, os.fsencode(source), -100, os.fsencode(CONTROL / "parent-close.json"), 1
+        "renameat2",
+        -100,
+        os.fsencode(source),
+        -100,
+        os.fsencode(loc.control / "parent-close.json"),
+        1,
     )
-    _sync_dir(CONTROL)
+    _sync_dir(loc.control)
 
 
-def _reject_close(ref, committed):
-    source = CONTROL / ("parent-close.json" if committed else "parent-close.pending.json")
+def _reject_close(ref, committed, *, additional=False):
+    loc = _locations(additional)
+    source = loc.control / ("parent-close.json" if committed else "parent-close.pending.json")
     try:
         read_ref({"path": str(source), "sha256": ref["sha256"]}, source)
     except FileNotFoundError:
-        source = CONTROL / ("parent-close.pending.json" if committed else "parent-close.json")
+        source = loc.control / ("parent-close.pending.json" if committed else "parent-close.json")
         read_ref({"path": str(source), "sha256": ref["sha256"]}, source)
     _libcall(
         "renameat2",
         -100,
         os.fsencode(source),
         -100,
-        os.fsencode(CONTROL / "parent-close.rejected.json"),
+        os.fsencode(loc.control / "parent-close.rejected.json"),
         1,
     )
-    _sync_dir(CONTROL)
+    _sync_dir(loc.control)
 
 
 def run_once(startup_ref):
-    context = _bootstrap(startup_ref)
+    return _run(startup_ref, additional=False)
+
+
+def run_additional_once(startup_ref):
+    return _run(startup_ref, additional=True)
+
+
+def _run(startup_ref, *, additional):
+    loc = _locations(additional)
+    started = time.monotonic() if additional else None
+    context = _for_task(_bootstrap, additional)(startup_ref)
     startup, values, issuer, helper, native, producer = context
-    plan = _seed(values, startup, helper, issuer)
+    plan = (
+        _seed(values, startup, helper, issuer, started=started)
+        if additional
+        else _seed(values, startup, helper, issuer)
+    )
     _stdio()
     need(
         _fds() == {0, 1, 2} and len(list(Path("/proc/self/task").iterdir())) == 1,
@@ -1522,7 +1761,7 @@ def run_once(startup_ref):
     with _Handles() as stack:
         scope = _Scope.__new__(_Scope)
         try:
-            scope.__init__(stack)
+            _for_task(scope.__init__, additional)(stack)
             a, b = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET | socket.SOCK_CLOEXEC)
             stack.callback(a.close)
             stack.callback(b.close)
@@ -1552,11 +1791,11 @@ def run_once(startup_ref):
             result["elapsed_seconds"] = elapsed
             # Keep all resource/event handles through JSON/file+directory
             # fsync and normal publication. No partial file is normal authority.
-            pending = put(CONTROL / "parent-close.pending.json", result)
+            pending = put(loc.control / "parent-close.pending.json", result)
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
             committed = True
-            _commit_close(pending)
+            _for_task(_commit_close, additional)(pending)
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
@@ -1568,7 +1807,7 @@ def run_once(startup_ref):
         failures = [*(primary or []), *stack.errors]
         if pending is not None:
             try:
-                _reject_close(pending, committed)
+                _for_task(_reject_close, additional)(pending, committed)
             except BaseException as error:
                 failures.append("SEAL_RETIRE_" + reason(error))
         raise Refused("+".join(failures)) from None
@@ -1576,14 +1815,19 @@ def run_once(startup_ref):
 
 
 def main(argv):
+    additional = bool(argv) and argv[0] == "--additional-task"
+    control = _locations(additional).control
     try:
+        if additional:
+            argv = argv[1:]
         need(len(argv) == 1, "STARTUP_DIGEST_REQUIRED")
-        run_once({"path": str(CONTROL / "startup.json"), "sha256": argv[0]})
+        entry = run_additional_once if additional else run_once
+        entry({"path": str(control / "startup.json"), "sha256": argv[0]})
         return 0
     except BaseException as e:
         # Even when preflight failed, never overwrite an earlier attempt.
         with contextlib.suppress(OSError, ValueError):
-            put(CONTROL / "runner-failure.json", {"state": "STOP", "reason": reason(e)})
+            put(control / "runner-failure.json", {"state": "STOP", "reason": reason(e)})
         return 1
 
 

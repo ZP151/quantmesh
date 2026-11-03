@@ -1,5 +1,41 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Approved independent additional IVV task —2026-11-04
+
+Actual new human event595c2987 approves the full independent task277, new capture
+C53badf05/effecta668/K189ac10c and researchR75bdbea1/effect03cade/fixedjob1d05c58d,
+<=1context/7business and separately Init1/KeepAlive96, SDK-free auth preparation
+before unique carrier, and one study only after independent real input acceptance.
+OldUNKNOWN_LOCKED, nominal old1/7 and every oldhold/future remain; historical actual
+totals UNKNOWN, no old-flow investigation/refund/migration. No new appGoal or
+automation is created/restored. This current source checkpoint supersedes the
+old original-capture next-action text only for the explicit new task.
+
+Parent/Server coordinates a fresh sparse branch from actuald95, exact closed
+contract5f10014a plus policiesc784/22f6, shared24MiB software (Server7.5/Product10/
+integration-commonGit6.5), originalProduct in its separate file-exclusive leaf.
+Actual total72MiB registration is not runtimeGO. Existing provider/login, resource,
+readonly origin/FD/namespace/normal-close/data/math and accepted externalUNKNOWN
+limits remain. Independent R1/maxknownR2, normalCI/merge/catalog, then actual
+readiness/solecapture; no SDK health context. Product owns startup/runtime/consumer/
+ordinarypage and actual one-study/cold same-ID originals; originalQuant independently
+accepts actual inputs first. See [spec](../superpowers/specs/2026-11-04-ivv-additional-task.md),
+[plan](../superpowers/plans/2026-11-04-ivv-additional-task.md),
+[iteration](../iterations/0038-ivv-additional-task.md).
+
+Both source leaves are frozen and integrated once: Server636291bb plus Product
+0acc56b8/eda59085/3107c2a3. Parent independently verified21 evidence refs,7 source
+pins and11 package blobs. Integrated affected suite316PASS; the separate connected
+source-to-consumer/control/registration/cold closure check6PASS after test-fixture
+path/pin/init-send and complete archive-closure corrections. These are scripted
+SDK/kernel controls with actual private approval bytes, not real input acceptance.
+Fresh whole-slice R1 found one test-only Linux path fixture issue. Sole fix
+9835ecf2 and same-reviewer R2 are ADDRESSED/READY_SOFTWARE_CONDITIONAL, no new
+Critical/Important. Normal exact-head CI/merge/catalog and actual gates remain.
+No new auth preparation/carrier/context/input acceptance/trial has occurred.
+The existing browser authorization page was inspected using the Edge extension
+and displays Authorization successful; this is not a new AUTH_READY receipt.
+
 ## Current original IVV trusted-environment implementation — 2026-11-02
 
 Current software boundary: complete connected runner is independently verified (Parent283 affected pre-fix and115 directly changed post-fix cases, not summed as unique tests). Fresh Spec/Standards R1 plus the one located R2 closes all four findings on2cafc3d6b1ea7a364a05a265729aa4f9e83c8e18; no new Critical/Important in that fix. Source writer stopped. Parent now owns normal CI/merge/full catalog, then only the original conditional diagnostic. No native/SDK/GO/held permit/once/input acceptance or financial result has been produced by this software evidence.

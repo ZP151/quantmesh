@@ -245,6 +245,18 @@ def test_ready_gate_runtime_cannot_omit_installed_sdk_search_origin(monkeypatch)
 
 @pytest.mark.parametrize("pidfd_first", [False, True])
 def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeypatch, pidfd_first):
+    _connected_capture(tmp_path, monkeypatch, pidfd_first, None)
+
+
+def connected_additional_capture(tmp_path, monkeypatch, *, private=True, fault=None):
+    from test_ivv_additional_task import additional
+
+    return _connected_capture(
+        tmp_path, monkeypatch, False, additional(), private=private, fault=fault
+    )
+
+
+def _connected_capture(tmp_path, monkeypatch, pidfd_first, extra, *, private=False, fault=None):
     """Real immutable bytes cross every policy/permit/capture/seal/import boundary.
 
     Only Linux metadata/IPC/provider observations and the SDK are modeled. This
@@ -258,17 +270,57 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
 
     from quantmesh.research import ivv_admission as v
 
-    registration = _registration_authorities(tmp_path, monkeypatch)
-    d, m, old_ref, root, kwargs, snapshot = kernel_fixture(
-        tmp_path, monkeypatch, registration=registration
-    )
+    if extra:
+        from test_ivv_additional_task import private_inputs, window_controls
+
+        from quantmesh.research import ivv_runtime, native_daily_candidate
+        from quantmesh.research import native_daily_real as daily
+
+        if private:
+            private_inputs()
+        controls = window_controls(private)
+        registration = {
+            "go_fields": {
+                "code": native_daily_candidate._code(),
+                "adapter_sha256": daily.digest(Path(daily.__file__).read_bytes()),
+                "gate_sha256": daily.digest(Path(v.__file__).read_bytes()),
+                "output_root_digest": daily._root_pin(v.ADDITIONAL_STUDY_ROOT),
+                "runtime": daily.runtime_versions(),
+            }
+        }
+        d, m, old_ref, root, kwargs, snapshot = kernel_fixture(
+            tmp_path, monkeypatch, additional_controls=controls
+        )
+    else:
+        registration = _registration_authorities(tmp_path, monkeypatch)
+        d, m, old_ref, root, kwargs, snapshot = kernel_fixture(
+            tmp_path, monkeypatch, registration=registration
+        )
     r = runner()
     child_root = tmp_path / "child"
     child_root.mkdir()
     root = child_root / "capture"
     auth = kwargs["expected_authorization_sha256"]  # fictional authority, never actual once
-    for owner, name in ((r, "AUTH"), (m, "TRUSTED_AUTH"), (v, "TRUSTED_AUTH")):
-        monkeypatch.setattr(owner, name, auth)
+    if extra:
+        if private:
+            approval, descriptor, policy_bytes, windows = private_inputs()
+            extra.authenticate(approval, descriptor, policy_bytes, windows)
+        additional_ledger = tmp_path / "additional-once"
+        additional_ledger.mkdir()
+        monkeypatch.setattr(extra, "_remote_ledger", lambda: additional_ledger)
+        if fault == "context_fsync":
+
+            def uncertain(path):
+                raise OSError("directory flush uncertain")
+
+            monkeypatch.setattr(extra, "_sync_directory", uncertain)
+        else:
+            monkeypatch.setattr(extra, "_sync_directory", m._sync_dir)
+
+        assert hasattr(r, "run_additional_once"), "additional normal parent entry missing"
+    else:
+        for owner, name in ((r, "AUTH"), (m, "TRUSTED_AUTH"), (v, "TRUSTED_AUTH")):
+            monkeypatch.setattr(owner, name, auth)
     monkeypatch.setattr(r, "CONTROL", tmp_path)
     monkeypatch.setattr(r, "CHILD", child_root)
     monkeypatch.setattr(r, "RECEIPT", root)
@@ -291,6 +343,43 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
     )
     material["exceptions"].append("external_provider_terminal_ipc_socket_environment")
     plan["policy_ref"] = body("policy", material)
+    if extra:
+        plan.update(
+            schema_id="qm.ivv.capture-plan" + extra.FAMILY,
+            scope_id=extra.APPROVED.capture_scope_id,
+            effect_id=extra.TASK,
+            approval_sha256=extra.APPROVED.capture_effect_sha256,
+            execution_sha256=extra.APPROVED.authorization_sha256,
+        )
+        common = extra.provenance()
+        common.pop("policy_sha256")
+        material.update(
+            common,
+            schema_id="qm.ivv.capture-policy" + extra.FAMILY,
+            scope_id=plan["scope_id"],
+            execution_sha256=plan["execution_sha256"],
+            effect_id=extra.TASK,
+        )
+        plan["policy_ref"] = body("policy.json", material)
+        assert plan["policy_ref"]["sha256"] == extra.POLICY
+        source = tmp_path / "authority.json"
+        source.write_bytes(approval if private else b"protected approval held outside portable CI")
+        kwargs["authorization_ref"] = {
+            "path": str(source),
+            "sha256": extra.APPROVED.authorization_sha256,
+        }
+        if not private:
+            original_read = m._read_root_ref
+
+            def protected_approval(ref, **kwargs):
+                if (
+                    ref["path"].endswith("authority.json")
+                    and ref["sha256"] == extra.APPROVED.authorization_sha256
+                ):
+                    return source.read_bytes()
+                return original_read(ref, **kwargs)
+
+            monkeypatch.setattr(m, "_read_root_ref", protected_approval)
     sdk_root = Path(plan["sdk_root"])
     roles = [
         "moomoo/quote/open_quote_context.py",
@@ -313,6 +402,10 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
     python.parent.mkdir(parents=True)
     python.write_bytes(b"model interpreter")
     catalog["python_sha256"] = hashlib.sha256(python.read_bytes()).hexdigest()
+    if extra:
+        catalog["additional_task_sha256"] = hashlib.sha256(
+            Path(extra.__file__).read_bytes()
+        ).hexdigest()
     catalog_ref = body("catalog", catalog)
     plan["catalog_sha256"] = catalog_ref["sha256"]
     actor = m._native_actor()
@@ -345,6 +438,16 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         "go_fields_ref": registration["go_fields"],
         "budget_ref": {"G": 1000, "P": 1000},
     }
+    if extra:
+        values["go_fields_ref"].pop("controls", None)
+        values["_additional"] = extra
+        values["go_fields_ref"] = {
+            **values["go_fields_ref"],
+            "job_id": extra.APPROVED.job_id,
+            "windows_policy_sha256": extra.WINDOWS,
+            "numeric_runtime_sha256": daily.digest(Path(ivv_runtime.__file__).read_bytes()),
+        }
+        r._validate_windows_fields(values["go_fields_ref"], extra)
     from test_ivv_native_producer import producer
 
     context = (startup, values, d, m, None, producer())
@@ -387,14 +490,22 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
 
     class Backend(ScriptedBackend):
         def open(self):
-            assert len(list(m.ONCE_LEDGER.iterdir())) == 1
+            if extra:
+                assert (additional_ledger / extra.APPROVED.capture_once_key).exists()
+                assert not any(m.ONCE_LEDGER.iterdir())
+            else:
+                assert len(list(m.ONCE_LEDGER.iterdir())) == 1
             assert json.loads((root / "capture-intent.json").read_bytes())["synthetic"] is False
             self.o.context_created()
             self.o.initializing()
+            if extra:
+                self.o.before_send(1001, 1)
 
         def close(self):
             self.clock.value = 389.9
             super().close()
+            if fault == "close":
+                raise OSError("modeled abnormal socket close")
 
     monkeypatch.setattr(m, "_NativeClock", NativeClock)
     monkeypatch.setattr(m, "_OfficialBackend", lambda o, w, p, c: Backend(m, o, w, c, root))
@@ -475,10 +586,24 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         return snapshot
 
     monitor.sample = sample
-    monkeypatch.setattr(r, "_Provider", lambda *a: monitor)
+    monkeypatch.setattr(r, "_Provider", lambda *a, **kw: monitor)
     # R1: this connected positive must drive the real acquisition bodies.
     acquired = connected_acquisition_kernel(r, kernel, monkeypatch, tmp_path, local, d, m, real_d)
     monkeypatch.setattr(r, "time", SimpleNamespace(monotonic=lambda: parent_clock["now"]))
+    if extra:
+        legacy_locations = r._locations
+        monkeypatch.setattr(r, "_locations", lambda additional: legacy_locations(False))
+        if fault == "source":
+            catalog["additional_task_sha256"] = "9" * 64
+        if fault == "namespace":
+            original_stat = acquired.Path.stat
+
+            def namespace_stat(path, *args, **kwargs):
+                if str(path) == "/proc/502/ns/mnt":
+                    return SimpleNamespace(st_ino=40)
+                return original_stat(path, *args, **kwargs)
+
+            monkeypatch.setattr(acquired.Path, "stat", namespace_stat)
     assert r.RELEASE.is_absolute() and r.RELEASE.resolve(strict=True) == r.RELEASE, (
         str(r.RELEASE),
         r.RELEASE.drive,
@@ -518,6 +643,8 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
             return [a], [], []
         assert done.is_set()
         parent_clock["now"] = 391.0
+        if fault == "event":
+            kernel.nodes[kernel.handles[scope.leaf] + "/memory.events"]["content"] = "oom_kill 1"
         kernel.nodes[kernel.handles[scope.leaf] + "/cgroup.procs"]["content"] = ""
         return [scope.pidfd], [], []
 
@@ -531,7 +658,7 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
         produced = r._supervise(scope, channel, 6001, context, plan)
     finally:
         child_thread.join(timeout=3)
-        if status.get("error"):
+        if status.get("error") and fault != "namespace":
             raise status["error"]
     assert not child_thread.is_alive() and status["rc"] == 0
     assert acquired.namespace == 44 and acquired.nnp == 1 and acquired.caps == 0
@@ -541,6 +668,28 @@ def test_connected_trusted_issuer_capture_parent_consumer_cold(tmp_path, monkeyp
     scope.check_resources()
     scope.remove()
     result = json.loads((root / "capture-manifest.json").read_bytes())
+    if extra:
+        assert not any(m.ONCE_LEDGER.iterdir())
+        assert (
+            json.loads((root / "plain.json").read_bytes())["scope_id"]
+            == extra.APPROVED.capture_scope_id
+        )
+        requests = json.loads((root / "requests.json").read_bytes())
+        assert requests["sent"] == [
+            "state",
+            "quota",
+            "basic",
+            "rehab",
+            "dividends",
+            "splits",
+            "history",
+        ]
+        return (
+            result,
+            json.loads((root / "capture-intent.json").read_bytes()),
+            produced,
+            json.loads((tmp_path / "go.json").read_bytes()),
+        )
     kwargs.update(
         go_ref={
             "path": str(tmp_path / "go.json"),
@@ -652,16 +801,16 @@ def test_readonly_source_read_retains_exact_fd_lifetime_and_primary(tmp_path, mo
         )
 
 
-def owned_scope(r, monkeypatch, *, create=True):
+def owned_scope(r, monkeypatch, *, create=True, unit="owned.service"):
     """Kernel boundary: real _Scope ownership checks over literal cgroup2 nodes."""
     nodes, handles, stamps, writes, signals = {}, {}, {}, [], []
-    root = "/sys/fs/cgroup/system.slice/owned.service"
+    root = "/sys/fs/cgroup/system.slice/" + unit
     manager = root + "/manager"
     parent = {
         "pid": 501,
         "uid": 0,
         "start_ticks": 11,
-        "cgroup": "/system.slice/owned.service/manager",
+        "cgroup": "/system.slice/" + unit + "/manager",
     }
     child = {"pid": 502, "uid": 0, "start_ticks": 22, "cgroup": parent["cgroup"]}
     process = {501: (parent, 1), 502: (child, 501)}
@@ -675,6 +824,8 @@ def owned_scope(r, monkeypatch, *, create=True):
             **r.LIMITS,
             "cgroup.procs": procs,
             "cgroup.events": "populated 0",
+            "cgroup.controllers": "cpu memory pids",
+            "cgroup.subtree_control": "",
             "memory.events": "oom_kill 0",
             "pids.events": "max 0",
             "memory.swap.events": "max 0",
@@ -721,6 +872,8 @@ def owned_scope(r, monkeypatch, *, create=True):
         path = handles[fd]
         writes.append((path, raw))
         nodes[path]["content"] = raw.decode()
+        if path.endswith("/cgroup.subtree_control"):
+            nodes[path]["content"] = raw.decode().replace("+", "")
         if path.endswith("/cgroup.procs"):
             actor, ppid = process[int(raw)]
             process[int(raw)] = (
@@ -794,6 +947,8 @@ def owned_scope(r, monkeypatch, *, create=True):
         r.signal, "pidfd_send_signal", lambda fd, sig: signals.append((fd, sig)), raising=False
     )
     monkeypatch.setattr(r.signal, "SIGKILL", 9, raising=False)
+    if unit != "owned.service":
+        monkeypatch.setattr(r, "protected", lambda path: info(str(path).replace(chr(92), "/")))
     stack = contextlib.ExitStack()
     scope = r._Scope(stack) if create else None
     if scope is not None:
@@ -1557,6 +1712,10 @@ def test_landlock_does_not_expose_home_credentials_or_initial_environment(monkey
 def test_bootstrap_authenticates_same_held_release_bytes_before_helpers(
     tmp_path, monkeypatch, drift
 ):
+    check_bootstrap(tmp_path, monkeypatch, drift)
+
+
+def check_bootstrap(tmp_path, monkeypatch, drift, *, additional=None):
     import sys
 
     from test_ivv_dev_diagnostic import kernel_fixture
@@ -1568,7 +1727,7 @@ def test_bootstrap_authenticates_same_held_release_bytes_before_helpers(
     controls = tmp_path / "parent"
     controls.mkdir()
     catalog = {}
-    for key, name in r.SOURCES.items():
+    for key, name in r._sources(bool(additional)).items():
         raw = (Path(r.__file__).parent / name).read_bytes()
         (release / name).write_bytes(raw)
         catalog[key] = hashlib.sha256(raw).hexdigest()
@@ -1585,6 +1744,34 @@ def test_bootstrap_authenticates_same_held_release_bytes_before_helpers(
         ("go_fields_ref", "windows-go-fields.json", {}),
     ):
         startup[key] = put(controls / name, value)
+    if additional:
+        from test_ivv_additional_task import private_inputs
+
+        original_open = os.open
+        monkeypatch.setattr(
+            os,
+            "open",
+            lambda path, flags, *a, **kw: original_open(
+                path, flags | getattr(os, "O_BINARY", 0), *a, **kw
+            ),
+        )
+        originals = private_inputs()
+        for (key, name), raw in zip(
+            (
+                ("authorization_ref", "authorization.json"),
+                ("descriptor_ref", "descriptor.json"),
+                ("capture_policy_ref", "policy.json"),
+                ("windows_policy_ref", "windows-policy.json"),
+            ),
+            originals,
+            strict=True,
+        ):
+            path = controls / name
+            path.write_bytes(raw)
+            startup[key] = {"path": str(path), "sha256": hashlib.sha256(raw).hexdigest()}
+        monkeypatch.setattr(r, "__file__", str(release / "ivv_trusted_runner.py"))
+        original_locations = r._locations
+        monkeypatch.setattr(r, "_locations", lambda additional: original_locations(False))
     ref = put(controls / "startup.json", startup)
     monkeypatch.setattr(r, "AUTH", startup["authorization_ref"]["sha256"])
     monkeypatch.setattr(r, "RELEASE", release)
@@ -1613,7 +1800,12 @@ def test_bootstrap_authenticates_same_held_release_bytes_before_helpers(
         with pytest.raises(r.Refused, match="CONTROL_DIGEST"):
             r._bootstrap(ref)
     else:
-        context = r._bootstrap(ref)
+        context = r._bootstrap(ref, additional=bool(additional))
+        if additional:
+            assert (
+                context[1]["_additional"].APPROVED.authorization_sha256
+                == startup["authorization_ref"]["sha256"]
+            )
         assert context[3].capture_trusted_once is not None
         assert context[5].PosixReader is not None
         assert mounts == [
@@ -2022,7 +2214,7 @@ def connected_acquisition_kernel(r, kernel, monkeypatch, tmp_path, local, d, m, 
             return 7999
         if name.startswith("/sys/fs/cgroup") or dir_fd is not None:
             return before_open(path, flags, mode, dir_fd=dir_fd)
-        fd = raw_open(p.real(), flags, mode)
+        fd = raw_open(p.real(), flags | getattr(os, "O_BINARY", 0), mode)
         if child():
             state.fds.add(fd)
         return fd

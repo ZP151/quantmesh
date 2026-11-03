@@ -39,6 +39,10 @@ ONCE_LEDGER = Path("/var/lib/quantmesh/ivv-capture-once")
 DEV_SUFFIX = ".dev-diagnostic.v1"
 TRUSTED_SUFFIX = ".dev-trusted-environment.v1"
 TRUSTED_AUTH = "3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452"
+ADDITIONAL_SUFFIX = ".dev-additional-task.v1"
+ADDITIONAL_SCOPE = "53badf05a10d955cc0826dccc592d1807bfbcfec8abcd4f9e3a194857e3d1858"
+ADDITIONAL_EFFECT = "a6681407439408a9d01baecedb3026f16f8e9513d601b2edd56910b0228eee17"
+ADDITIONAL_AUTH = "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832"
 CHANNEL_ASSURANCE = "UNVERIFIED_TRUSTED_EXTERNAL"
 
 
@@ -133,6 +137,14 @@ def _explicit_non_usd(statement):
 
 
 def normalize_capture(plain, *, schedule, source_facts):
+    return _normalize_capture(plain, schedule, source_facts, SCOPE)
+
+
+def normalize_additional_capture(plain, *, schedule, source_facts):
+    return _normalize_capture(plain, schedule, source_facts, ADDITIONAL_SCOPE)
+
+
+def _normalize_capture(plain, schedule, source_facts, scope):
     """Deterministic transformation only; evidence claims still need review.
 
     Returns the existing bars/distributions/schedule shapes. This function does
@@ -142,7 +154,7 @@ def normalize_capture(plain, *, schedule, source_facts):
         type(plain) is dict
         and plain.get("schema_id") == "qm.ivv.capture-plain.v1"
         and plain.get("symbol") == "US.IVV"
-        and plain.get("scope_id") == SCOPE,
+        and plain.get("scope_id") == scope,
         "capture_identity",
     )
     _require(
@@ -335,20 +347,24 @@ def _validate_production_plan_keys(plan, *, schema="qm.ivv.capture-plan.v1"):
         "window_ref",
         "schedule_ref",
     }
-    if schema in ("qm.ivv.capture-plan" + DEV_SUFFIX, "qm.ivv.capture-plan" + TRUSTED_SUFFIX):
+    if schema in {
+        "qm.ivv.capture-plan" + s for s in (DEV_SUFFIX, TRUSTED_SUFFIX, ADDITIONAL_SUFFIX)
+    }:
         allowed = (allowed - {"provider_bounds_ref"}) | {"provider_evidence_ref", "policy_ref"}
     _require(type(plan) is dict and set(plan) <= allowed, "unknown_plan_fields")
     _require(set(plan) == allowed, "missing_plan_fields")
 
 
 def _validate_fixed_plan(plan, *, schema="qm.ivv.capture-plan.v1"):
+    additional = schema == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX
     _require(
         type(plan) is dict
         and plan.get("schema_id") == schema
-        and plan.get("scope_id") == SCOPE
+        and plan.get("scope_id") == (ADDITIONAL_SCOPE if additional else SCOPE)
+        and (not additional or plan.get("effect_id") == "ivv-additional-20261103-01")
         and plan.get("symbol") == "US.IVV"
-        and plan.get("approval_sha256") == APPROVAL
-        and plan.get("execution_sha256") == EXECUTION
+        and plan.get("approval_sha256") == (ADDITIONAL_EFFECT if additional else APPROVAL)
+        and plan.get("execution_sha256") == (ADDITIONAL_AUTH if additional else EXECUTION)
         and plan.get("input_window_digest") == WINDOW
         and plan.get("full_window_sha256") == FULL_WINDOW,
         "fixed_scope_or_authority",
@@ -380,6 +396,35 @@ def _validate_fixed_plan(plan, *, schema="qm.ivv.capture-plan.v1"):
 
 
 def _dev_provenance(value, suffix=DEV_SUFFIX):
+    if suffix == ADDITIONAL_SUFFIX:
+        # Byte-typed projection of the approved public contract, including both scopes.
+        fields = {
+            key: value.get(key)
+            for key in (
+                "additional_task_id",
+                "authorization_sha256",
+                "capture_budget",
+                "capture_effect_sha256",
+                "capture_once_key",
+                "capture_scope_id",
+                "channel_assurance",
+                "descriptor_sha256",
+                "diagnostic_mode",
+                "hard_limit_enforced",
+                "historical_actual_cumulative",
+                "legacy_capture_charge",
+                "policy_sha256",
+                "provider_tail_max",
+                "research_effect_sha256",
+                "research_scope_id",
+            )
+        }
+        _require(
+            hashlib.sha256(_canonical(fields)).hexdigest()
+            == "ccbe2d987d5b55dd0ace449eea7740aad69c34ae3f4a856b3127e286eb30fe12",
+            "additional_provenance",
+        )
+        return fields
     keys = (
         "policy_sha256",
         "authorization_sha256",
@@ -636,12 +681,12 @@ def _view_rows(items):
     return [{"raw": dict(x), "presence": sorted(x)} for x in items]
 
 
-def _plain_from_originals(o):
+def _plain_from_originals(o, *, additional=False):
     trees = o.trees
     p = {
         "schema_id": "qm.ivv.capture-plain.v1",
         "symbol": "US.IVV",
-        "scope_id": SCOPE,
+        "scope_id": ADDITIONAL_SCOPE if additional else SCOPE,
         "raw_source_hashes": {k: v["sdk_ref"]["sha256"] for k, v in o.responses.items()},
         "adjustment_factors": {
             "code": "US.IVV",
@@ -681,8 +726,8 @@ def _plain_from_originals(o):
     return p
 
 
-def _precheck_actions(o, dates):
-    p = _plain_from_originals(o)
+def _precheck_actions(o, dates, *, additional=False):
+    p = _plain_from_originals(o, additional=additional)
     cash = {}
     for item in p["adjustment_factors"]["rows"]:
         r = _raw(item)
@@ -744,6 +789,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
     suffix = DEV_SUFFIX if plan.get("schema_id") == "qm.ivv.capture-plan" + DEV_SUFFIX else ".v1"
     if plan.get("schema_id") == "qm.ivv.capture-plan" + TRUSTED_SUFFIX:
         suffix = TRUSTED_SUFFIX
+    if plan.get("schema_id") == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX:
+        suffix = ADDITIONAL_SUFFIX
     _validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
     provenance = _dev_provenance(plan["_verified_binding"], suffix) if suffix != ".v1" else {}
     _require(
@@ -760,11 +807,11 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
             **provenance,
             "state": "ATTEMPTED",
             "synthetic": synthetic,
-            "scope_id": SCOPE,
+            "scope_id": plan["scope_id"],
             "effect_id": plan["effect_id"],
             "window_digest": WINDOW,
-            "approval_sha256": APPROVAL,
-            "execution_sha256": EXECUTION,
+            "approval_sha256": plan["approval_sha256"],
+            "execution_sha256": plan["execution_sha256"],
             "helper_sha256": plan["capture_helper_sha256"],
             "catalog_sha256": plan["catalog_sha256"],
         },
@@ -828,12 +875,12 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
                 }
                 observer.asof = clock.wall()
             elif tag == "splits":
-                _precheck_actions(observer, dates)
+                _precheck_actions(observer, dates, additional=suffix == ADDITIONAL_SUFFIX)
         _require(
             observer.counts()["application_sends"] == 7 and len(observer.responses) == 4,
             "capture_incomplete",
         )
-        p = _plain_from_originals(observer)
+        p = _plain_from_originals(observer, additional=suffix == ADDITIONAL_SUFFIX)
         _require(
             len(p["history_pages"][0]["rows"]) == 121
             and p["history_pages"][0]["next_key_has_field"] is False,
@@ -867,7 +914,7 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         "schema_id": "qm.ivv.capture" + suffix,
         **provenance,
         "state": state,
-        "scope_id": SCOPE,
+        "scope_id": plan["scope_id"],
         "symbol": "US.IVV",
         "effect_id": plan["effect_id"],
         "window_digest": WINDOW,
@@ -885,8 +932,17 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         "synthetic": synthetic,
         "source_binding": plan.get("_verified_binding", {}),
     }
+    if suffix == ADDITIONAL_SUFFIX:
+        manifest.update(
+            approval_sha256=plan["approval_sha256"], execution_sha256=plan["execution_sha256"]
+        )
+        manifest["counts"]["control_sends"] = {
+            str(k): observer.controls.get(k, 0) for k in (1001, 1004)
+        }
     manifest["metadata_ref"] = writer.json("metadata-safe.json", safe_meta)
-    manifest["plain_ref"] = writer.json("plain.json", _plain_from_originals(observer))
+    manifest["plain_ref"] = writer.json(
+        "plain.json", _plain_from_originals(observer, additional=suffix == ADDITIONAL_SUFFIX)
+    )
     manifest["request_ref"] = writer.json(
         "requests.json",
         {
@@ -1353,7 +1409,7 @@ def _native_actor():
     }
 
 
-def _native_recheck(actor, root_parent):
+def _native_recheck(actor, root_parent, *, additional=False, live=False):
     _require(_native_actor() == actor, "native_actor_lifetime")
     cgroup = actor["cgroup"]
     _require(
@@ -1366,7 +1422,9 @@ def _native_recheck(actor, root_parent):
     }
     _check_limits(limits)
     fs = os.statvfs(root_parent)
-    _require(fs.f_bavail * fs.f_frsize >= 53687091200 + 64 * MIB, "fresh_capture_capacity")
+    # Additional preflight covers its registered 16 MiB capture and 2 MiB closure.
+    reserve = (0 if live else 18 * MIB) if additional else 64 * MIB
+    _require(fs.f_bavail * fs.f_frsize >= 53687091200 + reserve, "fresh_capture_capacity")
 
 
 def _validate_provider_bounds(bounds, plan):
@@ -1473,7 +1531,8 @@ def _admit_material(plan, plan_path, receipt_root, permit, fd, expected_sha256):
         type(actor) is dict and set(actor) == {"pid", "uid", "start_ticks", "cgroup"},
         "root_actor_binding",
     )
-    _native_recheck(actor, Path(receipt_root).parent)
+    additional = plan["schema_id"] == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX
+    _native_recheck(actor, Path(receipt_root).parent, additional=additional)
     _require(0 <= time.monotonic() - plan["started_monotonic"] < 180, "root_effect_expired")
     budget = permit.get("budget", {})
     _require(
@@ -1542,7 +1601,7 @@ def _admit_material(plan, plan_path, receipt_root, permit, fd, expected_sha256):
             maximum=32768,
             exact_mode=True,
         )
-        _native_recheck(actor, Path(receipt_root).parent)
+        _native_recheck(actor, Path(receipt_root).parent, additional=additional, live=True)
 
     plan["_live_verifier"] = live
     plan["_verified_binding"] = {
@@ -1559,8 +1618,8 @@ def _admit_material(plan, plan_path, receipt_root, permit, fd, expected_sha256):
         {
             "plan_sha256": permit["plan_sha256"],
             "root_permit_sha256": expected_sha256,
-            "approval_sha256": APPROVAL,
-            "execution_sha256": EXECUTION,
+            "approval_sha256": plan["approval_sha256"],
+            "execution_sha256": plan["execution_sha256"],
         }
     )
     return plan, date_bytes.decode("ascii").splitlines(), permit
@@ -1696,11 +1755,57 @@ def capture_trusted_once(
     expected_authorization_sha256,
     expected_go_sha256,
 ):
+    return _capture_owned(
+        plan_path,
+        receipt_root,
+        permit_fd,
+        expected_sha256,
+        expected_policy_sha256,
+        expected_authorization_sha256,
+        expected_go_sha256,
+        TRUSTED_SUFFIX,
+    )
+
+
+def capture_additional_once(
+    plan_path,
+    receipt_root,
+    *,
+    permit_fd,
+    expected_sha256,
+    expected_policy_sha256,
+    expected_authorization_sha256,
+    expected_go_sha256,
+):
+    return _capture_owned(
+        plan_path,
+        receipt_root,
+        permit_fd,
+        expected_sha256,
+        expected_policy_sha256,
+        expected_authorization_sha256,
+        expected_go_sha256,
+        ADDITIONAL_SUFFIX,
+    )
+
+
+def _capture_owned(
+    plan_path,
+    receipt_root,
+    permit_fd,
+    expected_sha256,
+    expected_policy_sha256,
+    expected_authorization_sha256,
+    expected_go_sha256,
+    suffix,
+):
     """Only the newly forked actor holds the authenticated parent channel and admitted bytes."""
     state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
     _require(
         state is not None
-        and expected_authorization_sha256 == TRUSTED_AUTH
+        and expected_authorization_sha256
+        == (ADDITIONAL_AUTH if suffix == ADDITIONAL_SUFFIX else TRUSTED_AUTH)
+        and (suffix != ADDITIONAL_SUFFIX or getattr(state, "additional_task", None) is not None)
         and getattr(state, "trusted_issuer", None) is not None,
         "trusted_owned_actor_required",
     )
@@ -1710,13 +1815,16 @@ def capture_trusted_once(
         receipt_root,
         permit_fd,
         expected_sha256,
-        TRUSTED_SUFFIX,
+        suffix,
         expected_policy_sha256=expected_policy_sha256,
         expected_authorization_sha256=expected_authorization_sha256,
         expected_go_sha256=expected_go_sha256,
     )
     state.session.before_effect()
-    _reserve_once(plan)
+    if suffix == ADDITIONAL_SUFFIX:
+        state.additional_task.reserve_context()
+    else:
+        _reserve_once(plan)
     clock = _NativeClock()
     with clock.phase(plan["started_monotonic"] + 480):
         return _run_capture(

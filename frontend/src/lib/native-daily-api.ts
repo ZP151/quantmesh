@@ -93,8 +93,50 @@ function realUseBasis(v: unknown, id: string): boolean {
 // independent input acceptance; these fields never authorize browser submission.
 // This public digest discriminates the frozen schema branch, not browser authority.
 const TRUSTED_ENVIRONMENT_AUTHORIZATION = '3fede456cf8fff2e4ee29748fa6037617fe250d382c8b09474e1f6be4fe7e452'
+const ADDITIONAL_AUTHORIZATION = '595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832'
+const additionalProvenance = {
+  "additional_task_id": "ivv-additional-20261103-01",
+  "authorization_sha256": "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832",
+  "capture_budget": {
+    "business_requests": 7,
+    "carrier_submissions": 1,
+    "contexts": 1,
+    "init_connect": 1,
+    "keepalive": 96
+  },
+  "capture_effect_sha256": "a6681407439408a9d01baecedb3026f16f8e9513d601b2edd56910b0228eee17",
+  "capture_once_key": "189ac10caf73ef7fd31fa01fb4691bb4b00f19a371cc7792330df60bc6d7ac2c",
+  "capture_scope_id": "53badf05a10d955cc0826dccc592d1807bfbcfec8abcd4f9e3a194857e3d1858",
+  "channel_assurance": "UNVERIFIED_TRUSTED_EXTERNAL",
+  "descriptor_sha256": "06f192d60c76a95e91f150e4e4b867218f243759996442abeb58290f7faf6a25",
+  "diagnostic_mode": "DEV_ADDITIONAL_TRUSTED_ENVIRONMENT",
+  "hard_limit_enforced": false,
+  "historical_actual_cumulative": "UNKNOWN",
+  "legacy_capture_charge": {
+    "business_requests": 7,
+    "contexts": 1
+  },
+  "provider_tail_max": "UNKNOWN",
+  "research_effect_sha256": "03cade7368127b1ed36425ff9f7334892aba51fbbf516376a65b4da992dabbda",
+  "research_scope_id": "75bdbea142ca73c3c7964fd2fbcb7d2ded82aded73788c903a0d57d9528ebd0a"
+} as const
+const additionalFields = Object.keys(additionalProvenance).filter(key => !['diagnostic_mode', 'authorization_sha256', 'channel_assurance', 'hard_limit_enforced', 'provider_tail_max'].includes(key)).concat(['capture_usage', 'capture_usage_ref'])
+function additionalUseBasis(v: Record<string, unknown>, proof: Record<string, unknown>): boolean {
+  const usage = v.capture_usage
+  return Object.entries(additionalProvenance).every(([key, value]) => canonical(v[key] ?? null) === canonical(value))
+    && v.policy_sha256 === 'c784651ae76033a3a3695fad97d19d7721d7de5c28dc4a901408f101c6ae1e55'
+    && v.scope_id === additionalProvenance.research_scope_id && v.job_id === '1d05c58d-b536-4b64-b2c3-89e4217cc4ad'
+    && nativeRef(proof.scope_ref) && proof.scope_ref.digest === '76944da09e615b0fec9c60a6ed7ea78d7fa364543684b4d4e5832618860dfa12'
+    && ['effect_ref', 'execution_ref'].every(key => nativeRef(proof[key]) && proof[key].digest === ADDITIONAL_AUTHORIZATION)
+    && nativeRef(proof.windows_policy_ref) && proof.windows_policy_ref.digest === '22f6cb798c94c436759f4ff85d16b6101010ae5e550e5e7d4dc155c71ca54179'
+    && nativeRef(v.capture_usage_ref) && sameRef(v.capture_usage_ref, v.capture_ref)
+    && object(usage) && Object.keys(usage).length === 5 && usage.logical_state === 'SPENT'
+    && usage.actual_contexts === 1 && usage.actual_business_requests === 7
+    && Number.isSafeInteger(usage.actual_init_connect) && Number(usage.actual_init_connect) >= 0 && Number(usage.actual_init_connect) <= 1
+    && Number.isSafeInteger(usage.actual_keepalive) && Number(usage.actual_keepalive) >= 0 && Number(usage.actual_keepalive) <= 96
+}
 function diagnosticUseBasis(v: Record<string, unknown>, proof: Record<string, unknown>): boolean {
-  const fields = ['diagnostic_mode', 'channel_assurance', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max']
+  const fields = ['diagnostic_mode', 'channel_assurance', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max', ...additionalFields]
   const refs = ['capture_policy_ref', 'authorization_ref', 'expected_policy_sha256', 'expected_authorization_sha256']
   if (!fields.some(key => key in v) && !refs.some(key => key in proof)) return true // archived strict originals
   const binding = v.hard_limit_enforced === false && v.provider_tail_max === 'UNKNOWN'
@@ -102,6 +144,8 @@ function diagnosticUseBasis(v: Record<string, unknown>, proof: Record<string, un
     && v.policy_sha256 === proof.capture_policy_ref.digest && proof.expected_policy_sha256 === v.policy_sha256
     && v.authorization_sha256 === proof.authorization_ref.digest && proof.expected_authorization_sha256 === v.authorization_sha256
   if (!binding) return false
+  if (v.diagnostic_mode === 'DEV_ADDITIONAL_TRUSTED_ENVIRONMENT') return additionalUseBasis(v, proof)
+  if (additionalFields.some(key => key in v) || v.authorization_sha256 === ADDITIONAL_AUTHORIZATION) return false
   return v.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
     ? v.channel_assurance === 'UNVERIFIED_TRUSTED_EXTERNAL' && v.authorization_sha256 === TRUSTED_ENVIRONMENT_AUTHORIZATION
     : v.diagnostic_mode === 'DEV_DIAGNOSTIC' && v.channel_assurance === undefined && v.authorization_sha256 !== TRUSTED_ENVIRONMENT_AUTHORIZATION

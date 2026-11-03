@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
 const preferences = vi.hoisted(() => ({ locale: 'en' }))
 vi.mock('@/lib/preferences', () => ({ usePreferences: () => preferences }))
-const key = '11111111-1111-4111-8111-111111111111'
+let key = '11111111-1111-4111-8111-111111111111'
 const decisionKey = '22222222-2222-4222-8222-222222222222'
 const storage = 'quantmesh.native-daily.v1'
 const request = { candidate: 'doublema_daily_overlay_candidate_v1', package_ref: null, grant_ref: null, approved_scope_ref: null, protocol_ref: null }
@@ -54,6 +54,7 @@ async function mount() { const Panel = (await import('./NativeDailyPanel')).Nati
 function posts() { return fetcher.mock.calls.filter(([, init]) => init?.method === 'POST') }
 async function submit() { fireEvent.click(await screen.findByRole('button', { name: 'Save insufficient evidence' })); await screen.findByRole('button', { name: 'Download admission' }) }
 beforeEach(() => {
+  key = '11111111-1111-4111-8111-111111111111'
   preferences.locale = 'en'
   localStorage.clear()
   history.replaceState(null, '', '/app/research/jobs?engine=native-daily-v2')
@@ -501,6 +502,99 @@ it.each(['missing_channel', 'wrong_channel', 'missing_mode', 'policy_digest', 'p
     for (const name of ['capture_policy_ref', 'authorization_ref', 'expected_policy_sha256', 'expected_authorization_sha256']) delete basis.proofs[name]
   }
   artifacts.admission = JSON.stringify(raw); current = { ...current, admission: objectRef(artifacts.admission) }
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  await expect(api.artifact(await api.get(key), 'admission')).rejects.toMatchObject({ code: 'artifact_invalid' })
+  expect(posts()).toHaveLength(0)
+})
+
+const additionalFragment = {
+  "additional_task_id": "ivv-additional-20261103-01",
+  "authorization_sha256": "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832",
+  "capture_budget": {
+    "business_requests": 7,
+    "carrier_submissions": 1,
+    "contexts": 1,
+    "init_connect": 1,
+    "keepalive": 96
+  },
+  "capture_effect_sha256": "a6681407439408a9d01baecedb3026f16f8e9513d601b2edd56910b0228eee17",
+  "capture_once_key": "189ac10caf73ef7fd31fa01fb4691bb4b00f19a371cc7792330df60bc6d7ac2c",
+  "capture_scope_id": "53badf05a10d955cc0826dccc592d1807bfbcfec8abcd4f9e3a194857e3d1858",
+  "channel_assurance": "UNVERIFIED_TRUSTED_EXTERNAL",
+  "descriptor_sha256": "06f192d60c76a95e91f150e4e4b867218f243759996442abeb58290f7faf6a25",
+  "diagnostic_mode": "DEV_ADDITIONAL_TRUSTED_ENVIRONMENT",
+  "hard_limit_enforced": false,
+  "historical_actual_cumulative": "UNKNOWN",
+  "legacy_capture_charge": {
+    "business_requests": 7,
+    "contexts": 1
+  },
+  "provider_tail_max": "UNKNOWN",
+  "research_effect_sha256": "03cade7368127b1ed36425ff9f7334892aba51fbbf516376a65b4da992dabbda",
+  "research_scope_id": "75bdbea142ca73c3c7964fd2fbcb7d2ded82aded73788c903a0d57d9528ebd0a"
+} as const
+
+function declaredAdditional(state: Parameters<typeof declaredDev>[0] = 'failed') {
+  key = '1d05c58d-b536-4b64-b2c3-89e4217cc4ad'
+  const original = declaredDev(state)
+  const auth = { ...objectRef('{}'), digest: additionalFragment.authorization_sha256, byte_length: 7912 }
+  const policy = { ...auth, digest: 'c784651ae76033a3a3695fad97d19d7721d7de5c28dc4a901408f101c6ae1e55', byte_length: 1547 }
+  const descriptor = { ...auth, digest: '76944da09e615b0fec9c60a6ed7ea78d7fa364543684b4d4e5832618860dfa12', byte_length: 3300 }
+  const windows = { ...auth, digest: '22f6cb798c94c436759f4ff85d16b6101010ae5e550e5e7d4dc155c71ca54179', byte_length: 949 }
+  const basis = { ...original, ...additionalFragment, scope_id: additionalFragment.research_scope_id,
+    scope_trial_key: sha(canonical({ execution: auth.digest, scope: additionalFragment.research_scope_id, trial: 1 })),
+    policy_sha256: policy.digest, capture_usage_ref: original.capture_ref,
+    capture_usage: { logical_state: 'SPENT', actual_contexts: 1, actual_business_requests: 7, actual_init_connect: 1, actual_keepalive: 2 },
+    proofs: { ...original.proofs, scope_ref: descriptor, effect_ref: auth, execution_ref: auth, authorization_ref: auth, windows_policy_ref: windows,
+      capture_policy_ref: policy, expected_policy_sha256: policy.digest, expected_authorization_sha256: auth.digest } }
+  for (const kind of (state === 'succeeded' ? ['admission', 'report'] : ['admission'])) {
+    artifacts[kind] = JSON.stringify({ ...JSON.parse(artifacts[kind]), use_basis: basis })
+    current = { ...current, [kind]: objectRef(artifacts[kind]) }
+  }
+  return basis
+}
+
+it.each(['failed', 'interrupted', 'running', 'succeeded'] as const)('shows separate additional task and observed usage for %s, preserving cold-read no POST', async state => {
+  declaredAdditional(state); const view = await mount()
+  expect(await screen.findByText('Additional IVV task · unverified external environment')).toBeVisible()
+  expect(screen.getByText(/Old task: UNKNOWN_LOCKED; nominal allowance consumed/)).toBeVisible()
+  expect(screen.getByText(/Historical actual cumulative usage: UNKNOWN/)).toBeVisible()
+  expect(screen.getByText(/This task limits: 1 carrier, 1 context, 7 business requests/)).toBeVisible()
+  expect(screen.getByText(/Observed: 1 context, 7 business requests, 1 InitConnect, 2 KeepAlive/)).toBeVisible()
+  expect(screen.queryByText(/Capture-once usage: UNKNOWN on this page/)).not.toBeInTheDocument()
+  view.unmount(); await mount()
+  expect(await screen.findByText('Additional IVV task · unverified external environment')).toBeVisible()
+  expect(posts()).toHaveLength(0)
+})
+
+it('keeps additional-task limits and consumed state explicit in Chinese', async () => {
+  preferences.locale = 'zh-CN'; declaredAdditional()
+  await mount()
+  expect(await screen.findByText('新增 IVV 任务 · 外部环境未核验')).toBeVisible()
+  expect(screen.getByText(/历史实际累计使用量：UNKNOWN/)).toBeVisible()
+  expect(screen.getByText(/实际观察：1 个 context、7 次业务请求、1 次 InitConnect、2 次 KeepAlive/)).toBeVisible()
+  expect(posts()).toHaveLength(0)
+})
+
+it.each(['old_authority', 'old_scope', 'wrong_job', 'effect_is_file_hash', 'missing_key', 'known_history', 'ref_alias', 'missing_counts', 'bool_count', 'excess_rpc', 'excess_keepalive', 'missing_descriptor', 'old_windows', 'downcast_to_A', 'stripped_mode'])('rejects additional-task contract defect (%s)', async defect => {
+  declaredAdditional()
+  const a = JSON.parse(artifacts.admission); const b = a.use_basis
+  if (defect === 'old_authority') { b.authorization_sha256 = trustedFragment.authorization_sha256; b.proofs.authorization_ref.digest = b.authorization_sha256; b.proofs.expected_authorization_sha256 = b.authorization_sha256 }
+  if (defect === 'old_scope') b.scope_id = sha('old-scope')
+  if (defect === 'wrong_job') b.job_id = decisionKey
+  if (defect === 'effect_is_file_hash') b.capture_effect_sha256 = b.authorization_sha256
+  if (defect === 'missing_key') delete b.capture_once_key
+  if (defect === 'known_history') b.historical_actual_cumulative = 2
+  if (defect === 'ref_alias') b.capture_usage_ref = objectRef('different capture')
+  if (defect === 'missing_counts') delete b.capture_usage.actual_contexts
+  if (defect === 'bool_count') b.capture_usage.actual_contexts = true
+  if (defect === 'excess_rpc') b.capture_usage.actual_business_requests = 8
+  if (defect === 'excess_keepalive') b.capture_usage.actual_keepalive = 97
+  if (defect === 'missing_descriptor') delete b.descriptor_sha256
+  if (defect === 'old_windows') b.proofs.windows_policy_ref.digest = sha('old policy')
+  if (defect === 'downcast_to_A') { b.diagnostic_mode = 'DEV_DIAGNOSTIC'; delete b.channel_assurance }
+  if (defect === 'stripped_mode') delete b.diagnostic_mode
+  artifacts.admission = JSON.stringify(a); current = { ...current, admission: objectRef(artifacts.admission) }
   const api = (await import('@/lib/native-daily-api')).nativeDailyApi
   await expect(api.artifact(await api.get(key), 'admission')).rejects.toMatchObject({ code: 'artifact_invalid' })
   expect(posts()).toHaveLength(0)

@@ -29,18 +29,26 @@ def service_from_config(config_path, expected_sha256):
     if daily.digest(raw) != expected_sha256:
         raise ValueError("ivv_startup_pin")
     config = daily._loads(raw)
-    if (
-        not isinstance(config, dict)
-        or set(config)
-        != {"schema_id", "scope_id", "inputs_root", "study_root", "input_set_ref", "proofs"}
-        or config["schema_id"] != "qm.ivv.startup.v1"
-        or config["scope_id"] != gate.SCOPE_ID
-    ):
+    if not isinstance(config, dict) or set(config) != {
+        "schema_id",
+        "scope_id",
+        "inputs_root",
+        "study_root",
+        "input_set_ref",
+        "proofs",
+    }:
+        raise ValueError("ivv_startup_config")
+    proofs = gate.TrustedIVVProofs.model_validate(config["proofs"])
+    additional = proofs.expected_authorization_sha256 == gate.ADDITIONAL_AUTH
+    schema = gate._schema(proofs, "startup") if additional else "qm.ivv.startup.v1"
+    scope = gate.ADDITIONAL_RESEARCH_SCOPE if additional else gate.SCOPE_ID
+    if config["schema_id"] != schema or config["scope_id"] != scope:
         raise ValueError("ivv_startup_config")
     inputs, study = _safe_path(config["inputs_root"]), _safe_path(config["study_root"])
+    if additional and study != Path(gate.ADDITIONAL_STUDY_ROOT):
+        raise ValueError("ivv_startup_config")
     if not inputs.is_dir() or inputs == study:
         raise ValueError("ivv_startup_inputs")
-    proofs = gate.TrustedIVVProofs.model_validate(config["proofs"])
     registration = gate.bind_reviewed_ivv_input(
         ObjectStore(inputs),
         input_set_ref=daily.ObjectRef.model_validate(config["input_set_ref"]),
