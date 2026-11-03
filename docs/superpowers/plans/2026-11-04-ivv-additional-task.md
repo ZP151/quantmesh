@@ -67,7 +67,7 @@ it does not patch production admission. Logs include exact RED reason and GREEN.
 
 - [x] Import frozen Product leaf once, resolving only owned interface conflicts. Test actual connected Server originals through the actual Product additional verifier/normalizer/registration/cold-archive paths with external syscalls/provider scripted. Negative A/C/R/ref/source/state/count/capacity paths must refuse before effects. Keep numerical mathematics unchanged.
 - [ ] Recheck complete software24MiB physical forecast across both roots, shared Git positive deltas exactly once, all retained RED/failures, reviews, CI/catalog/build/closure futures. Run applicable broad gates at slice/final-PR boundaries per collaboration.md, not per leaf. Local platform gaps are recorded; required normal CI supplies its own full clean-checkout gate.
-- [ ] Fresh independent Spec and Standards R1 on the consistent whole branch. At most one located correction and same-reviewer R2; third structural failure returns Planner. No reviewer may call green tests/native qualification or invent a human review.
+- [x] Fresh independent Spec and Standards R1 on the consistent whole branch. At most one located correction and same-reviewer R2; third structural failure returns Planner. No reviewer may call green tests/native qualification or invent a human review.
 - [ ] Open one PR, observe exact-head required CI once, resolve actual actionable findings within scope, normal SHA-guard merge after green. Verify actual complete merged tree/catalog/source bytes and actual eight-field Windows inputs. Only then form concrete released operational packet.
 
 ### Task 4: Parent actual one-shot execution and real handoff

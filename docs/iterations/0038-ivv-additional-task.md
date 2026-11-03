@@ -101,3 +101,23 @@ unused frozen Server contingency: Server7.5/Product10/Parent6.5MiB, still exactl
 full review package2MiB, catalog600000B, CI131072B, Git262144B and reports65536B.
 No old histories or failed scratch are removed. Post-style startup/private
 follow-up4PASS/53deselected; normal full clean-checkout CI remains required.
+
+## Whole release review checkpoint
+
+Fresh integrated Spec/Standards R1 at9f4a9db3 found one P1 portability defect
+in the authored startup dispatch test, no confirmed production blocker. On
+Ubuntu the fixed C:/ Windows literal is not an absolute POSIX path. Sole fix
+9835ecf2 first asserts the real production Windows pin, then uses an absolute
+platform-native temporary fixture root only for that routing test, retaining
+the actual path validator, registration spy and all four refusal variants.
+Covering startup test1PASS/17deselected; no source or private-A chain changes.
+Same-reviewer sole R2 marks it ADDRESSED with no new Critical/Important finding,
+READY_SOFTWARE_CONDITIONAL at9835ecf2. No third structural round. Normal exact-head
+lock-matched Ubuntu CI, matching-head merge/catalog and all actual gates remain.
+
+The actual operations packet must return its full original mirror on the same
+sole program-bearing connection. The mature2MiB stdout profile cannot guarantee
+coverage of the approved7MiB writer bound. A bounded profile of the same reviewed
+Job/pipe/timeout primitive and a finite purpose-specific binary frame will be
+locally checked before use; no second connection or truncated input is accepted.
+No operational source/counter/auth/SDK execution occurred at this checkpoint.

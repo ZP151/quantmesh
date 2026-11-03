@@ -29,7 +29,9 @@ pins and11 package blobs. Integrated affected suite316PASS; the separate connect
 source-to-consumer/control/registration/cold closure check6PASS after test-fixture
 path/pin/init-send and complete archive-closure corrections. These are scripted
 SDK/kernel controls with actual private approval bytes, not real input acceptance.
-Fresh whole-slice R1, normal exact-head CI/merge/catalog and actual gates remain.
+Fresh whole-slice R1 found one test-only Linux path fixture issue. Sole fix
+9835ecf2 and same-reviewer R2 are ADDRESSED/READY_SOFTWARE_CONDITIONAL, no new
+Critical/Important. Normal exact-head CI/merge/catalog and actual gates remain.
 No new auth preparation/carrier/context/input acceptance/trial has occurred.
 The existing browser authorization page was inspected using the Edge extension
 and displays Authorization successful; this is not a new AUTH_READY receipt.
