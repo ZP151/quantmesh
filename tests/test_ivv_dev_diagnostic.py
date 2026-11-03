@@ -242,16 +242,17 @@ def _registration_authorities(tmp_path, monkeypatch):
     }
 
 
-def kernel_fixture(tmp_path, monkeypatch, *, registration=None):
+def kernel_fixture(tmp_path, monkeypatch, *, registration=None, additional_controls=None):
     """Real files/hash/issuer/admission; replace only unavailable Linux syscalls/provider."""
     d, m = dev_module(), leaf()
-    monkeypatch.setattr(m, "SCOPE", "fictional-dev-scope")
-    monkeypatch.setattr(m, "EXECUTION", "e" * 64)
-    monkeypatch.setattr(m, "APPROVAL", "a" * 64)
-    if registration is not None:
-        monkeypatch.setattr(m, "SCOPE", registration["scope_id"])
-        monkeypatch.setattr(m, "APPROVAL", registration["original_pins"]["effect"])
-        monkeypatch.setattr(m, "EXECUTION", registration["original_pins"]["execution"])
+    if additional_controls is None:
+        monkeypatch.setattr(m, "SCOPE", "fictional-dev-scope")
+        monkeypatch.setattr(m, "EXECUTION", "e" * 64)
+        monkeypatch.setattr(m, "APPROVAL", "a" * 64)
+        if registration is not None:
+            monkeypatch.setattr(m, "SCOPE", registration["scope_id"])
+            monkeypatch.setattr(m, "APPROVAL", registration["original_pins"]["effect"])
+            monkeypatch.setattr(m, "EXECUTION", registration["original_pins"]["execution"])
     root = tmp_path / "capture"
 
     def put(name, value, raw=False):
@@ -271,8 +272,18 @@ def kernel_fixture(tmp_path, monkeypatch, *, registration=None):
             value = {"input_window_ref": registration["window"], "schedule_ref": SCHEDULE}.get(
                 key, value
             )
-        refs[key] = put(key, value)
-        monkeypatch.setattr(m, constant, refs[key]["sha256"])
+        if additional_controls is None:
+            refs[key] = put(key, value)
+            monkeypatch.setattr(m, constant, refs[key]["sha256"])
+        else:
+            name = {
+                "input_window_ref": "INPUT-WINDOW.json",
+                "window_ref": "WINDOW.json",
+                "schedule_ref": "SCHEDULE.json",
+            }[key]
+            refs[key] = put(key, additional_controls[name], raw=True)
+            assert refs[key]["sha256"] == getattr(m, constant)
+
     if registration is not None:
         for name, body in registration["originals"].items():
             put("original-" + name, body, raw=True)
