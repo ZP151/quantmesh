@@ -56,6 +56,9 @@ def test_new_startup_routes_only_new_fixed_scope_and_root(tmp_path, monkeypatch)
     namespace = runpy.run_path(
         str(Path(__file__).parents[1] / "tools/research/open_ivv_workstation.py")
     )
+    assert gate.ADDITIONAL_STUDY_ROOT == STUDY
+    study = tmp_path / "study"
+    monkeypatch.setattr(gate, "ADDITIONAL_STUDY_ROOT", str(study))
     inputs = tmp_path / "inputs"
     inputs.mkdir()
     calls = []
@@ -68,7 +71,7 @@ def test_new_startup_routes_only_new_fixed_scope_and_root(tmp_path, monkeypatch)
         "schema_id": "qm.ivv.startup.dev-additional-task.v1",
         "scope_id": RESEARCH_SCOPE,
         "inputs_root": str(inputs),
-        "study_root": STUDY,
+        "study_root": str(study),
         "input_set_ref": ref("f" * 64).model_dump(),
         "proofs": proofs().model_dump(mode="json"),
     }
@@ -79,7 +82,7 @@ def test_new_startup_routes_only_new_fixed_scope_and_root(tmp_path, monkeypatch)
         path.write_bytes(raw)
         return namespace["service_from_config"](path, daily.digest(raw))
 
-    assert call(value) == (Path(STUDY), (sentinel,))
+    assert call(value) == (study, (sentinel,))
     assert len(calls) == 1 and calls[0]["proofs"] == proofs()
     for changed in (
         {"schema_id": "qm.ivv.startup.v1"},
