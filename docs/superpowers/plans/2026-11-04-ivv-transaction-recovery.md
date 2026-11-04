@@ -21,7 +21,7 @@ new permit issuer.
 
 Preserve all old evidence/charges/futures and old-family interpretations. Current
 human direction6db1254 replaces repeated single-shot approval gates. Current
-12GiB/6GiB/free50GiB and complete232MiB hold apply; software40MiB is shared (Server7/Product16/common16/FS1). Data/math,
+12GiB/6GiB/free50GiB and complete236MiB hold apply; software44MiB is shared (Server7/Product16/common20/FS1). Data/math,
 credentials, no-paid, read-only protocol scope and paper/live boundaries remain.
 One integration branch/CI observer; no old PR280 revalidation or diagnostic sandbox.
 
@@ -87,8 +87,12 @@ WriterLease and JsonlStore remain the only job/result commit mechanism.
   report/decision/cold-read harness. Engineering seams remain disclosed.
 - [x] Fresh two-axis independent R1; at most one consolidated RED/GREEN correction
   and same-reader R2. Material structural R2 blocker returns to scope reduction.
-- [ ] Relevant broad checks at final boundary, one normal matching-head PR/CI,
+- [x] Relevant broad checks at final boundary, one normal matching-head PR/CI,
   actual merge-policy scope and guarded merge/full source/catalog provenance.
+
+PR282 merged0e0d3cf4 after final-head423113cf CI41909344046 and actual full-tree/
+catalog/exact-lock verification. First actual entry then stopped at INITIAL/
+EXECUTABLE with SDK counts UNKNOWN; see the bounded [failure-evidence addendum](2026-11-05-ivv-executable-failure-evidence.md).
 
 ## Task 5 â€” actual bounded recovery and user outcome (Server/Quant/Product)
 

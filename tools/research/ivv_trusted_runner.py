@@ -22,7 +22,7 @@ import subprocess
 import sys
 import time
 import types
-from pathlib import Path, PurePosixPath
+from pathlib import Path, PosixPath, PurePosixPath, WindowsPath
 
 BASE = Path("/var/lib/quantmesh/ivv-trusted-environment")
 CONTROL = BASE / "parent"
@@ -144,6 +144,142 @@ def reason(e):
     return type(e).__name__
 
 
+def _public_executable_path(value):
+    return (
+        type(value) is str
+        and len(value) <= 160
+        and re.fullmatch(
+            r"/usr/(?:bin|sbin|libexec|local/bin)/[A-Za-z0-9_+./-]+(?: \(deleted\))?", value
+        )
+        is not None
+        and all(part not in ("", ".", "..") for part in value.split("/")[1:])
+    )
+
+
+def select_executable_path(value):
+    need(
+        type(value) is dict
+        and set(value) == {"classification", "path"}
+        and type(value["classification"]) is str,
+        "EXECUTABLE_OBSERVATION_SHAPE",
+    )
+    kind, path = value["classification"], value["path"]
+    fixed = {
+        "EXPECTED": "/usr/bin/python3.12",
+        "EXPECTED_DELETED": "/usr/bin/python3.12 (deleted)",
+    }
+    need(
+        (kind in fixed and type(path) is str and path == fixed[kind])
+        or (kind in ("PROC_EXE", "REDACTED") and path is None)
+        or (
+            kind == "OTHER_PUBLIC" and _public_executable_path(path) and path not in fixed.values()
+        ),
+        "EXECUTABLE_OBSERVATION_SHAPE",
+    )
+    return {"classification": kind, "path": path}
+
+
+def select_executable_observation(value):
+    need(
+        type(value) is dict
+        and set(value) == {"schema", "nonstrict", "readlink", "strict", "namespace"}
+        and type(value["schema"]) is str
+        and value["schema"] == "qm.ivv.executable-observation.v1"
+        and type(value["namespace"]) is str
+        and value["namespace"] in ("SAME", "CHANGED", "UNAVAILABLE"),
+        "EXECUTABLE_OBSERVATION_SHAPE",
+    )
+    result = {
+        "schema": value["schema"],
+        "namespace": value["namespace"],
+        "nonstrict": select_executable_path(value["nonstrict"]),
+    }
+    for name in ("readlink", "strict"):
+        item = value[name]
+        need(
+            type(item) is dict
+            and set(item) == {"status", "result"}
+            and type(item["status"]) is str,
+            "EXECUTABLE_OBSERVATION_SHAPE",
+        )
+        if item["status"] == "OK":
+            selected = select_executable_path(item["result"])
+        else:
+            need(
+                item["status"]
+                in (
+                    "EACCES",
+                    "EPERM",
+                    "ENOENT",
+                    "ELOOP",
+                    "ENOTDIR",
+                    "OTHER_OSERROR",
+                    "OTHER_EXCEPTION",
+                )
+                and item["result"] is None,
+                "EXECUTABLE_OBSERVATION_SHAPE",
+            )
+            selected = None
+        result[name] = {"status": item["status"], "result": selected}
+    return result
+
+
+def _executable_path(value):
+    # Never call user-defined stringification. Only exact stdlib path/string values.
+    if type(value) in (PosixPath, WindowsPath, PurePosixPath):
+        value = str(value)
+    kind, public = "REDACTED", None
+    if type(value) is str:
+        if value == "/usr/bin/python3.12":
+            kind, public = "EXPECTED", value
+        elif value == "/usr/bin/python3.12 (deleted)":
+            kind, public = "EXPECTED_DELETED", value
+        elif re.fullmatch(r"/proc/(?:self|[0-9]{1,20})/exe", value):
+            kind = "PROC_EXE"
+        elif _public_executable_path(value):
+            kind, public = "OTHER_PUBLIC", value
+    return {"classification": kind, "path": public}
+
+
+def _observe_executable(resolved, namespace):
+    def inode():
+        try:
+            value = os.stat("/proc/self/ns/mnt").st_ino
+            return value if type(value) is int and value > 0 else None
+        except BaseException:
+            return None
+
+    def lookup(operation):
+        try:
+            return {"status": "OK", "result": _executable_path(operation())}
+        except BaseException as error:
+            status = "OTHER_EXCEPTION"
+            if isinstance(error, OSError):
+                number = OSError.errno.__get__(error, OSError)
+                known = {13: "EACCES", 1: "EPERM", 2: "ENOENT", 40: "ELOOP", 20: "ENOTDIR"}
+                status = (
+                    known.get(number, "OTHER_OSERROR") if type(number) is int else "OTHER_OSERROR"
+                )
+            return {"status": status, "result": None}
+
+    before = inode()
+    result = {
+        "schema": "qm.ivv.executable-observation.v1",
+        "nonstrict": _executable_path(resolved),
+        "readlink": lookup(lambda: os.readlink("/proc/self/exe")),
+        "strict": lookup(lambda: Path("/proc/self/exe").resolve(strict=True)),
+    }
+    after = inode()
+    result["namespace"] = (
+        "UNAVAILABLE"
+        if before is None or after is None
+        else "SAME"
+        if before == after == namespace
+        else "CHANGED"
+    )
+    return select_executable_observation(result)
+
+
 def select_origin_failure(value):
     """Select only finite origin facts; absent legacy evidence remains absent."""
     if value is None:
@@ -151,8 +287,12 @@ def select_origin_failure(value):
     need(
         type(value) is dict
         and all(type(key) is str for key in value)
-        and set(value) == {"schema", "phase", "predicate", "outcome"}
-        and all(type(item) is str for item in value.values())
+        and set(value)
+        in (
+            {"schema", "phase", "predicate", "outcome"},
+            {"schema", "phase", "predicate", "outcome", "executable_observation"},
+        )
+        and all(type(value[key]) is str for key in ("schema", "phase", "predicate", "outcome"))
         and value["schema"] == "qm.ivv.runtime-origin-failure.v1"
         and value["phase"] in ("INITIAL", "SESSION", "UNKNOWN")
         and value["predicate"] in ("SDK_ROOT", "PYTHON_VERSION", "EXECUTABLE", "UNKNOWN")
@@ -160,7 +300,16 @@ def select_origin_failure(value):
         and ((value["predicate"] == "UNKNOWN") == (value["outcome"] == "UNKNOWN")),
         "ORIGIN_FAILURE_SHAPE",
     )
-    return dict(value)
+    result = {key: value[key] for key in ("schema", "phase", "predicate", "outcome")}
+    if "executable_observation" in value:
+        need(
+            value["predicate"] == "EXECUTABLE" and value["outcome"] == "FIRST_FALSE",
+            "EXECUTABLE_OBSERVATION_SHAPE",
+        )
+        result["executable_observation"] = select_executable_observation(
+            value["executable_observation"]
+        )
+    return result
 
 
 _ORIGIN_MARKER = object()
@@ -1789,18 +1938,31 @@ def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_ph
         origin["predicate"] = predicate
         return expression()
 
+    resolved_executable = None
+
+    def executable():
+        nonlocal resolved_executable
+        resolved_executable = Path("/proc/self/exe").resolve()
+        return resolved_executable == Path("/usr/bin/python3.12")
+
     try:
         need(
             evaluated("SDK_ROOT", lambda: plan["sdk_root"] == str(SDK))
             and evaluated("PYTHON_VERSION", lambda: sys.version_info[:2] == (3, 12))
-            and evaluated(
-                "EXECUTABLE",
-                lambda: Path("/proc/self/exe").resolve() == Path("/usr/bin/python3.12"),
-            ),
+            and evaluated("EXECUTABLE", executable),
             "RUNTIME_ORIGIN",
             _origin=origin,
         )
     except BaseException as error:
+        if (
+            _recovery_mode(additional)
+            and origin["predicate"] == "EXECUTABLE"
+            and origin["outcome"] == "FIRST_FALSE"
+        ):
+            try:
+                origin["executable_observation"] = _observe_executable(resolved_executable, ns)
+            except BaseException:
+                pass  # Optional evidence cannot replace the original refusal or ownership.
         _carry_origin(error, origin)
         raise
     home = os.environ.get("HOME")

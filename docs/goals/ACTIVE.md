@@ -6,7 +6,7 @@ Actual human direction6db1254 authorizes necessary reasonable capture/request/
 compute recovery and registered growth within the original fixed data/math/
 privacy/trading/no-paid scope. Permanent1/7, repeated whole-package approval and
 the pending4.6GB question are superseded. Current administrative caps12GiB/6GiB/
-free50GiB; old80MiB plus complete recovery152MiB=232MiB, all prior futures retained.
+free50GiB; old80MiB plus complete recovery156MiB=236MiB, all prior futures retained.
 
 Server and original Product froze one policy: stable task/registered experiment/
 semantic input version/math-cost spec determine business identity; authority,
@@ -18,9 +18,17 @@ at92431f7d. PR282 first CI failed only the old F0 comparison's changed storage
 provenance; the test-only correction atf9863996 preserves original golden bytes
 and passed its narrow review. That head passed CI, but premerge found the decision
 artifact contract defect; its bounded consumer fix/bundle atbdba284e is narrowly
-reviewed READY. New-head normal CI/publication remain before actual execution;
-source merge alone never completes actual capture/Quant acceptance/report/
-decision/cold-read. See [current iteration](../iterations/0038-ivv-transaction-recovery.md).
+reviewed READY. PR282 is normally merged as0e0d3cf4/tree38a21582 after actual
+head423113cf CI41909344046 success and exact-lock bundle qualification. Its first
+actual recovery invocation stopped INITIAL/FIRST_FALSE/EXECUTABLE; SDK actual
+counts remain UNKNOWN, no input/checkpoint or study was created. Current-only
+read-only evidence proves owned cleanup; bare-host pathname/inode agree but do
+not establish the hardened child's cause. A bounded original-owner failure
+observation delta must preserve the original guard and authenticated evidence
+chain, pass targeted TDD/narrow independent review/normal publication, then
+resume the same task with actual accounting. No new mode/unit/sandbox or SDK0
+claim is introduced. Source merge alone never completes actual capture/Quant
+acceptance/report/decision/cold-read. See [current iteration](../iterations/0038-ivv-transaction-recovery.md).
 PR280/399b below is delivered; its old CI is not repeated or used as native GO.
 
 ## Current offline runtime-origin failure-evidence repair — issue279
