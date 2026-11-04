@@ -55,7 +55,25 @@ SOURCES = {
 ADDITIONAL_ROOT = Path("/var/lib/quantmesh-ivv-additional")
 
 
+def _recovery_mode(mode):
+    return type(mode) is str and re.fullmatch(r"connection-[0-9]{6}", mode) is not None
+
+
+def _task_mode(values):
+    return values.get("_recovery_mode", values.get("_additional") is not None)
+
+
 def _locations(additional):
+    if _recovery_mode(additional):
+        root = Path("/var/lib/quantmesh-ivv-recovery")
+        base = root / "attempts" / additional
+        return types.SimpleNamespace(
+            control=base / "parent",
+            child=base / "child",
+            receipt=base / "child/capture",
+            ledger=root / "ledger",
+            release=base / "release",
+        )
     if additional:
         base = ADDITIONAL_ROOT / "tasks/20261103-01"
         return types.SimpleNamespace(
@@ -71,6 +89,12 @@ def _locations(additional):
 
 
 def _sources(additional):
+    if _recovery_mode(additional):
+        return {
+            **SOURCES,
+            "additional_task_sha256": "ivv_additional_task.py",
+            "recovery_contract_sha256": "ivv_recovery.py",
+        }
     return (
         {**SOURCES, "additional_task_sha256": "ivv_additional_task.py"} if additional else SOURCES
     )
@@ -78,7 +102,7 @@ def _sources(additional):
 
 def _for_task(fn, additional):
     # Preserve the existing trusted entry and the shape of its syscall seams.
-    return functools.partial(fn, additional=True) if additional else fn
+    return functools.partial(fn, additional=additional) if additional else fn
 
 
 class Refused(ValueError):
@@ -274,7 +298,13 @@ def select_failure_status(status, publication_sha256):
         type(status) is dict
         and status.get("state") == "STOP"
         and status.get("publication_sha256") == publication_sha256
-        and status.get("stage") in ("PACKET", "STAGE_OWNED_ONLY", "RELEASED_ADDITIONAL_RUNNER_ONCE")
+        and status.get("stage")
+        in (
+            "PACKET",
+            "STAGE_OWNED_ONLY",
+            "RELEASED_ADDITIONAL_RUNNER_ONCE",
+            "RELEASED_RECOVERY_ATTEMPT",
+        )
         and status.get("automatic_retry") is False
         and status.get("provider_mutation") is False
         and "unit_returncode" in status
@@ -287,7 +317,7 @@ def select_failure_status(status, publication_sha256):
         code = "UNIT_RETURN_" + str(rc).replace("-", "NEG_") if rc else "UNIT_NORMAL_SEAL_MISSING"
     need(type(code) is str and re.fullmatch("[A-Za-z0-9_+]{1,256}", code), "NATIVE_STOP_NOT_PROVEN")
     contexts = status.get("actual_contexts")
-    if stage == "RELEASED_ADDITIONAL_RUNNER_ONCE":
+    if stage in ("RELEASED_ADDITIONAL_RUNNER_ONCE", "RELEASED_RECOVERY_ATTEMPT"):
         contexts = "UNKNOWN"
     else:
         need(rc is None and type(contexts) is int and contexts == 0, "NATIVE_STOP_NOT_PROVEN")
@@ -460,7 +490,14 @@ def _bootstrap(startup_ref, *, additional=False):
         "authorization_ref": "authorization.json",
         "go_fields_ref": "windows-go-fields.json",
     }
-    if additional:
+    if _recovery_mode(additional):
+        names.pop("go_fields_ref")
+        names["capture_policy_ref"] = "policy.json"
+        need(
+            Path(__file__).resolve(strict=True) == loc.release / "ivv_trusted_runner.py",
+            "RECOVERY_RUNNER_ORIGIN",
+        )
+    elif additional:
         names.update(
             descriptor_ref="descriptor.json",
             windows_policy_ref="windows-policy.json",
@@ -491,7 +528,20 @@ def _bootstrap(startup_ref, *, additional=False):
             issuer = types.ModuleType("_qm_trusted_issuer")
             issuer.__file__ = str(path)
             exec(compile(raw, str(path), "exec"), issuer.__dict__)
-    if additional:
+    if _recovery_mode(additional):
+        need(
+            startup["authorization_ref"]["sha256"]
+            == "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+            "RECOVERY_AUTHORIZATION_PIN",
+        )
+        task = issuer._released_module("ivv_additional_task.py", catalog["additional_task_sha256"])
+        contract = issuer._released_module("ivv_recovery.py", catalog["recovery_contract_sha256"])
+        extra = task.RecoveryProfile(contract, values["capture_policy_ref"], additional)
+        need(extra.policy_sha == startup["capture_policy_ref"]["sha256"], "RECOVERY_POLICY_PIN")
+        values["_additional"] = extra
+        values["_recovery_mode"] = additional
+        values["_recovery_task"] = task
+    elif additional:
         extra = issuer._released_module("ivv_additional_task.py", catalog["additional_task_sha256"])
         extra.authenticate(
             *(
@@ -664,7 +714,11 @@ class _Scope:
                 self.parent["uid"] == 0
                 and self.parent["pid"] == os.getpid()
                 and self.parent["cgroup"]
-                == "/system.slice/qm-ivv-additional-20261103-01.service/manager",
+                == (
+                    "/system.slice/qm-ivv-recovery-" + additional + ".service/manager"
+                    if _recovery_mode(additional)
+                    else "/system.slice/qm-ivv-additional-20261103-01.service/manager"
+                ),
                 "ADDITIONAL_OWNED_UNIT",
             )
         self.manager_contract = _manager_contract(self.parent)
@@ -898,6 +952,253 @@ class _Scope:
         except BaseException as e:
             errors.append(reason(e))
         return errors
+
+
+def _persist_recovery_owner(book, attempt, scope):
+    # The child is still blocked on the authenticated enter message here.
+    scope.check_pid()
+    scope.check_leaf()
+    binding = {
+        "connection_attempt_id": attempt,
+        "manager": scope.parent,
+        "child": scope.child,
+        "mount": {"id": scope.mount, "namespace": list(identity(os.stat("/proc/self/ns/mnt")))},
+        "group": list(identity(os.fstat(scope.group))),
+        "manager_dir": list(identity(os.fstat(scope.man))),
+        "leaf": list(identity(os.fstat(scope.leaf))),
+    }
+    book._write(attempt + ".owner.json", binding)
+    scope.check_pid()
+    scope.check_leaf()
+
+
+def _recover_bound_owner(binding):
+    """Recover only the recorded orphan after its original manager has exited.
+
+    This never certifies normal SDK close, original wait status or data admission.
+    The exact cgroup and pidfd primitives are the same as the live owner path.
+    """
+    need(
+        type(binding) is dict
+        and set(binding)
+        == {"connection_attempt_id", "manager", "child", "mount", "group", "manager_dir", "leaf"},
+        "RECOVERY_OWNER_BINDING",
+    )
+    attempt, manager, child = (binding[k] for k in ("connection_attempt_id", "manager", "child"))
+    need(_recovery_mode(attempt), "RECOVERY_ATTEMPT")
+    unit = "/system.slice/qm-ivv-recovery-" + attempt + ".service"
+    for actor in (manager, child):
+        need(
+            type(actor) is dict
+            and set(actor) == {"pid", "start_ticks", "uid", "cgroup"}
+            and type(actor["pid"]) is int
+            and actor["pid"] > 1
+            and type(actor["start_ticks"]) is int
+            and actor["start_ticks"] > 0
+            and type(actor["uid"]) is int
+            and actor["uid"] == 0,
+            "RECOVERY_OWNER_ACTOR",
+        )
+    leaf = "ivv-owned-" + str(manager["pid"]) + "-" + str(manager["start_ticks"])
+    need(
+        manager["pid"] != child["pid"]
+        and manager["cgroup"] == unit + "/manager"
+        and child["cgroup"] == unit + "/" + leaf,
+        "RECOVERY_OWNER_SCOPE",
+    )
+    for key in ("group", "manager_dir", "leaf"):
+        need(
+            type(binding[key]) is list
+            and len(binding[key]) == 4
+            and all(type(v) is int for v in binding[key])
+            and stat.S_ISDIR(binding[key][2])
+            and binding[key][3] == 0,
+            "RECOVERY_OWNER_INODE",
+        )
+
+    def actor_now(actor):
+        try:
+            actual, ppid = _process(actor["pid"])
+        except FileNotFoundError:
+            # A partial /proc read is not absence; require the process directory gone.
+            need(not (Path("/proc") / str(actor["pid"])).exists(), "RECOVERY_PROCESS_UNCERTAIN")
+            return None
+        need(actual == actor, "RECOVERY_PID_CHANGED")
+        return ppid
+
+    need(actor_now(manager) is None, "RECOVERY_MANAGER_ACTIVE")
+    child_parent = actor_now(child)
+    need(child_parent in (None, 1), "RECOVERY_CHILD_PARENT")
+    old_mount = binding["mount"]
+    need(
+        type(old_mount) is dict
+        and set(old_mount) == {"id", "namespace"}
+        and type(old_mount["id"]) is int
+        and old_mount["id"] > 0
+        and type(old_mount["namespace"]) is list
+        and len(old_mount["namespace"]) == 4
+        and all(type(v) is int for v in old_mount["namespace"]),
+        "RECOVERY_MOUNT_PROVENANCE",
+    )
+    # Mount IDs identify mounts in a namespace, not the backing cgroup inode.
+    # _cgroup_mount requires the current cgroup2 mount at CG with mount root '/'.
+    # Keep the original namespace/id above; match every current held FD to this
+    # current mount and every backing dev/ino/mode/UID to the original binding.
+    current_mount = _cgroup_mount()
+    root = CG / unit.lstrip("/")
+    descriptors, paths = {}, {}
+    errors = []
+    try:
+        for name, path in (
+            ("group", root),
+            ("manager_dir", root / "manager"),
+            ("leaf", root / leaf),
+        ):
+            try:
+                protected(path)
+                fd = os.open(
+                    path,
+                    os.O_RDONLY
+                    | getattr(os, "O_DIRECTORY", 0)
+                    | getattr(os, "O_NOFOLLOW", 0)
+                    | getattr(os, "O_CLOEXEC", 0),
+                )
+            except FileNotFoundError:
+                need(child_parent is None or name == "manager_dir", "RECOVERY_CGROUP_MISSING")
+                continue
+            descriptors[name], paths[name] = fd, path
+            need(
+                list(identity(os.fstat(fd))) == binding[name]
+                and identity(os.stat(path, follow_symlinks=False)) == identity(os.fstat(fd))
+                and _mount_id(fd) == current_mount,
+                "RECOVERY_CGROUP_CHANGED",
+            )
+        need("group" in descriptors or not descriptors, "RECOVERY_CGROUP_PARTIAL")
+
+        def check_members():
+            for name, fd in descriptors.items():
+                need(
+                    list(identity(os.fstat(fd))) == binding[name]
+                    and identity(os.stat(paths[name], follow_symlinks=False))
+                    == identity(os.fstat(fd))
+                    and _mount_id(fd) == current_mount,
+                    "RECOVERY_CGROUP_CHANGED",
+                )
+                allowed_dirs = (
+                    ({"manager"} if "manager_dir" in descriptors else set())
+                    | ({leaf} if "leaf" in descriptors else set())
+                    if name == "group"
+                    else set()
+                )
+                need(_Scope.dirs(fd) == allowed_dirs, "RECOVERY_FOREIGN_CGROUP")
+                members = _kread(fd, "cgroup.procs").split()
+                allowed = {str(child["pid"])} if name == "leaf" else set()
+                need(set(members) <= allowed, "RECOVERY_FOREIGN_MEMBER")
+
+        check_members()
+        if child_parent is not None:
+            fd = os.pidfd_open(child["pid"])
+            descriptors["pidfd"] = fd
+            need(actor_now(manager) is None and actor_now(child) == 1, "RECOVERY_OWNER_CHANGED")
+            # pidfd is acquired between two exact start/UID/cgroup observations.
+            held_pidfd = descriptors.pop("pidfd")
+            try:
+                check_members()
+                until = time.monotonic() + 2
+                signal.pidfd_send_signal(held_pidfd, signal.SIGKILL)
+                need(
+                    select.select([held_pidfd], [], [], max(0, until - time.monotonic()))[0]
+                    == [held_pidfd],
+                    "RECOVERY_WAIT_UNKNOWN",
+                )
+                while actor_now(child) is not None and time.monotonic() < until:
+                    time.sleep(0.01)
+                need(actor_now(child) is None, "RECOVERY_REAP_UNKNOWN")
+            finally:
+                descriptors["pidfd"] = held_pidfd
+        need(actor_now(manager) is None and actor_now(child) is None, "RECOVERY_OWNER_ACTIVE")
+        for name, fd in descriptors.items():
+            if name == "pidfd":
+                continue
+            need(
+                not _kread(fd, "cgroup.procs")
+                and "populated 0" in _kread(fd, "cgroup.events").splitlines(),
+                "RECOVERY_NOT_EMPTY",
+            )
+        # No namespace-expiry assumption, no old normal-close upgrade.
+    finally:
+        for fd in reversed(list(descriptors.values())):
+            try:
+                _close_fd(fd)
+            except BaseException:
+                errors.append("RECOVERY_FD_CLOSE")
+        need(not errors, "RECOVERY_FD_CLOSE")
+    return {"owned_cleanup_proven": True, "external_effects": "UNKNOWN", "input_publishable": False}
+
+
+def recover_previous_attempt(book, read_owned):
+    """Fixed carrier entry, before any new context intent or SDK opportunity."""
+    import fcntl
+
+    rows = book._intents()
+    if not rows:
+        return
+    attempt = rows[-1]["connection_attempt_id"]
+    need(
+        _recovery_mode(attempt) and book.root == _locations(attempt).ledger, "RECOVERY_LEDGER_SCOPE"
+    )
+    protected(book.root)
+    close_path = book.root / (attempt + ".close.json")
+    closed = book._read(close_path.name) if close_path.exists() else None
+    if closed is not None and closed["owner_state"] == "CLOSED":
+        return
+    binding = book._read(attempt + ".owner.json")
+    previous_failure = read_runner_failure(_locations(attempt).control, read_owned)
+    ref = digest(raw_json(binding))
+    receipt = {
+        "owner_binding_sha256": ref,
+        "owned_cleanup_proven": True,
+        "external_effects": "UNKNOWN",
+        "input_publishable": False,
+    }
+    done = attempt + ".recovered.json"
+    if (book.root / done).exists():
+        need(book._read(done) == receipt, "RECOVERY_RECEIPT")
+        return
+    lockname = attempt + ".recovery-lock.json"
+    try:
+        book._write(lockname, {})
+    except FileExistsError:
+        pass
+    need(book._read(lockname) == {}, "RECOVERY_LEASE_FILE")
+    protected(book.root / lockname)
+    lock = os.open(book.root / lockname, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        need(
+            os.path.samestat(os.fstat(lock), (book.root / lockname).lstat()),
+            "RECOVERY_LEASE_CHANGED",
+        )
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        need(not (book.root / done).exists(), "RECOVERY_ALREADY_COMMITTED")
+        proof = _recover_bound_owner(binding)
+        need(proof == {k: receipt[k] for k in proof} and len(proof) == 3, "RECOVERY_PROOF")
+    finally:
+        _close_fd(lock)
+    # All recovery descriptors, including the lease, closed before publication.
+    if closed is None:
+        # A crashed parent cannot supply a normal close. Record only interruption;
+        # an existing finite structural refusal still requires a changed method.
+        failure = (
+            "CAPTURE_INTERRUPTED"
+            if previous_failure is None
+            else (
+                previous_failure["reason"]
+                if previous_failure["reason"] in ("SDK_CLOSE_UNKNOWN", "CAPTURE_TIMEOUT")
+                else "RECORDED_PRIOR_FAILURE"
+            )
+        )
+        book.close(attempt, {}, failure=failure, method_sha256=rows[-1]["method_sha256"])
+    book._write(done, receipt)
 
 
 class _Channel:
@@ -1202,6 +1503,7 @@ class _Provider:
 
     def __init__(self, native, producer, helper, plan, budget_ref, *, additional=False):
         self.locations = _locations(additional)
+        self.recovery = _recovery_mode(additional)
         self.native = native
         self.producer = producer
         self.helper = helper
@@ -1253,8 +1555,8 @@ class _Provider:
                 "free": fs.f_bavail * fs.f_frsize,
             }
             need(
-                sample["G"] <= 10500000000
-                and sample["P"] <= 4500000000
+                sample["G"] <= (12884901888 if self.recovery else 10500000000)
+                and sample["P"] <= (6442450944 if self.recovery else 4500000000)
                 and sample["free"] >= 53687091200,
                 "MONITOR_THRESHOLD",
             )
@@ -1431,7 +1733,7 @@ def _digest_pin(value):
 
 def _seed(values, startup, helper, issuer, *, started=None):
     extra = values.get("_additional")
-    additional = extra is not None
+    additional = _task_mode(values)
     loc = _locations(additional)
     family = extra.FAMILY if additional else FAMILY
     plan = dict(values["seed_ref"])
@@ -1460,7 +1762,14 @@ def _seed(values, startup, helper, issuer, *, started=None):
     ):
         read_ref(plan[key], loc.control / name)
     policy = json.loads(read_ref(plan["policy_ref"], loc.control / "policy.json"))
-    if additional:
+    if _recovery_mode(additional):
+        need(
+            plan["policy_ref"] == startup["capture_policy_ref"]
+            and digest(raw_json(policy)) == extra.policy_sha
+            and plan["recovery"] == extra.binding(),
+            "RECOVERY_POLICY_BINDING",
+        )
+    elif additional:
         need(
             plan["policy_ref"] == startup["capture_policy_ref"]
             and digest(raw_json(policy)) == extra.POLICY,
@@ -1468,13 +1777,19 @@ def _seed(values, startup, helper, issuer, *, started=None):
         )
     else:
         issuer.validate_trusted_policy(helper, policy, plan, AUTH)
-    _validate_windows_fields(values["go_fields_ref"], extra)
+    if not _recovery_mode(additional):
+        _validate_windows_fields(values["go_fields_ref"], extra)
     if additional:
         home = loc.child.parent / "home"
         need(os.environ.get("HOME") == str(home), "ADDITIONAL_HOME")
         protected(home)
-        protected(ADDITIONAL_ROOT)
-        need(stat.S_IMODE(ADDITIONAL_ROOT.stat().st_mode) == 0o700, "ADDITIONAL_PRIVATE_ROOT")
+        root = (
+            Path("/var/lib/quantmesh-ivv-recovery")
+            if _recovery_mode(additional)
+            else ADDITIONAL_ROOT
+        )
+        protected(root)
+        need(stat.S_IMODE(root.stat().st_mode) == 0o700, "ADDITIONAL_PRIVATE_ROOT")
     for path in (loc.control, loc.child, loc.ledger):
         protected(path)
         need(stat.S_IMODE(path.stat().st_mode) == 0o700, "PRIVATE_CONTROL_DIRECTORY")
@@ -1506,7 +1821,7 @@ class _ChildSession:
 def _child(channel, parent, context, plan):
     startup, values, issuer, m, native, producer = context
     extra = values.get("_additional")
-    additional = extra is not None
+    additional = _task_mode(values)
     loc = _locations(additional)
     _bind_parent(parent)
     need(channel.recv(parent) == {"op": "enter"}, "CHILD_GATE")
@@ -1548,6 +1863,10 @@ def _child(channel, parent, context, plan):
     state.helper = m
     state.trusted_issuer = issuer
     state.additional_task = extra
+    if _recovery_mode(additional):
+        state.recovery_profile = extra
+        state.recovery_ledger = values["_recovery_ledger"]
+        state.recovery_attempt = additional
     state.plan = m._canonical({k: v for k, v in final.items() if k != "provider_evidence_ref"})
     state.evidence = m._canonical(evidence)
     need(state.__name__ not in sys.modules, "NATIVE_BUSY")
@@ -1555,7 +1874,9 @@ def _child(channel, parent, context, plan):
     try:
         pins = {
             "expected_policy_sha256": final["policy_ref"]["sha256"],
-            "expected_authorization_sha256": extra.APPROVED.authorization_sha256
+            "expected_authorization_sha256": extra.contract.AUTHORITY
+            if _recovery_mode(additional)
+            else extra.APPROVED.authorization_sha256
             if additional
             else AUTH,
             "expected_go_sha256": grant["go_ref"]["sha256"],
@@ -1578,12 +1899,23 @@ def _child(channel, parent, context, plan):
             **pins,
         )
         try:
-            capture = m.capture_additional_once if additional else m.capture_trusted_once
+            capture = (
+                m.capture_recovery_attempt
+                if _recovery_mode(additional)
+                else m.capture_additional_once
+                if additional
+                else m.capture_trusted_once
+            )
             result = capture(
                 grant["plan_ref"]["path"], loc.receipt, permit_fd=fd, expected_sha256=sha, **pins
             )
         finally:
             _close_fd(fd)
+        if _recovery_mode(additional) and result["state"] != "CAPTURED_UNREVIEWED":
+            if result.get("close_failure"):
+                raise Refused("SDK_CLOSE_UNKNOWN")
+            if (result.get("primary_failure") or {}).get("code") == "absolute_deadline":
+                raise Refused("CAPTURE_TIMEOUT")
         need(result["state"] == "CAPTURED_UNREVIEWED", "CHILD_CAPTURE_FAILED")
         channel.send(
             {
@@ -1607,7 +1939,7 @@ def _bind_parent(parent):
 def _authorize(context, plan, scope, monitor):
     startup, values, issuer, m, native, producer = context
     extra = values.get("_additional")
-    additional = extra is not None
+    additional = _task_mode(values)
     loc = _locations(additional)
     family = extra.FAMILY if additional else FAMILY
     prov = (
@@ -1634,9 +1966,11 @@ def _authorize(context, plan, scope, monitor):
     plan_ref = put(loc.control / "plan.json", plan)
     go = {
         "schema_id": "qm.ivv.root-go" + family,
-        "decision": "GO_ONCE_AFTER_INPUT_ACCEPTANCE",
+        "decision": "GO_BOUNDED_CAPTURE_RECOVERY"
+        if _recovery_mode(additional)
+        else "GO_ONCE_AFTER_INPUT_ACCEPTANCE",
         **prov,
-        **values["go_fields_ref"],
+        **({} if _recovery_mode(additional) else values["go_fields_ref"]),
         "scope_id": plan["scope_id"],
         "execution_sha256": plan["execution_sha256"],
         "approval_sha256": plan["approval_sha256"],
@@ -1653,6 +1987,17 @@ def _authorize(context, plan, scope, monitor):
         "controls": {"released": True, "resource_bounds": True, "provider_log_cache_bounds": False},
         **{k: values["catalog_ref"][k] for k in _sources(additional)},
     }
+    if _recovery_mode(additional):
+        go.pop("max_capture_intents")
+        go.pop("max_trials")
+        go.update(
+            recovery=extra.binding(),
+            capture_scope_id=plan["scope_id"],
+            actor=scope.child,
+            catalog=startup.get("catalog_ref"),
+            source={k: values["catalog_ref"][k] for k in _sources(additional)},
+            native_controls=go["controls"],
+        )
     return plan_ref, put(loc.control / "go.json", go), plan, prov
 
 
@@ -1685,7 +2030,7 @@ def _manifest(ref, path):
 def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
     startup, values, issuer, m, native, producer = context
     extra = values.get("_additional")
-    additional = extra is not None
+    additional = _task_mode(values)
     loc = _locations(additional)
     family = extra.FAMILY if additional else FAMILY
     plan_ref, go_ref, plan, prov = grant
@@ -1808,8 +2153,7 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
 
 def _supervise(scope, channel, endpoint, context, plan):
     startup, values, issuer, m, native, producer = context
-    extra = values.get("_additional")
-    additional = extra is not None
+    additional = _task_mode(values)
     monitor = _for_task(_Provider, additional)(native, producer, m, plan, startup["budget_ref"])
     start = plan["started_monotonic"]
     kernel = grant = terminal = peer = None
@@ -1966,6 +2310,11 @@ def run_additional_once(startup_ref):
     return _run(startup_ref, additional=True)
 
 
+def run_recovery_attempt(startup_ref, connection_attempt_id):
+    need(_recovery_mode(connection_attempt_id), "RECOVERY_ATTEMPT")
+    return _run(startup_ref, additional=connection_attempt_id)
+
+
 def _run(startup_ref, *, additional):
     loc = _locations(additional)
     started = time.monotonic() if additional else None
@@ -1976,6 +2325,15 @@ def _run(startup_ref, *, additional):
         if additional
         else _seed(values, startup, helper, issuer)
     )
+    if _recovery_mode(additional):
+        task = values["_recovery_task"]
+        book = task.RecoveryLedger(
+            loc.ledger, values["_additional"].policy, values["_additional"].contract
+        )
+        method = digest(raw_json({k: values["catalog_ref"][k] for k in _sources(additional)}))
+        values["_recovery_method"] = method
+        book.enter(additional, method, startup_ref["sha256"])
+        values["_recovery_ledger"] = book
     _stdio()
     need(
         _fds() == {0, 1, 2} and len(list(Path("/proc/self/task").iterdir())) == 1,
@@ -1984,6 +2342,7 @@ def _run(startup_ref, *, additional):
     os.umask(0o077)
     primary = None
     primary_origin = None
+    cleanup_failures = None
     pending = None
     committed = False
     with _Handles() as stack:
@@ -2010,6 +2369,8 @@ def _run(startup_ref, *, additional):
                     os._exit(rc)
             b.close()
             scope.bind(pid)
+            if _recovery_mode(additional):
+                _persist_recovery_owner(book, additional, scope)
             result = _supervise(scope, parent_side, endpoint, context, plan)
             scope.check_resources()
             scope.remove()
@@ -2029,9 +2390,34 @@ def _run(startup_ref, *, additional):
         except BaseException as error:
             primary_origin = _origin_from_error(error)
             failures = scope.abort()
+            cleanup_failures = failures
             primary = [_failure_code(error), *failures]
     if time.monotonic() - plan["started_monotonic"] > 480:
         primary = [*(primary or []), "FINAL_SEAL_DEADLINE"]
+    if _recovery_mode(additional):
+        # A failed capture remains unpublishable. Independently completed exact
+        # owner abort/reap/empty/removal can nevertheless enable a new attempt.
+        closed = (
+            not stack.errors
+            and scope.reaped
+            and (cleanup_failures == [] or (primary is None and scope.leaf is None))
+        )
+        proof = dict(
+            child_reaped=scope.reaped,
+            recursive_populated=0 if closed else 1,
+            owned_fds_closed=not stack.errors,
+            resource_limit_event=False,
+            active_owned_processes=0 if closed else 1,
+        )
+        failure = primary[0] if primary else None
+        if failure is not None and re.fullmatch(r"[A-Z0-9_+]{1,512}", failure) is None:
+            failure = "CAPTURE_FAILED"
+        try:
+            values["_recovery_ledger"].close(
+                additional, proof, failure=failure, method_sha256=values["_recovery_method"]
+            )
+        except BaseException:
+            primary = [*(primary or []), "RECOVERY_CLOSURE_PERSISTENCE"]
     if primary or stack.errors:
         failures = [*(primary or []), *stack.errors]
         if pending is not None:
@@ -2045,13 +2431,23 @@ def _run(startup_ref, *, additional):
 
 
 def main(argv):
-    additional = bool(argv) and argv[0] == "--additional-task"
+    recovery = bool(argv) and argv[0] == "--recovery-attempt"
+    additional = (
+        argv[1] if recovery and len(argv) == 3 else bool(argv) and argv[0] == "--additional-task"
+    )
     control = _locations(additional).control
     try:
-        if additional:
+        if recovery:
+            need(len(argv) == 3 and _recovery_mode(additional), "RECOVERY_ARGUMENTS")
+            argv = argv[2:]
+        elif additional:
             argv = argv[1:]
         need(len(argv) == 1, "STARTUP_DIGEST_REQUIRED")
-        entry = run_additional_once if additional else run_once
+        entry = (
+            functools.partial(run_recovery_attempt, connection_attempt_id=additional)
+            if recovery
+            else (run_additional_once if additional else run_once)
+        )
         entry({"path": str(control / "startup.json"), "sha256": argv[0]})
         return 0
     except BaseException as e:

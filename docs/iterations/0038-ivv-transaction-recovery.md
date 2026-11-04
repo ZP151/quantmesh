@@ -116,3 +116,43 @@ If that CI finds a different bundle, integrate only its verified exact-source
 artifact and rerun the normal checks for the changed commit; never reuse a green
 status from the previous head. The workflow addition is part of the single joint
 review. Parent scoped Ruff/format six files and workflow YAML parsing pass.
+
+Supplement05 after the exact-lock toolchain finding: current measured common
+rounded5,722,112B plus complete future CI ZIPs, generated asset objects, catalog
+and failure evidence requires an integration12MiB subset. Standing net6MiB ID
+IVV_TRANSACTION_RECOVERY_COMMON6_TO12MiB_NET6MiB_20261104_01 registered once;
+software32(Server7/Product12/common12/FS1), recovery144+old80=224MiB. P5 actual
+1425B SHA0d817811c3fd1db015451f700ec5a2531ba6855ec07fee032c3e0d0d31a56bf5; guards
+G10621120602/P4583048206/all-parent4639671310 fit. No old future is borrowed.
+
+The actual producer-to-consumer seam test executed issuer/held admission, fake
+SDK observer, normal parent seal, ObjectStore import and Product capture verifier.
+It failed at _dev_binding: RecoveryProfile's manually copied provenance omitted
+shared policy_provenance fields. Source owner is correcting its producer; the
+consumer remains strict. Initial outside-checkout import collection failure and
+real interface RED are retained separately; neither is an actual native/SDK call.
+
+Server freeze16:01:03UTC (Nov5 Singapore): Parent independently matched all15
+source/ops/test/dependency/current-policy byte pins in PINS-FREEZE.json. Source
+AFFECTED-FINAL reports310PASS/145.42s; later exact-owner mount fix has62 targeted
+PASS/9.94s after retained RED. Old manager private mount ID remains provenance;
+current cgroup2 root/path/named-held mount/FD and original backing dev/ino, exact
+actor identity, lease and empty ownership are checked together. Mount IDs across
+namespace copies are not object identity. Official basis: [mount_namespaces(7)](https://man7.org/linux/man-pages/man7/mount_namespaces.7.html)
+and [proc_pid_mountinfo(5)](https://man7.org/linux/man-pages/man5/proc_pid_mountinfo.5.html).
+This is RAM/OS-seam coverage; actual orphan recovery remains unproved natively.
+
+Parent's committed-test candidate now connects real producer functions through
+held issuer/fake SDK/normal parent seal/ObjectStore/Product capture verifier,
+actual recovery normalizer,121 declared fixture bars, unreviewed staging and
+same-epoch candidate publication. Unreviewed study binding is refused and creates
+no study root. PRODUCER-CONSUMER-07:1PASS/2.74s. Its private authority reader and
+OS/SDK are explicit engineering seams; the ignored companion also passed using
+actual protected authorization bytes. No actual data acceptance, numeric trial
+or financial qualification follows. An initial guessed plain filename failure
+is retained separately from the corrected real-ref run.
+
+Source provenance mismatch was fixed at the producer by consuming the single
+shared policy projection, preserving legacy aliases; issuer independently binds
+that projection. No consumer guard was weakened. Both source owners are now
+frozen; Parent owns joint review/publication and actual execution.

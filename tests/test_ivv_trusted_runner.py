@@ -128,6 +128,7 @@ def test_consumer_requires_external_family_on_each_binding():
 
     proofs = SimpleNamespace(
         capture_policy_ref=object(),
+        recovery_policy_ref=None,
         authorization_ref=object(),
         expected_policy_sha256="1" * 64,
         expected_authorization_sha256=AUTH,
@@ -1721,6 +1722,14 @@ def check_bootstrap(tmp_path, monkeypatch, drift, *, additional=None):
     from test_ivv_dev_diagnostic import kernel_fixture
 
     _, _, _, _, kwargs, _ = kernel_fixture(tmp_path, monkeypatch)
+    bootstrap_open = os.open
+    monkeypatch.setattr(
+        os,
+        "open",
+        lambda path, flags, *a, **kw: bootstrap_open(
+            path, flags | getattr(os, "O_BINARY", 0), *a, **kw
+        ),
+    )
     r = runner()
     release = tmp_path / "release"
     release.mkdir()

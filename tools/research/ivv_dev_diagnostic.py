@@ -23,7 +23,7 @@ PROVENANCE_KEYS = (
 
 # The independently reviewed helper is fixed for this release. No code from the
 # plan, catalog, or helper runs to establish this initial trust anchor.
-_CAPTURE_HELPER_SHA256 = "daa413cc391906f9a018f4662d93f9ba1301358124686061c1354a4139650cc1"
+_CAPTURE_HELPER_SHA256 = "aced2a5a98915a4dadbe055d176e98aa4db527a1d4b504a63ad9b298582932b8"
 
 
 def _capture():
@@ -84,6 +84,7 @@ def _released_module(name, expected):
         "ivv_dev_native.py",
         "ivv_native_producer.py",
         "ivv_additional_task.py",
+        "ivv_recovery.py",
     ):
         raise RuntimeError("DEV_NATIVE_SOURCE_ORIGIN")
     path = Path(__file__).with_name(name)
@@ -252,7 +253,10 @@ def native_provider_snapshot(m, plan, evidence):
         "identity_binding_sha256",
         "listener_binding_sha256"
         if plan["schema_id"]
-        in {"qm.ivv.capture-plan" + x for x in (m.TRUSTED_SUFFIX, m.ADDITIONAL_SUFFIX)}
+        in {
+            "qm.ivv.capture-plan" + x
+            for x in (m.TRUSTED_SUFFIX, m.ADDITIONAL_SUFFIX, m.RECOVERY_SUFFIX)
+        }
         else "channels_binding_sha256",
         "configuration_binding_sha256",
     ):
@@ -265,13 +269,14 @@ def native_provider_snapshot(m, plan, evidence):
         and limits.get("pids.max") == "128",
         "dev_provider_resources",
     )
+    recovery = plan["schema_id"] == "qm.ivv.capture-plan" + m.RECOVERY_SUFFIX
     sample = actual.get("sample", {})
     m._require(
         set(sample) == {"incremental_bytes", "G", "P", "free"}
         and all(type(v) is int and v >= 0 for v in sample.values())
         and sample["incremental_bytes"] < 33554432
-        and sample["G"] <= 10500000000
-        and sample["P"] <= 4500000000
+        and sample["G"] <= (12884901888 if recovery else 10500000000)
+        and sample["P"] <= (6442450944 if recovery else 4500000000)
         and sample["free"] >= 53687091200,
         "dev_monitor_threshold",
     )
@@ -308,7 +313,19 @@ def _context(
     m._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
     m._require(plan["policy_ref"]["sha256"] == expected_policy_sha256, "dev_policy_pin")
     policy = m._strict_json(m._read_root_ref(plan["policy_ref"], maximum=32768, exact_mode=True))
-    if suffix == m.ADDITIONAL_SUFFIX:
+    recovery = suffix == m.RECOVERY_SUFFIX
+    if recovery:
+        state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
+        profile = getattr(state, "recovery_profile", None)
+        m._require(
+            profile is not None
+            and expected_authorization_sha256 == m.RECOVERY_AUTH
+            and expected_policy_sha256 == profile.policy_sha
+            and m._canonical(policy) == profile.policy_bytes
+            and plan["recovery"] == profile.binding(),
+            "recovery_owned_authority",
+        )
+    elif suffix == m.ADDITIONAL_SUFFIX:
         state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
         extra = getattr(state, "additional_task", None)
         m._require(
@@ -328,6 +345,11 @@ def _context(
     m._read_root_ref(authorization_ref, maximum=32768, exact_mode=True)
     go = m._strict_json(m._read_root_ref(go_ref, maximum=32768, exact_mode=True))
     provenance = m._dev_provenance(go, suffix)
+    if recovery:
+        m._require(
+            m._canonical(provenance) == m._canonical(profile.provenance()),
+            "recovery_policy_provenance",
+        )
     m._require(
         provenance["policy_sha256"] == expected_policy_sha256
         and provenance["authorization_sha256"] == expected_authorization_sha256,
@@ -335,7 +357,8 @@ def _context(
     )
     m._require(
         go.get("schema_id") == "qm.ivv.root-go" + suffix
-        and go.get("decision") == "GO_ONCE_AFTER_INPUT_ACCEPTANCE"
+        and go.get("decision")
+        == ("GO_BOUNDED_CAPTURE_RECOVERY" if recovery else "GO_ONCE_AFTER_INPUT_ACCEPTANCE")
         and go.get("capture_effect_id") == plan["effect_id"]
         and go.get("scope_id") == plan["scope_id"]
         and go.get("execution_sha256") == plan["execution_sha256"]
@@ -343,10 +366,15 @@ def _context(
         and go.get("input_window_digest") == plan["input_window_digest"]
         and go.get("full_window_sha256") == plan["full_window_sha256"]
         and go.get("plan_sha256") == plan_ref["sha256"]
-        and type(go.get("max_capture_intents")) is int
-        and go["max_capture_intents"] == 1
-        and type(go.get("max_trials")) is int
-        and go["max_trials"] == 1,
+        and (
+            recovery
+            or (
+                type(go.get("max_capture_intents")) is int
+                and go["max_capture_intents"] == 1
+                and type(go.get("max_trials")) is int
+                and go["max_trials"] == 1
+            )
+        ),
         "dev_go_binding",
     )
     m._require(
@@ -364,6 +392,25 @@ def _context(
         "dev_released_source",
     )
     _native_sources(m, catalog, go)
+    if recovery:
+        m._require(
+            go.get("recovery") == profile.binding()
+            and go.get("capture_scope_id") == plan["scope_id"]
+            and go.get("actor") == go.get("capture_actor")
+            and go.get("catalog") == catalog_ref
+            and go.get("native_controls") == go.get("controls")
+            and not {"job_id", "research_scope_id", "max_trials"} & set(go),
+            "recovery_capture_go",
+        )
+        for key, name in (
+            ("additional_task_sha256", "ivv_additional_task.py"),
+            ("recovery_contract_sha256", "ivv_recovery.py"),
+        ):
+            m._require(
+                catalog.get(key) == go.get(key) and go.get("source", {}).get(key) == catalog[key],
+                "recovery_source_catalog",
+            )
+            _released_module(name, catalog[key])
     if suffix == m.ADDITIONAL_SUFFIX:
         m._require(
             catalog["additional_task_sha256"] == go.get("additional_task_sha256")
@@ -402,7 +449,7 @@ def _context(
     for key in (
         "identity_binding_sha256",
         "listener_binding_sha256"
-        if suffix in (m.TRUSTED_SUFFIX, m.ADDITIONAL_SUFFIX)
+        if suffix in (m.TRUSTED_SUFFIX, m.ADDITIONAL_SUFFIX, m.RECOVERY_SUFFIX)
         else "channels_binding_sha256",
         "configuration_binding_sha256",
     ):

@@ -23,7 +23,7 @@ effects before the call; UNKNOWN is conservatively charged and never refunded.
 | Attempts | Distinct connection/request/compute IDs. Durable intent, MAY_HAVE_SENT, observed response original, closed/UNKNOWN and checkpoint state precede successor effects. Current owner lease serializes effects; uncertain owned cleanup requires exact-owner recovery before another owned context. Same unrepaired structural refusal stops for a concrete repair, not blind retries. |
 | Computation | Existing WriterLease+JsonlStore record running attempt before compute; ObjectStore report -> durable prepared_report pointer -> atomic committed job. Restart with validated prepared report commits without recomputation. Without a prepared result, bounded recorded recovery computation is allowed. Cumulative compute allowance counts the same logical task across all registered experiments/business keys and authority/batch versions; a validated prepared commit uses zero new computation. Committed report/decision stays immutable; lost acknowledgement reads the same originals. |
 | First operating batch | 1800s,3 contexts,32 read-only business sends,1 business/s,Init<=3,KeepAlive<=288,initial cumulative compute allowance3; one simultaneous context. These are recorded expandable operating allowances, not permanent authorization caps. Honor actual provider quota/rate responses. Own context retains512MiB/swap0/CPU50%/Tasks32/480s and existing transport/close protections. |
-| Capacity | Current caps12GiB global/6GiB parent/free50GiB. Old80MiB retained; recovery138MiB (software26,capture48local/48remote,review4,study8,close2local/2remote), total218MiB. Current P4 guardG10614829146/P4576756750/all-parent4633379854 fit. Software subsets Server7/Product12/commonGit-review-CI-catalog6/failureFS1 MiB; P1/P2/P3 retained. This is a complete forecast, not runtime GO. |
+| Capacity | Current caps12GiB global/6GiB parent/free50GiB. Old80MiB retained; recovery144MiB (software32,capture48local/48remote,review4,study8,close2local/2remote), total224MiB. Current P5 guardG10621120602/P4583048206/all-parent4639671310 fit. Software subsets Server7/Product12/commonGit-review-CI-catalog12/failureFS1 MiB; P1-P4 retained. This is a complete forecast, not runtime GO. |
 
 Server exclusively owns shared policy/contracts/docs, capture/helper/issuer/runner,
 operational adapters and actual host work. Product exclusively owns admission,
@@ -53,3 +53,9 @@ operator P4 is1425B/SHA256d55242c0510cda04c775a5725f10c3974a5c7d0c6c92e1ef9b44fb
 The pure-module default is an initial convenience, not a permanent policy hash.
 Capture policy/source/normal closure are archived per actual original; later
 study policy may differ without relabeling inputs or resetting attempt debits.
+
+Supplement05 adds6MiB only to integration/common (now12MiB) after discovering the
+actual local Vite mismatch and the need to retain exact-lock CI artifacts plus
+publication objects/catalog. Software32MiB, recovery144+old80=224MiB. Protected
+P5 is1425B/SHA2560d817811c3fd1db015451f700ec5a2531ba6855ec07fee032c3e0d0d31a56bf5;
+all initial policies remain historical without changing business or attempt counts.

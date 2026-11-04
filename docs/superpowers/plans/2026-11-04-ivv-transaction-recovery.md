@@ -21,7 +21,7 @@ new permit issuer.
 
 Preserve all old evidence/charges/futures and old-family interpretations. Current
 human direction6db1254 replaces repeated single-shot approval gates. Current
-12GiB/6GiB/free50GiB and complete218MiB hold apply; software26MiB is shared (Server7/Product12/common6/FS1). Data/math,
+12GiB/6GiB/free50GiB and complete224MiB hold apply; software32MiB is shared (Server7/Product12/common12/FS1). Data/math,
 credentials, no-paid, read-only protocol scope and paper/live boundaries remain.
 One integration branch/CI observer; no old PR280 revalidation or diagnostic sandbox.
 
@@ -53,15 +53,15 @@ ivv_dev_diagnostic.py, ivv_trusted_runner.py, direct tests; versioned private op
 Consume shared policy; preserve old entry defaults. New family uses the current
 human direction/pinned policy and existing native held controls, not a new issuer.
 
-- [ ] RED real durable intent -> MAY_HAVE_SENT -> response/close transitions with
+- [x] RED real durable intent -> MAY_HAVE_SENT -> response/close transitions with
   crash/uncertain flush, budget/rate refusal, same structural failure blockade,
   complete checkpoint reuse, and no cross-epoch assembly. Existing storage/owned
   process and SDK seams are modeled; do not issue real SDK calls during tests.
-- [ ] Persist intent/possible effects before SDK side effects. Bind all responses
+- [x] Persist intent/possible effects before SDK side effects. Bind all responses
   to exact request/context and immutable originals; preserve uncertainty/debits.
-- [ ] Adapt actual carrier/runner/observer to bounded expandable batches, actual
+- [x] Adapt actual carrier/runner/observer to bounded expandable batches, actual
   protocol counters and proven owned cleanup before successor connection.
-- [ ] Validate and atomically publish a complete candidate manifest; retain failed
+- [x] Validate and atomically publish a complete candidate manifest; retain failed
   originals. Run affected capture/authority/cleanup tests and record evidence.
 
 ## Task 3 â€” resumable numerical attempt/result loop (Product)
@@ -71,13 +71,13 @@ minimum native-daily-api.ts/NativeDailyPanel.tsx consumer guard if necessary.
 Consume shared helpers and exact trusted recovery_policy_ref/identity. Existing
 WriterLease and JsonlStore remain the only job/result commit mechanism.
 
-- [ ] RED interrupted recovery, policy extension/cross-A non-reset, same-business
+- [x] RED interrupted recovery, policy extension/cross-A non-reset, same-business
   concurrent duplicate, prepared report lostack/zero-recompute and immutable
   committed report/decision. Keep old-family regression behavior.
-- [ ] Implement trusted recovery registration, per-attempt state/counter and
+- [x] Implement trusted recovery registration, per-attempt state/counter and
   prepared-report-before-committed pointer. New experiments require registration;
   recovery computations are not new published/OOS experiments.
-- [ ] GREEN direct tests/static checks; freeze exact source/diff/owned paths and
+- [x] GREEN direct tests/static checks; freeze exact source/diff/owned paths and
   complete12MiB subset accounting for Server integration. No Product host/CI work.
 
 ## Task 4 â€” integration, independent review and normal publication (Server)

@@ -93,6 +93,57 @@ jobs:
         working-directory: frontend
       - name: Check committed frontend bundle
         run: python tools/build_frontend.py --check
+      - name: Record built frontend provenance
+        if: ${{ always() }}
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          dist = Path("frontend/dist")
+          if not (dist / "index.html").is_file():
+              print("No built frontend bundle is available")
+              raise SystemExit(0)
+
+          def git_revision(name):
+              return subprocess.check_output(["git", "rev-parse", name], text=True).strip()
+
+          def file_pin(path):
+              data = path.read_bytes()
+              return {"byte_length": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+
+          provenance = {
+              "schema_id": "qm.ci.frontend-bundle.v1",
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "checkout_commit": git_revision("HEAD"),
+              "checkout_tree": git_revision("HEAD^{tree}"),
+              "frontend_tree": git_revision("HEAD:frontend"),
+              "package_lock": file_pin(Path("frontend/package-lock.json")),
+              "workflow": file_pin(Path(".github/workflows/ci.yml")),
+              "vite_version": json.loads(
+                  Path("frontend/node_modules/vite/package.json").read_text()
+              )["version"],
+              "files": {
+                  path.relative_to(dist).as_posix(): file_pin(path)
+                  for path in sorted(dist.rglob("*")) if path.is_file()
+              },
+          }
+          Path("frontend/bundle-provenance.json").write_text(
+              json.dumps(provenance, sort_keys=True, indent=2) + "\n"
+          )
+          PY
+      - name: Retain built frontend bundle
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-bundle-${{ github.run_id }}
+          path: |
+            frontend/dist
+            frontend/bundle-provenance.json
+          if-no-files-found: ignore
       - name: Run bounded fast gate
         run: |
           python - <<'PY'
