@@ -422,3 +422,13 @@ uninitialized. Current Server actual6,516,736B/fullforecast7,041,024B<7MiB,
 with all failures and524288B future retained. Both original independent readers
 now inspect this specific producer/authenticated-IPC/strict-STOP delta; actual
 new-head normal CI/publication must precede an ordinary accounted entry2.
+
+Both original independent readers return READY for only the executable-evidence
+delta at78acb88022ed8e1d211efe072ce210f9e4fcdf82. Spec report2804B/SHA
+effbbd4b8e4104337bd389864aed6ecbdc836e5c202d2de96d411398f59e0f10 and Standards
+report3554B/SHAa79f1b7fe6e66d32d1ceba740c078eab49ee82d67a7e1395a20f0dbc5d8331ca
+have no material blocker. Parent read/pinned both. This is the bounded new actual
+failure evidence review, not another whole-branch structural pass or a fabricated
+human commit review. The following docs-only checkpoint must pass its own normal
+matching-head CI/full-tree/catalog qualification and ordinary guarded merge;
+native child facts, real inputs and financial acceptance are still absent.
