@@ -16,7 +16,9 @@ UNKNOWN/SPENT remain immutable. Both exclusive writers froze the sole R1 correct
 Parent independent affected checks pass and both same-reader R2 axes are READY
 at92431f7d. PR282 first CI failed only the old F0 comparison's changed storage
 provenance; the test-only correction atf9863996 preserves original golden bytes
-and passed its narrow review. New-head normal CI/publication remain before execution;
+and passed its narrow review. That head passed CI, but premerge found the decision
+artifact contract defect; its bounded consumer fix/bundle atbdba284e is narrowly
+reviewed READY. New-head normal CI/publication remain before actual execution;
 source merge alone never completes actual capture/Quant acceptance/report/
 decision/cold-read. See [current iteration](../iterations/0038-ivv-transaction-recovery.md).
 PR280/399b below is delivered; its old CI is not repeated or used as native GO.

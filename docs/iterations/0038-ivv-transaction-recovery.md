@@ -315,3 +315,12 @@ copied11 files after verifying only contained generated targets; old bytes remai
 in Git and qualified CI ZIPs. Local Vite8.2.1/Vitest3.2.7 differ from lock8.2.4/
 4.1.11, so this is local evidence only. Narrow delta review and actual new-head
 normal CI/exact-lock artifact remain before resolving the thread/ordinary merge.
+
+Original Standards same-reader DECISION-GUARD-DELTA-REVIEW-01 is READY at
+bdba284ef2d8669b4c157aaef395c2d879729adc,2342B/SHAf4f7ff305d83018cd6a7960685c139c9115a4f196c3fdf4a74da9ab8402c703e.
+No material blocker. This is the actual consumer/schema/fixture/generated-source
+delta review, with current capacity metadata checked without a third whole-branch
+structural pass. Parent read/pinned the report. The next docs-only checkpoint
+records it, then actual new-head normal CI/exact-lock qualification is mandatory.
+The known PR thread remains unresolved until the published correction is verified;
+no source merge, native capture, real input acceptance or financial result follows.
