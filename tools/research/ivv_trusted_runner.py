@@ -102,8 +102,10 @@ class _Handles(contextlib.ExitStack):
         return super().callback(close)
 
 
-def need(ok, code):
+def need(ok, code, *, _origin=None):
     if not ok:
+        if _origin is not None:
+            _origin["outcome"] = "FIRST_FALSE"
         raise Refused(code)
 
 
@@ -116,6 +118,191 @@ def reason(e):
     ):
         return e.args[0]
     return type(e).__name__
+
+
+def select_origin_failure(value):
+    """Select only finite origin facts; absent legacy evidence remains absent."""
+    if value is None:
+        return None
+    need(
+        type(value) is dict
+        and all(type(key) is str for key in value)
+        and set(value) == {"schema", "phase", "predicate", "outcome"}
+        and all(type(item) is str for item in value.values())
+        and value["schema"] == "qm.ivv.runtime-origin-failure.v1"
+        and value["phase"] in ("INITIAL", "SESSION", "UNKNOWN")
+        and value["predicate"] in ("SDK_ROOT", "PYTHON_VERSION", "EXECUTABLE", "UNKNOWN")
+        and value["outcome"] in ("FIRST_FALSE", "EXCEPTION", "UNKNOWN")
+        and ((value["predicate"] == "UNKNOWN") == (value["outcome"] == "UNKNOWN")),
+        "ORIGIN_FAILURE_SHAPE",
+    )
+    return dict(value)
+
+
+_ORIGIN_MARKER = object()
+_EXCEPTION_DICT = BaseException.__dict__.get("__dict__")
+
+
+def _exception_storage(error):
+    # Invoke the built-in descriptor directly, never a subclass hook/property.
+    try:
+        value = _EXCEPTION_DICT.__get__(error, BaseException)
+        return value if type(value) is dict and all(type(key) is str for key in value) else None
+    except BaseException:
+        return None
+
+
+def _origin_from_error(error):
+    try:
+        storage = _exception_storage(error)
+        if storage is None or storage.get("_qm_origin_owner") is not _ORIGIN_MARKER:
+            return None
+        return select_origin_failure(storage.get("_qm_origin_failure"))
+    except BaseException:
+        return None
+
+
+def _carry_origin(error, value, code=None):
+    # Optional diagnostics must never replace the original exception object.
+    try:
+        storage = _exception_storage(error)
+        selected = select_origin_failure(value)
+        if storage is not None and selected is not None:
+            storage["_qm_origin_owner"] = None
+            storage["_qm_origin_failure"] = selected
+            storage["_qm_origin_code"] = code
+            storage["_qm_origin_owner"] = _ORIGIN_MARKER
+    except BaseException:
+        pass
+    return error
+
+
+def _failure_code(error):
+    origin = _origin_from_error(error)
+    if origin is None or origin["outcome"] != "EXCEPTION":
+        return reason(error)
+    storage = _exception_storage(error)
+    forwarded = storage.get("_qm_origin_code") if storage is not None else None
+    if type(forwarded) is str and re.fullmatch("[A-Za-z0-9_+]{1,256}", forwarded):
+        return forwarded
+    if type(error) is Refused and error.args == ("RUNTIME_ORIGIN",):
+        return "RUNTIME_ORIGIN"
+    kinds = (
+        KeyError,
+        IndexError,
+        AttributeError,
+        TypeError,
+        ValueError,
+        RuntimeError,
+        OSError,
+        PermissionError,
+        FileNotFoundError,
+        OverflowError,
+    )
+    for kind in kinds:
+        if type(error) is kind:
+            return kind.__name__
+    return "ORIGIN_EVALUATION_EXCEPTION"
+
+
+def _failure_record(error):
+    value = {"state": "STOP", "reason": _failure_code(error)}
+    origin = _origin_from_error(error)
+    if origin is not None:
+        value["origin_failure"] = origin
+    return value
+
+
+def _failed_packet(error):
+    value = _failure_record(error)
+    return {
+        "op": "failed",
+        "code": value["reason"],
+        **({"origin_failure": value["origin_failure"]} if "origin_failure" in value else {}),
+    }
+
+
+def _child_failure(packet):
+    if (
+        type(packet) is not dict
+        or packet.get("op") != "failed"
+        or set(packet) not in ({"op", "code"}, {"op", "code", "origin_failure"})
+        or type(packet.get("code")) is not str
+        or re.fullmatch("[A-Za-z0-9_+]{1,256}", packet["code"]) is None
+    ):
+        return Refused("CHILD_PROTOCOL")
+    if "origin_failure" in packet:
+        need(packet["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
+    origin = select_origin_failure(packet.get("origin_failure"))
+    return _carry_origin(Refused(packet["code"]), origin, packet["code"])
+
+
+def read_runner_failure(control, read_owned):
+    """Read the existing protected failure file with the caller's held reader."""
+    path = control / "runner-failure.json"
+    if not path.exists():
+        return None
+    data = read_owned(path, 4096)
+    need(type(data) is bytes and 0 < len(data) <= 4096, "FAILURE_BOUND")
+
+    def unique(pairs):
+        value = {}
+        for key, item in pairs:
+            need(key not in value, "FAILURE_SHAPE")
+            value[key] = item
+        return value
+
+    value = json.loads(data, object_pairs_hook=unique)
+    need(
+        type(value) is dict
+        and set(value) in ({"state", "reason"}, {"state", "reason", "origin_failure"})
+        and value["state"] == "STOP"
+        and type(value["reason"]) is str
+        and re.fullmatch("[A-Za-z0-9_+]{1,256}", value["reason"]),
+        "FAILURE_SHAPE",
+    )
+    result = {"state": "STOP", "reason": value["reason"]}
+    if "origin_failure" in value:
+        need(value["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
+        result["origin_failure"] = select_origin_failure(value["origin_failure"])
+    return result
+
+
+def select_failure_status(status, publication_sha256):
+    """Select finite STOP facts, never infer usage from the origin phase."""
+    need(
+        type(status) is dict
+        and status.get("state") == "STOP"
+        and status.get("publication_sha256") == publication_sha256
+        and status.get("stage") in ("PACKET", "STAGE_OWNED_ONLY", "RELEASED_ADDITIONAL_RUNNER_ONCE")
+        and status.get("automatic_retry") is False
+        and status.get("provider_mutation") is False
+        and "unit_returncode" in status
+        and "reason" in status,
+        "NATIVE_STOP_NOT_PROVEN",
+    )
+    stage, rc, code = status["stage"], status["unit_returncode"], status["reason"]
+    need(rc is None or type(rc) is int and -255 <= rc <= 255, "NATIVE_STOP_NOT_PROVEN")
+    if code is None and rc is not None:
+        code = "UNIT_RETURN_" + str(rc).replace("-", "NEG_") if rc else "UNIT_NORMAL_SEAL_MISSING"
+    need(type(code) is str and re.fullmatch("[A-Za-z0-9_+]{1,256}", code), "NATIVE_STOP_NOT_PROVEN")
+    contexts = status.get("actual_contexts")
+    if stage == "RELEASED_ADDITIONAL_RUNNER_ONCE":
+        contexts = "UNKNOWN"
+    else:
+        need(rc is None and type(contexts) is int and contexts == 0, "NATIVE_STOP_NOT_PROVEN")
+    result = {
+        "state": "STOP",
+        "reason": code,
+        "stage": stage,
+        "unit_returncode": rc,
+        "actual_contexts": contexts,
+        "publication_sha256": publication_sha256,
+    }
+    if "origin_failure" in status:
+        need(status["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
+        result["origin_failure"] = select_origin_failure(status["origin_failure"])
+    return result
 
 
 def raw_json(value):
@@ -732,11 +919,21 @@ class _Channel:
         raw = raw_json(obj)
         need(0 < len(raw) <= 8192 and self.s.send(raw) == len(raw), "CONTROL_SEND")
 
-    def recv(self, sender):
+    def recv(self, sender, *, nonblocking=False):
         import struct
 
         self.check()
-        data, anc, flags, _ = self.s.recvmsg(8192, socket.CMSG_SPACE(12))
+        if nonblocking:
+            previous = self.s.gettimeout()
+            try:
+                self.s.settimeout(0)
+                data, anc, flags, _ = self.s.recvmsg(
+                    8192, socket.CMSG_SPACE(12), socket.MSG_DONTWAIT
+                )
+            finally:
+                self.s.settimeout(previous)
+        else:
+            data, anc, flags, _ = self.s.recvmsg(8192, socket.CMSG_SPACE(12))
         if not data and not anc and flags == 0:
             raise Refused("CONTROL_EOF")
         need(
@@ -889,16 +1086,37 @@ def _child_namespace(channel, producer, *, additional=False):
     return ns
 
 
-def _runtime(plan, helper, ns, catalog, producer, *, additional=False):
+def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_phase="UNKNOWN"):
     loc = _locations(additional)
     need(os.stat("/proc/self/ns/mnt").st_ino == ns, "OWN_NAMESPACE_DRIFT")
     _for_task(_writable_mounts, additional)(producer)
-    need(
-        plan["sdk_root"] == str(SDK)
-        and sys.version_info[:2] == (3, 12)
-        and Path("/proc/self/exe").resolve() == Path("/usr/bin/python3.12"),
-        "RUNTIME_ORIGIN",
-    )
+    origin = {
+        "schema": "qm.ivv.runtime-origin-failure.v1",
+        "phase": origin_phase
+        if type(origin_phase) is str and origin_phase in ("INITIAL", "SESSION")
+        else "UNKNOWN",
+        "predicate": "UNKNOWN",
+        "outcome": "EXCEPTION",
+    }
+
+    def evaluated(predicate, expression):
+        origin["predicate"] = predicate
+        return expression()
+
+    try:
+        need(
+            evaluated("SDK_ROOT", lambda: plan["sdk_root"] == str(SDK))
+            and evaluated("PYTHON_VERSION", lambda: sys.version_info[:2] == (3, 12))
+            and evaluated(
+                "EXECUTABLE",
+                lambda: Path("/proc/self/exe").resolve() == Path("/usr/bin/python3.12"),
+            ),
+            "RUNTIME_ORIGIN",
+            _origin=origin,
+        )
+    except BaseException as error:
+        _carry_origin(error, origin)
+        raise
     home = os.environ.get("HOME")
     need(home and Path(home).is_absolute(), "HOME_NOT_READY")
     log = Path(home) / ".com.moomoo.OpenD" / "Log"
@@ -1297,10 +1515,12 @@ def _child(channel, parent, context, plan):
     if str(SDK) not in sys.path:
         sys.path.append(str(SDK))
 
-    def runtime():
-        return _for_task(_runtime, additional)(plan, m, ns, values["catalog_ref"], producer)
+    def runtime(phase):
+        return _for_task(_runtime, additional)(
+            plan, m, ns, values["catalog_ref"], producer, origin_phase=phase
+        )
 
-    runtime()
+    runtime("INITIAL")
     # Validate all immutable material, actor limits and available space before parent GO.
     actor = m._native_actor()
     m._admit_material(
@@ -1324,7 +1544,7 @@ def _child(channel, parent, context, plan):
         read_ref(final["provider_evidence_ref"], loc.control / "provider.json")
     )
     state = types.ModuleType("_qm_live_ivv_native_" + str(os.getpid()))
-    state.session = _ChildSession(channel, parent, runtime)
+    state.session = _ChildSession(channel, parent, lambda: runtime("SESSION"))
     state.helper = m
     state.trusted_issuer = issuer
     state.additional_task = extra
@@ -1643,16 +1863,23 @@ def _supervise(scope, channel, endpoint, context, plan):
                 )
                 terminal = packet
             elif packet is not None:
-                raise Refused(
-                    packet.get("code", "CHILD_PROTOCOL")
-                    if packet.get("op") == "failed"
-                    and re.fullmatch("[A-Za-z0-9_+]{1,256}", packet.get("code", ""))
-                    else "CHILD_PROTOCOL"
-                )
+                raise _child_failure(packet)
         if scope.pidfd in ready:
             rc = scope.reap()
             exited = exit_observed
             need(exited <= 420, "CHILD_EXIT_DEADLINE")
+            if rc != 0:
+                # Exit readiness can precede the queued authenticated failed IPC.
+                # This is one already-owned nonblocking read, never a success gate.
+                try:
+                    failed = channel.recv(scope.pid, nonblocking=True)
+                except (BlockingIOError, TimeoutError):
+                    pass
+                except Refused as error:
+                    if reason(error) != "CONTROL_EOF":
+                        raise
+                else:
+                    raise _child_failure(failed)
             need(rc == 0 and grant and kernel, "CHILD_TERMINAL_MISSING")
             # select may have checked the channel before the child's final
             # send and the pidfd after its exit. Authenticate queued terminal
@@ -1756,6 +1983,7 @@ def _run(startup_ref, *, additional):
     )
     os.umask(0o077)
     primary = None
+    primary_origin = None
     pending = None
     committed = False
     with _Handles() as stack:
@@ -1777,7 +2005,7 @@ def _run(startup_ref, *, additional):
                     rc = 0
                 except BaseException as error:
                     with contextlib.suppress(OSError, ValueError):
-                        child_side.send({"op": "failed", "code": reason(error)})
+                        child_side.send(_failed_packet(error))
                 finally:
                     os._exit(rc)
             b.close()
@@ -1799,8 +2027,9 @@ def _run(startup_ref, *, additional):
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
+            primary_origin = _origin_from_error(error)
             failures = scope.abort()
-            primary = [reason(error), *failures]
+            primary = [_failure_code(error), *failures]
     if time.monotonic() - plan["started_monotonic"] > 480:
         primary = [*(primary or []), "FINAL_SEAL_DEADLINE"]
     if primary or stack.errors:
@@ -1810,7 +2039,8 @@ def _run(startup_ref, *, additional):
                 _for_task(_reject_close, additional)(pending, committed)
             except BaseException as error:
                 failures.append("SEAL_RETIRE_" + reason(error))
-        raise Refused("+".join(failures)) from None
+        code = "+".join(failures)
+        raise _carry_origin(Refused(code), primary_origin, code) from None
     return result
 
 
@@ -1827,7 +2057,7 @@ def main(argv):
     except BaseException as e:
         # Even when preflight failed, never overwrite an earlier attempt.
         with contextlib.suppress(OSError, ValueError):
-            put(control / "runner-failure.json", {"state": "STOP", "reason": reason(e)})
+            put(control / "runner-failure.json", _failure_record(e))
         return 1
 
 

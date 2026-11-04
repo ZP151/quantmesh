@@ -1,5 +1,19 @@
 # QuantMesh Product Roadmap
 
+## Trusted-entry failure evidence — issue279, 2026-11-04
+
+Repair the observed loss of runtime-origin phase/predicate evidence through the
+actual runner and finite STOP consumers, retaining original rejection and lazy
+evaluation semantics. This is an offline operability slice with no new host,
+SDK, collection or trial authority. The old root cause and input/financial
+qualification remain unresolved. See the [checkpoint](../iterations/0038-ivv-origin-failure-evidence.md).
+
+Implemented and independently verified locally:181 direct tests and15 actual
+consumer/driver cases pass after the sole R1 correction. Final same-reader R2 is
+READY, all three findings ADDRESSED. Normal matching-head CI and the concrete
+Class B merge gate remain pending;
+versioned operational consumers remain inert.
+
 ## Independent additional IVV capture-to-study task — issue277,2026-11-04
 
 Actual human approved a new independent additional1context/7business acquisition,

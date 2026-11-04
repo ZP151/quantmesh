@@ -236,7 +236,7 @@ def test_ready_gate_runtime_cannot_omit_installed_sdk_search_origin(monkeypatch)
     monkeypatch.setattr(r, "_environment", lambda: None)
     monkeypatch.setattr(r, "_bind_parent", lambda *a: None)
     monkeypatch.setattr(
-        r, "_runtime", lambda *a: r.need(str(r.SDK) in r.sys.path, "SDK_SEARCH_MISSING")
+        r, "_runtime", lambda *a, **kw: r.need(str(r.SDK) in r.sys.path, "SDK_SEARCH_MISSING")
     )
     with pytest.raises(r.Refused, match="STOP_AT_READY"):
         r._child(Channel(), 1, context, {})
@@ -1846,7 +1846,7 @@ def test_supervisor_cannot_seal_uncertain_child_or_monitor(monkeypatch, fault):
 
     channel = SimpleNamespace(
         send=lambda packet: None,
-        recv=lambda pid: (
+        recv=lambda pid, **kw: (
             packets.pop(0) if packets else (_ for _ in ()).throw(r.Refused("CONTROL_EOF"))
         ),
         check=check,
