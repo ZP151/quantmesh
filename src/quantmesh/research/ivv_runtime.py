@@ -14,7 +14,7 @@ import threading
 import time
 from pathlib import Path
 
-from quantmesh.research.job_runner import _ExtendedLimits, _OwnedChild
+from quantmesh.research.job_runner import _close_process_handle, _ExtendedLimits, _OwnedChild
 from quantmesh.research.jobs import RunBudget
 
 COMMIT_BYTES = 536870912
@@ -201,9 +201,12 @@ class IVVRuntime:
         )
         self.child = self.started = self.timer = None
         self.closed = False
+        self.cleanup_pending = False
         self._lock = threading.RLock()
 
     def check(self, *, pending_bytes=0):
+        if getattr(self, "cleanup_pending", False):
+            raise ValueError("numeric_cleanup_unconfirmed")
         if self.closed:
             return False
         # Four MiB cover bounded command/result/report, decision, atomic staging,
@@ -248,7 +251,10 @@ class IVVRuntime:
             + "from quantmesh.research.ivv_runtime import _child_main; _child_main(sys.argv[1])"
         )
         try:
-            self.child = _OwnedChild(
+            # Retain the partial owner even if construction/preflight cleanup fails.
+            self.child = _OwnedChild.__new__(_OwnedChild)
+            self.child._verified_cleanup = True
+            self.child.__init__(
                 [sys.executable, "-B", "-c", boot, str(self.directory)],
                 RunBudget(
                     timeout_seconds=80,
@@ -294,10 +300,8 @@ class IVVRuntime:
                 raise ValueError("numeric_timeout")
             if self.child.poll() != 0:
                 raise ValueError("numeric_failed")
-            while _active(self.child) and time.monotonic() - self.started < 70:
-                time.sleep(0.02)
             with self._lock:
-                if self.closed or _active(self.child) != 0:
+                if self.closed:
                     raise ValueError("numeric_close")
                 result = self.directory / "result.json"
                 if not 1 <= result.stat().st_size <= daily.MAX_OBJECT:
@@ -305,7 +309,15 @@ class IVVRuntime:
                 matrix = daily._loads(result.read_bytes())
                 self.child.process.wait(timeout=0)
                 self.child.log.close()
-                self.child.process._handle.Close()
+                if not self.child.log.closed or not self.child.process.stdin.closed:
+                    raise ValueError("numeric_fd_close")
+                _close_process_handle(self.child.process)
+                # Retain the Job handle until references are released and the
+                # kernel confirms the whole tree has no active processes.
+                while _active(self.child) and time.monotonic() - self.started < 70:
+                    time.sleep(0.02)
+                if _active(self.child) != 0:
+                    raise ValueError("numeric_close")
                 if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(self.child.job_handle)):
                     raise ValueError("numeric_handle_close")
                 self.child.job_handle = None
@@ -332,9 +344,11 @@ class IVVRuntime:
             if self.timer is not None:
                 self.timer.cancel()
             if not self.closed:
+                self.cleanup_pending = True
+                if self.child is not None and self.child.close(verify=True) is not True:
+                    raise OSError("numeric_cleanup_unconfirmed")
                 self.closed = True
-                if self.child is not None:
-                    self.child.close()
+                self.cleanup_pending = False
 
 
 def _child_main(directory):

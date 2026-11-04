@@ -416,6 +416,11 @@ def engineering_registration(store: ObjectStore, *, output_root):
     )
 
 
+# Strong references keep an uncertain exact owner and its WriterLease alive even
+# if a caller drops the service. Entries are removed only after terminal cleanup.
+_UNCERTAIN_OWNER_ROOTS = {}
+
+
 class NativeDailyService:
     """One durable writer, fixed candidate, explicit missing-input decisions."""
 
@@ -424,6 +429,9 @@ class NativeDailyService:
         for path in (self.root, *self.root.parents):
             if is_reparse_point(path):
                 raise NativeError("unsafe_storage")
+        prior_owner = _UNCERTAIN_OWNER_ROOTS.get(str(self.root))
+        if prior_owner is not None:
+            prior_owner.close()  # Exact known owner only, before acquiring another lease.
         self._condition = threading.Condition(threading.RLock())
         self._closed = False
         self._closing = False
@@ -431,7 +439,13 @@ class NativeDailyService:
         self._registered = tuple(registered)
         self._real_runtime_factory = real_runtime_factory
         self._real_runtimes = {}
-        self.objects = ObjectStore(self.root)
+        self._cleanup_pending = {}
+        self._durable_recovery = any(r.recovery is not None for r in self._registered)
+        if self._durable_recovery:
+            from quantmesh._fs import durable_mkdir
+
+            durable_mkdir(self.root)
+        self.objects = ObjectStore(self.root, durable=self._durable_recovery)
         self._lease = WriterLease(self.root / ".writer.lock")
         self._store = JsonlStore(
             self.root,
@@ -447,6 +461,9 @@ class NativeDailyService:
         )
         try:
             jobs = self._records()
+            if any(j.transaction is not None for j in jobs):
+                self._durable_recovery = self.objects.durable = self._store.durable = True
+                self._publish_records(jobs)  # Cold barrier before any prepared commit/effect.
             changed = []
             for job in jobs:
                 if job.state == "running":
@@ -462,7 +479,7 @@ class NativeDailyService:
                         )
                 changed.append(job)
             if changed != jobs:
-                self._store.write(changed)
+                self._publish_records(changed)
         except BaseException:
             self._lease.close()
             raise
@@ -654,7 +671,7 @@ class NativeDailyService:
                     return self._public(existing), False
                 if existing.transaction.prepared_report is not None and self._inflight is None:
                     done = self._committed_transaction(existing)
-                    self._store.write([done if j.job_id == key else j for j in jobs])
+                    self._publish_records([done if j.job_id == key else j for j in jobs])
                     return self._public(done), False
                 if existing.state == "running" or meta is None:
                     return self._public(existing), False
@@ -683,6 +700,7 @@ class NativeDailyService:
             )
             if task_attempts >= meta["attempt_policy"]["max_numerical_attempts"]:
                 raise NativeError("study_not_admitted")
+            self._recover_pending_cleanup()
             if self._inflight is not None:
                 raise NativeError("capacity_exceeded")
             if existing is None and len(jobs) >= MAX_JOBS:
@@ -770,7 +788,7 @@ class NativeDailyService:
                     ),
                 )
                 self._verify(job)
-                self._store.write(
+                self._publish_records(
                     [job if j.job_id == key else j for j in jobs] if existing else [*jobs, job]
                 )
                 self._inflight = key
@@ -796,9 +814,9 @@ class NativeDailyService:
                     }
                 )
                 self._verify(prepared)
-                self._store.write([prepared if j.job_id == key else j for j in self._records()])
+                self._publish_records([prepared if j.job_id == key else j for j in self._records()])
                 done = self._committed_transaction(prepared)
-                self._store.write([done if j.job_id == key else j for j in self._records()])
+                self._publish_records([done if j.job_id == key else j for j in self._records()])
                 return self._public(done), existing is None
         except Exception:
             with self._condition:
@@ -824,19 +842,84 @@ class NativeDailyService:
                         ),
                     }
                 )
-                self._store.write([failed if j.job_id == key else j for j in self._records()])
+                self._publish_records([failed if j.job_id == key else j for j in self._records()])
                 return self._public(failed), existing is None
         finally:
-            with self._condition:
-                self._release_real_runtime(registration)
-                self._inflight = None
-                self._condition.notify_all()
+            self._finish_runtime(registration)
 
     def _release_real_runtime(self, registration):
         if registration.real_binding is not None:
-            owner = self._real_runtimes.pop(registration.real_binding.digest, None)
+            pin = registration.real_binding.digest
+            owner = self._real_runtimes.get(pin)
             if owner is not None:
-                owner.close()
+                try:
+                    owner.close()
+                except BaseException:
+                    self._cleanup_pending[pin] = self._inflight
+                    _UNCERTAIN_OWNER_ROOTS[str(self.root)] = self
+                    raise
+                del self._real_runtimes[pin]
+                self._cleanup_pending.pop(pin, None)
+                if not self._cleanup_pending:
+                    _UNCERTAIN_OWNER_ROOTS.pop(str(self.root), None)
+
+    def _recover_pending_cleanup(self):
+        """Only retry the same held owner; no new child or computation here."""
+        with self._condition:
+            for pin, job_id in list(self._cleanup_pending.items()):
+                self._real_runtimes[pin].close()
+                del self._real_runtimes[pin]
+                del self._cleanup_pending[pin]
+                if self._inflight == job_id:
+                    self._inflight = None
+            if not self._cleanup_pending:
+                _UNCERTAIN_OWNER_ROOTS.pop(str(self.root), None)
+            self._condition.notify_all()
+
+    def _finish_runtime(self, registration):
+        with self._condition:
+            try:
+                self._release_real_runtime(registration)
+            finally:
+                # A failed close leaves the exact owner AND its inflight claim held.
+                if not self._cleanup_pending:
+                    self._inflight = None
+                self._condition.notify_all()
+
+    def _publish_records(self, records):
+        records = list(records)
+        if self._durable_recovery or any(j.transaction is not None for j in records):
+            self._durable_recovery = self.objects.durable = self._store.durable = True
+            references = {}
+
+            def collect(value):
+                if isinstance(value, dict):
+                    if set(value) == {"algorithm", "digest", "media_type", "byte_length"}:
+                        ref = ObjectRef.model_validate(value)
+                        references[ref.digest] = ref
+                    else:
+                        for item in value.values():
+                            collect(item)
+                elif isinstance(value, list):
+                    for item in value:
+                        collect(item)
+
+            for job in records:
+                if job.transaction is None:
+                    continue
+                collect(job.model_dump(mode="json"))
+                for attempt in job.transaction.attempts:
+                    _, contents = self._binding(attempt.request, self.objects)
+                    for ref, _ in contents:
+                        references[ref.digest] = ref
+                    if attempt.real_binding is not None:
+                        from quantmesh.research import ivv_admission as ivv
+
+                        for ref, _ in ivv.binding_objects(self.objects, attempt.real_binding):
+                            references[ref.digest] = ref
+            for ref in references.values():
+                self.objects.confirm_durable(ref)
+        self._store.write(records)
 
     def _object(self, reference):
         return self._from_store(self.objects, reference)
@@ -1155,6 +1238,7 @@ class NativeDailyService:
         return package, contents
 
     def _admit(self, request, jobs, *, key, recovery_attempt_id=None):
+        self._recover_pending_cleanup()
         from quantmesh.research import ivv_admission as ivv
 
         missing = []
@@ -1216,9 +1300,7 @@ class NativeDailyService:
                     if owner.check(pending_bytes=sum(pending.values())) is not True:
                         raise ValueError("runtime")
                 except (ValueError, OSError, RuntimeError):
-                    self._real_runtimes.pop(registration.real_binding.digest, None)
-                    if owner is not None:
-                        owner.close()
+                    self._release_real_runtime(registration)
                     return None, ["study_runtime_not_admitted"]
             elif (
                 registration.real_binding is not None
@@ -1302,6 +1384,8 @@ class NativeDailyService:
     def _records(self):
         try:
             self._lease.validate()
+            if self.objects.durability_uncertain or self._store.durability_uncertain:
+                raise OSError("study_publication_uncertain")
             if self._store.path.exists() and self._store.path.stat().st_size > 256 * 1024:
                 raise ValueError
             jobs = self._store.read()
@@ -1596,7 +1680,7 @@ class NativeDailyService:
                 scope_trial_key=scope_trial_key,
                 real_binding=real_binding,
             )
-            self._store.write([*jobs, job])
+            self._publish_records([*jobs, job])
             if registration is None:
                 return self._public(job), True
             self._inflight = key
@@ -1608,21 +1692,19 @@ class NativeDailyService:
                     update={"state": "succeeded", "report": reference, "completed_at": _now()}
                 )
                 self._verify(done)
-                self._store.write(
+                self._publish_records(
                     [done if item.job_id == key else item for item in self._records()]
                 )
                 return self._public(done), True
         except Exception:
             with self._condition:
                 failed = job.model_copy(update={"state": "failed", "completed_at": _now()})
-                self._store.write(
+                self._publish_records(
                     [failed if item.job_id == key else item for item in self._records()]
                 )
                 return self._public(failed), True
         finally:
-            with self._condition:
-                self._inflight = None
-                self._condition.notify_all()
+            self._finish_runtime(registration)
 
     def read(self, key):
         with self._condition:
@@ -1669,7 +1751,7 @@ class NativeDailyService:
             }
             reference = self._put(canonical(value))
             saved = job.model_copy(update={"decision": reference, "decision_key": decision_key})
-            self._store.write(
+            self._publish_records(
                 [saved if item.job_id == job.job_id else item for item in self._records()]
             )
             return self._public(saved), True
@@ -1677,10 +1759,21 @@ class NativeDailyService:
     def close(self):
         with self._condition:
             self._closing = True
+            self._recover_pending_cleanup()
             while self._inflight is not None:
+                self._recover_pending_cleanup()
+                if self._inflight is None:
+                    break
                 self._condition.wait()
             if not self._closed:
-                for owner in self._real_runtimes.values():
-                    owner.close()
+                for pin, owner in list(self._real_runtimes.items()):
+                    try:
+                        owner.close()
+                    except BaseException:
+                        self._cleanup_pending[pin] = None
+                        _UNCERTAIN_OWNER_ROOTS[str(self.root)] = self
+                        raise
+                    del self._real_runtimes[pin]
                 self._lease.close()
                 self._closed = True
+                _UNCERTAIN_OWNER_ROOTS.pop(str(self.root), None)

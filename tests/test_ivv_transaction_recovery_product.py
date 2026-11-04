@@ -410,8 +410,8 @@ def test_recovery_numeric_preflight_uses_attempt_namespace_after_legacy_refusals
         def poll(self):
             return None
 
-        def close(self):
-            pass
+        def close(self, *, verify=False):
+            return True
 
     monkeypatch.setattr(runtime, "_OwnedChild", Child)
     monkeypatch.setattr(runtime, "_readback", lambda child: {"authored_control": True})
@@ -875,8 +875,9 @@ def test_preclaim_refusal_closes_started_runtime_without_reserving_trial(tmp_pat
     closed = []
 
     class Owner:
-        def close(self):
+        def close(self, *, verify=False):
             closed.append(True)
+            return True
 
     def admitted(*args, **kwargs):
         service._real_runtimes[registered.real_binding.digest] = Owner()

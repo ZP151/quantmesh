@@ -248,7 +248,10 @@ class _OwnedChild:
             self.process.stdin.flush()
             self.process.stdin.close()
         except BaseException:
-            self.close()
+            if getattr(self, "_verified_cleanup", False):
+                self.close(verify=True)
+            else:
+                self.close()
             raise
 
     def _windows_limits(self, budget):
@@ -282,7 +285,9 @@ class _OwnedChild:
     def pulse(self) -> None:
         """Windows Job Object lifetime has no owner-pulse channel."""
 
-    def close(self):
+    def close(self, *, verify=False):
+        if verify:
+            return self._close_verified()
         if self.job_handle is not None:
             kernel = ctypes.windll.kernel32
             kernel.TerminateJobObject(ctypes.c_void_p(self.job_handle), 1)
@@ -295,6 +300,67 @@ class _OwnedChild:
                 self.process.kill()
             self.process.wait(timeout=5)
         self.log.close()
+
+    def _close_verified(self):
+        """IVV opt-in: retain exact handles on uncertainty; never attest normal exit."""
+
+        class Accounting(ctypes.Structure):
+            _fields_ = [
+                (name, ctypes.c_longlong)
+                for name in ("user", "kernel", "period_user", "period_kernel")
+            ] + [(name, ctypes.c_uint32) for name in ("faults", "total", "active", "terminated")]
+
+        handle = self.job_handle
+        kernel = ctypes.windll.kernel32 if handle is not None else None
+        if handle is not None and not kernel.TerminateJobObject(ctypes.c_void_p(handle), 1):
+            raise OSError("owned_job_termination_unconfirmed")
+        if self.process is not None:
+            if self.process.poll() is None:
+                self.process.kill()
+            self.process.wait(timeout=5)
+            if self.process.poll() is None:
+                raise OSError("owned_child_reap_unconfirmed")
+        if self.process is not None:
+            pipe = self.process.stdin
+            if pipe is not None and not pipe.closed:
+                pipe.close()
+                if not pipe.closed:
+                    raise OSError("owned_pipe_close_unconfirmed")
+        log = getattr(self, "log", None)
+        if log is not None:
+            log.close()
+            if not log.closed:
+                raise OSError("owned_log_close_unconfirmed")
+        if self.process is not None:
+            _close_process_handle(self.process)
+        if handle is not None:
+            deadline = time.monotonic() + 5
+            while True:
+                info = Accounting()
+                if not kernel.QueryInformationJobObject(
+                    ctypes.c_void_p(handle), 1, ctypes.byref(info), ctypes.sizeof(info), None
+                ):
+                    raise OSError("owned_job_accounting_unconfirmed")
+                if info.active == 0:
+                    break
+                if time.monotonic() >= deadline:
+                    raise OSError("owned_job_not_empty")
+                time.sleep(0.01)
+        if handle is not None:
+            if not kernel.CloseHandle(ctypes.c_void_p(handle)):
+                raise OSError("owned_job_handle_close_unconfirmed")
+            self.job_handle = None
+        return True
+
+
+def _close_process_handle(process):
+    # CPython Handle.Close sets closed BEFORE the Win32 call. Preserve its state
+    # on a failed CloseHandle instead, so another cleanup can retry this handle.
+    handle = process._handle
+    if not handle.closed:
+        if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(int(handle))):
+            raise OSError("owned_process_handle_close_unconfirmed")
+        handle.closed = True
 
 
 def _child_command(attempt: Path) -> list[str]:

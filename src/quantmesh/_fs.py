@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import stat
+import tempfile
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -89,8 +90,7 @@ def _windows_file_identity(path: Path, file_type: int) -> FilesystemIdentity:
         return FilesystemIdentity(
             scheme="windows-file-id",
             volume=int(information.volume_serial_number),
-            file_id=(int(information.file_index_high) << 32)
-            | int(information.file_index_low),
+            file_id=(int(information.file_index_high) << 32) | int(information.file_index_low),
             file_type=file_type,
         )
     finally:
@@ -121,7 +121,7 @@ def filesystem_identity(path: str | Path) -> FilesystemIdentity:
     )
 
 
-def atomic_replace(source: str | Path, target: str | Path) -> None:
+def atomic_replace(source: str | Path, target: str | Path, *, durable: bool = False) -> None:
     """Atomically replace ``target``, tolerating brief external file scans.
 
     Antivirus and indexer processes can transiently open a just-written file
@@ -134,7 +134,14 @@ def atomic_replace(source: str | Path, target: str | Path) -> None:
     delay = _ATOMIC_REPLACE_INITIAL_DELAY_SECONDS
     while True:
         try:
-            os.replace(source, target)
+            if durable and os.name == "nt":
+                _windows_write_through_move(Path(source), Path(target), replace=True)
+            else:
+                os.replace(source, target)
+                if durable:
+                    _sync_directory(Path(target).parent)
+                    if Path(source).parent != Path(target).parent:
+                        _sync_directory(Path(source).parent)
             return
         except PermissionError:
             remaining = deadline - time.monotonic()
@@ -142,3 +149,62 @@ def atomic_replace(source: str | Path, target: str | Path) -> None:
                 raise
             time.sleep(min(delay, remaining))
             delay = min(delay * 2, _ATOMIC_REPLACE_MAX_DELAY_SECONDS)
+
+
+def _windows_write_through_move(source: Path, target: Path, *, replace: bool):
+    """Checked same-volume Win32 publication; never a directory-fsync claim.
+
+    MoveFileExW documents WRITE_THROUGH completion. Storage hardware/filesystem
+    failure guarantees beyond that API are not established by these calls.
+    """
+    import ctypes
+    from ctypes import wintypes
+
+    move = ctypes.WinDLL("kernel32", use_last_error=True).MoveFileExW
+    move.argtypes = (wintypes.LPCWSTR, wintypes.LPCWSTR, wintypes.DWORD)
+    move.restype = wintypes.BOOL
+
+    def extended(path):
+        name = str(path.absolute())
+        if name.startswith("\\\\?\\"):
+            return name
+        if name.startswith("\\\\"):
+            return "\\\\?\\UNC\\" + name[2:]
+        return "\\\\?\\" + name
+
+    if not move(extended(source), extended(target), 0x8 | int(replace)):
+        raise ctypes.WinError(ctypes.get_last_error())
+
+
+def _sync_directory(path: Path):
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def durable_mkdir(path: str | Path):
+    """Publish each new ancestor before using it; existing ancestors are retained."""
+    path = Path(path).absolute()
+    for parent in (path, *path.parents):
+        if parent.is_symlink() or (
+            parent.exists() and getattr(parent.lstat(), "st_file_attributes", 0) & 0x400
+        ):
+            raise OSError("durable_directory_reparse_point")
+    if path.exists():
+        if not path.is_dir():
+            raise NotADirectoryError(str(path))
+        return
+    durable_mkdir(path.parent)
+    if os.name == "nt":
+        temporary = Path(tempfile.mkdtemp(prefix=".publish-dir-", dir=path.parent))
+        try:
+            _windows_write_through_move(temporary, path, replace=False)
+        finally:
+            if temporary.exists():
+                temporary.rmdir()
+    else:
+        path.mkdir()
+        _sync_directory(path)
+        _sync_directory(path.parent)

@@ -55,8 +55,9 @@ def test_readback_failure_closes_owned_process_before_work(tmp_path, monkeypatch
         def __init__(self, *args):
             self.job_handle = 123
 
-        def close(self):
+        def close(self, *, verify=False):
             closed.append(True)
+            return True
 
     monkeypatch.setattr(module, "_OwnedChild", Child)
     monkeypatch.setattr(module, "_readback", lambda _: (_ for _ in ()).throw(ValueError()))
@@ -86,8 +87,8 @@ def test_manual_preflight_recovery_preserves_refused_attempt(tmp_path, monkeypat
         def poll(self):
             return None
 
-        def close(self):
-            pass
+        def close(self, *, verify=False):
+            return True
 
     def readback(child):
         if len(seen) == 1:
