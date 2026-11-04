@@ -13,7 +13,8 @@ semantic input version/math-cost spec determine business identity; authority,
 sourcepack and connection/request/compute attempts are provenance. Reuse existing
 leases/JSONL/objects with prepared-report then atomic commit. Old families and
 UNKNOWN/SPENT remain immutable. Both exclusive writers froze the sole R1 correction;
-Parent independent affected checks pass and the same-reader final R2 is next;
+Parent independent affected checks pass and both same-reader R2 axes are READY
+at92431f7d. Required normal CI/publication remain before actual execution;
 source merge alone never completes actual capture/Quant acceptance/report/
 decision/cold-read. See [current iteration](../iterations/0038-ivv-transaction-recovery.md).
 PR280/399b below is delivered; its old CI is not repeated or used as native GO.

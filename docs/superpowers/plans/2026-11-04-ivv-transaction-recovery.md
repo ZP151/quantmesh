@@ -85,7 +85,7 @@ WriterLease and JsonlStore remain the only job/result commit mechanism.
 - [ ] Integrate only the disjoint frozen Product files; run the connected actual
   policy -> capture original -> acceptance -> registration -> recovery -> committed
   report/decision/cold-read harness. Engineering seams remain disclosed.
-- [ ] Fresh two-axis independent R1; at most one consolidated RED/GREEN correction
+- [x] Fresh two-axis independent R1; at most one consolidated RED/GREEN correction
   and same-reader R2. Material structural R2 blocker returns to scope reduction.
 - [ ] Relevant broad checks at final boundary, one normal matching-head PR/CI,
   actual merge-policy scope and guarded merge/full source/catalog provenance.
