@@ -101,6 +101,7 @@ class TrustedIVVProofs(daily.Contract):
     authorization_ref: daily.ObjectRef | None = None
     expected_policy_sha256: daily.Digest | None = None
     expected_authorization_sha256: daily.Digest | None = None
+    recovery_policy_ref: daily.ObjectRef | None = None
 
 
 def _schema(proofs, kind):
@@ -112,6 +113,16 @@ def _schema(proofs, kind):
         proofs.expected_authorization_sha256,
     )
     _require(all(v is not None for v in values) if dev else all(v is None for v in values))
+    from quantmesh.research import ivv_recovery as recovery
+
+    if proofs.recovery_policy_ref is not None:
+        _require(proofs.scope_ref == proofs.capture_policy_ref == proofs.recovery_policy_ref)
+        _require(proofs.recovery_policy_ref.digest == proofs.expected_policy_sha256)
+        _require(proofs.authorization_ref == proofs.effect_ref == proofs.execution_ref)
+        _require(proofs.expected_authorization_sha256 == proofs.authorization_ref.digest)
+        _require(proofs.expected_authorization_sha256 == recovery.AUTHORITY)
+        return "qm.ivv." + kind + recovery.FAMILY
+    _require(proofs.expected_authorization_sha256 != recovery.AUTHORITY)
     if dev and proofs.expected_authorization_sha256 == ADDITIONAL_AUTH:
         # These slots hold immutable file digests, never logical effect IDs.
         _require(proofs.scope_ref.digest == ADDITIONAL_DESCRIPTOR)
@@ -127,9 +138,22 @@ def _schema(proofs, kind):
     return "qm.ivv." + kind + (".dev-diagnostic.v1" if dev else ".v1")
 
 
-def _dev_binding(proofs, value):
+def _dev_binding(proofs, value, *, policy=None):
     if proofs.capture_policy_ref is None:
         return {}
+    if proofs.recovery_policy_ref is not None:
+        from quantmesh.research import ivv_recovery as recovery
+
+        _schema(proofs, "provenance")
+        _require(policy is not None)
+        expected = {
+            **recovery.policy_provenance(policy),
+            "policy_sha256": proofs.expected_policy_sha256,
+        }
+        _require(
+            all(daily.canonical(value.get(k)) == daily.canonical(v) for k, v in expected.items())
+        )
+        return expected
     if proofs.expected_authorization_sha256 == ADDITIONAL_AUTH:
         _schema(proofs, "provenance")
         expected = {**ADDITIONAL_PROVENANCE, "policy_sha256": ADDITIONAL_POLICY}
@@ -252,13 +276,24 @@ def _capture_refs(raw):
     return refs
 
 
-def _capture_close(store, raw_ref, acceptance, go, proofs):
+def _capture_close(store, raw_ref, acceptance, go, proofs, *, capture_go_ref=None):
     raw = _load(store, raw_ref)
+    recovered = proofs.recovery_policy_ref is not None
+    policy = _recovery_policy(store, proofs) if recovered else None
+
+    def check_binding(value):
+        return _dev_binding(proofs, value, policy=policy)
+
     additional = proofs.expected_authorization_sha256 == ADDITIONAL_AUTH
     capture_scope = ADDITIONAL_PROVENANCE["capture_scope_id"] if additional else SCOPE_ID
     approval = (
         ADDITIONAL_PROVENANCE["capture_effect_sha256"] if additional else proofs.effect_ref.digest
     )
+    if recovered:
+        from quantmesh.research import ivv_recovery as recovery
+
+        capture_scope = recovery.capture_scope_id()
+        approval = recovery.capture_effect()
     _require(
         raw["schema_id"] == _schema(proofs, "capture") and raw["state"] == "CAPTURED_UNREVIEWED"
     )
@@ -275,10 +310,10 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
             for k in ("context_closed", "callbacks_stopped", "data_socket_closed")
         )
     )
-    _dev_binding(proofs, raw)
+    check_binding(raw)
     binding = raw["source_binding"]
-    _dev_binding(proofs, binding)
-    _require(binding["root_go_sha256"] == proofs.go_ref.digest)
+    check_binding(binding)
+    _require(binding["root_go_sha256"] == (capture_go_ref or proofs.go_ref).digest)
     _require(
         binding["approval_sha256"] == approval
         and binding["execution_sha256"] == proofs.execution_ref.digest
@@ -290,7 +325,7 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     parent_ref = daily.ObjectRef.model_validate(acceptance["parent_close_ref"])
     parent = _load(store, parent_ref)
     _require(parent["schema_id"] == _schema(proofs, "capture-parent-close"))
-    _dev_binding(proofs, parent)
+    check_binding(parent)
     _require(parent["state"] == "NORMAL_EXIT" and parent["termination"] == "NORMAL")
     expected = {
         "scope_id": capture_scope,
@@ -317,7 +352,7 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
     evidence = [daily.ObjectRef.model_validate(r) for r in acceptance["parent_evidence_refs"]]
     _require(1 <= len(evidence) <= 8 and len(evidence) == len(parent["evidence_refs"]))
     _require([r.digest for r in evidence] == [r["sha256"] for r in parent["evidence_refs"]])
-    if proofs.expected_authorization_sha256 in (TRUSTED_AUTH, ADDITIONAL_AUTH):
+    if recovered or proofs.expected_authorization_sha256 in (TRUSTED_AUTH, ADDITIONAL_AUTH):
         _require(len(evidence) == len({r.digest for r in evidence}) == 8)
         _require(
             [r.digest for r in evidence[:5]]
@@ -337,10 +372,10 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
         ):
             _require(obj.get("schema_id") == _schema(proofs, kind))
         _require(plan["policy_ref"]["sha256"] == proofs.expected_policy_sha256)
-        _dev_binding(proofs, permit)
-        _dev_binding(proofs, provider)
+        check_binding(permit)
+        check_binding(provider)
         _require(permit["actor"] == parent["capture_actor"] == go["capture_actor"])
-        _require(permit["root_go_sha256"] == proofs.expected_go_sha256)
+        _require(permit["root_go_sha256"] == (capture_go_ref or proofs.go_ref).digest)
         _require(provider["provider_actor"] == binding["provider_actor"])
         _require(
             [r.digest for r in evidence[5:]]
@@ -364,7 +399,7 @@ def _capture_close(store, raw_ref, acceptance, go, proofs):
             ),
         )
         _require(intent["schema_id"] == _schema(proofs, "capture-intent"))
-        _dev_binding(proofs, intent)
+        check_binding(intent)
         _require(intent["scope_id"] == capture_scope and intent["effect_id"] == raw["effect_id"])
         _require(
             intent["execution_sha256"] == proofs.execution_ref.digest
@@ -394,6 +429,357 @@ def _capture_usage(raw_ref, counts):
     }
 
 
+def _recovery_policy(store, proofs):
+    from quantmesh.research import ivv_recovery as recovery
+
+    _schema(proofs, "recovery-policy")
+    policy = recovery.validate_policy(_load(store, proofs.recovery_policy_ref))
+    _require(policy["authority_sha256"] == proofs.expected_authorization_sha256)
+    _require(daily.digest(daily.canonical(policy)) == proofs.expected_policy_sha256)
+    _require(proofs.recovery_policy_ref.byte_length == len(daily.canonical(policy)))
+    _load(store, proofs.authorization_ref)
+    return policy
+
+
+def verify_recovery_windows_policy(store, proofs, identity):
+    """Check the pinned projection of a trusted policy, not an OS admission."""
+    from quantmesh.research import ivv_recovery as recovery
+
+    proofs = TrustedIVVProofs.model_validate(proofs)
+    policy = _recovery_policy(store, proofs)
+    identity = recovery.validate_identity(identity)
+    expected = {
+        "schema_id": "qm.ivv.windows-policy" + recovery.FAMILY,
+        "logical_task_id": recovery.LOGICAL_TASK_ID,
+        "recovery_identity": identity,
+        "policy_sha256": proofs.recovery_policy_ref.digest,
+        "planning_scope_id": identity["business_key"],
+        "planning_job_uuid": recovery.logical_job_id(identity),
+        "full_execution_approval_sha256": proofs.authorization_ref.digest,
+        "research_effect_sha256": recovery.research_effect(identity),
+        "windows_controls": {
+            "job_wide_committed_memory_max": policy["actor"]["windows_job_commit_bytes"],
+            "affinity_cores": policy["actor"]["windows_affinity_cores"],
+            "absolute_seconds": policy["actor"]["numeric_seconds"],
+            "owned_study_artifacts": policy["storage"]["study"],
+            "paging": "ORDINARY_WINDOWS_OS_MANAGED_ALLOWED",
+        },
+        "shared_pagefile_growth": "UNKNOWN_NOT_OWNED_ARTIFACTS",
+    }
+    _require(daily.canonical(_load(store, proofs.windows_policy_ref)) == daily.canonical(expected))
+    return policy
+
+
+def _stored_reference(store, digest, media="application/json"):
+    """A digest selects an already held store object, not a remote filename."""
+    ref = daily.ObjectRef(digest=digest, byte_length=1, media_type=media)
+    path = store.path_for(ref)
+    store._reject_symlink_components(path)
+    length = path.stat().st_size
+    _require(path.is_file() and 1 <= length <= daily.MAX_OBJECT)
+    ref = ref.model_copy(update={"byte_length": length})
+    daily.NativeDailyService._from_store(store, ref)
+    return ref
+
+
+def _parent_evidence(store, parent_ref):
+    """Resolve authenticated digest names within ObjectStore, never child paths."""
+    parent = _load(store, parent_ref)
+    refs = []
+    for item in parent["evidence_refs"]:
+        ref = _stored_reference(store, item["sha256"])
+        length = ref.byte_length
+        if "bytes" in item:
+            _require(type(item["bytes"]) is int and item["bytes"] == length)
+        refs.append(ref)
+    return refs
+
+
+def _recovery_capture_objects(store, input_manifest, proofs, policy):
+    from quantmesh.research import ivv_recovery as recovery
+
+    arrays = [input_manifest[k] for k in ("capture_refs", "capture_go_refs", "parent_close_refs")]
+    _require(all(isinstance(a, list) for a in arrays))
+    _require(1 <= len(arrays[0]) <= 8 and all(len(a) == len(arrays[0]) for a in arrays))
+    epoch = input_manifest["capture_epoch"]
+    _require(isinstance(epoch, str) and 1 <= len(epoch) <= 160)
+    all_refs, actual_usage = [], []
+    for raw_value, go_value, parent_value in zip(*arrays, strict=True):
+        raw_ref, go_ref, parent_ref = (
+            daily.ObjectRef.model_validate(r) for r in (raw_value, go_value, parent_value)
+        )
+        raw, capture_go = _load(store, raw_ref), _load(store, go_ref)
+        _require(capture_go["schema_id"] == _schema(proofs, "root-go"))
+        historical_policy_ref = _stored_reference(store, capture_go["policy_sha256"])
+        capture_proofs = proofs.model_copy(
+            update={
+                "scope_ref": historical_policy_ref,
+                "capture_policy_ref": historical_policy_ref,
+                "recovery_policy_ref": historical_policy_ref,
+                "expected_policy_sha256": historical_policy_ref.digest,
+            }
+        )
+        capture_policy = _recovery_policy(store, capture_proofs)
+        _dev_binding(capture_proofs, capture_go, policy=capture_policy)
+        expected = {
+            "decision": "GO_BOUNDED_CAPTURE_RECOVERY",
+            "scope_id": recovery.capture_scope_id(),
+            "capture_scope_id": recovery.capture_scope_id(),
+            "capture_effect_id": recovery.LOGICAL_TASK_ID + "-capture",
+            "approval_sha256": recovery.capture_effect(),
+            "execution_sha256": proofs.execution_ref.digest,
+        }
+        _require(all(capture_go.get(k) == v for k, v in expected.items()))
+        rec = raw["recovery"]
+        _require(
+            set(rec)
+            == {
+                "logical_task_id",
+                "batch_id",
+                "connection_attempt_id",
+                "policy_sha256",
+                "request_journal_ref",
+                "history_actual",
+            }
+        )
+        common = {
+            "logical_task_id": recovery.LOGICAL_TASK_ID,
+            "batch_id": capture_policy["batch"]["batch_id"],
+            "connection_attempt_id": rec["connection_attempt_id"],
+            "policy_sha256": historical_policy_ref.digest,
+        }
+        _require(all(rec.get(k) == v for k, v in common.items()))
+        _require(
+            isinstance(rec["connection_attempt_id"], str) and bool(rec["connection_attempt_id"])
+        )
+        _require(epoch == rec["batch_id"] + "/" + rec["connection_attempt_id"])
+        _require(rec["history_actual"] == "UNKNOWN")
+        _require(all(capture_go["recovery"].get(k) == v for k, v in common.items()))
+        journal_ref = daily.ObjectRef.model_validate(rec["request_journal_ref"])
+        _load(store, journal_ref)
+        evidence = _parent_evidence(store, parent_ref)
+        accepted = {
+            "parent_close_ref": parent_ref.model_dump(),
+            "parent_evidence_refs": [r.model_dump() for r in evidence],
+        }
+        _, refs = _capture_close(
+            store, raw_ref, accepted, capture_go, capture_proofs, capture_go_ref=go_ref
+        )
+        parent = _load(store, parent_ref)
+        if "recovery" in parent:
+            _require(all(parent["recovery"].get(k) == v for k, v in common.items()))
+        counts = raw["counts"]
+        controls = counts["control_sends"]
+        _require(type(counts["contexts"]) is int and counts["contexts"] == 1)
+        _require(
+            type(counts["application_sends"]) is int
+            and 7 <= counts["application_sends"] <= capture_policy["batch"]["business_requests"]
+        )
+        _require(type(counts["history_sends"]) is int and counts["history_sends"] == 1)
+        _require(set(controls) == {"1001", "1004"})
+        _require(
+            type(controls["1001"]) is int
+            and 0 <= controls["1001"] <= capture_policy["batch"]["init_connect"]
+        )
+        _require(
+            type(controls["1004"]) is int
+            and 0 <= controls["1004"] <= capture_policy["batch"]["keepalive"]
+        )
+        actual_usage.append(
+            {
+                "capture_ref": raw_ref.model_dump(),
+                "contexts": counts["contexts"],
+                "business_requests": counts["application_sends"],
+                "init_connect": controls["1001"],
+                "keepalive": controls["1004"],
+            }
+        )
+        all_refs.extend(
+            [
+                raw_ref,
+                go_ref,
+                historical_policy_ref,
+                capture_proofs.authorization_ref,
+                journal_ref,
+                *refs,
+            ]
+        )
+    return all_refs, actual_usage
+
+
+def _verify_recovery(store, package_ref, proofs, *, executing):
+    from quantmesh.research import ivv_recovery as recovery
+    from quantmesh.research import ivv_runtime
+    from quantmesh.research import native_daily_candidate as native
+
+    policy = _recovery_policy(store, proofs)
+    _require(proofs.go_ref.digest == proofs.expected_go_sha256)
+    _require(proofs.acceptance_ref.digest == proofs.expected_acceptance_sha256)
+    go, accepted = _load(store, proofs.go_ref), _load(store, proofs.acceptance_ref)
+    _require(
+        go["schema_id"] == _schema(proofs, "root-go")
+        and go["decision"] == "GO_RECOVERABLE_AFTER_INPUT_ACCEPTANCE"
+    )
+    _require(
+        accepted["schema_id"] == _schema(proofs, "input-acceptance")
+        and accepted["decision"] == "ACCEPT_FOR_DECLARED_RECOVERABLE_RESEARCH"
+    )
+    provenance = _dev_binding(proofs, go, policy=policy)
+    _dev_binding(proofs, accepted, policy=policy)
+    identity = recovery.validate_identity(go["recovery_identity"])
+    _require(identity == accepted["recovery_identity"])
+    package = _load(store, package_ref)
+    manifest = daily.RealInput.model_validate(package)
+    _require(manifest.evidence_kind == "reviewed_real" and manifest.instrument == "US.IVV")
+    _require(manifest.source_id == SOURCE_ID and manifest.source_use == SOURCE_USE)
+    _require(manifest.window.model_dump(mode="json") == WINDOW)
+    _require(manifest.calendar_version == "exchange-calendars:4.13.2:XNYS")
+    _require(manifest.sample_role == "development_only_retrospective")
+    semantic = {k: package[k] for k in recovery.SEMANTIC_FIELDS}
+    _require(identity["input_version"] == recovery.semantic_input_version(semantic))
+    _require(identity["math_cost_spec"] == policy["math_cost_spec"] == recovery.MATH_COST_SPEC)
+    refs = {r.digest for r in manifest.review_refs}
+    for key in (
+        "scope_ref",
+        "effect_ref",
+        "execution_ref",
+        "go_ref",
+        "acceptance_ref",
+        "windows_policy_ref",
+        "recovery_policy_ref",
+    ):
+        _require(getattr(proofs, key).digest in refs)
+    input_ref = daily.ObjectRef.model_validate(go["input_manifest_ref"])
+    _require(go["input_manifest_ref"] == accepted["input_manifest_ref"])
+    input_manifest = _load(store, input_ref)
+    _require(
+        set(input_manifest)
+        == {
+            "schema_id",
+            "logical_task_id",
+            "semantic",
+            "capture_epoch",
+            "capture_refs",
+            "capture_go_refs",
+            "source_facts_ref",
+            "parent_close_refs",
+            "asof_pit",
+        }
+    )
+    _require(input_manifest["schema_id"] == _schema(proofs, "input-manifest"))
+    _require(input_manifest["logical_task_id"] == recovery.LOGICAL_TASK_ID)
+    _require(daily.canonical(input_manifest["semantic"]) == daily.canonical(semantic))
+    _require(accepted["source_facts_ref"] == input_manifest["source_facts_ref"])
+    _require(
+        [daily.ObjectRef.model_validate(r) for r in input_manifest["capture_refs"]]
+        == manifest.source_asset_refs
+    )
+    pit = input_manifest["asof_pit"]
+    _require(set(pit) == {"status", "provider_asof", "provider_version", "basis_refs"})
+    _require(pit["status"] == manifest.pit_status and pit["status"] in {"known", "unknown"})
+    for k in ("provider_asof", "provider_version"):
+        _require(
+            pit[k] is None
+            or (
+                isinstance(pit[k], str)
+                and bool(pit[k].strip())
+                and pit[k] != input_manifest["capture_epoch"]
+            )
+        )
+    basis_refs = [daily.ObjectRef.model_validate(r) for r in pit["basis_refs"]]
+    if pit["status"] == "known":
+        _require(bool(basis_refs) and pit["provider_version"] is not None)
+    if pit["provider_asof"] is not None or pit["provider_version"] is not None:
+        _require(bool(basis_refs))
+    for ref in basis_refs:
+        daily.NativeDailyService._from_store(store, ref)
+    verify_recovery_windows_policy(store, proofs, identity)
+    effect = recovery.research_effect(identity)
+    expected = {
+        "scope_id": identity["business_key"],
+        "research_scope_id": identity["business_key"],
+        "research_effect_sha256": effect,
+        "approval_sha256": effect,
+        "execution_sha256": proofs.execution_ref.digest,
+        "job_id": recovery.logical_job_id(identity),
+        "capture_scope_id": recovery.capture_scope_id(),
+        "capture_effect_id": recovery.LOGICAL_TASK_ID + "-capture",
+        "capture_policy_sha256": proofs.recovery_policy_ref.digest,
+        "windows_policy_sha256": proofs.windows_policy_ref.digest,
+        "output_root_digest": daily._root_pin(recovery.STUDY_ROOT),
+        "input_window_digest": daily.digest(daily.canonical(WINDOW)),
+        "full_window_sha256": WINDOW_SHA,
+    }
+    _require(all(go.get(k) == v for k, v in expected.items()))
+    _require(all(go["controls"].get(k) is True for k in ("released", "resource_bounds")))
+    _require(go["controls"].get("provider_log_cache_bounds") is False)
+    recovery.validate_attempt_policy(go["attempt_policy"], policy)
+    if executing:
+        _require(go["code"] == native._code())
+        _require(go["adapter_sha256"] == daily.digest(Path(daily.__file__).read_bytes()))
+        _require(go["gate_sha256"] == daily.digest(Path(__file__).read_bytes()))
+        _require(
+            go["numeric_runtime_sha256"] == daily.digest(Path(ivv_runtime.__file__).read_bytes())
+        )
+        _require(go["runtime"] == daily.runtime_versions())
+        _require(
+            identity["math_cost_spec"]
+            == daily.digest(daily.canonical(daily._accounting_contract()))
+        )
+    _require(
+        accepted["scope_id"] == identity["business_key"]
+        and accepted["capture_scope_id"] == recovery.capture_scope_id()
+    )
+    _require(
+        accepted["reviewer"] == REVIEWER
+        and accepted["input_set_digest"] == input_set_digest(package)
+    )
+    _require(all(accepted["checks"].get(k) is True for k in INPUT_CHECKS))
+    _require(
+        accepted["financial_qualification"] == "INSUFFICIENT"
+        and accepted["paper_allowed"] is False
+        and accepted["live_allowed"] is False
+    )
+    source = _load(store, input_manifest["source_facts_ref"])
+    _require(source["schema_id"] == "qm.ivv.source-facts.v1")
+    for k in ("currency", "volume_unit", "historical_trade_venues", "action_coverage"):
+        _require(source[k] == package[k])
+    _require(isinstance(source["basis"], str) and bool(source["basis"].strip()))
+    exposure, ledger = _load(store, manifest.exposure_ref), _load(store, manifest.trial_ledger_ref)
+    _require(exposure["scope_id"] == identity["business_key"] and exposure["unseen_oos"] is False)
+    _require(exposure["sample_role"] == manifest.sample_role)
+    _require(
+        ledger["scope_id"] == identity["business_key"]
+        and ledger["trial_id"] == "qm-ivv-trial-" + identity["business_key"]
+    )
+    _require(type(ledger["max_trials"]) is int and ledger["max_trials"] == 1)
+    _require(
+        ledger["state"] in {"REGISTERED", "UNRESERVED"}
+    )  # Registration, not proof of unused execution.
+    _, usage = _recovery_capture_objects(store, input_manifest, proofs, policy)
+    return {
+        **provenance,
+        "scope_id": identity["business_key"],
+        "scope_trial_key": identity["business_key"],
+        "job_id": recovery.logical_job_id(identity),
+        "output_root_digest": go["output_root_digest"],
+        "proofs": proofs.model_dump(mode="json", exclude_none=True),
+        "source_facts_ref": input_manifest["source_facts_ref"],
+        "capture_ref": input_manifest["capture_refs"][0],
+        "parent_close_ref": input_manifest["parent_close_refs"][0],
+        "source_use": SOURCE_USE,
+        "provider_permission_verified": False,
+        "external_API_retention_applicability": "UNKNOWN",
+        "recovery_identity": identity,
+        "attempt_policy": go["attempt_policy"],
+        "recovery_provenance": {
+            "input_manifest_ref": input_ref.model_dump(),
+            "capture_attempt_refs": input_manifest["capture_refs"],
+        },
+        "capture_usage": usage,
+    }
+
+
 def _verify_additional_originals(store, proofs):
     """Authenticate immutable new authority files without minting a registration."""
     _require(proofs.expected_authorization_sha256 == ADDITIONAL_AUTH)
@@ -408,6 +794,8 @@ def _verify(store, package_ref, proofs, *, executing):
     from quantmesh.research import native_daily_candidate as native
 
     proofs = TrustedIVVProofs.model_validate(proofs)
+    if proofs.recovery_policy_ref is not None:
+        return _verify_recovery(store, package_ref, proofs, executing=executing)
     additional = proofs.expected_authorization_sha256 == ADDITIONAL_AUTH
     _schema(proofs, "registration")
     scope_id = ADDITIONAL_RESEARCH_SCOPE if additional else SCOPE_ID
@@ -579,7 +967,14 @@ def register_ivv_input(store, *, package_ref, grant_ref, approved_scope_ref, aut
             **evidence,
         }
         binding = store.put_bytes("application/json", daily.canonical(record))
-        return replace(registration, _authority=_REAL_AUTHORITY, real_binding=binding)
+        recovery = (
+            {k: evidence[k] for k in ("recovery_identity", "attempt_policy", "recovery_provenance")}
+            if "recovery_identity" in evidence
+            else None
+        )
+        return replace(
+            registration, _authority=_REAL_AUTHORITY, real_binding=binding, recovery=recovery
+        )
     except (KeyError, TypeError, ValueError, OSError, RecursionError):
         raise daily.NativeError("ivv_not_admitted") from None
 
@@ -599,6 +994,37 @@ def verify_saved_binding(store, package_ref, binding_ref, *, executing):
 def binding_objects(store, binding_ref):
     record = _load(store, binding_ref)
     proofs = TrustedIVVProofs.model_validate(record["proofs"])
+    if proofs.recovery_policy_ref is not None:
+        input_ref = daily.ObjectRef.model_validate(
+            record["recovery_provenance"]["input_manifest_ref"]
+        )
+        manifest = _load(store, input_ref)
+        capture_refs, _ = _recovery_capture_objects(
+            store, manifest, proofs, _recovery_policy(store, proofs)
+        )
+        refs = [
+            binding_ref,
+            input_ref,
+            *[
+                getattr(proofs, k)
+                for k in (
+                    "scope_ref",
+                    "effect_ref",
+                    "execution_ref",
+                    "authorization_ref",
+                    "capture_policy_ref",
+                    "recovery_policy_ref",
+                    "go_ref",
+                    "acceptance_ref",
+                    "windows_policy_ref",
+                )
+            ],
+            daily.ObjectRef.model_validate(manifest["source_facts_ref"]),
+            *capture_refs,
+            *[daily.ObjectRef.model_validate(r) for r in manifest["asof_pit"]["basis_refs"]],
+        ]
+        unique = {r.digest: r for r in refs}
+        return [(r, daily.NativeDailyService._from_store(store, r)) for r in unique.values()]
     _, capture_refs = _capture_close(
         store,
         daily.ObjectRef.model_validate(record["capture_ref"]),
@@ -721,6 +1147,9 @@ def bind_reviewed_ivv_input(store, *, input_set_ref, proofs, output_root):
             for ref in (proofs.capture_policy_ref, proofs.authorization_ref)
             if ref is not None
         )
+        if proofs.recovery_policy_ref is not None:
+            facts["review_refs"].append(proofs.recovery_policy_ref.model_dump())
+        facts["review_refs"] = list({r["digest"]: r for r in facts["review_refs"]}.values())
         package_ref = _put(store, facts)
         checked = _verify(store, package_ref, proofs, executing=True)
         _require(checked["output_root_digest"] == daily._root_pin(output_root))

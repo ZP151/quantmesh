@@ -1,5 +1,41 @@
 # ADR0042 — one internally approved IVV retrospective admission
 
+## Actual human transaction-recovery amendment —2026-11-04
+
+Direction6db1254 supersedes fixed-one-context/seven-request and cross-authority
+one-compute workflow gates for the fixed IVV objective. Necessary reasonable
+attempts are recorded and recovered without per-batch whole-package approval.
+Historical records stay unchanged; SDK uncertainty is neither exactly-once nor
+zero by inference. Stable task/registered experiment/semantic input/math spec
+identify business work; authority/source/attempt versions are provenance.
+
+Existing ObjectStore, WriterLease and JSONL persist intent before effects,
+possible sends/UNKNOWN, immutable responses/checkpoints, prepared report and
+atomic result/decision. Reuse complete consistent inputs, never unproved cross-
+asof/PIT epochs. Committed jobs reopen originals; recovery is not new OOS evidence.
+One IVV-only shared policy extends existing native admission, not a new issuer.
+Current12GiB/6GiB/free50GiB/expandable recorded batches replace stale caps; metadata
+is not runtime GO. Fixed dataH1/H2/H3, mathematics/costs/window/QuantityA, credentials,
+read-only scope/no-paid and paper/live=false remain. New recovery family is explicit;
+old-family history keeps its original meaning. See [issue281 contract](../superpowers/specs/2026-11-04-ivv-transaction-recovery.md).
+
+The consolidated source review requires exact ownership through uncertain close:
+retain the original numerical owner and Root WriterLease across partial
+construction, failed cleanup and garbage collection. Native handle close records
+MAY_HAVE_CLOSED before FFI; an unknown acknowledgement never permits another
+operation on the possibly reused numeric handle. Only an observed false return
+permits retry; observed closure permits idempotent Python bookkeeping. Forced
+cleanup cannot create a normal numeric receipt or refund a durable attempt.
+
+Recovery alone opts into durable existing ObjectStore/JSONL publication. Confirm
+payload and namespace publication before INTENT, prepared-report and committed
+records; visible but uncertain writes poison that instance until cold validation.
+Under the original study WriterLease, hash-verified owned-study CAS bytes may be
+republished identically to establish durability; their inode may change but their
+bytes/ObjectRef cannot. External source/input/human originals and the writer-lock
+inode are never replaced. POSIX fsync and Windows same-volume WRITE_THROUGH API
+ordering tests do not qualify hardware power-loss behavior.
+
 ## Independent additional task — actual approval2026-11-04
 
 Actual human approved new event7912B SHA256595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832,

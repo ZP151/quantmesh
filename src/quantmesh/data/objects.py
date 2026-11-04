@@ -10,6 +10,8 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from quantmesh import _fs
+
 FABRIC_NAMESPACE = ".trusted-data-v2"
 
 
@@ -53,8 +55,10 @@ class ObjectRef(BaseModel):
 class ObjectStore:
     """Publish and verify SHA-256-addressed objects beneath one lake root."""
 
-    def __init__(self, root: Path) -> None:
+    def __init__(self, root: Path, *, durable: bool = False) -> None:
         self.root = Path(root)
+        self.durable = durable
+        self.durability_uncertain = False
 
     def path_for(self, reference: ObjectRef) -> Path:
         """Return the canonical path for ``reference`` without reading it."""
@@ -68,6 +72,56 @@ class ObjectStore:
         )
 
     def put_bytes(self, media_type: str, payload: bytes) -> ObjectRef:
+        if not self.durable:
+            return self._put_bytes(media_type, payload)
+        if self.durability_uncertain:
+            raise OSError("object_publication_uncertain")
+        try:
+            return self._put_durable(media_type, payload)
+        except BaseException:
+            self.durability_uncertain = True
+            raise
+
+    def confirm_durable(self, reference: ObjectRef) -> None:
+        """Re-publish identical verified content under the caller's exclusive lease.
+
+        Only the opt-in owned study uses this. Reference/content identity remains
+        immutable; Windows may replace the file identity to confirm publication.
+        """
+        if not self.durable:
+            raise ValueError("durable_opt_in_required")
+        if self.put_bytes(reference.media_type, self.get_bytes(reference)) != reference:
+            raise ObjectIntegrityError("durable_reference_mismatch")
+
+    def _put_durable(self, media_type: str, payload: bytes) -> ObjectRef:
+        if not isinstance(payload, bytes):
+            raise TypeError("payload must be bytes")
+        reference = ObjectRef(
+            digest=hashlib.sha256(payload).hexdigest(),
+            media_type=media_type,
+            byte_length=len(payload),
+        )
+        target = self.path_for(reference)
+        self._reject_symlink_components(target)
+        _fs.durable_mkdir(target.parent)
+        self._reject_symlink_components(target)
+        if target.exists() and self.get_bytes(reference) != payload:
+            raise ObjectIntegrityError("conflicting_durable_object")
+        descriptor, temporary = tempfile.mkstemp(
+            dir=target.parent, prefix=".publish-", suffix=".tmp"
+        )
+        try:
+            with os.fdopen(descriptor, "wb") as handle:
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+            _fs.atomic_replace(temporary, target, durable=True)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+        return reference
+
+    def _put_bytes(self, media_type: str, payload: bytes) -> ObjectRef:
         """Publish bytes once; an existing digest must contain identical bytes."""
         if not isinstance(payload, bytes):
             raise TypeError("payload must be bytes")

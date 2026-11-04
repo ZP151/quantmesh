@@ -5,7 +5,8 @@ export const nativeUuid = (v: unknown): v is string => typeof v === 'string' && 
 export type NativeRef = { algorithm: 'sha256'; digest: string; byte_length: number; media_type: string }
 export type NativeRequest = { candidate: typeof NATIVE_CANDIDATE; package_ref: NativeRef | null; grant_ref: NativeRef | null; approved_scope_ref: NativeRef | null; protocol_ref: NativeRef | null }
 export type NativeOptions = { configured: boolean; candidate: typeof NATIVE_CANDIDATE; kernel: 'native-daily-v2'; packages: { label: string; evidence_kind: 'engineering_fixture' | 'reviewed_real'; package_ref: NativeRef; approved_scope_ref: NativeRef; protocol_ref: NativeRef; job_id?: string }[]; grants: { label: string; package_digest: string; grant_ref: NativeRef }[]; real_input_enabled: boolean }
-export type NativeJob = { job_id: string; request: NativeRequest; request_digest: string; state: 'not_run' | 'running' | 'succeeded' | 'failed' | 'interrupted'; admission_status: 'INSUFFICIENT' | 'REJECT' | 'ACCEPTED_ENGINEERING' | 'ACCEPTED_DECLARED_RESEARCH'; admission_reasons: string[]; admission: NativeRef; report: NativeRef | null; decision: NativeRef | null; trial_consumed: boolean; created_at: string; completed_at: string | null }
+export type NativeRecovery = { business_key: string; experiment_id: string; registered_attempts: number; last_attempt_state: 'running' | 'failed' | 'interrupted' | 'prepared' | 'committed'; request_digest_history: string[] }
+export type NativeJob = { recovery_status?: NativeRecovery; job_id: string; request: NativeRequest; request_digest: string; state: 'not_run' | 'running' | 'succeeded' | 'failed' | 'interrupted'; admission_status: 'INSUFFICIENT' | 'REJECT' | 'ACCEPTED_ENGINEERING' | 'ACCEPTED_DECLARED_RESEARCH'; admission_reasons: string[]; admission: NativeRef; report: NativeRef | null; decision: NativeRef | null; trial_consumed: boolean; created_at: string; completed_at: string | null }
 export type NativeDecisionRequest = { request_digest: string; admission_digest: string; report_digest: string | null; disposition: 'reject' | 'watch'; reason: string }
 export type NativeArtifact = { bytes: Uint8Array<ArrayBuffer>; value: Record<string, unknown>; digest: string }
 export const nativeArms = ['T', 'TO', 'B50', 'B100', 'C'] as const
@@ -50,9 +51,25 @@ function options(v: unknown): NativeOptions {
     || !v.grants.every(g => object(g) && bounded(g.label, 160) && hash(g.package_digest) && nativeRef(g.grant_ref))) return invalid()
   return v as unknown as NativeOptions
 }
+function recoveryStatus(v: Record<string, unknown>): boolean {
+  const r = v.recovery_status
+  return object(r) && Object.keys(r).length === 5 && hash(r.business_key)
+    && typeof r.experiment_id === 'string' && /^[a-z0-9][a-z0-9-]{0,95}$/.test(r.experiment_id)
+    && Number.isSafeInteger(r.registered_attempts) && Number(r.registered_attempts) > 0
+    && Array.isArray(r.request_digest_history) && r.request_digest_history.length === r.registered_attempts
+    && r.request_digest_history.every(hash) && r.request_digest_history.at(-1) === v.request_digest
+    && (v.state === 'succeeded' ? r.last_attempt_state === 'committed'
+      : v.state === 'running' ? ['running', 'prepared'].includes(String(r.last_attempt_state))
+      : ['failed', 'interrupted'].includes(String(v.state)) && r.last_attempt_state === v.state)
+}
 async function job(v: unknown, id: string, expected?: NativeRequest): Promise<NativeJob> {
+  if (object(v) && v.recovery_status !== undefined && !recoveryStatus(v)) return invalid()
+  const expectedHash = expected ? await digest(new TextEncoder().encode(canonical(expected))) : null
+  const matchesHistory = object(v) && recoveryStatus(v) && object(v.recovery_status)
+    && Array.isArray(v.recovery_status.request_digest_history) && v.recovery_status.request_digest_history.includes(expectedHash)
+
   if (!object(v) || !safe(v) || v.job_id !== id || !nativeUuid(id) || !nativeRequest(v.request) || !hash(v.request_digest)
-    || (expected && canonical(v.request) !== canonical(expected)) || await digest(new TextEncoder().encode(canonical(v.request))) !== v.request_digest
+    || (expected && canonical(v.request) !== canonical(expected) && !matchesHistory) || await digest(new TextEncoder().encode(canonical(v.request))) !== v.request_digest
     || !['not_run', 'running', 'succeeded', 'failed', 'interrupted'].includes(String(v.state)) || !['INSUFFICIENT', 'REJECT', 'ACCEPTED_ENGINEERING', 'ACCEPTED_DECLARED_RESEARCH'].includes(String(v.admission_status))
     || !Array.isArray(v.admission_reasons) || !v.admission_reasons.every(r => bounded(r, 160)) || !nativeRef(v.admission) || v.admission.media_type !== 'application/json'
     || !(v.report === null || nativeRef(v.report)) || !(v.decision === null || nativeRef(v.decision)) || typeof v.trial_consumed !== 'boolean'
@@ -135,7 +152,40 @@ function additionalUseBasis(v: Record<string, unknown>, proof: Record<string, un
     && Number.isSafeInteger(usage.actual_init_connect) && Number(usage.actual_init_connect) >= 0 && Number(usage.actual_init_connect) <= 1
     && Number.isSafeInteger(usage.actual_keepalive) && Number(usage.actual_keepalive) >= 0 && Number(usage.actual_keepalive) <= 96
 }
+const RECOVERY_AUTHORIZATION = '6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd'
+function recoveryUseBasis(v: Record<string, unknown>, proof: Record<string, unknown>): boolean {
+  const identity = v.recovery_identity, attempt = v.attempt_policy, provenance = v.recovery_provenance, budget = v.capture_budget
+  if (v.diagnostic_mode !== 'DEV_TRANSACTION_RECOVERY' || v.authorization_sha256 !== RECOVERY_AUTHORIZATION
+    || v.logical_task_id !== 'ivv-trend-staged-20261029' || v.channel !== 'UNVERIFIED_TRUSTED_EXTERNAL'
+    || v.provider_hard_limit_enforced !== false || v.provider_tail_max !== 'UNKNOWN' || v.historical_actual_cumulative !== 'UNKNOWN'
+    || 'hard_limit_enforced' in v || 'channel_assurance' in v || additionalFields.some(k => !['capture_usage', 'capture_budget', 'historical_actual_cumulative'].includes(k) && k in v)
+    || !hash(v.policy_sha256) || !object(identity) || Object.keys(identity).length !== 5
+    || identity.logical_task_id !== v.logical_task_id || !bounded(identity.experiment_id, 96)
+    || !/^[a-z0-9][a-z0-9-]{0,95}$/.test(String(identity.experiment_id)) || !hash(identity.input_version)
+    || identity.math_cost_spec !== '7e0c785311bdae85828898bcc63b7a88d724da9bab4f844eb35673c923c34fea'
+    || v.math_cost_spec !== identity.math_cost_spec || identity.business_key !== v.scope_id || v.scope_trial_key !== v.scope_id
+    || !object(attempt) || Object.keys(attempt).length !== 3 || !nativeRef(attempt.policy_ref)
+    || attempt.policy_ref.digest !== v.policy_sha256 || attempt.batch_id !== v.batch_id
+    || !Number.isSafeInteger(attempt.max_numerical_attempts) || Number(attempt.max_numerical_attempts) < 1
+    || !object(budget) || Object.keys(budget).length !== 8 || budget.batch_id !== v.batch_id
+    || budget.max_numerical_attempts !== attempt.max_numerical_attempts
+    || !['wall_seconds','contexts','business_requests','max_business_per_second','init_connect','keepalive','max_numerical_attempts'].every(k => Number.isSafeInteger(budget[k]) && Number(budget[k]) >= (k === 'keepalive' ? 0 : 1))
+    || !object(provenance) || Object.keys(provenance).length !== 2 || !nativeRef(provenance.input_manifest_ref)
+    || !Array.isArray(provenance.capture_attempt_refs) || provenance.capture_attempt_refs.length < 1 || provenance.capture_attempt_refs.length > 8
+    || !provenance.capture_attempt_refs.every(nativeRef) || !sameRef(provenance.capture_attempt_refs[0], v.capture_ref)
+    || !['scope_ref','capture_policy_ref','recovery_policy_ref'].every(k => nativeRef(proof[k]) && proof[k].digest === v.policy_sha256 && sameRef(proof[k], attempt.policy_ref))
+    || !['effect_ref','execution_ref','authorization_ref'].every(k => nativeRef(proof[k]) && proof[k].digest === RECOVERY_AUTHORIZATION && sameRef(proof[k], proof.authorization_ref))
+    || proof.expected_policy_sha256 !== v.policy_sha256 || proof.expected_authorization_sha256 !== RECOVERY_AUTHORIZATION
+    || !Array.isArray(v.capture_usage) || v.capture_usage.length !== provenance.capture_attempt_refs.length) return false
+  const refs = provenance.capture_attempt_refs
+  return v.capture_usage.every((u, i) => object(u) && Object.keys(u).length === 5 && sameRef(u.capture_ref, refs[i])
+    && u.contexts === 1 && Number.isSafeInteger(u.business_requests) && Number(u.business_requests) >= 7
+    && ['init_connect','keepalive'].every(k => Number.isSafeInteger(u[k]) && Number(u[k]) >= 0))
+}
 function diagnosticUseBasis(v: Record<string, unknown>, proof: Record<string, unknown>): boolean {
+  if (v.diagnostic_mode === 'DEV_TRANSACTION_RECOVERY' || 'recovery_policy_ref' in proof
+    || 'recovery_identity' in v || v.authorization_sha256 === RECOVERY_AUTHORIZATION) return recoveryUseBasis(v, proof)
+
   const fields = ['diagnostic_mode', 'channel_assurance', 'policy_sha256', 'authorization_sha256', 'hard_limit_enforced', 'provider_tail_max', ...additionalFields]
   const refs = ['capture_policy_ref', 'authorization_ref', 'expected_policy_sha256', 'expected_authorization_sha256']
   if (!fields.some(key => key in v) && !refs.some(key => key in proof)) return true // archived strict originals
@@ -208,6 +258,15 @@ async function artifact(saved: NativeJob, kind: 'admission' | 'report' | 'decisi
   let v: unknown
   try { v = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) } catch { return artifactInvalid() }
   if (!object(v) || !safe(v) || v.job_id !== saved.job_id || v.request_digest !== saved.request_digest) return artifactInvalid()
+  // Decision v1 binds admission/report digests; only those artifacts carry use_basis.
+  if ((kind === 'admission' || kind === 'report') && saved.recovery_status && saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH') {
+    const b = v.use_basis
+    if (!object(b) || b.diagnostic_mode !== 'DEV_TRANSACTION_RECOVERY' || !object(b.recovery_identity)
+      || b.recovery_identity.business_key !== saved.recovery_status.business_key
+      || b.recovery_identity.experiment_id !== saved.recovery_status.experiment_id) return artifactInvalid()
+    const { business_key, ...semanticIdentity } = b.recovery_identity
+    if (await digest(new TextEncoder().encode(canonical(semanticIdentity))) !== business_key) return artifactInvalid()
+  }
   if (kind === 'admission') {
     const real = saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH'
     if (v.schema_id !== (real ? 'qm.native-daily.admission.v2' : 'qm.native-daily.admission.v1') || !nativeRequest(v.request) || canonical(v.request) !== canonical(saved.request) || v.status !== saved.admission_status || canonical(v.reasons) !== canonical(saved.admission_reasons)

@@ -14,7 +14,13 @@ import threading
 import time
 from pathlib import Path
 
-from quantmesh.research.job_runner import _ExtendedLimits, _OwnedChild
+from quantmesh.research.job_runner import (
+    _close_job_handle,
+    _close_process_handle,
+    _ExtendedLimits,
+    _guard_owned_handle_closes,
+    _OwnedChild,
+)
 from quantmesh.research.jobs import RunBudget
 
 COMMIT_BYTES = 536870912
@@ -23,14 +29,20 @@ ADDITIONAL_WINDOWS_POLICY_SHA = "22f6cb798c94c436759f4ff85d16b6101010ae5e550e5e7
 WINDOWS_POLICY_SHA = "eba49b57044c1883c185fd3d844a8f645cfd64dc058104c63b820d34c65abb63"
 
 
-def ensure_capacity(root, reserved):
+def ensure_capacity(root, reserved, *, limit=None):
+    limit = ARTIFACT_BYTES if limit is None else limit
+    if type(reserved) is not int or type(limit) is not int or reserved < 0 or limit <= 0:
+        raise ValueError("numeric_artifact_capacity")
     used = sum(p.stat().st_size for p in Path(root).rglob("*") if p.is_file())
-    if reserved < 0 or used + reserved > ARTIFACT_BYTES:
+    if reserved < 0 or used + reserved > limit:
         raise ValueError("numeric_artifact_capacity")
 
 
 def _readback(child):
     """Read kernel limits AND membership; JSON declarations cannot satisfy this."""
+    _guard_owned_handle_closes(child)
+    if child.job_handle is None or getattr(child.process._handle, "closed", False):
+        raise ValueError("job_readback_closed")
     kernel = ctypes.windll.kernel32
     limits = _ExtendedLimits()
     handle = ctypes.c_void_p(child.job_handle)
@@ -79,6 +91,9 @@ class _Accounting(ctypes.Structure):
 
 
 def _active(child):
+    _guard_owned_handle_closes(child)
+    if child.job_handle is None:
+        raise ValueError("job_accounting_closed")
     info = _Accounting()
     if not ctypes.windll.kernel32.QueryInformationJobObject(
         ctypes.c_void_p(child.job_handle), 1, ctypes.byref(info), ctypes.sizeof(info), None
@@ -128,8 +143,36 @@ class IVVRuntime:
         policy = gate._load(store, ref)
         go = gate._load(store, basis["proofs"]["go_ref"])
         proofs = gate.TrustedIVVProofs.model_validate(basis["proofs"])
-        additional = proofs.expected_authorization_sha256 == gate.ADDITIONAL_AUTH
-        expected_policy = ADDITIONAL_WINDOWS_POLICY_SHA if additional else WINDOWS_POLICY_SHA
+        recovered = proofs.recovery_policy_ref is not None
+        additional = not recovered and proofs.expected_authorization_sha256 == gate.ADDITIONAL_AUTH
+        self.artifact_limit = ARTIFACT_BYTES
+        self.recovery_attempt_id = None
+        if recovered:
+            from uuid import UUID
+
+            from quantmesh.research import ivv_recovery as recovery
+
+            identity = recovery.validate_identity(basis["recovery_identity"])
+            declared = gate.verify_recovery_windows_policy(store, proofs, identity)
+            attempt = basis.get("compute_attempt_id")
+            if (
+                not isinstance(attempt, str)
+                or str(UUID(attempt)) != attempt
+                or basis["scope_id"] != identity["business_key"]
+                or basis["job_id"] != recovery.logical_job_id(identity)
+                or go["recovery_identity"] != identity
+                or proofs.go_ref.digest != proofs.expected_go_sha256
+                or go["output_root_digest"] != gate.daily._root_pin(root)
+                or gate.daily._root_pin(root) != gate.daily._root_pin(recovery.STUDY_ROOT)
+            ):
+                raise ValueError("windows_runtime_authority")
+            self.recovery_attempt_id = attempt
+            self.artifact_limit = declared["storage"]["study"]
+        expected_policy = (
+            ref["digest"]
+            if recovered
+            else (ADDITIONAL_WINDOWS_POLICY_SHA if additional else WINDOWS_POLICY_SHA)
+        )
         if additional:
             gate._schema(proofs, "windows-policy")
             if (
@@ -162,34 +205,55 @@ class IVVRuntime:
             or controls["job_wide_committed_memory_max"] != COMMIT_BYTES
             or controls["absolute_seconds"] != 80
             or controls["paging"] != "ORDINARY_WINDOWS_OS_MANAGED_ALLOWED"
-            or controls["owned_study_artifacts"] != 8388608
+            or controls["owned_study_artifacts"] != self.artifact_limit
         ):
             raise ValueError("windows_runtime_budget")
-        self.directory = Path(root) / "numeric"
+        self.directory = Path(root) / (
+            "numeric-" + self.recovery_attempt_id if recovered else "numeric"
+        )
         self.child = self.started = self.timer = None
         self.closed = False
+        self.cleanup_pending = False
         self._lock = threading.RLock()
 
     def check(self, *, pending_bytes=0):
+        if getattr(self, "cleanup_pending", False):
+            raise ValueError("numeric_cleanup_unconfirmed")
         if self.closed:
             return False
         # Four MiB cover bounded command/result/report, decision, atomic staging,
         # ledger and metadata. Existing originals are additional, never deleted.
-        ensure_capacity(self.directory.parent, pending_bytes + 4 * 1024 * 1024)
+        ensure_capacity(
+            self.directory.parent,
+            pending_bytes + 4 * 1024 * 1024,
+            limit=getattr(self, "artifact_limit", ARTIFACT_BYTES),
+        )
         if self.child is not None:
             return self.child.poll() is None and time.monotonic() - self.started < 60
         # Explicit caller retry after a pre-trial refusal uses a new bounded
         # directory. Never truncate the failed owner's log or reuse its child.
-        for attempt in range(4):
-            directory = self.directory.with_name(f"numeric-{attempt}")
+        if getattr(self, "recovery_attempt_id", None) is not None:
+            # The trusted consumer chooses a durable compute-attempt UUID. A new
+            # attempt gets a distinct namespace; no old refusal is ever removed.
+            from quantmesh.research.native_daily_real import _uuid
+
+            if _uuid(self.recovery_attempt_id) != self.recovery_attempt_id:
+                raise ValueError("numeric_attempt_identity")
             try:
-                directory.mkdir(exist_ok=False)
+                self.directory.mkdir(exist_ok=False)
             except FileExistsError:
-                continue
-            self.directory = directory
-            break
+                raise ValueError("numeric_preflight_capacity") from None
         else:
-            raise ValueError("numeric_preflight_capacity")
+            for attempt in range(4):
+                directory = self.directory.with_name(f"numeric-{attempt}")
+                try:
+                    directory.mkdir(exist_ok=False)
+                except FileExistsError:
+                    continue
+                self.directory = directory
+                break
+            else:
+                raise ValueError("numeric_preflight_capacity")
         self.started = time.monotonic()
         boot = (
             "import os,sys\nif sys.stdin.readline() != "
@@ -199,7 +263,10 @@ class IVVRuntime:
             + "from quantmesh.research.ivv_runtime import _child_main; _child_main(sys.argv[1])"
         )
         try:
-            self.child = _OwnedChild(
+            # Retain the partial owner even if construction/preflight cleanup fails.
+            self.child = _OwnedChild.__new__(_OwnedChild)
+            self.child._verified_cleanup = True
+            self.child.__init__(
                 [sys.executable, "-B", "-c", boot, str(self.directory)],
                 RunBudget(
                     timeout_seconds=80,
@@ -245,10 +312,8 @@ class IVVRuntime:
                 raise ValueError("numeric_timeout")
             if self.child.poll() != 0:
                 raise ValueError("numeric_failed")
-            while _active(self.child) and time.monotonic() - self.started < 70:
-                time.sleep(0.02)
             with self._lock:
-                if self.closed or _active(self.child) != 0:
+                if self.closed:
                     raise ValueError("numeric_close")
                 result = self.directory / "result.json"
                 if not 1 <= result.stat().st_size <= daily.MAX_OBJECT:
@@ -256,10 +321,16 @@ class IVVRuntime:
                 matrix = daily._loads(result.read_bytes())
                 self.child.process.wait(timeout=0)
                 self.child.log.close()
-                self.child.process._handle.Close()
-                if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(self.child.job_handle)):
-                    raise ValueError("numeric_handle_close")
-                self.child.job_handle = None
+                if not self.child.log.closed or not self.child.process.stdin.closed:
+                    raise ValueError("numeric_fd_close")
+                _close_process_handle(self.child.process)
+                # Retain the Job handle until references are released and the
+                # kernel confirms the whole tree has no active processes.
+                while _active(self.child) and time.monotonic() - self.started < 70:
+                    time.sleep(0.02)
+                if _active(self.child) != 0:
+                    raise ValueError("numeric_close")
+                _close_job_handle(self.child)
                 self.closed = True
                 self.timer.cancel()
                 receipt = {
@@ -283,9 +354,11 @@ class IVVRuntime:
             if self.timer is not None:
                 self.timer.cancel()
             if not self.closed:
+                self.cleanup_pending = True
+                if self.child is not None and self.child.close(verify=True) is not True:
+                    raise OSError("numeric_cleanup_unconfirmed")
                 self.closed = True
-                if self.child is not None:
-                    self.child.close()
+                self.cleanup_pending = False
 
 
 def _child_main(directory):

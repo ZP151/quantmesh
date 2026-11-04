@@ -1,3 +1,12 @@
+## Fixed IVV transaction recovery — issue281,2026-11-04
+
+Reuse the capture observer/normalizer/native held admission, ObjectStore,
+WriterLease, JsonlStore and existing job/report/decision. One IVV-only pure
+policy/semantic-identity module supports both original writers; it neither issues
+permits nor provides a generic transaction platform. Preserve external uncertainty
+and resume checkpoints/compute publication without numerical engine changes,
+upstream code copying, dependencies or new environments.
+
 ## Approved independent additional IVV task — issue277
 
 Reuse merged capture/observer/normalizer/issuer/owned native closure, immutable

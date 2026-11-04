@@ -25,7 +25,7 @@ from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ValidationError
 
-from quantmesh._fs import atomic_replace
+from quantmesh._fs import atomic_replace, durable_mkdir
 
 Model = TypeVar("Model", bound=BaseModel)
 
@@ -47,8 +47,11 @@ class JsonlStore(Generic[Model]):
         article: str = "a",
         secondary_keys: Sequence[tuple[str, Callable[[Model], str | None]]] = (),
         record_label: str | None = None,
+        durable: bool = False,
     ) -> None:
         self.root = root
+        self.durable = durable
+        self.durability_uncertain = False
         self.filename = filename
         self.model = model
         self.label = label
@@ -69,9 +72,7 @@ class JsonlStore(Generic[Model]):
 
     def _refuse_symlink(self, candidate: Path) -> None:
         if candidate.is_symlink():
-            raise self._error(
-                f"symlink in {self.label} layout is not allowed: {candidate}"
-            )
+            raise self._error(f"symlink in {self.label} layout is not allowed: {candidate}")
 
     def _refuse_hostile_root(self) -> None:
         self._refuse_symlink(self.root)
@@ -87,6 +88,8 @@ class JsonlStore(Generic[Model]):
         duplicate identity and a failed ``extra_validate`` are all refused
         with the store's error type and line attribution.
         """
+        if self.durability_uncertain:
+            raise OSError("jsonl_publication_uncertain")
         self._refuse_hostile_root()
         if not self.root.exists():
             return []
@@ -118,9 +121,7 @@ class JsonlStore(Generic[Model]):
                         f"{self.label} {self.path} lines {seen[key]} and {line_number} "
                         f"share {self.article} {self.id_label} id"
                     )
-                for index, (secondary_label, secondary_key) in enumerate(
-                    self.secondary_keys
-                ):
+                for index, (secondary_label, secondary_key) in enumerate(self.secondary_keys):
                     secondary_value = secondary_key(record)
                     if secondary_value is None:
                         continue
@@ -144,6 +145,16 @@ class JsonlStore(Generic[Model]):
         return records
 
     def write(self, records: Iterable[Model]) -> None:
+        if self.durability_uncertain:
+            raise OSError("jsonl_publication_uncertain")
+        try:
+            self._write(records)
+        except BaseException:
+            if self.durable:
+                self.durability_uncertain = True
+            raise
+
+    def _write(self, records: Iterable[Model]) -> None:
         """Atomically replace the store with ``records``.
 
         One temp file plus ``os.replace`` (through ``atomic_replace``) per
@@ -151,7 +162,10 @@ class JsonlStore(Generic[Model]):
         temp file is cleaned up in the ``finally`` block.
         """
         self._refuse_hostile_root()
-        self.root.mkdir(parents=True, exist_ok=True)
+        if self.durable:
+            durable_mkdir(self.root)
+        else:
+            self.root.mkdir(parents=True, exist_ok=True)
         self._refuse_symlink(self.path)
         if self.path.exists() and not self.path.is_file():
             raise self._error(f"{self.label} path {self.path} is not a file")
@@ -163,7 +177,13 @@ class JsonlStore(Generic[Model]):
                 for record in records:
                     handle.write(record.model_dump_json())
                     handle.write("\n")
-            atomic_replace(temp_name, self.path)
+                if self.durable:
+                    handle.flush()
+                    os.fsync(handle.fileno())
+            if self.durable:
+                atomic_replace(temp_name, self.path, durable=True)
+            else:
+                atomic_replace(temp_name, self.path)
         finally:
             if os.path.exists(temp_name):
                 os.unlink(temp_name)

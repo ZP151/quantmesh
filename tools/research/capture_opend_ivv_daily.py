@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import contextlib
+import functools
 import hashlib
 import importlib
 import importlib.util
@@ -43,7 +44,20 @@ ADDITIONAL_SUFFIX = ".dev-additional-task.v1"
 ADDITIONAL_SCOPE = "53badf05a10d955cc0826dccc592d1807bfbcfec8abcd4f9e3a194857e3d1858"
 ADDITIONAL_EFFECT = "a6681407439408a9d01baecedb3026f16f8e9513d601b2edd56910b0228eee17"
 ADDITIONAL_AUTH = "595c2987fda4cc0275d785b91137b6e61824800888500e2f7c5a78ea7b5f5832"
+RECOVERY_SUFFIX = ".dev-transaction-recovery.v1"
+RECOVERY_SCOPE = "48683f978b5d6974ee9511287ec90f3720e67edfa698afc9219b6c394e104470"
+RECOVERY_EFFECT = "19c72a041a09ba81e229f933dd574d62b0bb8013099eaf2bb1357f4892e23e2c"
+RECOVERY_AUTH = "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd"
 CHANNEL_ASSURANCE = "UNVERIFIED_TRUSTED_EXTERNAL"
+
+
+def _serialized(method):
+    @functools.wraps(method)
+    def invoke(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return invoke
 
 
 class CaptureRejected(ValueError):
@@ -138,6 +152,10 @@ def _explicit_non_usd(statement):
 
 def normalize_capture(plain, *, schedule, source_facts):
     return _normalize_capture(plain, schedule, source_facts, SCOPE)
+
+
+def normalize_recovery_capture(plain, *, schedule, source_facts):
+    return _normalize_capture(plain, schedule, source_facts, RECOVERY_SCOPE)
 
 
 def normalize_additional_capture(plain, *, schedule, source_facts):
@@ -348,23 +366,31 @@ def _validate_production_plan_keys(plan, *, schema="qm.ivv.capture-plan.v1"):
         "schedule_ref",
     }
     if schema in {
-        "qm.ivv.capture-plan" + s for s in (DEV_SUFFIX, TRUSTED_SUFFIX, ADDITIONAL_SUFFIX)
+        "qm.ivv.capture-plan" + s
+        for s in (DEV_SUFFIX, TRUSTED_SUFFIX, ADDITIONAL_SUFFIX, RECOVERY_SUFFIX)
     }:
         allowed = (allowed - {"provider_bounds_ref"}) | {"provider_evidence_ref", "policy_ref"}
+    if schema == "qm.ivv.capture-plan" + RECOVERY_SUFFIX:
+        allowed |= {"recovery"}
     _require(type(plan) is dict and set(plan) <= allowed, "unknown_plan_fields")
     _require(set(plan) == allowed, "missing_plan_fields")
 
 
 def _validate_fixed_plan(plan, *, schema="qm.ivv.capture-plan.v1"):
     additional = schema == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX
+    recovery = schema == "qm.ivv.capture-plan" + RECOVERY_SUFFIX
     _require(
         type(plan) is dict
         and plan.get("schema_id") == schema
-        and plan.get("scope_id") == (ADDITIONAL_SCOPE if additional else SCOPE)
+        and plan.get("scope_id")
+        == (RECOVERY_SCOPE if recovery else ADDITIONAL_SCOPE if additional else SCOPE)
         and (not additional or plan.get("effect_id") == "ivv-additional-20261103-01")
+        and (not recovery or plan.get("effect_id") == "ivv-trend-staged-20261029-capture")
         and plan.get("symbol") == "US.IVV"
-        and plan.get("approval_sha256") == (ADDITIONAL_EFFECT if additional else APPROVAL)
-        and plan.get("execution_sha256") == (ADDITIONAL_AUTH if additional else EXECUTION)
+        and plan.get("approval_sha256")
+        == (RECOVERY_EFFECT if recovery else ADDITIONAL_EFFECT if additional else APPROVAL)
+        and plan.get("execution_sha256")
+        == (RECOVERY_AUTH if recovery else ADDITIONAL_AUTH if additional else EXECUTION)
         and plan.get("input_window_digest") == WINDOW
         and plan.get("full_window_sha256") == FULL_WINDOW,
         "fixed_scope_or_authority",
@@ -396,6 +422,42 @@ def _validate_fixed_plan(plan, *, schema="qm.ivv.capture-plan.v1"):
 
 
 def _dev_provenance(value, suffix=DEV_SUFFIX):
+    if suffix == RECOVERY_SUFFIX:
+        fields = (
+            "policy_sha256",
+            "authorization_sha256",
+            "diagnostic_mode",
+            "hard_limit_enforced",
+            "provider_tail_max",
+            "channel_assurance",
+            "logical_task_id",
+            "math_cost_spec",
+            "batch_id",
+            "capture_budget",
+            "channel",
+            "historical_actual_cumulative",
+            "provider_hard_limit_enforced",
+        )
+        _require(
+            all(key in value for key in fields)
+            and value.get("logical_task_id") == "ivv-trend-staged-20261029"
+            and value.get("math_cost_spec")
+            == "7e0c785311bdae85828898bcc63b7a88d724da9bab4f844eb35673c923c34fea"
+            and type(value.get("batch_id")) is str
+            and type(value.get("capture_budget")) is dict
+            and value["capture_budget"].get("batch_id") == value["batch_id"]
+            and value.get("channel") == CHANNEL_ASSURANCE
+            and value.get("historical_actual_cumulative") == "UNKNOWN"
+            and value.get("provider_hard_limit_enforced") is False
+            and _digest(value.get("policy_sha256"))
+            and value.get("authorization_sha256") == RECOVERY_AUTH
+            and value.get("diagnostic_mode") == "DEV_TRANSACTION_RECOVERY"
+            and value.get("hard_limit_enforced") is False
+            and value.get("provider_tail_max") == "UNKNOWN"
+            and value.get("channel_assurance") == CHANNEL_ASSURANCE,
+            "recovery_provenance",
+        )
+        return {key: value[key] for key in fields}
     if suffix == ADDITIONAL_SUFFIX:
         # Byte-typed projection of the approved public contract, including both scopes.
         fields = {
@@ -509,6 +571,7 @@ def _sync_dir(path):
 
 class _Writer:
     def __init__(self, root, sync_dir):
+        self._lock = threading.RLock()
         self.root = Path(root)
         self.sync_dir = sync_dir
         self.written = 0
@@ -520,6 +583,7 @@ class _Writer:
             raise CaptureRejected("spent_capture_root") from error
         self.sync_dir(self.root.parent)
 
+    @_serialized
     def write(self, name, payload, maximum=MIB):
         _require(
             re.fullmatch(r"[a-z0-9_-]+(?:\.[a-z0-9_-]+)?\.(json|pb|log)", name), "receipt_name"
@@ -558,6 +622,7 @@ class _Writer:
 
 class _CaptureObserver:
     def __init__(self, plan, writer, clock):
+        self._lock = threading.RLock()
         self.plan = plan
         self.writer = writer
         self.clock = clock
@@ -571,6 +636,10 @@ class _CaptureObserver:
         self.trees = {}
         self.poison = None
         self.asof = None
+        self.recovery = plan.get("_recovery_ledger")
+        self.attempt = plan.get("_recovery_attempt")
+        self.last_business_send = None
+        self.request_ids = {}
 
     def check(self, limit=480):
         verifier = self.plan.get("_live_verifier")
@@ -585,18 +654,21 @@ class _CaptureObserver:
         self.poison = code
         raise CaptureRejected(code)
 
+    @_serialized
     def context_created(self):
         if self.contexts:
             self.reject("second_context")
         self.contexts += 1
         self.check(180)
 
+    @_serialized
     def initializing(self):
         if self.initializations:
             self.reject("second_initialization")
         self.initializations += 1
         self.check(180)
 
+    @_serialized
     def reserve(self, tag, params):
         self.check(360 if tag in DATA else 180)
         if len(self.pack_attempts) >= len(ORDER) or ORDER[len(self.pack_attempts)] != tag:
@@ -611,6 +683,7 @@ class _CaptureObserver:
                 self.reject("fixed_request_parameters")
         self.pack_attempts.append(tag)
 
+    @_serialized
     def register(self, tag, proto, serial):
         if (
             proto != RPCS[tag]
@@ -621,8 +694,23 @@ class _CaptureObserver:
             self.reject("request_wire_binding")
         self.pending[(proto, serial)] = tag
 
+    @_serialized
     def before_send(self, proto, serial):
         self.check()
+        if self.recovery is not None:
+            tag = self.pending.get((proto, serial))
+            _require(proto in (1001, 1004) or tag is not None, "unregistered_or_duplicate_send")
+            if proto not in (1001, 1004) and self.last_business_send is not None:
+                delay = 1 / self.recovery.policy["batch"]["max_business_per_second"]
+                self.clock.sleep(max(0, delay - (self.clock.mono() - self.last_business_send)))
+                self.check()
+            request = self.recovery.request(
+                self.attempt, proto, dict(PARAMS[tag]) if tag else {}, now=self.clock.mono()
+            )
+            if tag is not None:
+                self.request_ids[tag] = request
+                self.last_business_send = self.clock.mono()
+
         if proto in (1001, 1004):
             self.controls[proto] = self.controls.get(proto, 0) + 1
             if self.controls[proto] > (1 if proto == 1001 else 96):
@@ -638,6 +726,7 @@ class _CaptureObserver:
                 self.reject("data_asof_stale")
         self.sent.append(tag)  # reserve BEFORE the actual SDK network send
 
+    @_serialized
     def response(self, tag, sdk_bytes, tree, observed_code=None):
         self.check(360)
         _require(
@@ -659,12 +748,35 @@ class _CaptureObserver:
             "observed_code": observed_code,
         }
         self.trees[tag] = tree
+        if self.recovery is not None:
+            ref = self.writer.json(
+                tag + ".response-binding.json",
+                {
+                    "connection_attempt_id": self.attempt,
+                    "request_attempt_id": self.request_ids[tag],
+                    "response": self.responses[tag],
+                },
+            )
+            self.observed(tag, ref)
         if tag == "splits":
             _require(
                 tree.get("s2c", {}).get("nextKey") == "-1" and "nextKey" in tree.get("s2c", {}),
                 "split_terminal_presence",
             )
 
+    def observed(self, tag, ref):
+        self.recovery.observed(
+            self.attempt,
+            self.request_ids[tag],
+            {
+                "algorithm": "sha256",
+                "digest": ref["sha256"],
+                "media_type": "application/json",
+                "byte_length": ref["bytes"],
+            },
+        )
+
+    @_serialized
     def counts(self):
         return {
             "contexts": self.contexts,
@@ -686,7 +798,9 @@ def _plain_from_originals(o, *, additional=False):
     p = {
         "schema_id": "qm.ivv.capture-plain.v1",
         "symbol": "US.IVV",
-        "scope_id": ADDITIONAL_SCOPE if additional else SCOPE,
+        "scope_id": getattr(o, "plan", {}).get(
+            "scope_id", ADDITIONAL_SCOPE if additional else SCOPE
+        ),
         "raw_source_hashes": {k: v["sdk_ref"]["sha256"] for k, v in o.responses.items()},
         "adjustment_factors": {
             "code": "US.IVV",
@@ -791,6 +905,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         suffix = TRUSTED_SUFFIX
     if plan.get("schema_id") == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX:
         suffix = ADDITIONAL_SUFFIX
+    if plan.get("schema_id") == "qm.ivv.capture-plan" + RECOVERY_SUFFIX:
+        suffix = RECOVERY_SUFFIX
     _validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + suffix)
     provenance = _dev_provenance(plan["_verified_binding"], suffix) if suffix != ".v1" else {}
     _require(
@@ -825,6 +941,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
     try:
         observer.check(180)
         with _phase(clock, plan["started_monotonic"] + 180):
+            if observer.recovery is not None:
+                observer.recovery.may_connect(observer.attempt)
             backend = backend_factory(observer, writer, plan, clock)
             backend.open()
         for tag in ORDER:
@@ -876,6 +994,9 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
                 observer.asof = clock.wall()
             elif tag == "splits":
                 _precheck_actions(observer, dates, additional=suffix == ADDITIONAL_SUFFIX)
+            if observer.recovery is not None and tag in safe_meta:
+                ref = writer.json(tag + ".metadata.json", safe_meta[tag])
+                observer.observed(tag, ref)
         _require(
             observer.counts()["application_sends"] == 7 and len(observer.responses) == 4,
             "capture_incomplete",
@@ -932,7 +1053,7 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         "synthetic": synthetic,
         "source_binding": plan.get("_verified_binding", {}),
     }
-    if suffix == ADDITIONAL_SUFFIX:
+    if suffix in (ADDITIONAL_SUFFIX, RECOVERY_SUFFIX):
         manifest.update(
             approval_sha256=plan["approval_sha256"], execution_sha256=plan["execution_sha256"]
         )
@@ -958,6 +1079,21 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         if manifest["primary_failure"] is None:
             manifest["primary_failure"] = _failure("final_guard", error)
         manifest["state"] = "FAILED_CAPTURE_REQUIRES_PARENT_SEAL"
+    if observer.recovery is not None:
+        journal = writer.json("request-journal.json", observer.recovery.journal(observer.attempt))
+        manifest["recovery"] = {
+            "logical_task_id": observer.recovery.contract.LOGICAL_TASK_ID,
+            "batch_id": observer.recovery.policy["batch"]["batch_id"],
+            "connection_attempt_id": observer.attempt,
+            "policy_sha256": observer.recovery.policy_sha,
+            "request_journal_ref": {
+                "algorithm": "sha256",
+                "digest": journal["sha256"],
+                "media_type": "application/json",
+                "byte_length": journal["bytes"],
+            },
+            "history_actual": "UNKNOWN",
+        }
     writer.json("capture-manifest.json", manifest)
     return manifest
 
@@ -1531,15 +1667,16 @@ def _admit_material(plan, plan_path, receipt_root, permit, fd, expected_sha256):
         type(actor) is dict and set(actor) == {"pid", "uid", "start_ticks", "cgroup"},
         "root_actor_binding",
     )
-    additional = plan["schema_id"] == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX
+    recovery = plan["schema_id"] == "qm.ivv.capture-plan" + RECOVERY_SUFFIX
+    additional = recovery or plan["schema_id"] == "qm.ivv.capture-plan" + ADDITIONAL_SUFFIX
     _native_recheck(actor, Path(receipt_root).parent, additional=additional)
     _require(0 <= time.monotonic() - plan["started_monotonic"] < 180, "root_effect_expired")
     budget = permit.get("budget", {})
     _require(
         type(budget.get("G")) is int
-        and 0 < budget["G"] <= 10500000000
+        and 0 < budget["G"] <= (12884901888 if recovery else 10500000000)
         and type(budget.get("P")) is int
-        and 0 < budget["P"] <= 4500000000,
+        and 0 < budget["P"] <= (6442450944 if recovery else 4500000000),
         "root_budget_fit",
     )
     expected_refs = {
@@ -1789,6 +1926,19 @@ def capture_additional_once(
     )
 
 
+def capture_recovery_attempt(plan_path, receipt_root, **pins):
+    return _capture_owned(
+        plan_path,
+        receipt_root,
+        pins["permit_fd"],
+        pins["expected_sha256"],
+        pins["expected_policy_sha256"],
+        pins["expected_authorization_sha256"],
+        pins["expected_go_sha256"],
+        RECOVERY_SUFFIX,
+    )
+
+
 def _capture_owned(
     plan_path,
     receipt_root,
@@ -1804,7 +1954,13 @@ def _capture_owned(
     _require(
         state is not None
         and expected_authorization_sha256
-        == (ADDITIONAL_AUTH if suffix == ADDITIONAL_SUFFIX else TRUSTED_AUTH)
+        == (
+            RECOVERY_AUTH
+            if suffix == RECOVERY_SUFFIX
+            else ADDITIONAL_AUTH
+            if suffix == ADDITIONAL_SUFFIX
+            else TRUSTED_AUTH
+        )
         and (suffix != ADDITIONAL_SUFFIX or getattr(state, "additional_task", None) is not None)
         and getattr(state, "trusted_issuer", None) is not None,
         "trusted_owned_actor_required",
@@ -1821,7 +1977,11 @@ def _capture_owned(
         expected_go_sha256=expected_go_sha256,
     )
     state.session.before_effect()
-    if suffix == ADDITIONAL_SUFFIX:
+    if suffix == RECOVERY_SUFFIX:
+        _require(getattr(state, "recovery_ledger", None) is not None, "recovery_owned_ledger")
+        plan["_recovery_ledger"] = state.recovery_ledger
+        plan["_recovery_attempt"] = state.recovery_attempt
+    elif suffix == ADDITIONAL_SUFFIX:
         state.additional_task.reserve_context()
     else:
         _reserve_once(plan)

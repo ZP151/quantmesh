@@ -248,7 +248,10 @@ class _OwnedChild:
             self.process.stdin.flush()
             self.process.stdin.close()
         except BaseException:
-            self.close()
+            if getattr(self, "_verified_cleanup", False):
+                self.close(verify=True)
+            else:
+                self.close()
             raise
 
     def _windows_limits(self, budget):
@@ -282,7 +285,9 @@ class _OwnedChild:
     def pulse(self) -> None:
         """Windows Job Object lifetime has no owner-pulse channel."""
 
-    def close(self):
+    def close(self, *, verify=False):
+        if verify or getattr(self, "_verified_cleanup", False):
+            return self._close_verified()
         if self.job_handle is not None:
             kernel = ctypes.windll.kernel32
             kernel.TerminateJobObject(ctypes.c_void_p(self.job_handle), 1)
@@ -295,6 +300,108 @@ class _OwnedChild:
                 self.process.kill()
             self.process.wait(timeout=5)
         self.log.close()
+
+    def _close_verified(self):
+        """IVV opt-in: retain exact handles on uncertainty; never attest normal exit."""
+
+        class Accounting(ctypes.Structure):
+            _fields_ = [
+                (name, ctypes.c_longlong)
+                for name in ("user", "kernel", "period_user", "period_kernel")
+            ] + [(name, ctypes.c_uint32) for name in ("faults", "total", "active", "terminated")]
+
+        _guard_owned_handle_closes(self)
+        handle = self.job_handle
+        process_closed = (
+            self.process is not None
+            and getattr(self.process, "_owned_handle_close_state", None) == "CLOSED"
+        )
+        kernel = ctypes.windll.kernel32 if handle is not None else None
+        if handle is not None and not kernel.TerminateJobObject(ctypes.c_void_p(handle), 1):
+            raise OSError("owned_job_termination_unconfirmed")
+        if self.process is not None and not process_closed:
+            if self.process.poll() is None:
+                self.process.kill()
+            self.process.wait(timeout=5)
+            if self.process.poll() is None:
+                raise OSError("owned_child_reap_unconfirmed")
+        if self.process is not None:
+            pipe = self.process.stdin
+            if pipe is not None and not pipe.closed:
+                pipe.close()
+                if not pipe.closed:
+                    raise OSError("owned_pipe_close_unconfirmed")
+        log = getattr(self, "log", None)
+        if log is not None:
+            log.close()
+            if not log.closed:
+                raise OSError("owned_log_close_unconfirmed")
+        if self.process is not None:
+            _close_process_handle(self.process)
+        if handle is not None:
+            deadline = time.monotonic() + 5
+            while True:
+                info = Accounting()
+                if not kernel.QueryInformationJobObject(
+                    ctypes.c_void_p(handle), 1, ctypes.byref(info), ctypes.sizeof(info), None
+                ):
+                    raise OSError("owned_job_accounting_unconfirmed")
+                if info.active == 0:
+                    break
+                if time.monotonic() >= deadline:
+                    raise OSError("owned_job_not_empty")
+                time.sleep(0.01)
+        _close_job_handle(self)
+        return True
+
+
+def _guard_owned_handle_closes(child):
+    """A lost close acknowledgement makes the raw value unsafe to touch again."""
+    process = getattr(child, "process", None)
+    job_state = getattr(child, "_job_handle_close_state", "OPEN")
+    process_state = getattr(process, "_owned_handle_close_state", "OPEN")
+    if "MAY_HAVE_CLOSED" in (job_state, process_state):
+        raise OSError("owned_handle_close_acknowledgement_unknown")
+    # Finalize Python bookkeeping after an observed success, without another FFI.
+    if job_state == "CLOSED":
+        child.job_handle = None
+    if process is not None and process_state == "CLOSED":
+        process._handle.closed = True
+
+
+def _close_job_handle(child):
+    state = getattr(child, "_job_handle_close_state", "OPEN")
+    if state == "MAY_HAVE_CLOSED":
+        raise OSError("owned_handle_close_acknowledgement_unknown")
+    if state == "CLOSED":
+        child.job_handle = None
+        return
+    if child.job_handle is not None:
+        child._job_handle_close_state = "MAY_HAVE_CLOSED"
+        if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(child.job_handle)):
+            child._job_handle_close_state = "OPEN"  # Explicitly observed no close.
+            raise OSError("owned_job_handle_close_unconfirmed")
+        child._job_handle_close_state = "CLOSED"
+        child.job_handle = None
+
+
+def _close_process_handle(process):
+    state = getattr(process, "_owned_handle_close_state", "OPEN")
+    if state == "MAY_HAVE_CLOSED":
+        raise OSError("owned_handle_close_acknowledgement_unknown")
+    handle = process._handle
+    if state == "CLOSED":
+        handle.closed = True
+        return
+    if not handle.closed:
+        # CPython Handle.Close marks closed before FFI; keep separate knowledge
+        # of the native effect and never retry a possibly reassigned raw value.
+        process._owned_handle_close_state = "MAY_HAVE_CLOSED"
+        if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(int(handle))):
+            process._owned_handle_close_state = "OPEN"
+            raise OSError("owned_process_handle_close_unconfirmed")
+        process._owned_handle_close_state = "CLOSED"
+        handle.closed = True
 
 
 def _child_command(attempt: Path) -> list[str]:

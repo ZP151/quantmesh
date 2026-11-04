@@ -1,0 +1,302 @@
+{
+  "status": "SERVER_PRODUCT_FIELDS_FROZEN_NOT_RUNTIME_GO",
+  "issue": 281,
+  "family": ".dev-transaction-recovery.v1",
+  "mode": "DEV_TRANSACTION_RECOVERY",
+  "authority_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+  "policy_ref": {
+    "algorithm": "sha256",
+    "digest": "b81fd83161f477dcd8c37c2b08ccc16f9075fc27760c359ec9bfc3694d7e5346",
+    "media_type": "application/json",
+    "byte_length": 1425
+  },
+  "identity_exact": [
+    "business_key",
+    "experiment_id",
+    "input_version",
+    "logical_task_id",
+    "math_cost_spec"
+  ],
+  "business_key": "SHA256(canonical(first4 fields)); no authority/sourcepack/attempts",
+  "job_id": "UUID5(NAMESPACE_URL,urn:quantmesh:ivv-recovery:v1:+business_key)",
+  "semantic_fields_exact": [
+    "action_coverage",
+    "availability_assumption",
+    "calendar_id",
+    "calendar_timezone",
+    "calendar_version",
+    "candidate",
+    "currency",
+    "historical_trade_venues",
+    "inputs",
+    "instrument",
+    "pit_status",
+    "price_adjustment",
+    "revision_note",
+    "sample_role",
+    "source_id",
+    "source_use",
+    "volume_unit",
+    "window"
+  ],
+  "math_cost_spec": "7e0c785311bdae85828898bcc63b7a88d724da9bab4f844eb35673c923c34fea",
+  "proof_slots": {
+    "scope_ref": "recovery_policy_ref",
+    "capture_policy_ref": "recovery_policy_ref",
+    "authorization_ref": "actual human directionA6db",
+    "effect_ref": "actual human directionA6db",
+    "execution_ref": "actual human directionA6db",
+    "windows_policy_ref": "actual new Windows projection pinned by accepted studyGO"
+  },
+  "attempt_policy_exact": [
+    "policy_ref",
+    "batch_id",
+    "max_numerical_attempts"
+  ],
+  "study_go": {
+    "schema_id": "qm.ivv.root-go.dev-transaction-recovery.v1",
+    "decision": "GO_RECOVERABLE_AFTER_INPUT_ACCEPTANCE",
+    "scope_id": "business_key",
+    "research_scope_id": "business_key",
+    "research_effect_sha256": "shared.research_effect(identity)",
+    "approval_sha256": "shared.research_effect(identity)",
+    "execution_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "additional_required": [
+      "recovery_identity",
+      "attempt_policy",
+      "input_manifest_ref",
+      "job_id",
+      "capture_scope_id",
+      "capture_effect_id",
+      "capture_policy_sha256",
+      "windows_policy_sha256",
+      "output_root_digest",
+      "input_window_digest",
+      "full_window_sha256",
+      "controls",
+      "code",
+      "adapter_sha256",
+      "gate_sha256",
+      "numeric_runtime_sha256",
+      "runtime"
+    ]
+  },
+  "acceptance_decision": "ACCEPT_FOR_DECLARED_RECOVERABLE_RESEARCH",
+  "study_root": "C:/Users/15492/.codex-clean/worktrees/0038-security-runtime-alignment/QuantMesh/output/ivv-transaction-recovery-20261104-01/study",
+  "ownership": {
+    "Server": [
+      "ivv_recovery.py",
+      "tools/research capture/helper/issuer/runner",
+      "ops",
+      "shared docs",
+      "host"
+    ],
+    "Product": [
+      "ivv_admission.py",
+      "ivv_runtime.py",
+      "native_daily_real.py",
+      "directtests",
+      "minimum existing UIconsumer"
+    ]
+  },
+  "operating_policy": {
+    "actor": {
+      "context_runtime_seconds": 480,
+      "cpu_percent": 50,
+      "memory_bytes": 536870912,
+      "numeric_seconds": 80,
+      "sdk_log_bytes": 1048576,
+      "swap_bytes": 0,
+      "tasks_max": 32,
+      "windows_affinity_cores": 1,
+      "windows_job_commit_bytes": 536870912,
+      "writer_bytes": 7340032
+    },
+    "assurance": {
+      "channel": "UNVERIFIED_TRUSTED_EXTERNAL",
+      "historical_actual_cumulative": "UNKNOWN",
+      "provider_hard_limit_enforced": false,
+      "provider_tail_max": "UNKNOWN"
+    },
+    "authority_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "batch": {
+      "batch_id": "ivv-recovery-batch-01",
+      "business_requests": 32,
+      "contexts": 3,
+      "init_connect": 3,
+      "keepalive": 288,
+      "max_business_per_second": 1,
+      "max_numerical_attempts": 3,
+      "wall_seconds": 1800
+    },
+    "logical_task_id": "ivv-trend-staged-20261029",
+    "math_cost_spec": "7e0c785311bdae85828898bcc63b7a88d724da9bab4f844eb35673c923c34fea",
+    "read_only_protocols": [
+      1002,
+      3104,
+      3202,
+      3105,
+      3234,
+      3236,
+      3103
+    ],
+    "schema_id": "qm.ivv.recovery-policy.v1",
+    "selection": {
+      "first": "2026-05-08",
+      "last": "2026-10-29",
+      "observations": 21,
+      "sessions": 121,
+      "symbol": "US.IVV",
+      "warmup": 100,
+      "window_sha256": "38f7822357ce458d4fe1d974821e7fda89deb3a31208c68dcea6abb85b04eaf4"
+    },
+    "storage": {
+      "capture_local": 50331648,
+      "capture_remote": 50331648,
+      "closeout_local": 2097152,
+      "closeout_remote": 2097152,
+      "input_review": 4194304,
+      "software": 41943040,
+      "study": 8388608
+    },
+    "thresholds": {
+      "G": 12884901888,
+      "P": 6442450944,
+      "all_parent_stress": 4648059918,
+      "free": 53687091200,
+      "guard_G": 10629509210,
+      "guard_P": 4591436814
+    }
+  },
+  "originals": "All old80MiB holds/futures/failures and UNKNOWN/SPENT remain; no old ledger inspection",
+  "input_coherence": "Current version requires one actual capture_epoch; batch/connection grouping is provenance only, not provider PIT; no cross-epoch composition",
+  "input_manifest": {
+    "schema_id": "qm.ivv.input-manifest.dev-transaction-recovery.v1",
+    "exact_fields": [
+      "schema_id",
+      "logical_task_id",
+      "semantic",
+      "capture_epoch",
+      "capture_refs",
+      "capture_go_refs",
+      "source_facts_ref",
+      "parent_close_refs",
+      "asof_pit"
+    ],
+    "parallel_refs": "capture_refs/capture_go_refs/parent_close_refs length1..8, index-aligned actual same-epoch originals",
+    "asof_pit_exact": [
+      "status",
+      "provider_asof",
+      "provider_version",
+      "basis_refs"
+    ],
+    "asof_pit": "actual source-only; unknown/null if unproved, known requires actual basis+provider version, never local attempt label as provider PIT",
+    "no_self_reference": "Manifest before acceptance; acceptance signs manifest; manifest excludes future acceptance ref"
+  },
+  "capture_go": {
+    "schema_id": "qm.ivv.root-go.dev-transaction-recovery.v1",
+    "decision": "GO_BOUNDED_CAPTURE_RECOVERY",
+    "scope_id": "48683f978b5d6974ee9511287ec90f3720e67edfa698afc9219b6c394e104470",
+    "capture_scope_id": "48683f978b5d6974ee9511287ec90f3720e67edfa698afc9219b6c394e104470",
+    "capture_effect_id": "ivv-trend-staged-20261029-capture",
+    "approval_sha256": "19c72a041a09ba81e229f933dd574d62b0bb8013099eaf2bb1357f4892e23e2c",
+    "execution_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "authorization_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "policy_sha256": "0ddf5c191a38fe0642ca761cac740c86afddef417511778f681c8f2272634a34",
+    "recovery_fields": [
+      "logical_task_id",
+      "batch_id",
+      "connection_attempt_id",
+      "policy_sha256"
+    ],
+    "actual_fields": [
+      "actor",
+      "catalog",
+      "source",
+      "native_controls"
+    ],
+    "no_study_job_before_inputs": true
+  },
+  "raw_binding": {
+    "scope_id": "capture_scope_id",
+    "effect_id": "logical_task_id+-capture",
+    "source_binding.root_go_sha256": "actual capture_go_ref.digest; NOT future studyGO",
+    "source_binding.approval_sha256": "19c72a041a09ba81e229f933dd574d62b0bb8013099eaf2bb1357f4892e23e2c",
+    "source_binding.execution_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "recovery_required": [
+      "logical_task_id",
+      "batch_id",
+      "connection_attempt_id",
+      "policy_sha256",
+      "request_journal_ref",
+      "history_actual"
+    ]
+  },
+  "windows_policy": {
+    "schema_id": "qm.ivv.windows-policy.dev-transaction-recovery.v1",
+    "exact_fields": [
+      "schema_id",
+      "logical_task_id",
+      "recovery_identity",
+      "policy_sha256",
+      "planning_scope_id",
+      "planning_job_uuid",
+      "full_execution_approval_sha256",
+      "research_effect_sha256",
+      "windows_controls",
+      "shared_pagefile_growth"
+    ],
+    "windows_controls": {
+      "job_wide_committed_memory_max": 536870912,
+      "affinity_cores": 1,
+      "absolute_seconds": 80,
+      "owned_study_artifacts": 8388608,
+      "paging": "ORDINARY_WINDOWS_OS_MANAGED_ALLOWED"
+    },
+    "shared_pagefile_growth": "UNKNOWN_NOT_OWNED_ARTIFACTS"
+  },
+  "retained_previous_policy_refs": [
+    {
+      "algorithm": "sha256",
+      "digest": "ae7ccc4c39273a01363db25fa58b4a033182de0b91a46080bf2e7531b8322013",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "0ddf5c191a38fe0642ca761cac740c86afddef417511778f681c8f2272634a34",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "5c458e640c8153dff68f596d70757752f98e857b94ea2dbd127a7f52d328ca4f",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "d55242c0510cda04c775a5725f10c3974a5c7d0c6c92e1ef9b44fbfbf0f2ebfc",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "0d817811c3fd1db015451f700ec5a2531ba6855ec07fee032c3e0d0d31a56bf5",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "05abb057cc5e3b3fb82e3ec40979aca2dad193d259717ddea3d79d082a378671",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "60025969eae837b0205128b9b9a5db2cb8acd8b63a35766ac8f7fe35135f999d",
+      "media_type": "application/json",
+      "byte_length": 1426
+    }
+  ]
+}

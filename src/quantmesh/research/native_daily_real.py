@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime
 from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated, Literal
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -217,6 +217,30 @@ class NativeDecisionRequest(Contract):
         return value.strip()
 
 
+class ComputeAttempt(Contract):
+    """One durable local execution, distinct from an SDK or research experiment."""
+
+    attempt_id: str
+    sequence: Annotated[int, Field(strict=True, ge=1)]
+    state: Literal["running", "failed", "interrupted", "prepared", "committed"]
+    request: NativeRequest
+    request_digest: Digest
+    admission: ObjectRef
+    real_binding: ObjectRef | None = None
+    policy: dict
+    provenance: dict
+    started_at: str
+    completed_at: str | None = None
+    failure_code: Literal["COMPUTE_FAILED", "EXECUTION_INTERRUPTED"] | None = None
+    report: ObjectRef | None = None
+
+
+class ResearchTransaction(Contract):
+    identity: dict[str, str]
+    attempts: list[ComputeAttempt] = Field(min_length=1)
+    prepared_report: ObjectRef | None = None
+
+
 class NativeJob(Contract):
     job_id: str
     request: NativeRequest
@@ -232,6 +256,7 @@ class NativeJob(Contract):
     consumed_grant: Digest | None = None
     scope_trial_key: Digest | None = None
     real_binding: ObjectRef | None = None
+    transaction: ResearchTransaction | None = None
     created_at: str
     completed_at: str | None = None
     financial_qualification: Literal["INSUFFICIENT"] = "INSUFFICIENT"
@@ -255,6 +280,7 @@ class RegisteredInput:
     _authority: object = field(default=None, repr=False, compare=False)
     authority_ref: ObjectRef | None = None
     real_binding: ObjectRef | None = None
+    recovery: dict | None = field(default=None, repr=False, compare=False)
 
     @property
     def request(self):
@@ -390,6 +416,11 @@ def engineering_registration(store: ObjectStore, *, output_root):
     )
 
 
+# Strong references keep an uncertain exact owner and its WriterLease alive even
+# if a caller drops the service. Entries are removed only after terminal cleanup.
+_UNCERTAIN_OWNER_ROOTS = {}
+
+
 class NativeDailyService:
     """One durable writer, fixed candidate, explicit missing-input decisions."""
 
@@ -398,6 +429,9 @@ class NativeDailyService:
         for path in (self.root, *self.root.parents):
             if is_reparse_point(path):
                 raise NativeError("unsafe_storage")
+        prior_owner = _UNCERTAIN_OWNER_ROOTS.get(str(self.root))
+        if prior_owner is not None:
+            prior_owner.close()  # Exact known owner only, before acquiring another lease.
         self._condition = threading.Condition(threading.RLock())
         self._closed = False
         self._closing = False
@@ -405,7 +439,13 @@ class NativeDailyService:
         self._registered = tuple(registered)
         self._real_runtime_factory = real_runtime_factory
         self._real_runtimes = {}
-        self.objects = ObjectStore(self.root)
+        self._cleanup_pending = {}
+        self._durable_recovery = any(r.recovery is not None for r in self._registered)
+        if self._durable_recovery:
+            from quantmesh._fs import durable_mkdir
+
+            durable_mkdir(self.root)
+        self.objects = ObjectStore(self.root, durable=self._durable_recovery)
         self._lease = WriterLease(self.root / ".writer.lock")
         self._store = JsonlStore(
             self.root,
@@ -421,17 +461,465 @@ class NativeDailyService:
         )
         try:
             jobs = self._records()
-            changed = [
-                job.model_copy(update={"state": "interrupted", "completed_at": _now()})
-                if job.state == "running"
-                else job
-                for job in jobs
-            ]
+            if any(j.transaction is not None for j in jobs):
+                self._durable_recovery = self.objects.durable = self._store.durable = True
+                self._publish_records(jobs)  # Cold barrier before any prepared commit/effect.
+            changed = []
+            for job in jobs:
+                if job.state == "running":
+                    if job.transaction is not None:
+                        job = (
+                            self._committed_transaction(job)
+                            if job.transaction.prepared_report
+                            else self._interrupted_transaction(job)
+                        )
+                    else:
+                        job = job.model_copy(
+                            update={"state": "interrupted", "completed_at": _now()}
+                        )
+                changed.append(job)
             if changed != jobs:
-                self._store.write(changed)
+                self._publish_records(changed)
         except BaseException:
             self._lease.close()
             raise
+
+    @staticmethod
+    def _recovery_metadata(registration):
+        """Only trusted startup registrations carry recovery policy, never HTTP."""
+        if registration.recovery is None:
+            return None
+        from quantmesh.research import ivv_recovery as recovery
+
+        value = registration.recovery
+        if set(value) != {"recovery_identity", "attempt_policy", "recovery_provenance"}:
+            raise NativeError("study_not_admitted")
+        identity = recovery.validate_identity(value["recovery_identity"])
+        policy = value["attempt_policy"]
+        if (
+            set(policy) != {"policy_ref", "batch_id", "max_numerical_attempts"}
+            or type(policy["max_numerical_attempts"]) is not int
+            or policy["max_numerical_attempts"] < 1
+            or not isinstance(policy["batch_id"], str)
+            or not policy["batch_id"]
+        ):
+            raise NativeError("study_not_admitted")
+        policy_ref = ObjectRef.model_validate(policy["policy_ref"])
+        actual_policy = recovery.validate_policy(
+            _loads(NativeDailyService._from_store(registration.store, policy_ref))
+        )
+        recovery.validate_attempt_policy(policy, actual_policy)
+        if identity["math_cost_spec"] != digest(canonical(_accounting_contract())):
+            raise NativeError("study_not_admitted")
+        provenance = value["recovery_provenance"]
+        if set(provenance) != {"input_manifest_ref", "capture_attempt_refs"}:
+            raise NativeError("study_not_admitted")
+        ObjectRef.model_validate(provenance["input_manifest_ref"])
+        if not isinstance(provenance["capture_attempt_refs"], list):
+            raise NativeError("study_not_admitted")
+        for ref in provenance["capture_attempt_refs"]:
+            ObjectRef.model_validate(ref)
+        return {**value, "recovery_identity": identity}
+
+    @staticmethod
+    def _transaction_job_id(identity):
+        from quantmesh.research import ivv_recovery as recovery
+
+        return recovery.logical_job_id(identity)
+
+    def _verify_transaction(self, job):
+        from quantmesh.research import ivv_recovery as recovery
+
+        tx = job.transaction
+        identity = recovery.validate_identity(tx.identity)
+        if (
+            job.job_id != self._transaction_job_id(identity)
+            or job.scope_trial_key != identity["business_key"]
+            or len({a.attempt_id for a in tx.attempts}) != len(tx.attempts)
+        ):
+            raise ValueError("transaction_identity")
+        last = tx.attempts[-1]
+        for sequence, attempt in enumerate(tx.attempts, 1):
+            if (
+                _uuid(attempt.attempt_id) != attempt.attempt_id
+                or attempt.sequence != sequence
+                or digest(canonical(attempt.request.model_dump(mode="json")))
+                != attempt.request_digest
+                or attempt.policy["max_numerical_attempts"] < sequence
+                or type(attempt.policy["max_numerical_attempts"]) is not int
+                or (sequence < len(tx.attempts) and attempt.state not in {"failed", "interrupted"})
+                or (attempt.state in {"prepared", "committed"}) != (attempt.report is not None)
+                or (attempt.completed_at is None) != (attempt.state in {"running", "prepared"})
+                or attempt.failure_code
+                != {"failed": "COMPUTE_FAILED", "interrupted": "EXECUTION_INTERRUPTED"}.get(
+                    attempt.state
+                )
+            ):
+                raise ValueError("transaction_attempt")
+            for ref in [
+                attempt.policy["policy_ref"],
+                attempt.provenance["input_manifest_ref"],
+                *attempt.provenance["capture_attempt_refs"],
+            ]:
+                self._object(ObjectRef.model_validate(ref))
+            policy_ref = ObjectRef.model_validate(attempt.policy["policy_ref"])
+            archived_policy = recovery.validate_policy(_loads(self._object(policy_ref)))
+            recovery.validate_attempt_policy(attempt.policy, archived_policy)
+            snapshot = job.model_copy(
+                update={
+                    "transaction": None,
+                    "request": attempt.request,
+                    "request_digest": attempt.request_digest,
+                    "admission": attempt.admission,
+                    "real_binding": attempt.real_binding,
+                    "scope_trial_key": identity["business_key"] if attempt.real_binding else None,
+                    "consumed_grant": attempt.request.grant_ref.digest,
+                    "state": "succeeded" if attempt.report else attempt.state,
+                    "report": attempt.report,
+                    "decision": None,
+                    "decision_key": None,
+                    "created_at": attempt.started_at,
+                    "completed_at": attempt.completed_at,
+                }
+            )
+            self._verify(snapshot)
+            if attempt.real_binding is not None:
+                actual_basis = self._ivv_binding(snapshot, executing=False)
+                if (
+                    actual_basis["recovery_identity"] != identity
+                    or actual_basis["attempt_policy"] != attempt.policy
+                    or actual_basis["recovery_provenance"] != attempt.provenance
+                ):
+                    raise ValueError("transaction_provenance")
+        if (
+            job.request != last.request
+            or job.request_digest != last.request_digest
+            or job.admission != last.admission
+            or job.real_binding != last.real_binding
+            or job.state
+            != {
+                "running": "running",
+                "prepared": "running",
+                "failed": "failed",
+                "interrupted": "interrupted",
+                "committed": "succeeded",
+            }[last.state]
+            or (job.completed_at is None) != (job.state == "running")
+            or (tx.prepared_report is not None) != (last.state == "prepared")
+            or (tx.prepared_report is not None and tx.prepared_report != last.report)
+            or job.report != (last.report if last.state == "committed" else None)
+        ):
+            raise ValueError("transaction_snapshot")
+
+    def _interrupted_transaction(self, job):
+        tx = job.transaction
+        attempt = tx.attempts[-1].model_copy(
+            update={
+                "state": "interrupted",
+                "completed_at": _now(),
+                "failure_code": "EXECUTION_INTERRUPTED",
+            }
+        )
+        return job.model_copy(
+            update={
+                "state": "interrupted",
+                "completed_at": _now(),
+                "transaction": tx.model_copy(update={"attempts": [*tx.attempts[:-1], attempt]}),
+            }
+        )
+
+    def _committed_transaction(self, job):
+        tx = job.transaction
+        if tx.prepared_report is None:
+            raise NativeError("artifact_invalid")
+        attempt = tx.attempts[-1].model_copy(update={"state": "committed", "completed_at": _now()})
+        done = job.model_copy(
+            update={
+                "state": "succeeded",
+                "report": tx.prepared_report,
+                "completed_at": _now(),
+                "transaction": tx.model_copy(
+                    update={"prepared_report": None, "attempts": [*tx.attempts[:-1], attempt]}
+                ),
+            }
+        )
+        self._verify(done)
+        return done
+
+    def _submit_transaction(self, request, key):
+        """Return None for legacy jobs; one local result commit for each business key."""
+        with self._condition:
+            if self._closed or self._closing:
+                raise NativeError("service_closed")
+            jobs = self._records()
+            existing = next((j for j in jobs if j.job_id == key), None)
+            registration = next(
+                (r for r in self._registered if r.request == request and r.recovery is not None),
+                None,
+            )
+            if registration is None and (existing is None or existing.transaction is None):
+                return None
+            if existing is not None and existing.transaction is None:
+                raise NativeError("idempotency_conflict")  # Never migrate an old spent claim.
+            meta = self._recovery_metadata(registration) if registration else None
+            if existing is not None:
+                if (meta is None and existing.request != request) or (
+                    meta and meta["recovery_identity"] != existing.transaction.identity
+                ):
+                    raise NativeError("idempotency_conflict")
+                if existing.report is not None or existing.decision is not None:
+                    return self._public(existing), False
+                if existing.transaction.prepared_report is not None and self._inflight is None:
+                    done = self._committed_transaction(existing)
+                    self._publish_records([done if j.job_id == key else j for j in jobs])
+                    return self._public(done), False
+                if existing.state == "running" or meta is None:
+                    return self._public(existing), False
+            if meta is None or key != self._transaction_job_id(meta["recovery_identity"]):
+                raise NativeError("study_not_admitted")
+            identity = meta["recovery_identity"]
+            for prior in jobs:
+                if prior.job_id == key:
+                    continue
+                if prior.scope_trial_key == identity["business_key"]:
+                    raise NativeError("idempotency_conflict")
+                if prior.transaction is not None:
+                    registered_identity = prior.transaction.identity
+                    if (
+                        registered_identity["logical_task_id"] == identity["logical_task_id"]
+                        and registered_identity["experiment_id"] == identity["experiment_id"]
+                    ):
+                        # A changed data/math version needs an explicit new experiment.
+                        raise NativeError("idempotency_conflict")
+            attempts = existing.transaction.attempts if existing else []
+            task_attempts = sum(
+                len(prior.transaction.attempts)
+                for prior in jobs
+                if prior.transaction is not None
+                and prior.transaction.identity["logical_task_id"] == identity["logical_task_id"]
+            )
+            if task_attempts >= meta["attempt_policy"]["max_numerical_attempts"]:
+                raise NativeError("study_not_admitted")
+            self._recover_pending_cleanup()
+            if self._inflight is not None:
+                raise NativeError("capacity_exceeded")
+            if existing is None and len(jobs) >= MAX_JOBS:
+                raise NativeError("capacity_exceeded")
+            attempt_id = str(uuid4())
+            conflicts = [j for j in jobs if j.job_id != key]
+            try:
+                admitted, reasons = self._admit(
+                    request, conflicts, key=key, recovery_attempt_id=attempt_id
+                )
+                if admitted is None:
+                    raise NativeError("study_not_admitted")
+                _, contents = self._binding(request, registration.store, executing=True)
+                references = [
+                    meta["attempt_policy"]["policy_ref"],
+                    meta["recovery_provenance"]["input_manifest_ref"],
+                    *meta["recovery_provenance"]["capture_attempt_refs"],
+                ]
+                for ref in references:
+                    ref = ObjectRef.model_validate(ref)
+                    contents.append((ref, self._from_store(registration.store, ref)))
+                basis = None
+                if registration.real_binding is not None:
+                    from quantmesh.research import ivv_admission as ivv
+
+                    contents.extend(
+                        ivv.binding_objects(registration.store, registration.real_binding)
+                    )
+                    basis = ivv.verify_saved_binding(
+                        registration.store,
+                        request.package_ref,
+                        registration.real_binding,
+                        executing=True,
+                    )
+                    if any(basis.get(k) != v for k, v in meta.items()):
+                        raise NativeError("study_not_admitted")
+                for ref, raw in contents:
+                    if self._put(raw, ref.media_type) != ref:
+                        raise NativeError("artifact_invalid")
+                now = _now()
+                identity = digest(canonical(request.model_dump(mode="json")))
+                status = "ACCEPTED_DECLARED_RESEARCH" if basis else "ACCEPTED_ENGINEERING"
+                admission = {
+                    "schema_id": "qm.native-daily.admission.v2"
+                    if basis
+                    else "qm.native-daily.admission.v1",
+                    "job_id": key,
+                    "request_digest": identity,
+                    "request": request.model_dump(mode="json"),
+                    "status": status,
+                    "reasons": reasons,
+                    "created_at": now,
+                    "financial_qualification": "INSUFFICIENT",
+                    "paper_allowed": False,
+                    "live_allowed": False,
+                }
+                if basis:
+                    admission["use_basis"] = basis
+                admission_ref = self._put(canonical(admission))
+                attempt = ComputeAttempt(
+                    attempt_id=attempt_id,
+                    sequence=len(attempts) + 1,
+                    state="running",
+                    request=request,
+                    request_digest=identity,
+                    admission=admission_ref,
+                    real_binding=registration.real_binding,
+                    policy=meta["attempt_policy"],
+                    provenance=meta["recovery_provenance"],
+                    started_at=now,
+                )
+                job = NativeJob(
+                    job_id=key,
+                    request=request,
+                    request_digest=identity,
+                    state="running",
+                    admission_status=status,
+                    admission=admission_ref,
+                    created_at=existing.created_at if existing else now,
+                    consumed_grant=request.grant_ref.digest,
+                    scope_trial_key=meta["recovery_identity"]["business_key"],
+                    real_binding=registration.real_binding,
+                    transaction=ResearchTransaction(
+                        identity=meta["recovery_identity"], attempts=[*attempts, attempt]
+                    ),
+                )
+                self._verify(job)
+                self._publish_records(
+                    [job if j.job_id == key else j for j in jobs] if existing else [*jobs, job]
+                )
+                self._inflight = key
+            except BaseException:
+                self._release_real_runtime(registration)
+                raise
+        try:
+            raw = self._compute(registration, job)
+            with self._condition:
+                report = self._put(raw)
+                tx = job.transaction
+                prepared_attempt = tx.attempts[-1].model_copy(
+                    update={"state": "prepared", "report": report}
+                )
+                prepared = job.model_copy(
+                    update={
+                        "transaction": tx.model_copy(
+                            update={
+                                "prepared_report": report,
+                                "attempts": [*tx.attempts[:-1], prepared_attempt],
+                            }
+                        )
+                    }
+                )
+                self._verify(prepared)
+                self._publish_records([prepared if j.job_id == key else j for j in self._records()])
+                done = self._committed_transaction(prepared)
+                self._publish_records([done if j.job_id == key else j for j in self._records()])
+                return self._public(done), existing is None
+        except Exception:
+            with self._condition:
+                current = next(j for j in self._records() if j.job_id == key)
+                if current.report is not None:
+                    return self._public(current), existing is None
+                if current.transaction.prepared_report is not None:
+                    raise
+                tx = current.transaction
+                failed_attempt = tx.attempts[-1].model_copy(
+                    update={
+                        "state": "failed",
+                        "completed_at": _now(),
+                        "failure_code": "COMPUTE_FAILED",
+                    }
+                )
+                failed = current.model_copy(
+                    update={
+                        "state": "failed",
+                        "completed_at": _now(),
+                        "transaction": tx.model_copy(
+                            update={"attempts": [*tx.attempts[:-1], failed_attempt]}
+                        ),
+                    }
+                )
+                self._publish_records([failed if j.job_id == key else j for j in self._records()])
+                return self._public(failed), existing is None
+        finally:
+            self._finish_runtime(registration)
+
+    def _release_real_runtime(self, registration):
+        if registration.real_binding is not None:
+            pin = registration.real_binding.digest
+            owner = self._real_runtimes.get(pin)
+            if owner is not None:
+                try:
+                    owner.close()
+                except BaseException:
+                    self._cleanup_pending[pin] = self._inflight
+                    _UNCERTAIN_OWNER_ROOTS[str(self.root)] = self
+                    raise
+                del self._real_runtimes[pin]
+                self._cleanup_pending.pop(pin, None)
+                if not self._cleanup_pending:
+                    _UNCERTAIN_OWNER_ROOTS.pop(str(self.root), None)
+
+    def _recover_pending_cleanup(self):
+        """Only retry the same held owner; no new child or computation here."""
+        with self._condition:
+            for pin, job_id in list(self._cleanup_pending.items()):
+                self._real_runtimes[pin].close()
+                del self._real_runtimes[pin]
+                del self._cleanup_pending[pin]
+                if self._inflight == job_id:
+                    self._inflight = None
+            if not self._cleanup_pending:
+                _UNCERTAIN_OWNER_ROOTS.pop(str(self.root), None)
+            self._condition.notify_all()
+
+    def _finish_runtime(self, registration):
+        with self._condition:
+            try:
+                self._release_real_runtime(registration)
+            finally:
+                # A failed close leaves the exact owner AND its inflight claim held.
+                if not self._cleanup_pending:
+                    self._inflight = None
+                self._condition.notify_all()
+
+    def _publish_records(self, records):
+        records = list(records)
+        if self._durable_recovery or any(j.transaction is not None for j in records):
+            self._durable_recovery = self.objects.durable = self._store.durable = True
+            references = {}
+
+            def collect(value):
+                if isinstance(value, dict):
+                    if set(value) == {"algorithm", "digest", "media_type", "byte_length"}:
+                        ref = ObjectRef.model_validate(value)
+                        references[ref.digest] = ref
+                    else:
+                        for item in value.values():
+                            collect(item)
+                elif isinstance(value, list):
+                    for item in value:
+                        collect(item)
+
+            for job in records:
+                if job.transaction is None:
+                    continue
+                collect(job.model_dump(mode="json"))
+                for attempt in job.transaction.attempts:
+                    _, contents = self._binding(attempt.request, self.objects)
+                    for ref, _ in contents:
+                        references[ref.digest] = ref
+                    if attempt.real_binding is not None:
+                        from quantmesh.research import ivv_admission as ivv
+
+                        for ref, _ in ivv.binding_objects(self.objects, attempt.real_binding):
+                            references[ref.digest] = ref
+            for ref in references.values():
+                self.objects.confirm_durable(ref)
+        self._store.write(records)
 
     def _object(self, reference):
         return self._from_store(self.objects, reference)
@@ -447,11 +935,31 @@ class NativeDailyService:
         except (OSError, ValueError):
             raise NativeError("artifact_invalid") from None
 
+    def _artifact_capacity(self):
+        from quantmesh.research import ivv_recovery as recovery
+
+        limits = [8 * MAX_OBJECT]
+        for registration in self._registered:
+            meta = self._recovery_metadata(registration)
+            if meta is not None:
+                ref = ObjectRef.model_validate(meta["attempt_policy"]["policy_ref"])
+                policy = recovery.validate_policy(_loads(self._from_store(registration.store, ref)))
+                limits.append(policy["storage"]["study"])
+        # Cold decision writes retain the allowance actually archived by admitted
+        # attempts; a missing current selector never discards previous originals.
+        for job in self._records():
+            if job.transaction is not None:
+                for attempt in job.transaction.attempts:
+                    ref = ObjectRef.model_validate(attempt.policy["policy_ref"])
+                    policy = recovery.validate_policy(_loads(self._object(ref)))
+                    limits.append(policy["storage"]["study"])
+        return max(limits)
+
     def _put(self, raw, media="application/json"):
         if not 1 <= len(raw) <= MAX_OBJECT:
             raise NativeError("capacity_exceeded")
         used = sum(path.stat().st_size for path in self.root.rglob("*") if path.is_file())
-        if used + 2 * len(raw) + 512 * 1024 > 8 * MAX_OBJECT:
+        if used + 2 * len(raw) + 512 * 1024 > self._artifact_capacity():
             raise NativeError("capacity_exceeded")
         return self.objects.put_bytes(media, raw)
 
@@ -729,7 +1237,8 @@ class NativeDailyService:
         contents = [(reference, self._from_store(store, reference)) for reference in references]
         return package, contents
 
-    def _admit(self, request, jobs, *, key):
+    def _admit(self, request, jobs, *, key, recovery_attempt_id=None):
+        self._recover_pending_cleanup()
         from quantmesh.research import ivv_admission as ivv
 
         missing = []
@@ -746,6 +1255,11 @@ class NativeDailyService:
         ):
             return None, ["candidate_grant_not_qualified"]
         try:
+            recovery_meta = self._recovery_metadata(registration)
+            if recovery_meta is not None and key != self._transaction_job_id(
+                recovery_meta["recovery_identity"]
+            ):
+                return None, ["request_identity_not_authorized"]
             package, contents = self._binding(request, registration.store, executing=True)
             if package["evidence_kind"] == "reviewed_real":
                 if (
@@ -769,7 +1283,12 @@ class NativeDailyService:
                     owner = self._real_runtimes.get(registration.real_binding.digest)
                     if owner is None:
                         factory = self._real_runtime_factory or ivv.prepare_runtime
-                        owner = factory(self.root, checked, registration.store)
+                        runtime_basis = (
+                            {**checked, "compute_attempt_id": recovery_attempt_id}
+                            if recovery_meta
+                            else checked
+                        )
+                        owner = factory(self.root, runtime_basis, registration.store)
                         self._real_runtimes[registration.real_binding.digest] = owner
                     pending = {
                         ref.digest: len(raw)
@@ -781,9 +1300,7 @@ class NativeDailyService:
                     if owner.check(pending_bytes=sum(pending.values())) is not True:
                         raise ValueError("runtime")
                 except (ValueError, OSError, RuntimeError):
-                    self._real_runtimes.pop(registration.real_binding.digest, None)
-                    if owner is not None:
-                        owner.close()
+                    self._release_real_runtime(registration)
                     return None, ["study_runtime_not_admitted"]
             elif (
                 registration.real_binding is not None
@@ -796,7 +1313,17 @@ class NativeDailyService:
                     return None, ["candidate_grant_not_qualified"]
         except (KeyError, TypeError, ValueError, OSError, csv.Error, RecursionError):
             return None, ["candidate_grant_not_qualified"]
-        if any(job.consumed_grant == request.grant_ref.digest for job in jobs):
+        if any(
+            job.consumed_grant == request.grant_ref.digest
+            or (
+                job.transaction is not None
+                and any(
+                    a.request.grant_ref.digest == request.grant_ref.digest
+                    for a in job.transaction.attempts
+                )
+            )
+            for job in jobs
+        ):
             return None, ["trial_already_reserved"]
         if self._inflight is not None:
             raise NativeError("capacity_exceeded")
@@ -857,6 +1384,8 @@ class NativeDailyService:
     def _records(self):
         try:
             self._lease.validate()
+            if self.objects.durability_uncertain or self._store.durability_uncertain:
+                raise OSError("study_publication_uncertain")
             if self._store.path.exists() and self._store.path.stat().st_size > 256 * 1024:
                 raise ValueError
             jobs = self._store.read()
@@ -878,7 +1407,12 @@ class NativeDailyService:
             admission = _loads(self._object(job.admission))
             is_real = job.admission_status == "ACCEPTED_DECLARED_RESEARCH"
             basis = self._ivv_binding(job, executing=False) if is_real else None
-            if not is_real and (job.real_binding is not None or job.scope_trial_key is not None):
+            if job.transaction is not None:
+                self._verify_transaction(job)
+            if not is_real and (
+                job.real_binding is not None
+                or (job.scope_trial_key is not None and job.transaction is None)
+            ):
                 raise ValueError
             expected = {
                 "schema_id": "qm.native-daily.admission.v2"
@@ -972,8 +1506,23 @@ class NativeDailyService:
     def _public(self, job):
         result = job.model_dump(
             mode="json",
-            exclude={"consumed_grant", "decision_key", "scope_trial_key", "real_binding"},
+            exclude={
+                "consumed_grant",
+                "decision_key",
+                "scope_trial_key",
+                "real_binding",
+                "transaction",
+            },
         )
+        if job.transaction is not None:
+            tx = job.transaction
+            result["recovery_status"] = {
+                "business_key": tx.identity["business_key"],
+                "experiment_id": tx.identity["experiment_id"],
+                "registered_attempts": len(tx.attempts),
+                "last_attempt_state": tx.attempts[-1].state,
+                "request_digest_history": [a.request_digest for a in tx.attempts],
+            }
         result["trial_consumed"] = job.consumed_grant is not None
         result["admission_reasons"] = _loads(self._object(job.admission))["reasons"]
         return result
@@ -1048,6 +1597,9 @@ class NativeDailyService:
         request = NativeRequest.model_validate(request.model_dump())
         key = _uuid(key)
         identity = digest(canonical(request.model_dump(mode="json")))
+        transaction_result = self._submit_transaction(request, key)
+        if transaction_result is not None:
+            return transaction_result
         with self._condition:
             if self._closed or self._closing:
                 raise NativeError("service_closed")
@@ -1128,7 +1680,7 @@ class NativeDailyService:
                 scope_trial_key=scope_trial_key,
                 real_binding=real_binding,
             )
-            self._store.write([*jobs, job])
+            self._publish_records([*jobs, job])
             if registration is None:
                 return self._public(job), True
             self._inflight = key
@@ -1140,21 +1692,19 @@ class NativeDailyService:
                     update={"state": "succeeded", "report": reference, "completed_at": _now()}
                 )
                 self._verify(done)
-                self._store.write(
+                self._publish_records(
                     [done if item.job_id == key else item for item in self._records()]
                 )
                 return self._public(done), True
         except Exception:
             with self._condition:
                 failed = job.model_copy(update={"state": "failed", "completed_at": _now()})
-                self._store.write(
+                self._publish_records(
                     [failed if item.job_id == key else item for item in self._records()]
                 )
                 return self._public(failed), True
         finally:
-            with self._condition:
-                self._inflight = None
-                self._condition.notify_all()
+            self._finish_runtime(registration)
 
     def read(self, key):
         with self._condition:
@@ -1201,7 +1751,7 @@ class NativeDailyService:
             }
             reference = self._put(canonical(value))
             saved = job.model_copy(update={"decision": reference, "decision_key": decision_key})
-            self._store.write(
+            self._publish_records(
                 [saved if item.job_id == job.job_id else item for item in self._records()]
             )
             return self._public(saved), True
@@ -1209,10 +1759,21 @@ class NativeDailyService:
     def close(self):
         with self._condition:
             self._closing = True
+            self._recover_pending_cleanup()
             while self._inflight is not None:
+                self._recover_pending_cleanup()
+                if self._inflight is None:
+                    break
                 self._condition.wait()
             if not self._closed:
-                for owner in self._real_runtimes.values():
-                    owner.close()
+                for pin, owner in list(self._real_runtimes.items()):
+                    try:
+                        owner.close()
+                    except BaseException:
+                        self._cleanup_pending[pin] = None
+                        _UNCERTAIN_OWNER_ROOTS[str(self.root)] = self
+                        raise
+                    del self._real_runtimes[pin]
                 self._lease.close()
                 self._closed = True
+                _UNCERTAIN_OWNER_ROOTS.pop(str(self.root), None)

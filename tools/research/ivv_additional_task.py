@@ -1,5 +1,6 @@
 """Fixed identities and durable counters for the independent additional IVV task."""
 
+import functools
 import hashlib
 import json
 import math
@@ -7,9 +8,19 @@ import os
 import re
 import stat
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import NamedTuple
+
+
+def _serialized(method):
+    @functools.wraps(method)
+    def invoke(self, *args, **kwargs):
+        with self._lock:
+            return method(self, *args, **kwargs)
+
+    return invoke
 
 
 class Profile(NamedTuple):
@@ -214,7 +225,7 @@ def _sync_directory(path):
         os.close(fd)
 
 
-def _claim(path, value):
+def _claim(path, value, *, sync_dir=None):
     raw = _canonical(value)
     directory = path.parent.lstat()
     fd = os.open(
@@ -243,7 +254,7 @@ def _claim(path, value):
         os.fsync(fd)
     finally:
         os.close(fd)
-    _sync_directory(path.parent)
+    (sync_dir or _sync_directory)(path.parent)
     _need(
         os.path.samestat(held, path.lstat())
         and os.path.samestat(directory, path.parent.lstat())
@@ -251,6 +262,512 @@ def _claim(path, value):
         and os.path.samestat(held, path.lstat()),
         "CLAIM_READBACK",
     )
+
+
+def build_input_manifest(contract, semantic, capture_sets, source_facts_ref, read_object):
+    """Candidate only: immutable originals, no future acceptance or invented PIT.
+
+    The archive importer must first validate the entire frame/control closure.
+    Independent Quant review remains necessary for every source fact and input.
+    """
+    contract.semantic_input_version(semantic)
+
+    def original(ref):
+        contract._reference(ref)
+        raw = read_object(ref)
+        _need(
+            type(raw) is bytes and len(raw) == ref["byte_length"] and _sha(raw) == ref["digest"],
+            "recovery_original_integrity",
+        )
+        return json.loads(raw)
+
+    for ref in semantic["inputs"].values():
+        contract._reference(ref)
+        raw = read_object(ref)
+        _need(
+            type(raw) is bytes and len(raw) == ref["byte_length"] and _sha(raw) == ref["digest"],
+            "recovery_original_integrity",
+        )
+    original(source_facts_ref)
+    _need(type(capture_sets) is list and 1 <= len(capture_sets) <= 8, "recovery_capture_sets")
+    epochs, captures, gos, parents = set(), [], [], []
+    for row in capture_sets:
+        _need(type(row) in (list, tuple) and len(row) == 3, "recovery_capture_sets")
+        capture_ref, go_ref, parent_ref = row
+        raw, go, parent = (original(ref) for ref in row)
+        recovery = raw["recovery"]
+        binding = {
+            k: recovery[k]
+            for k in ("logical_task_id", "batch_id", "connection_attempt_id", "policy_sha256")
+        }
+        _need(
+            binding["logical_task_id"] == contract.LOGICAL_TASK_ID
+            and type(binding["batch_id"]) is str
+            and type(binding["connection_attempt_id"]) is str,
+            "recovery_epoch",
+        )
+        epochs.add(binding["batch_id"] + "/" + binding["connection_attempt_id"])
+        expected_close = {
+            "context_closed": True,
+            "callbacks_stopped": True,
+            "data_socket_closed": True,
+        }
+        _need(
+            raw["schema_id"] == "qm.ivv.capture" + contract.FAMILY
+            and raw["state"] == "CAPTURED_UNREVIEWED"
+            and raw["synthetic"] is False
+            and raw["primary_failure"] is None
+            and raw["close_failure"] is None
+            and type(raw["normal_close"]) is dict
+            and _canonical(raw["normal_close"]) == _canonical(expected_close)
+            and raw["scope_id"] == contract.capture_scope_id()
+            and raw["source_binding"]["root_go_sha256"] == go_ref["digest"],
+            "recovery_capture_not_complete",
+        )
+        _need(
+            go["schema_id"] == "qm.ivv.root-go" + contract.FAMILY
+            and go["decision"] == "GO_BOUNDED_CAPTURE_RECOVERY"
+            and go["scope_id"] == contract.capture_scope_id()
+            and go["approval_sha256"] == contract.capture_effect()
+            and go["execution_sha256"] == contract.AUTHORITY
+            and go["recovery"] == binding,
+            "recovery_capture_go",
+        )
+        expected_parent = {
+            "schema_id": "qm.ivv.capture-parent-close" + contract.FAMILY,
+            "state": "NORMAL_EXIT",
+            "termination": "NORMAL",
+            "helper_exit_code": 0,
+            "active_owned_processes": 0,
+            "owned_fds_closed": True,
+            "resource_limit_event": False,
+            "force_killed": False,
+            "capture_manifest_sha256": capture_ref["digest"],
+        }
+        _need(
+            _canonical({k: parent.get(k) for k in expected_parent}) == _canonical(expected_parent),
+            "recovery_parent_close",
+        )
+        original(recovery["request_journal_ref"])
+        captures.append(capture_ref)
+        gos.append(go_ref)
+        parents.append(parent_ref)
+    _need(
+        len(epochs) == 1 and len({r["digest"] for r in captures}) == len(captures),
+        "recovery_cross_epoch_or_duplicate",
+    )
+    return json.loads(
+        _canonical(
+            {
+                "schema_id": "qm.ivv.input-manifest" + contract.FAMILY,
+                "logical_task_id": contract.LOGICAL_TASK_ID,
+                "semantic": semantic,
+                "capture_epoch": next(iter(epochs)),
+                "capture_refs": captures,
+                "capture_go_refs": gos,
+                "source_facts_ref": source_facts_ref,
+                "parent_close_refs": parents,
+                "asof_pit": {
+                    "status": "unknown",
+                    "provider_asof": None,
+                    "provider_version": None,
+                    "basis_refs": [],
+                },
+            }
+        )
+    )
+
+
+class RecoveryProfile:
+    """Validated fixed recovery identity, independent of any future study."""
+
+    FAMILY = ".dev-transaction-recovery.v1"
+
+    def __init__(self, contract, policy, attempt):
+        _need(
+            type(attempt) is str
+            and re.fullmatch(r"connection-[0-9]{6}", attempt)
+            and int(attempt[-6:]) > 0,
+            "recovery_attempt",
+        )
+        checked = contract.validate_policy(policy)
+        _need(checked["authority_sha256"] == contract.AUTHORITY, "recovery_authority")
+        self.contract = contract
+        self.policy_bytes = contract.canonical(checked)
+        self.policy_sha = contract.digest(self.policy_bytes)
+        self.attempt = attempt
+
+    @property
+    def policy(self):
+        return json.loads(self.policy_bytes)
+
+    def binding(self):
+        return {
+            "logical_task_id": self.contract.LOGICAL_TASK_ID,
+            "batch_id": self.policy["batch"]["batch_id"],
+            "connection_attempt_id": self.attempt,
+            "policy_sha256": self.policy_sha,
+        }
+
+    def provenance(self):
+        return {
+            **self.contract.policy_provenance(self.policy),
+            "policy_sha256": self.policy_sha,
+            "hard_limit_enforced": False,
+            "provider_tail_max": "UNKNOWN",
+            "channel_assurance": "UNVERIFIED_TRUSTED_EXTERNAL",
+        }
+
+
+class RecoveryLedger:
+    """Append-only attempts in the admitted private recovery directory.
+
+    Exclusive deterministic intents serialize callers. Partial persistence stays
+    occupied. Only the owning parent can establish closure for a successor.
+    """
+
+    def __init__(self, root, policy, contract, *, sync_dir=None):
+        self._lock = threading.RLock()
+        self.root = Path(root)
+        _need(self.root.is_absolute() and self.root.resolve() == self.root, "recovery_ledger_path")
+        self.origin = self.root.stat()
+        _need(stat.S_ISDIR(self.origin.st_mode), "recovery_ledger_path")
+        self.contract = contract
+        self.policy = contract.validate_policy(policy)
+        _need(self.policy["authority_sha256"] == contract.AUTHORITY, "recovery_authority")
+        self.policy_sha = contract.digest(contract.canonical(self.policy))
+        self.sync = sync_dir or _sync_directory
+
+    def _read(self, name):
+        _need(
+            type(name) is str
+            and re.fullmatch(r"connection-[0-9]{6}(?:-request-[0-9]{6})?\.[a-z-]+\.json", name),
+            "recovery_journal_name",
+        )
+        _need(os.path.samestat(self.origin, self.root.lstat()), "recovery_ledger_changed")
+        path = self.root / name
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0))
+        try:
+            held = os.fstat(fd)
+            _need(
+                stat.S_ISREG(held.st_mode)
+                and held.st_nlink == 1
+                and 0 < held.st_size <= 32768
+                and os.path.samestat(held, path.lstat()),
+                "recovery_journal_file",
+            )
+            raw = os.read(fd, held.st_size + 1)
+            after = os.fstat(fd)
+            _need(
+                len(raw) == held.st_size
+                and after.st_size == held.st_size
+                and after.st_mtime_ns == held.st_mtime_ns
+                and after.st_ctime_ns == held.st_ctime_ns
+                and os.path.samestat(held, path.lstat()),
+                "recovery_journal_changed",
+            )
+            return json.loads(raw)
+        finally:
+            os.close(fd)
+
+    def _write(self, name, value):
+        _need(
+            type(name) is str
+            and re.fullmatch(r"connection-[0-9]{6}(?:-request-[0-9]{6})?\.[a-z-]+\.json", name),
+            "recovery_journal_name",
+        )
+        _need(os.path.samestat(self.origin, self.root.lstat()), "recovery_ledger_changed")
+        _claim(self.root / name, value, sync_dir=self.sync)
+        return value
+
+    def _intents(self):
+        names = sorted(self.root.glob("connection-*.intent.json"))
+        names = [p for p in names if "-request-" not in p.name]
+        _need(len(names) <= 4096, "recovery_history_bound")
+        rows = []
+        for number, path in enumerate(names, 1):
+            _need(path.name == f"connection-{number:06d}.intent.json", "recovery_history_gap")
+            rows.append(self._read(path.name))
+        return rows
+
+    @_serialized
+    def begin(self, method_sha256, *, now, expected_connection=None, pre_dispatch=None):
+        if pre_dispatch is not None:
+            _need(
+                type(pre_dispatch) is dict
+                and set(pre_dispatch) == {"controller", "claim_inode", "unit"}
+                and expected_connection is not None
+                and pre_dispatch["unit"] == "qm-ivv-recovery-" + expected_connection + ".service"
+                and len(_canonical(pre_dispatch)) <= 4096,
+                "recovery_pre_dispatch",
+            )
+        _need(self.contract._sha(method_sha256), "recovery_method")
+        _need(type(now) in (int, float) and math.isfinite(now) and now >= 0, "recovery_clock")
+        rows = self._intents()
+        attempt = f"connection-{len(rows) + 1:06d}"
+        _need(
+            expected_connection is None or expected_connection == attempt,
+            "recovery_attempt_sequence",
+        )
+        if rows:
+            previous = rows[-1]
+            path = self.root / (previous["connection_attempt_id"] + ".close.json")
+            _need(path.exists(), "owned_cleanup_unknown")
+            closed = self._read(path.name)
+            if closed["owner_state"] != "CLOSED":
+                _need(
+                    (self.root / (previous["connection_attempt_id"] + ".recovered.json")).exists(),
+                    "owned_cleanup_unknown",
+                )
+                recovered = self._read(previous["connection_attempt_id"] + ".recovered.json")
+                stem = previous["connection_attempt_id"]
+                kind = (
+                    ".owner.json"
+                    if (self.root / (stem + ".owner.json")).exists()
+                    else (
+                        ".preowner.json"
+                        if (self.root / (stem + ".preowner.json")).exists()
+                        else ".intent.json"
+                    )
+                )
+                binding = self._read(stem + kind)
+                _need(
+                    recovered
+                    == {
+                        "owner_binding_sha256": self.contract.digest(
+                            self.contract.canonical(binding)
+                        ),
+                        "owned_cleanup_proven": True,
+                        "external_effects": "UNKNOWN",
+                        "input_publishable": False,
+                    },
+                    "owned_cleanup_unknown",
+                )
+            preowner = self.root / (previous["connection_attempt_id"] + ".preowner.json")
+            if closed["owner_state"] == "CLOSED" and preowner.exists():
+                receipt = self.root / (previous["connection_attempt_id"] + ".unit-cleanup.json")
+                _need(receipt.exists(), "owned_unit_cleanup_unknown")
+                _need(
+                    self._read(receipt.name)
+                    == {
+                        "preowner_sha256": self.contract.digest(
+                            self.contract.canonical(self._read(preowner.name))
+                        ),
+                        "owned_cleanup_proven": True,
+                        "external_effects": "UNKNOWN",
+                        "input_publishable": False,
+                    },
+                    "owned_unit_cleanup_unknown",
+                )
+            _need(
+                closed["failure"]
+                in (None, "SDK_CLOSE_UNKNOWN", "CAPTURE_TIMEOUT", "CAPTURE_INTERRUPTED")
+                or closed["method_sha256"] != method_sha256,
+                "unrepaired_structural_failure",
+            )
+        batch_rows = [r for r in rows if r["batch_id"] == self.policy["batch"]["batch_id"]]
+        if batch_rows:
+            _need(
+                0 <= now - batch_rows[0]["started"] < self.policy["batch"]["wall_seconds"],
+                "recovery_batch_deadline",
+            )
+        _need(len(batch_rows) < self.policy["batch"]["contexts"], "context_budget")
+        attempt = f"connection-{len(rows) + 1:06d}"
+        self._write(
+            attempt + ".intent.json",
+            {
+                "schema_id": "qm.ivv.connection-attempt.v1",
+                "state": "INTENT",
+                **({"pre_dispatch": pre_dispatch} if pre_dispatch is not None else {}),
+                "logical_task_id": self.contract.LOGICAL_TASK_ID,
+                "batch_id": self.policy["batch"]["batch_id"],
+                "policy_sha256": self.policy_sha,
+                "connection_attempt_id": attempt,
+                "method_sha256": method_sha256,
+                "started": now,
+                "historical_actual_cumulative": "UNKNOWN",
+            },
+        )
+        return attempt
+
+    @_serialized
+    def enter(self, attempt, method_sha256, startup_sha256):
+        rows = self._intents()
+        _need(
+            rows
+            and rows[-1]["connection_attempt_id"] == attempt
+            and rows[-1]["method_sha256"] == method_sha256
+            and rows[-1]["policy_sha256"] == self.policy_sha
+            and self.contract._sha(startup_sha256)
+            and not (self.root / (attempt + ".close.json")).exists(),
+            "recovery_entry_binding",
+        )
+        self._write(
+            attempt + ".entry.json",
+            {
+                "state": "ENTERED",
+                "startup_sha256": startup_sha256,
+                "connection_attempt_id": attempt,
+            },
+        )
+
+    @_serialized
+    def may_connect(self, attempt):
+        self._read(attempt + ".intent.json")
+        self._write(
+            attempt + ".may.json", {"state": "MAY_HAVE_SENT", "connection_attempt_id": attempt}
+        )
+
+    @_serialized
+    def usage(self, *, current_batch=False):
+        attempts = {
+            r["connection_attempt_id"]
+            for r in self._intents()
+            if not current_batch or r["batch_id"] == self.policy["batch"]["batch_id"]
+        }
+        counts = {
+            "contexts": len(attempts),
+            "business_requests": 0,
+            "init_connect": 0,
+            "keepalive": 0,
+        }
+        for path in self.root.glob("connection-*-request-*.intent.json"):
+            row = self._read(path.name)
+            if row["connection_attempt_id"] not in attempts:
+                continue
+            key = (
+                "init_connect"
+                if row["protocol"] == 1001
+                else ("keepalive" if row["protocol"] == 1004 else "business_requests")
+            )
+            counts[key] += 1
+        return counts
+
+    @_serialized
+    def request(self, attempt, protocol, params, *, now):
+        self._read(attempt + ".may.json")
+        _need(not (self.root / (attempt + ".close.json")).exists(), "recovery_closed_attempt")
+        _need(
+            type(protocol) is int and protocol in (*self.policy["read_only_protocols"], 1001, 1004),
+            "recovery_protocol",
+        )
+        _need(
+            type(params) is dict and len(self.contract.canonical(params)) <= 4096,
+            "recovery_parameters",
+        )
+        intents = sorted(self.root.glob(attempt + "-request-*.intent.json"))
+        all_intents = sorted(self.root.glob("connection-*-request-*.intent.json"))
+        usage = self.usage(current_batch=True)
+        key = (
+            "init_connect"
+            if protocol == 1001
+            else ("keepalive" if protocol == 1004 else "business_requests")
+        )
+        _need(usage[key] < self.policy["batch"][key], "request_budget")
+        _need(type(now) in (int, float) and math.isfinite(now), "recovery_clock")
+        started = next(
+            r["started"]
+            for r in self._intents()
+            if r["batch_id"] == self.policy["batch"]["batch_id"]
+        )
+        _need(0 <= now - started < self.policy["batch"]["wall_seconds"], "recovery_batch_deadline")
+        if key == "business_requests":
+            business = [self._read(p.name) for p in all_intents]
+            stamps = [r["started"] for r in business if r["protocol"] not in (1001, 1004)]
+            _need(
+                not stamps
+                or now - max(stamps) >= 1 / self.policy["batch"]["max_business_per_second"],
+                "request_rate",
+            )
+        request = f"request-{len(intents) + 1:06d}"
+        name = attempt + "-" + request
+        self._write(
+            name + ".intent.json",
+            {
+                "state": "INTENT",
+                "connection_attempt_id": attempt,
+                "request_attempt_id": request,
+                "protocol": protocol,
+                "params": params,
+                "started": now,
+                "policy_sha256": self.policy_sha,
+            },
+        )
+        self._write(
+            name + ".may.json",
+            {
+                "state": "MAY_HAVE_SENT",
+                "connection_attempt_id": attempt,
+                "request_attempt_id": request,
+            },
+        )
+        return request
+
+    @_serialized
+    def close(self, attempt, proof, *, failure, method_sha256):
+        intent = self._read(attempt + ".intent.json")
+        _need(method_sha256 == intent["method_sha256"], "recovery_method")
+        _need(
+            failure is None or type(failure) is str and re.fullmatch(r"[A-Z0-9_+]{1,512}", failure),
+            "recovery_failure_code",
+        )
+        expected = dict(
+            child_reaped=True,
+            recursive_populated=0,
+            owned_fds_closed=True,
+            resource_limit_event=False,
+            active_owned_processes=0,
+        )
+        closed = (
+            type(proof) is dict
+            and set(proof) == set(expected)
+            and all(type(proof[k]) is type(v) and proof[k] == v for k, v in expected.items())
+        )
+        return self._write(
+            attempt + ".close.json",
+            {
+                "owner_state": "CLOSED" if closed else "UNKNOWN",
+                "failure": failure,
+                "external_effects": "UNKNOWN",
+                "method_sha256": method_sha256,
+                "connection_attempt_id": attempt,
+            },
+        )
+
+    @_serialized
+    def observed(self, attempt, request, response_ref):
+        self._read(attempt + "-" + request + ".may.json")
+        self.contract._reference(response_ref)
+        return self._write(
+            attempt + "-" + request + ".response.json",
+            {
+                "state": "RESPONSE_OBSERVED",
+                "connection_attempt_id": attempt,
+                "request_attempt_id": request,
+                "response_ref": response_ref,
+            },
+        )
+
+    @_serialized
+    def journal(self, attempt):
+        self._read(attempt + ".intent.json")
+        paths = sorted(self.root.glob(attempt + "-request-*.json"))
+        _need(
+            len(paths)
+            <= 3
+            * (
+                self.policy["batch"]["business_requests"]
+                + self.policy["batch"]["init_connect"]
+                + self.policy["batch"]["keepalive"]
+            ),
+            "recovery_journal_bound",
+        )
+        return {
+            "schema_id": "qm.ivv.request-journal.v1",
+            "connection_attempt_id": attempt,
+            "records": [self._read(path.name) for path in paths],
+            "history_actual": "UNKNOWN",
+        }
 
 
 def reserve_context():
