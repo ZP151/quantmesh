@@ -286,7 +286,7 @@ class _OwnedChild:
         """Windows Job Object lifetime has no owner-pulse channel."""
 
     def close(self, *, verify=False):
-        if verify:
+        if verify or getattr(self, "_verified_cleanup", False):
             return self._close_verified()
         if self.job_handle is not None:
             kernel = ctypes.windll.kernel32
@@ -310,11 +310,16 @@ class _OwnedChild:
                 for name in ("user", "kernel", "period_user", "period_kernel")
             ] + [(name, ctypes.c_uint32) for name in ("faults", "total", "active", "terminated")]
 
+        _guard_owned_handle_closes(self)
         handle = self.job_handle
+        process_closed = (
+            self.process is not None
+            and getattr(self.process, "_owned_handle_close_state", None) == "CLOSED"
+        )
         kernel = ctypes.windll.kernel32 if handle is not None else None
         if handle is not None and not kernel.TerminateJobObject(ctypes.c_void_p(handle), 1):
             raise OSError("owned_job_termination_unconfirmed")
-        if self.process is not None:
+        if self.process is not None and not process_closed:
             if self.process.poll() is None:
                 self.process.kill()
             self.process.wait(timeout=5)
@@ -346,20 +351,56 @@ class _OwnedChild:
                 if time.monotonic() >= deadline:
                     raise OSError("owned_job_not_empty")
                 time.sleep(0.01)
-        if handle is not None:
-            if not kernel.CloseHandle(ctypes.c_void_p(handle)):
-                raise OSError("owned_job_handle_close_unconfirmed")
-            self.job_handle = None
+        _close_job_handle(self)
         return True
 
 
+def _guard_owned_handle_closes(child):
+    """A lost close acknowledgement makes the raw value unsafe to touch again."""
+    process = getattr(child, "process", None)
+    job_state = getattr(child, "_job_handle_close_state", "OPEN")
+    process_state = getattr(process, "_owned_handle_close_state", "OPEN")
+    if "MAY_HAVE_CLOSED" in (job_state, process_state):
+        raise OSError("owned_handle_close_acknowledgement_unknown")
+    # Finalize Python bookkeeping after an observed success, without another FFI.
+    if job_state == "CLOSED":
+        child.job_handle = None
+    if process is not None and process_state == "CLOSED":
+        process._handle.closed = True
+
+
+def _close_job_handle(child):
+    state = getattr(child, "_job_handle_close_state", "OPEN")
+    if state == "MAY_HAVE_CLOSED":
+        raise OSError("owned_handle_close_acknowledgement_unknown")
+    if state == "CLOSED":
+        child.job_handle = None
+        return
+    if child.job_handle is not None:
+        child._job_handle_close_state = "MAY_HAVE_CLOSED"
+        if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(child.job_handle)):
+            child._job_handle_close_state = "OPEN"  # Explicitly observed no close.
+            raise OSError("owned_job_handle_close_unconfirmed")
+        child._job_handle_close_state = "CLOSED"
+        child.job_handle = None
+
+
 def _close_process_handle(process):
-    # CPython Handle.Close sets closed BEFORE the Win32 call. Preserve its state
-    # on a failed CloseHandle instead, so another cleanup can retry this handle.
+    state = getattr(process, "_owned_handle_close_state", "OPEN")
+    if state == "MAY_HAVE_CLOSED":
+        raise OSError("owned_handle_close_acknowledgement_unknown")
     handle = process._handle
+    if state == "CLOSED":
+        handle.closed = True
+        return
     if not handle.closed:
+        # CPython Handle.Close marks closed before FFI; keep separate knowledge
+        # of the native effect and never retry a possibly reassigned raw value.
+        process._owned_handle_close_state = "MAY_HAVE_CLOSED"
         if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(int(handle))):
+            process._owned_handle_close_state = "OPEN"
             raise OSError("owned_process_handle_close_unconfirmed")
+        process._owned_handle_close_state = "CLOSED"
         handle.closed = True
 
 

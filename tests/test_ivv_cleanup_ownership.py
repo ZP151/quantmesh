@@ -275,3 +275,242 @@ def test_normal_numeric_receipt_requires_released_process_reference_and_empty_jo
     assert matrix == {} and receipt["returncode"] == 0 and receipt["active_processes"] == 0
     assert owner.closed and owner.child.job_handle is None and owner.child.log.closed
     assert events[0] == 124 and events[-1] == 123
+
+
+@pytest.mark.parametrize("lost_handle", [123, 124])
+def test_close_ack_loss_never_reuses_reassigned_raw_handle(monkeypatch, lost_handle):
+    import io
+
+    from quantmesh.research import job_runner as runner
+
+    state = {"lost": False, "foreign_alive": True}
+
+    class Handle(int):
+        closed = False
+
+    process = SimpleNamespace(
+        _handle=Handle(124), stdin=None, poll=lambda: 0, wait=lambda timeout: 0
+    )
+
+    class Kernel:
+        def TerminateJobObject(self, handle, code):
+            if state["lost"] and handle.value == lost_handle:
+                state["foreign_alive"] = False
+            return True
+
+        def QueryInformationJobObject(self, handle, kind, pointer, size, unused):
+            pointer._obj.active = 0
+            return True
+
+        def CloseHandle(self, handle):
+            if handle.value == lost_handle:
+                if state["lost"]:
+                    state["foreign_alive"] = False
+                else:
+                    # Kernel closed the original and reused its numeric value;
+                    # the Python caller did not receive a completion observation.
+                    state["lost"] = True
+                    raise KeyboardInterrupt("authored close acknowledgment loss")
+            return True
+
+    monkeypatch.setattr(runner.ctypes, "windll", SimpleNamespace(kernel32=Kernel()), raising=False)
+    owner = runner._OwnedChild.__new__(runner._OwnedChild)
+    owner.job_handle, owner.process, owner.log = 123, process, io.BytesIO()
+    with pytest.raises(KeyboardInterrupt):
+        owner.close(verify=True)
+    try:
+        owner.close(verify=True)
+    except OSError:
+        pass  # Preserving unresolved ownership is safe; touching the foreign object is not.
+    assert state["foreign_alive"], "cleanup retried a potentially reassigned native handle"
+
+
+@pytest.mark.parametrize("lost_handle", [123, 124])
+@pytest.mark.parametrize("known_success", [False, True])
+def test_interrupt_between_native_return_and_bookkeeping_never_reuses_handle(
+    monkeypatch, lost_handle, known_success
+):
+    import inspect
+    import io
+    import sys
+
+    from quantmesh.research import job_runner as runner
+
+    native_closed = set()
+    calls = []
+
+    class Handle(int):
+        closed = False
+
+    process = SimpleNamespace(
+        _handle=Handle(124), stdin=None, poll=lambda: 0, wait=lambda timeout: 0
+    )
+
+    class Kernel:
+        def TerminateJobObject(self, handle, code):
+            assert handle.value not in native_closed
+            calls.append(("terminate", handle.value))
+            return True
+
+        def QueryInformationJobObject(self, handle, kind, pointer, size, unused):
+            assert handle.value not in native_closed
+            pointer._obj.active = 0
+            return True
+
+        def CloseHandle(self, handle):
+            assert handle.value not in native_closed
+            native_closed.add(handle.value)
+            calls.append(("close", handle.value))
+            return True
+
+    monkeypatch.setattr(runner.ctypes, "windll", SimpleNamespace(kernel32=Kernel()), raising=False)
+    owner = runner._OwnedChild.__new__(runner._OwnedChild)
+    owner.job_handle = 123
+    owner.process = process
+    owner.log = io.BytesIO()
+    function = runner._close_job_handle if lost_handle == 123 else runner._close_process_handle
+    lines, start = inspect.getsourcelines(function)
+    if lost_handle == 123:
+        text = (
+            "child.job_handle = None"
+            if known_success
+            else 'child._job_handle_close_state = "CLOSED"'
+        )
+    else:
+        text = (
+            "handle.closed = True"
+            if known_success
+            else 'process._owned_handle_close_state = "CLOSED"'
+        )
+    location = start + max(i for i, line in enumerate(lines) if line.strip() == text)
+
+    def interrupt(frame, event, arg):
+        if frame.f_code is function.__code__ and event == "line" and frame.f_lineno == location:
+            sys.settrace(None)
+            raise KeyboardInterrupt("authored bookkeeping interruption")
+        return interrupt
+
+    try:
+        sys.settrace(interrupt)
+        with pytest.raises(KeyboardInterrupt):
+            owner.close(verify=True)
+    finally:
+        sys.settrace(None)
+    assert lost_handle in native_closed
+    before = list(calls)
+    if known_success:
+        assert owner.close(verify=True) is True
+        assert calls.count(("close", lost_handle)) == 1
+    else:
+        with pytest.raises(OSError, match="acknowledgement_unknown"):
+            owner.close(verify=True)
+        assert calls == before
+
+
+@pytest.mark.parametrize("lost_handle", [123, 124])
+def test_normal_finally_ack_loss_retains_root_owner_and_lease_across_gc(
+    tmp_path, monkeypatch, lost_handle
+):
+    import gc
+    import io
+    import time
+    import weakref
+
+    from quantmesh.research import job_runner as runner
+
+    gate, store, root, key, kwargs = reviewed_recovery_registration(tmp_path, monkeypatch)
+    registration = gate.register_ivv_input(store, **kwargs)
+    closed = set()
+    calls = []
+    owners = []
+
+    class Handle(int):
+        closed = False
+
+    class Process:
+        _handle = Handle(124)
+        stdin = SimpleNamespace(closed=True)
+
+        def wait(self, timeout):
+            return 0
+
+        def poll(self):
+            assert 124 not in closed
+            return 0
+
+    class Kernel:
+        def TerminateJobObject(self, handle, code):
+            assert handle.value not in closed
+            calls.append(("terminate", handle.value))
+            return True
+
+        def QueryInformationJobObject(self, handle, kind, pointer, size, unused):
+            assert handle.value not in closed
+            calls.append(("query", handle.value))
+            pointer._obj.active = 0
+            return True
+
+        def CloseHandle(self, handle):
+            assert handle.value not in closed
+            closed.add(handle.value)
+            calls.append(("close", handle.value))
+            if handle.value == lost_handle:
+                raise KeyboardInterrupt("authored native ack loss")
+            return True
+
+    monkeypatch.setattr(runner.ctypes, "windll", SimpleNamespace(kernel32=Kernel()), raising=False)
+
+    def factory(*args):
+        owner = runtime.IVVRuntime.__new__(runtime.IVVRuntime)
+        owner.directory = root / "normal-modeled"
+        owner.directory.mkdir()
+        (owner.directory / "result.json").write_bytes(b"{}")
+        owner.child = runner._OwnedChild.__new__(runner._OwnedChild)
+        owner.child.job_handle = 123
+        owner.child.process = Process()
+        owner.child.log = io.BytesIO()
+        owner.closed = False
+        owner.cleanup_pending = False
+        owner.started = time.monotonic()
+        owner._lock = threading.RLock()
+        owner.timer = SimpleNamespace(cancel=lambda: None)
+        owner.native_limits = {
+            "job_commit_bytes": 536870912,
+            "affinity": 1,
+            "process_affinity": 1,
+            "kernel_flags": 0x2210,
+            "child_membership_verified": True,
+        }
+        monkeypatch.setattr(owner, "check", lambda **kw: True)
+        owners.append(owner)
+        return owner
+
+    service = daily.NativeDailyService(
+        root, registered=(registration,), real_runtime_factory=factory
+    )
+    try:
+        with pytest.raises(OSError, match="acknowledgement_unknown"):
+            service.submit(registration.request, key)
+        assert len(owners) == 1 and owners[0].closed is False
+        job = service._records()[0]
+        assert job.state == "failed" and job.report is None and len(job.transaction.attempts) == 1
+        assert service._inflight == key
+        before = list(calls)
+        reference = weakref.ref(service)
+        del service
+        gc.collect()
+        assert reference() is not None
+        reference()._lease.validate()
+        with pytest.raises(OSError, match="acknowledgement_unknown"):
+            daily.NativeDailyService(root)
+        assert calls == before
+        with pytest.raises(OSError, match="acknowledgement_unknown"):
+            runtime._active(owners[0].child)
+        assert calls == before
+    finally:
+        # The authored kernel/handle table ends here; no real child or native
+        # handle existed. Release the test lease only, never invoke fake handles.
+        retained = daily._UNCERTAIN_OWNER_ROOTS.pop(str(root), None)
+        if retained is not None:
+            retained._lease.close()
+            retained._closed = True

@@ -14,7 +14,13 @@ import threading
 import time
 from pathlib import Path
 
-from quantmesh.research.job_runner import _close_process_handle, _ExtendedLimits, _OwnedChild
+from quantmesh.research.job_runner import (
+    _close_job_handle,
+    _close_process_handle,
+    _ExtendedLimits,
+    _guard_owned_handle_closes,
+    _OwnedChild,
+)
 from quantmesh.research.jobs import RunBudget
 
 COMMIT_BYTES = 536870912
@@ -34,6 +40,9 @@ def ensure_capacity(root, reserved, *, limit=None):
 
 def _readback(child):
     """Read kernel limits AND membership; JSON declarations cannot satisfy this."""
+    _guard_owned_handle_closes(child)
+    if child.job_handle is None or getattr(child.process._handle, "closed", False):
+        raise ValueError("job_readback_closed")
     kernel = ctypes.windll.kernel32
     limits = _ExtendedLimits()
     handle = ctypes.c_void_p(child.job_handle)
@@ -82,6 +91,9 @@ class _Accounting(ctypes.Structure):
 
 
 def _active(child):
+    _guard_owned_handle_closes(child)
+    if child.job_handle is None:
+        raise ValueError("job_accounting_closed")
     info = _Accounting()
     if not ctypes.windll.kernel32.QueryInformationJobObject(
         ctypes.c_void_p(child.job_handle), 1, ctypes.byref(info), ctypes.sizeof(info), None
@@ -318,9 +330,7 @@ class IVVRuntime:
                     time.sleep(0.02)
                 if _active(self.child) != 0:
                     raise ValueError("numeric_close")
-                if not ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(self.child.job_handle)):
-                    raise ValueError("numeric_handle_close")
-                self.child.job_handle = None
+                _close_job_handle(self.child)
                 self.closed = True
                 self.timer.cancel()
                 receipt = {
