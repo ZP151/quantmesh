@@ -599,3 +599,107 @@ it.each(['old_authority', 'old_scope', 'wrong_job', 'effect_is_file_hash', 'miss
   await expect(api.artifact(await api.get(key), 'admission')).rejects.toMatchObject({ code: 'artifact_invalid' })
   expect(posts()).toHaveLength(0)
 })
+
+
+function declaredRecovery(state: 'succeeded' | 'interrupted' = 'interrupted') {
+  const original = declaredDev(state)
+  const authority = { ...objectRef('{}'), digest: '6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd' }
+  const policy = objectRef('scripted-recovery-policy')
+  const first = { logical_task_id: 'ivv-trend-staged-20261029', experiment_id: 'declared-trend-staged-v1', input_version: sha('scripted-semantic'), math_cost_spec: '7e0c785311bdae85828898bcc63b7a88d724da9bab4f844eb35673c923c34fea' }
+  const identity = { ...first, business_key: sha(canonical(first)) }
+  const basis: Record<string, unknown> = { ...original, diagnostic_mode: 'DEV_TRANSACTION_RECOVERY',
+    logical_task_id: first.logical_task_id, math_cost_spec: first.math_cost_spec,
+    authorization_sha256: authority.digest, policy_sha256: policy.digest, batch_id: 'scripted-recovery-batch',
+    channel: 'UNVERIFIED_TRUSTED_EXTERNAL', provider_hard_limit_enforced: false, historical_actual_cumulative: 'UNKNOWN',
+    scope_id: identity.business_key, scope_trial_key: identity.business_key,
+    recovery_identity: identity, attempt_policy: { policy_ref: policy, batch_id: 'scripted-recovery-batch', max_numerical_attempts: 3 },
+    recovery_provenance: { input_manifest_ref: objectRef('scripted-manifest'), capture_attempt_refs: [original.capture_ref] },
+    capture_budget: { batch_id: 'scripted-recovery-batch', wall_seconds: 1800, contexts: 3, business_requests: 32, max_business_per_second: 1, init_connect: 3, keepalive: 288, max_numerical_attempts: 3 },
+    capture_usage: [{ capture_ref: original.capture_ref, contexts: 1, business_requests: 7, init_connect: 1, keepalive: 0 }],
+    proofs: { ...original.proofs, scope_ref: policy, capture_policy_ref: policy, recovery_policy_ref: policy,
+      effect_ref: authority, execution_ref: authority, authorization_ref: authority,
+      expected_policy_sha256: policy.digest, expected_authorization_sha256: authority.digest } }
+  delete basis.hard_limit_enforced
+  current.recovery_status = { business_key: identity.business_key, experiment_id: first.experiment_id,
+    registered_attempts: 1, last_attempt_state: state === 'succeeded' ? 'committed' : 'interrupted', request_digest_history: [current.request_digest] }
+  for (const kind of state === 'succeeded' ? ['admission', 'report'] : ['admission']) {
+    artifacts[kind] = JSON.stringify({ ...JSON.parse(artifacts[kind]), use_basis: basis })
+    current[kind] = objectRef(artifacts[kind])
+  }
+  return basis
+}
+
+it('reopens a recovery report with explicit attempt history and no automatic POST', async () => {
+  declaredRecovery('succeeded')
+  await mount()
+  await screen.findByRole('button', { name: 'Download report' })
+  expect(screen.getByText('Recoverable IVV study')).toBeVisible()
+  expect(screen.getByText('Registered attempts: 1 · committed')).toBeVisible()
+  expect(screen.queryByText(/1 carrier, 1 context, 7 business/)).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+it('explicitly resumes an interrupted registered study using the same ID', async () => {
+  declaredRecovery()
+  const body = current.request as typeof request
+  options = { ...options, real_input_enabled: true, packages: [{ label: 'Current accepted input', evidence_kind: 'reviewed_real', package_ref: body.package_ref, approved_scope_ref: body.approved_scope_ref, protocol_ref: body.protocol_ref, job_id: key }], grants: [{ label: 'Current grant', package_digest: (body.package_ref as unknown as { digest: string }).digest, grant_ref: body.grant_ref }] }
+  const originalFetch = fetcher.getMockImplementation()!
+  fetcher.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.endsWith('/jobs') && init?.method === 'POST') {
+      declaredRecovery('succeeded')
+      const status = current.recovery_status as Record<string, unknown>
+      status.registered_attempts = 2; status.request_digest_history = [current.request_digest, current.request_digest]
+    }
+    return originalFetch(url, init)
+  })
+  await mount()
+  fireEvent.click(await screen.findByRole('button', { name: 'Resume registered study' }))
+  await waitFor(() => expect(posts()).toHaveLength(1))
+  expect(new Headers(posts()[0][1].headers).get('Idempotency-Key')).toBe(key)
+  expect(JSON.parse(String(posts()[0][1].body))).toEqual(body)
+  await screen.findByRole('button', { name: 'Download report' })
+  expect(screen.getByText('Registered attempts: 2 · committed')).toBeVisible()
+})
+
+it.each(['downcast', 'policy', 'history', 'assurance'])('rejects recovery proof/status defects (%s)', async defect => {
+  declaredRecovery('succeeded')
+  const admission = JSON.parse(artifacts.admission)
+  if (defect === 'downcast') admission.use_basis.diagnostic_mode = 'DEV_DIAGNOSTIC'
+  if (defect === 'policy') admission.use_basis.proofs.recovery_policy_ref = objectRef('wrong')
+  if (defect === 'history') (current.recovery_status as Record<string, unknown>).request_digest_history = []
+  if (defect === 'assurance') admission.use_basis.provider_hard_limit_enforced = true
+  artifacts.admission = JSON.stringify(admission); current.admission = objectRef(artifacts.admission)
+  await mount()
+  await screen.findByRole('alert')
+  expect(screen.queryByRole('button', { name: 'Download report' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+
+it('reopens a committed recovery after saved request references change only when its history binds the saved request', async () => {
+  declaredRecovery('succeeded')
+  const oldRef = objectRef('older accepted package')
+  const previous = { candidate: request.candidate, package_ref: oldRef, grant_ref: oldRef, approved_scope_ref: oldRef, protocol_ref: oldRef }
+  const status = current.recovery_status as Record<string, unknown>
+  status.registered_attempts = 2; status.request_digest_history = [sha(canonical(previous)), current.request_digest]
+  localStorage.setItem(`${storage}.${key}`, JSON.stringify({ key, request: previous }))
+  await mount()
+  await screen.findByRole('button', { name: 'Download report' })
+  expect(posts()).toHaveLength(0)
+  expect(JSON.parse(localStorage.getItem(`${storage}.${key}`)!).request).toEqual(current.request)
+})
+
+
+it('reads an already committed logical study before submitting refreshed review references', async () => {
+  declaredRecovery('succeeded')
+  const refreshed = objectRef('new review envelope for same semantic study')
+  options = { ...options, real_input_enabled: true, packages: [{ label: 'Refreshed reviewed input', evidence_kind: 'reviewed_real', package_ref: refreshed, approved_scope_ref: refreshed, protocol_ref: refreshed, job_id: key }], grants: [{ label: 'Refreshed grant', package_digest: refreshed.digest, grant_ref: refreshed }] }
+  await mount()
+  await screen.findByRole('button', { name: 'Download report' })
+  fireEvent.click(screen.getByRole('button', { name: 'Return to study input' }))
+  fireEvent.change(await screen.findByLabelText('Registered package'), { target: { value: refreshed.digest } })
+  fireEvent.change(screen.getByLabelText('Candidate grant'), { target: { value: refreshed.digest } })
+  fireEvent.click(screen.getByRole('button', { name: 'Submit fixed study' }))
+  await screen.findByRole('button', { name: 'Download report' })
+  expect(posts()).toHaveLength(0)
+})

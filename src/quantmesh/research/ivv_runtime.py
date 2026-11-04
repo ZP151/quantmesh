@@ -23,9 +23,12 @@ ADDITIONAL_WINDOWS_POLICY_SHA = "22f6cb798c94c436759f4ff85d16b6101010ae5e550e5e7
 WINDOWS_POLICY_SHA = "eba49b57044c1883c185fd3d844a8f645cfd64dc058104c63b820d34c65abb63"
 
 
-def ensure_capacity(root, reserved):
+def ensure_capacity(root, reserved, *, limit=None):
+    limit = ARTIFACT_BYTES if limit is None else limit
+    if type(reserved) is not int or type(limit) is not int or reserved < 0 or limit <= 0:
+        raise ValueError("numeric_artifact_capacity")
     used = sum(p.stat().st_size for p in Path(root).rglob("*") if p.is_file())
-    if reserved < 0 or used + reserved > ARTIFACT_BYTES:
+    if reserved < 0 or used + reserved > limit:
         raise ValueError("numeric_artifact_capacity")
 
 
@@ -128,8 +131,36 @@ class IVVRuntime:
         policy = gate._load(store, ref)
         go = gate._load(store, basis["proofs"]["go_ref"])
         proofs = gate.TrustedIVVProofs.model_validate(basis["proofs"])
-        additional = proofs.expected_authorization_sha256 == gate.ADDITIONAL_AUTH
-        expected_policy = ADDITIONAL_WINDOWS_POLICY_SHA if additional else WINDOWS_POLICY_SHA
+        recovered = proofs.recovery_policy_ref is not None
+        additional = not recovered and proofs.expected_authorization_sha256 == gate.ADDITIONAL_AUTH
+        self.artifact_limit = ARTIFACT_BYTES
+        self.recovery_attempt_id = None
+        if recovered:
+            from uuid import UUID
+
+            from quantmesh.research import ivv_recovery as recovery
+
+            identity = recovery.validate_identity(basis["recovery_identity"])
+            declared = gate.verify_recovery_windows_policy(store, proofs, identity)
+            attempt = basis.get("compute_attempt_id")
+            if (
+                not isinstance(attempt, str)
+                or str(UUID(attempt)) != attempt
+                or basis["scope_id"] != identity["business_key"]
+                or basis["job_id"] != recovery.logical_job_id(identity)
+                or go["recovery_identity"] != identity
+                or proofs.go_ref.digest != proofs.expected_go_sha256
+                or go["output_root_digest"] != gate.daily._root_pin(root)
+                or gate.daily._root_pin(root) != gate.daily._root_pin(recovery.STUDY_ROOT)
+            ):
+                raise ValueError("windows_runtime_authority")
+            self.recovery_attempt_id = attempt
+            self.artifact_limit = declared["storage"]["study"]
+        expected_policy = (
+            ref["digest"]
+            if recovered
+            else (ADDITIONAL_WINDOWS_POLICY_SHA if additional else WINDOWS_POLICY_SHA)
+        )
         if additional:
             gate._schema(proofs, "windows-policy")
             if (
@@ -162,10 +193,12 @@ class IVVRuntime:
             or controls["job_wide_committed_memory_max"] != COMMIT_BYTES
             or controls["absolute_seconds"] != 80
             or controls["paging"] != "ORDINARY_WINDOWS_OS_MANAGED_ALLOWED"
-            or controls["owned_study_artifacts"] != 8388608
+            or controls["owned_study_artifacts"] != self.artifact_limit
         ):
             raise ValueError("windows_runtime_budget")
-        self.directory = Path(root) / "numeric"
+        self.directory = Path(root) / (
+            "numeric-" + self.recovery_attempt_id if recovered else "numeric"
+        )
         self.child = self.started = self.timer = None
         self.closed = False
         self._lock = threading.RLock()
@@ -175,7 +208,11 @@ class IVVRuntime:
             return False
         # Four MiB cover bounded command/result/report, decision, atomic staging,
         # ledger and metadata. Existing originals are additional, never deleted.
-        ensure_capacity(self.directory.parent, pending_bytes + 4 * 1024 * 1024)
+        ensure_capacity(
+            self.directory.parent,
+            pending_bytes + 4 * 1024 * 1024,
+            limit=getattr(self, "artifact_limit", ARTIFACT_BYTES),
+        )
         if self.child is not None:
             return self.child.poll() is None and time.monotonic() - self.started < 60
         # Explicit caller retry after a pre-trial refusal uses a new bounded

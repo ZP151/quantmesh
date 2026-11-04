@@ -13,7 +13,7 @@ from datetime import UTC, date, datetime
 from importlib.metadata import version
 from pathlib import Path
 from typing import Annotated, Literal
-from uuid import NAMESPACE_URL, UUID, uuid4, uuid5
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from quantmesh.data.objects import ObjectRef, ObjectStore, is_reparse_point
@@ -505,9 +505,9 @@ class NativeDailyService:
 
     @staticmethod
     def _transaction_job_id(identity):
-        return str(
-            uuid5(NAMESPACE_URL, "urn:quantmesh:ivv-recovery:v1:" + identity["business_key"])
-        )
+        from quantmesh.research import ivv_recovery as recovery
+
+        return recovery.logical_job_id(identity)
 
     def _verify_transaction(self, job):
         from quantmesh.research import ivv_recovery as recovery
@@ -661,7 +661,13 @@ class NativeDailyService:
                         # A changed data/math version needs an explicit new experiment.
                         raise NativeError("idempotency_conflict")
             attempts = existing.transaction.attempts if existing else []
-            if len(attempts) >= meta["attempt_policy"]["max_numerical_attempts"]:
+            task_attempts = sum(
+                len(prior.transaction.attempts)
+                for prior in jobs
+                if prior.transaction is not None
+                and prior.transaction.identity["logical_task_id"] == identity["logical_task_id"]
+            )
+            if task_attempts >= meta["attempt_policy"]["max_numerical_attempts"]:
                 raise NativeError("study_not_admitted")
             if self._inflight is not None:
                 raise NativeError("capacity_exceeded")
@@ -669,88 +675,94 @@ class NativeDailyService:
                 raise NativeError("capacity_exceeded")
             attempt_id = str(uuid4())
             conflicts = [j for j in jobs if j.job_id != key]
-            admitted, reasons = self._admit(
-                request, conflicts, key=key, recovery_attempt_id=attempt_id
-            )
-            if admitted is None:
-                raise NativeError("study_not_admitted")
-            _, contents = self._binding(request, registration.store, executing=True)
-            references = [
-                meta["attempt_policy"]["policy_ref"],
-                meta["recovery_provenance"]["input_manifest_ref"],
-                *meta["recovery_provenance"]["capture_attempt_refs"],
-            ]
-            for ref in references:
-                ref = ObjectRef.model_validate(ref)
-                contents.append((ref, self._from_store(registration.store, ref)))
-            basis = None
-            if registration.real_binding is not None:
-                from quantmesh.research import ivv_admission as ivv
-
-                contents.extend(ivv.binding_objects(registration.store, registration.real_binding))
-                basis = ivv.verify_saved_binding(
-                    registration.store,
-                    request.package_ref,
-                    registration.real_binding,
-                    executing=True,
+            try:
+                admitted, reasons = self._admit(
+                    request, conflicts, key=key, recovery_attempt_id=attempt_id
                 )
-                if any(basis.get(k) != v for k, v in meta.items()):
+                if admitted is None:
                     raise NativeError("study_not_admitted")
-            for ref, raw in contents:
-                if self._put(raw, ref.media_type) != ref:
-                    raise NativeError("artifact_invalid")
-            now = _now()
-            identity = digest(canonical(request.model_dump(mode="json")))
-            status = "ACCEPTED_DECLARED_RESEARCH" if basis else "ACCEPTED_ENGINEERING"
-            admission = {
-                "schema_id": "qm.native-daily.admission.v2"
-                if basis
-                else "qm.native-daily.admission.v1",
-                "job_id": key,
-                "request_digest": identity,
-                "request": request.model_dump(mode="json"),
-                "status": status,
-                "reasons": reasons,
-                "created_at": now,
-                "financial_qualification": "INSUFFICIENT",
-                "paper_allowed": False,
-                "live_allowed": False,
-            }
-            if basis:
-                admission["use_basis"] = basis
-            admission_ref = self._put(canonical(admission))
-            attempt = ComputeAttempt(
-                attempt_id=attempt_id,
-                sequence=len(attempts) + 1,
-                state="running",
-                request=request,
-                request_digest=identity,
-                admission=admission_ref,
-                real_binding=registration.real_binding,
-                policy=meta["attempt_policy"],
-                provenance=meta["recovery_provenance"],
-                started_at=now,
-            )
-            job = NativeJob(
-                job_id=key,
-                request=request,
-                request_digest=identity,
-                state="running",
-                admission_status=status,
-                admission=admission_ref,
-                created_at=existing.created_at if existing else now,
-                consumed_grant=request.grant_ref.digest,
-                scope_trial_key=meta["recovery_identity"]["business_key"],
-                real_binding=registration.real_binding,
-                transaction=ResearchTransaction(
-                    identity=meta["recovery_identity"], attempts=[*attempts, attempt]
-                ),
-            )
-            self._verify(job)
-            self._store.write(
-                [job if j.job_id == key else j for j in jobs] if existing else [*jobs, job]
-            )
-            self._inflight = key
+                _, contents = self._binding(request, registration.store, executing=True)
+                references = [
+                    meta["attempt_policy"]["policy_ref"],
+                    meta["recovery_provenance"]["input_manifest_ref"],
+                    *meta["recovery_provenance"]["capture_attempt_refs"],
+                ]
+                for ref in references:
+                    ref = ObjectRef.model_validate(ref)
+                    contents.append((ref, self._from_store(registration.store, ref)))
+                basis = None
+                if registration.real_binding is not None:
+                    from quantmesh.research import ivv_admission as ivv
+
+                    contents.extend(
+                        ivv.binding_objects(registration.store, registration.real_binding)
+                    )
+                    basis = ivv.verify_saved_binding(
+                        registration.store,
+                        request.package_ref,
+                        registration.real_binding,
+                        executing=True,
+                    )
+                    if any(basis.get(k) != v for k, v in meta.items()):
+                        raise NativeError("study_not_admitted")
+                for ref, raw in contents:
+                    if self._put(raw, ref.media_type) != ref:
+                        raise NativeError("artifact_invalid")
+                now = _now()
+                identity = digest(canonical(request.model_dump(mode="json")))
+                status = "ACCEPTED_DECLARED_RESEARCH" if basis else "ACCEPTED_ENGINEERING"
+                admission = {
+                    "schema_id": "qm.native-daily.admission.v2"
+                    if basis
+                    else "qm.native-daily.admission.v1",
+                    "job_id": key,
+                    "request_digest": identity,
+                    "request": request.model_dump(mode="json"),
+                    "status": status,
+                    "reasons": reasons,
+                    "created_at": now,
+                    "financial_qualification": "INSUFFICIENT",
+                    "paper_allowed": False,
+                    "live_allowed": False,
+                }
+                if basis:
+                    admission["use_basis"] = basis
+                admission_ref = self._put(canonical(admission))
+                attempt = ComputeAttempt(
+                    attempt_id=attempt_id,
+                    sequence=len(attempts) + 1,
+                    state="running",
+                    request=request,
+                    request_digest=identity,
+                    admission=admission_ref,
+                    real_binding=registration.real_binding,
+                    policy=meta["attempt_policy"],
+                    provenance=meta["recovery_provenance"],
+                    started_at=now,
+                )
+                job = NativeJob(
+                    job_id=key,
+                    request=request,
+                    request_digest=identity,
+                    state="running",
+                    admission_status=status,
+                    admission=admission_ref,
+                    created_at=existing.created_at if existing else now,
+                    consumed_grant=request.grant_ref.digest,
+                    scope_trial_key=meta["recovery_identity"]["business_key"],
+                    real_binding=registration.real_binding,
+                    transaction=ResearchTransaction(
+                        identity=meta["recovery_identity"], attempts=[*attempts, attempt]
+                    ),
+                )
+                self._verify(job)
+                self._store.write(
+                    [job if j.job_id == key else j for j in jobs] if existing else [*jobs, job]
+                )
+                self._inflight = key
+            except BaseException:
+                self._release_real_runtime(registration)
+                raise
         try:
             raw = self._compute(registration, job)
             with self._condition:
@@ -802,12 +814,15 @@ class NativeDailyService:
                 return self._public(failed), existing is None
         finally:
             with self._condition:
-                if registration.real_binding is not None:
-                    owner = self._real_runtimes.pop(registration.real_binding.digest, None)
-                    if owner is not None:
-                        owner.close()
+                self._release_real_runtime(registration)
                 self._inflight = None
                 self._condition.notify_all()
+
+    def _release_real_runtime(self, registration):
+        if registration.real_binding is not None:
+            owner = self._real_runtimes.pop(registration.real_binding.digest, None)
+            if owner is not None:
+                owner.close()
 
     def _object(self, reference):
         return self._from_store(self.objects, reference)
@@ -823,11 +838,31 @@ class NativeDailyService:
         except (OSError, ValueError):
             raise NativeError("artifact_invalid") from None
 
+    def _artifact_capacity(self):
+        from quantmesh.research import ivv_recovery as recovery
+
+        limits = [8 * MAX_OBJECT]
+        for registration in self._registered:
+            meta = self._recovery_metadata(registration)
+            if meta is not None:
+                ref = ObjectRef.model_validate(meta["attempt_policy"]["policy_ref"])
+                policy = recovery.validate_policy(_loads(self._from_store(registration.store, ref)))
+                limits.append(policy["storage"]["study"])
+        # Cold decision writes retain the allowance actually archived by admitted
+        # attempts; a missing current selector never discards previous originals.
+        for job in self._records():
+            if job.transaction is not None:
+                for attempt in job.transaction.attempts:
+                    ref = ObjectRef.model_validate(attempt.policy["policy_ref"])
+                    policy = recovery.validate_policy(_loads(self._object(ref)))
+                    limits.append(policy["storage"]["study"])
+        return max(limits)
+
     def _put(self, raw, media="application/json"):
         if not 1 <= len(raw) <= MAX_OBJECT:
             raise NativeError("capacity_exceeded")
         used = sum(path.stat().st_size for path in self.root.rglob("*") if path.is_file())
-        if used + 2 * len(raw) + 512 * 1024 > 8 * MAX_OBJECT:
+        if used + 2 * len(raw) + 512 * 1024 > self._artifact_capacity():
             raise NativeError("capacity_exceeded")
         return self.objects.put_bytes(media, raw)
 
@@ -1381,6 +1416,15 @@ class NativeDailyService:
                 "transaction",
             },
         )
+        if job.transaction is not None:
+            tx = job.transaction
+            result["recovery_status"] = {
+                "business_key": tx.identity["business_key"],
+                "experiment_id": tx.identity["experiment_id"],
+                "registered_attempts": len(tx.attempts),
+                "last_attempt_state": tx.attempts[-1].state,
+                "request_digest_history": [a.request_digest for a in tx.attempts],
+            }
         result["trial_consumed"] = job.consumed_grant is not None
         result["admission_reasons"] = _loads(self._object(job.admission))["reasons"]
         return result

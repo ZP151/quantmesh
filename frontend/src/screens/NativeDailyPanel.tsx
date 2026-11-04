@@ -51,6 +51,9 @@ const copy = {
     additional: 'Additional IVV task · unverified external environment',
     additionalLegacy: 'Old task: UNKNOWN_LOCKED; nominal allowance consumed (1 context / 7 business requests). Historical actual cumulative usage: UNKNOWN.',
     additionalLimits: 'This task limits: 1 carrier, 1 context, 7 business requests; InitConnect ≤1 and KeepAlive ≤96 counted separately. Capture submission is SPENT; returning to input restores no authority.',
+    recovery: 'Recoverable IVV study', recoveryAttempts: 'Registered attempts', recoveryTrial: 'Logical study registered', resume: 'Resume registered study',
+    recoveryReal: 'Declared retrospective research with recorded recovery. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
+    recoveryHelp: 'No report is available. Resume explicitly with the current registered input and policy. Previous attempts remain recorded; committed reports are reopened without calculation.',
     observed: 'Observed',
     trustedLimits: 'External environment and channels are unverified (UNVERIFIED_TRUSTED_EXTERNAL). Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Monitoring is not a hard limit.',
     devLimits: 'Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Full read-only/six-writable enforcement and legacy loaded-guard provenance are unproved. Monitoring is not a hard limit.',
@@ -82,6 +85,9 @@ const copy = {
     additional: '新增 IVV 任务 · 外部环境未核验',
     additionalLegacy: '旧任务：UNKNOWN_LOCKED；名义额度已消费（1 个 context / 7 次业务请求）。历史实际累计使用量：UNKNOWN。',
     additionalLimits: '本次上限：1 次 carrier 提交、1 个 context、7 次业务请求；InitConnect ≤1、KeepAlive ≤96 另计。采集提交权已消费；返回输入不恢复权限。',
+    recovery: '可恢复的 IVV 研究', recoveryAttempts: '已登记尝试', recoveryTrial: '已登记逻辑研究', resume: '恢复已注册研究',
+    recoveryReal: '已登记恢复尝试的回顾性研究。金融证据仍为 INSUFFICIENT，Paper 和实盘不可用。',
+    recoveryHelp: '当前无报告。可使用当前注册输入和策略显式恢复；既有尝试保留，已提交报告按原件重开而不重算。',
     observed: '实际观察',
     trustedLimits: '外部环境及通道未核验（UNVERIFIED_TRUSTED_EXTERNAL）。未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。监测不等于硬上限。',
     devLimits: '未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。完整只读/六个可写路径约束与旧版已加载防护的来源仍未证明。监测不等于硬上限。',
@@ -127,10 +133,16 @@ export function NativeDailyPanel() {
   function accept(value: NativeJob, token: number) {
     if (!alive.current || token !== generation.current) return
     const old = currentJob.current
-    if (old?.job_id === value.job_id && ((old.state !== 'running' && value.state === 'running') || (old.decision && !value.decision))) return
-    if (old?.job_id === value.job_id && (old.admission.digest !== value.admission.digest || old.request_digest !== value.request_digest
+    const advancing = old?.job_id === value.job_id && old.recovery_status && value.recovery_status
+      && old.recovery_status.business_key === value.recovery_status.business_key
+      && old.recovery_status.registered_attempts < value.recovery_status.registered_attempts
+      && value.recovery_status.request_digest_history.includes(old.request_digest)
+      && ['failed', 'interrupted'].includes(old.state) && !old.report && !old.decision
+    if (!advancing && old?.job_id === value.job_id && ((old.state !== 'running' && value.state === 'running') || (old.decision && !value.decision))) return
+    if (!advancing && old?.job_id === value.job_id && (old.admission.digest !== value.admission.digest || old.request_digest !== value.request_digest
       || old.created_at !== value.created_at || (old.report && old.report.digest !== value.report?.digest)
       || (old.decision && old.decision.digest !== value.decision?.digest) || (old.state !== 'running' && old.state !== value.state))) { setError('invalid'); return }
+    if (old?.job_id === value.job_id && old.created_at !== value.created_at) { setError('invalid'); return }
     const previous = currentIntent.current?.key === value.job_id ? currentIntent.current : retained(value.job_id)
     const next = { key: value.job_id, request: value.request, ...(previous?.decision ? { decision: previous.decision } : {}) }
     currentIntent.current = next; setIntent(next); persist(next)
@@ -176,8 +188,8 @@ export function NativeDailyPanel() {
     // The artifact refs are immutable; polling unchanged metadata does not reread bytes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.job_id, job?.admission.digest, job?.report?.digest, job?.decision?.digest])
-  async function submit(existing?: Intent) {
-    if (posting.current || job) return
+  async function submit(existing?: Intent, recovery = false) {
+    if (posting.current || (job && !recovery)) return
     const pack = options?.packages.find(p => p.package_ref.digest === packageId)
     const grant = options?.grants.find(g => g.grant_ref.digest === grantId && g.package_digest === packageId)
     if (!existing && !options?.configured) return
@@ -185,7 +197,20 @@ export function NativeDailyPanel() {
     if (!keep(saved)) return
     identify(saved.key); setOpenId(saved.key); setError(null); setPaused(false); setSubmitting(true); posting.current = true
     const token = generation.current
-    try { accept(await nativeDailyApi.submit(saved.request, saved.key), token) } catch (cause) { if (alive.current && token === generation.current) issue(cause) }
+    try {
+      if (options?.packages.some(p => p.job_id === saved.key)) {
+        try {
+          const original = await nativeDailyApi.get(saved.key)
+          if (original.recovery_status && (original.report || original.decision || original.state === 'running')) {
+            accept(original, token)
+            return
+          }
+        } catch (cause) {
+          if (!(cause instanceof NativeDailyError) || cause.code !== 'not_found') throw cause
+        }
+      }
+      accept(await nativeDailyApi.submit(saved.request, saved.key), token)
+    } catch (cause) { if (alive.current && token === generation.current) issue(cause) }
     finally { posting.current = false; if (alive.current && token === generation.current) setSubmitting(false) }
   }
   async function decide(existing?: Intent['decision']) {
@@ -208,16 +233,21 @@ export function NativeDailyPanel() {
   }
   const complete = !!packageId && !!grantId
   const real = job ? job.admission_status === 'ACCEPTED_DECLARED_RESEARCH' : options?.packages.some(p => p.package_ref.digest === packageId && p.evidence_kind === 'reviewed_real')
-  const evidenceNote = real ? w.real : w.engineering
+  const evidenceNote = real ? (job?.recovery_status ? w.recoveryReal : w.real) : w.engineering
   const state = job?.state === 'not_run' ? (job.admission_status === 'REJECT' ? w.rejected : w.notRun) : job?.state === 'running' ? (real ? w.realRunning : w.running) : job?.state === 'succeeded' ? (real ? w.realSucceeded : w.succeeded) : job?.state === 'failed' ? w.failed : w.interrupted
   const verified = evidence?.jobId === job?.job_id ? evidence : null
   const useBasis = real && verified ? verified.admission.value.use_basis as Record<string, unknown> : null
+  const recovery = useBasis?.diagnostic_mode === 'DEV_TRANSACTION_RECOVERY'
   const additional = useBasis?.diagnostic_mode === 'DEV_ADDITIONAL_TRUSTED_ENVIRONMENT'
   const usage = additional ? useBasis!.capture_usage as Record<string, unknown> : null
   const observed = (key: string) => typeof usage?.[key] === 'number' ? String(usage[key]) : 'UNKNOWN'
-  const trustedEnvironment = additional || useBasis?.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
+  const trustedEnvironment = recovery || additional || useBasis?.diagnostic_mode === 'DEV_TRUSTED_ENVIRONMENT'
   const diagnostic = trustedEnvironment || useBasis?.diagnostic_mode === 'DEV_DIAGNOSTIC'
-  const diagnosticLabel = additional ? w.additional : trustedEnvironment ? w.trustedDev : w.dev
+  const diagnosticLabel = recovery ? w.recovery : additional ? w.additional : trustedEnvironment ? w.trustedDev : w.dev
+  const recoveryPacks = options?.configured ? options.packages.filter(p => p.job_id === job?.job_id) : []
+  const recoveryPack = recoveryPacks.length === 1 ? recoveryPacks[0] : null
+  const recoveryGrants = recoveryPack ? options!.grants.filter(g => g.package_digest === recoveryPack.package_ref.digest) : []
+  const recoveryGrant = recoveryGrants.length === 1 ? recoveryGrants[0] : null
   const pendingDecision = intent?.decision
   const usd = (v: number) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD' }).format(v)
   const percent = (v: number) => new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 2 }).format(v)
@@ -250,12 +280,13 @@ export function NativeDailyPanel() {
       {job && <section aria-labelledby="native-evidence" className="min-w-0 space-y-3 border-t pt-4">
         <h3 id="native-evidence" className="font-medium">{w.status}</h3>
         <p role="status" className="text-sm">{state}</p>
-        <p className="text-xs text-muted-foreground">{w.trial}: {job.trial_consumed ? w.yes : w.no}</p>
+        <p className="text-xs text-muted-foreground">{job.recovery_status ? w.recoveryTrial : w.trial}: {job.trial_consumed ? w.yes : w.no}</p>
         {!verified && error !== 'artifact' && <p className="text-sm text-muted-foreground">{w.verify}</p>}
         {verified && <>
-          {real && <><p className="text-sm text-muted-foreground">{evidenceNote}</p>{!additional && <p className="text-sm text-muted-foreground">{w.captureAuthority}</p>}</>}
+          {real && <><p className="text-sm text-muted-foreground">{evidenceNote}</p>{!additional && !recovery && <p className="text-sm text-muted-foreground">{w.captureAuthority}</p>}</>}
           {diagnostic && <div className="space-y-2 text-sm" role="note" aria-label={diagnosticLabel}>
             <p className="font-medium">{diagnosticLabel}</p>
+            {recovery && job.recovery_status && <p className="tabular-nums">{w.recoveryAttempts}{zh ? '：' : ': '}{job.recovery_status.registered_attempts} · {job.recovery_status.last_attempt_state}</p>}
             {additional && <>
               <p>{w.additionalLegacy}</p><p>{w.additionalLimits}</p>
               <p className="tabular-nums">{w.observed}{zh ? `：${observed('actual_contexts')} 个 context、${observed('actual_business_requests')} 次业务请求、${observed('actual_init_connect')} 次 InitConnect、${observed('actual_keepalive')} 次 KeepAlive。` : `: ${observed('actual_contexts')} context, ${observed('actual_business_requests')} business requests, ${observed('actual_init_connect')} InitConnect, ${observed('actual_keepalive')} KeepAlive.`}</p>
@@ -267,7 +298,11 @@ export function NativeDailyPanel() {
           </div>}
           <ul className="space-y-1 text-sm">{job.admission_reasons.map(code => <li key={code} title={code}>{reasons[code]?.[zh ? 1 : 0] ?? code}</li>)}</ul>
           {job.state === 'not_run' && <p className="text-sm">{w.noReport}</p>}
-          {['failed', 'interrupted'].includes(job.state) && <p className="text-sm">{w.noResult}</p>}
+          {['failed', 'interrupted'].includes(job.state) && <>
+            <p className="text-sm">{recovery ? w.recoveryHelp : w.noResult}</p>
+            {recovery && !job.decision && !pendingDecision && recoveryPack && recoveryGrant && <Button className="min-h-11" disabled={submitting} onClick={() => void submit({ key: job.job_id, request: { candidate: NATIVE_CANDIDATE, package_ref: recoveryPack.package_ref, approved_scope_ref: recoveryPack.approved_scope_ref, protocol_ref: recoveryPack.protocol_ref, grant_ref: recoveryGrant.grant_ref } }, true)}>{w.resume}</Button>}
+            {recovery && submitting && <p role="status" className="text-sm">{w.waiting}</p>}
+          </>}
           {verified.report && <>
             {!real && <p className="text-sm text-muted-foreground">{evidenceNote}</p>}
             <div className="flex flex-wrap gap-1" aria-label={zh ? '成本场景' : 'Cost scenario'}>{(['base5', 'stress10'] as const).map(value => <Button key={value} className="min-h-11" variant={scenario === value ? 'secondary' : 'ghost'} aria-pressed={scenario === value} onClick={() => setScenario(value)}>{value === 'base5' ? w.base : w.stress}</Button>)}</div>
