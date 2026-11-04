@@ -6,8 +6,8 @@ Stable semantic research identity, durable external uncertainty/checkpoints and
 atomic accepted-input/result publication replace permanent one-shot blockers
 under actual human direction6db1254. Reuse existing stores/leases/native controls;
 retain every old SPENT/UNKNOWN and data/math/trading boundary. Two original
-writers consume one policy. Current caps12GiB/6GiB/free50GiB; old80+recovery128=
-208MiB reserved. [Current iteration](../iterations/0038-ivv-transaction-recovery.md).
+writers consume one policy. Current caps12GiB/6GiB/free50GiB; old80+recovery138=
+218MiB reserved. [Current iteration](../iterations/0038-ivv-transaction-recovery.md).
 
 ## Trusted-entry failure evidence — issue279, 2026-11-04
 

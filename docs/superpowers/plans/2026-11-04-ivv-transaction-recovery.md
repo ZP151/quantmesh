@@ -21,7 +21,7 @@ new permit issuer.
 
 Preserve all old evidence/charges/futures and old-family interpretations. Current
 human direction6db1254 replaces repeated single-shot approval gates. Current
-12GiB/6GiB/free50GiB and complete208MiB hold apply; source16MiB is shared. Data/math,
+12GiB/6GiB/free50GiB and complete218MiB hold apply; software26MiB is shared (Server7/Product12/common6/FS1). Data/math,
 credentials, no-paid, read-only protocol scope and paper/live boundaries remain.
 One integration branch/CI observer; no old PR280 revalidation or diagnostic sandbox.
 
@@ -30,7 +30,7 @@ and UNKNOWN cleanup, cross-epoch partial input refusal, source/authority refresh
 without semantic identity reset, and report-put/prepared/commit crash boundaries.
 No success or zero-usage inference from a spent claim, limit or origin phase.
 
-## Task 1 — shared policy and stable identity (Server)
+## Task 1 â€” shared policy and stable identity (Server)
 
 Files: create src/quantmesh/research/ivv_recovery.py;
 tests/test_ivv_transaction_recovery.py; shared spec/iteration/ACTIVE/roadmap/ADR.
@@ -39,14 +39,14 @@ semantic_input_version(semantic), logical_job_id(identity), research_effect(iden
 capture_scope_id(), validate_policy(policy), policy_provenance(policy),
 attempt_policy(policy,policy_ref), validate_attempt_policy(value,policy).
 
-- [ ] RED: unknown identity fields, wrong business key, semantic missing/extra raw
+- [x] RED: unknown identity fields, wrong business key, semantic missing/extra raw
   authority aliases, malformed refs, policy booleans/overflow/headroom, allowance
   extension without a new identity. Run only the new direct tests and retain RED.
-- [ ] Implement exact closed canonical schemas and strict finite values; no effects.
-- [ ] GREEN targeted pytest, Ruff/format; publish immutable shared input to Product.
-- [ ] Commit coherent shared contract checkpoint; retain old branch/history.
+- [x] Implement exact closed canonical schemas and strict finite values; no effects.
+- [x] GREEN targeted pytest, Ruff/format; publish immutable shared input to Product.
+- [x] Commit coherent shared contract checkpoint; retain old branch/history.
 
-## Task 2 — durable external attempts and actual recovery path (Server)
+## Task 2 â€” durable external attempts and actual recovery path (Server)
 
 Files: tools/research/ivv_additional_task.py, capture_opend_ivv_daily.py,
 ivv_dev_diagnostic.py, ivv_trusted_runner.py, direct tests; versioned private ops.
@@ -64,7 +64,7 @@ human direction/pinned policy and existing native held controls, not a new issue
 - [ ] Validate and atomically publish a complete candidate manifest; retain failed
   originals. Run affected capture/authority/cleanup tests and record evidence.
 
-## Task 3 — resumable numerical attempt/result loop (Product)
+## Task 3 â€” resumable numerical attempt/result loop (Product)
 
 Files: ivv_admission.py,ivv_runtime.py,native_daily_real.py and direct tests;
 minimum native-daily-api.ts/NativeDailyPanel.tsx consumer guard if necessary.
@@ -78,9 +78,9 @@ WriterLease and JsonlStore remain the only job/result commit mechanism.
   prepared-report-before-committed pointer. New experiments require registration;
   recovery computations are not new published/OOS experiments.
 - [ ] GREEN direct tests/static checks; freeze exact source/diff/owned paths and
-  complete6MiB subset accounting for Server integration. No Product host/CI work.
+  complete12MiB subset accounting for Server integration. No Product host/CI work.
 
-## Task 4 — integration, independent review and normal publication (Server)
+## Task 4 â€” integration, independent review and normal publication (Server)
 
 - [ ] Integrate only the disjoint frozen Product files; run the connected actual
   policy -> capture original -> acceptance -> registration -> recovery -> committed
@@ -90,7 +90,7 @@ WriterLease and JsonlStore remain the only job/result commit mechanism.
 - [ ] Relevant broad checks at final boundary, one normal matching-head PR/CI,
   actual merge-policy scope and guarded merge/full source/catalog provenance.
 
-## Task 5 — actual bounded recovery and user outcome (Server/Quant/Product)
+## Task 5 â€” actual bounded recovery and user outcome (Server/Quant/Product)
 
 - [ ] Adopt consistent current policy/source/manifest/guard and actual applicable
   owner/config/resource/free/cleanup checks; no standalone diagnostic sandbox.

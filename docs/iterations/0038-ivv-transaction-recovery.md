@@ -1,4 +1,4 @@
-# Iteration0038 — recover the fixed IVV user loop
+# Iteration0038 â€” recover the fixed IVV user loop
 
 Issue [281](https://github.com/ZP151/quantmesh/issues/281);
 [frozen boundary](../superpowers/specs/2026-11-04-ivv-transaction-recovery.md).
@@ -48,3 +48,71 @@ IVV_TRANSACTION_RECOVERY_PRODUCT6_TO8MiB_NET2MiB_20261104_01 records
 guardG10606440538/P4568368142/all-parent4624991246; all fit12GiB/6GiB, no paid
 resource/oldfuture/capture-pool borrowing. PolicyP1 is retained; P2 changes only
 storage forecast/guard provenance and never business identity or attempt counts.
+
+Parent integration checkpoint 2026-11-04: original Product froze seven owned
+files at0a694327/90207b60; Parent cherry-picks027b4648/7d3e42be match all seven
+byte pins. Original Product remains frozen. Parent now owns only its located
+consumer fix/docs/integration; original Server remains the other source writer.
+Quant limited field readback resolved F1 to one actual epoch; F2 preserves every
+possible wire enqueue and separate control buckets; F3 exposed an inconsistent
+failed/prepared archive accepted by the consumer. A real prepared-ack-loss ledger
+reproduced DID NOT RAISE before the fix, then state/completion/failure/report
+consistency guards passed the corruption case and normal prepared/interrupted
+cases. The first RED invocation had a missing basetemp parent; both logs retained.
+Parent shared+Product affected regression now139PASS/1skip/78.20s. The skip is the
+missing private approval fixture, never a fabricated human original. Engineering
+fixtures do not establish actual capture, input acceptance or financial results.
+
+Capacity supplements03/04 retain all history/futures and complete138MiB recovery
+plus old80MiB=218MiB: software26(Server7/Product12/common6/FS1), local/remote48+48,
+review4,study8,close2+2. Net4MiB registration04 raises only Server/common forecasts;
+guardG10614829146/P4576756750/all-parent4633379854 fit12GiB/6GiB/free50GiB. Protected
+operator P4 d55242c0/1425B is distinct from initial source DEFAULT_POLICY; all old
+policies remain immutable and no identity/count is reset. This is not runtime GO.
+
+Browser-only readback: Edge extension shows authenticated Tailscale Machines and
+research/both staging Connected. No global desktop inspection or OpenD/SDK
+connection inference. Parent frontend build/type checks ran with existing Vite
+8.2.1, while the lock requires8.2.4; its output/log is retained but exact-lock
+bundle qualification is pending. No dependency installation/new environment.
+Server actual capture chain/owned cleanup is not yet frozen; connected integrated
+review, exact-head normal CI/merge and actual input/report/decision/cold read remain.
+
+Parent integration checkpoint 2026-11-04: original Product froze seven owned
+files at0a694327/90207b60; Parent cherry-picks027b4648/7d3e42be match all seven
+byte pins. Original Product remains frozen. Parent now owns only its located
+consumer fix/docs/integration; original Server remains the other source writer.
+Quant limited field readback resolved F1 to one actual epoch; F2 preserves every
+possible wire enqueue and separate control buckets; F3 exposed an inconsistent
+failed/prepared archive accepted by the consumer. A real prepared-ack-loss ledger
+reproduced DID NOT RAISE before the fix, then state/completion/failure/report
+consistency guards passed the corruption case and normal prepared/interrupted
+cases. The first RED invocation had a missing basetemp parent; both logs retained.
+Parent shared+Product affected regression now139PASS/1skip/78.20s. The skip is the
+missing private approval fixture, never a fabricated human original. Engineering
+fixtures do not establish actual capture, input acceptance or financial results.
+
+Capacity supplements03/04 retain all history/futures and complete138MiB recovery
+plus old80MiB=218MiB: software26(Server7/Product12/common6/FS1), local/remote48+48,
+review4,study8,close2+2. Net4MiB registration04 raises only Server/common forecasts;
+guardG10614829146/P4576756750/all-parent4633379854 fit12GiB/6GiB/free50GiB. Protected
+operator P4 d55242c0/1425B is distinct from initial source DEFAULT_POLICY; all old
+policies remain immutable and no identity/count is reset. This is not runtime GO.
+
+Browser-only readback: Edge extension shows authenticated Tailscale Machines and
+research/both staging Connected. No global desktop inspection or OpenD/SDK
+connection inference. Parent frontend build/type checks ran with existing Vite
+8.2.1, while the lock requires8.2.4; its output/log is retained but exact-lock
+bundle qualification is pending. No dependency installation/new environment.
+Server actual capture chain/owned cleanup is not yet frozen; connected integrated
+review, exact-head normal CI/merge and actual input/report/decision/cold read remain.
+
+Ruling: the existing local node_modules is8.2.1, so retain it as disclosed software
+evidence only. The necessary normal CI keeps its existing npm-ci lock and stale-
+bundle refusal, and now retains its actual built bundle plus actual checkout/tree,
+frontend tree, lock/workflow digests and per-file byte/hash provenance. No new
+profiling CI, local install, lock downgrade or suppression of the stale check.
+If that CI finds a different bundle, integrate only its verified exact-source
+artifact and rerun the normal checks for the changed commit; never reuse a green
+status from the previous head. The workflow addition is part of the single joint
+review. Parent scoped Ruff/format six files and workflow YAML parsing pass.

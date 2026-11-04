@@ -16,6 +16,7 @@ from typing import Annotated, Literal
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from quantmesh.data.objects import ObjectRef, ObjectStore, is_reparse_point
 from quantmesh.ops.paper_controls import WriterLease
 from quantmesh.persistence.jsonl import JsonlStore
@@ -531,6 +532,11 @@ class NativeDailyService:
                 or type(attempt.policy["max_numerical_attempts"]) is not int
                 or (sequence < len(tx.attempts) and attempt.state not in {"failed", "interrupted"})
                 or (attempt.state in {"prepared", "committed"}) != (attempt.report is not None)
+                or (attempt.completed_at is None) != (attempt.state in {"running", "prepared"})
+                or attempt.failure_code
+                != {"failed": "COMPUTE_FAILED", "interrupted": "EXECUTION_INTERRUPTED"}.get(
+                    attempt.state
+                )
             ):
                 raise ValueError("transaction_attempt")
             for ref in [
@@ -573,10 +579,18 @@ class NativeDailyService:
             or job.request_digest != last.request_digest
             or job.admission != last.admission
             or job.real_binding != last.real_binding
-            or (job.state == "succeeded") != (last.state == "committed")
+            or job.state
+            != {
+                "running": "running",
+                "prepared": "running",
+                "failed": "failed",
+                "interrupted": "interrupted",
+                "committed": "succeeded",
+            }[last.state]
+            or (job.completed_at is None) != (job.state == "running")
             or (tx.prepared_report is not None) != (last.state == "prepared")
             or (tx.prepared_report is not None and tx.prepared_report != last.report)
-            or (job.report is not None and job.report != last.report)
+            or job.report != (last.report if last.state == "committed" else None)
         ):
             raise ValueError("transaction_snapshot")
 

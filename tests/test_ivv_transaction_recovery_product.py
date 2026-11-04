@@ -6,8 +6,8 @@ from dataclasses import replace
 from uuid import NAMESPACE_URL, uuid5
 
 import pytest
-from quantmesh.data.objects import ObjectStore
 
+from quantmesh.data.objects import ObjectStore
 from quantmesh.research import native_daily_real as daily
 
 SEMANTIC_KEYS = (
@@ -235,6 +235,50 @@ def test_prepared_report_and_decision_ack_loss_restart_publish_originals_without
         assert len(reopened._records()[0].transaction.attempts) == 1
     finally:
         reopened.close()
+
+
+def test_prepared_recovery_rejects_contradictory_archived_state(tmp_path, monkeypatch):
+    """A prepared blob cannot turn a failed or inconsistent archive into success."""
+    import copy
+
+    _, root, key, registered = transaction_registration(tmp_path)
+    service = daily.NativeDailyService(root, registered=(registered,))
+    write = service._store.write
+
+    def stop_after_prepare(records):
+        records = list(records)
+        write(records)
+        if records[0].transaction.prepared_report is not None:
+            raise KeyboardInterrupt("authored crash after durable prepared report")
+
+    monkeypatch.setattr(service._store, "write", stop_after_prepare)
+    with pytest.raises(KeyboardInterrupt):
+        service.submit(registered.request, key)
+    ledger = root / "jobs.jsonl"
+    original = json.loads(ledger.read_bytes())
+    service.close()
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("invalid archive must not compute or publish")
+
+    monkeypatch.setattr(daily.NativeDailyService, "_compute", forbidden)
+    mutations = [
+        ("job", "state", "failed"),
+        ("job", "state", "interrupted"),
+        ("job", "completed_at", "2026-11-04T00:00:00+00:00"),
+        ("attempt", "failure_code", "COMPUTE_FAILED"),
+        ("attempt", "completed_at", "2026-11-04T00:00:00+00:00"),
+    ]
+    for target, field, value in mutations:
+        changed = copy.deepcopy(original)
+        record = changed if target == "job" else changed["transaction"]["attempts"][-1]
+        record[field] = value
+        raw = daily.canonical(changed) + b"\n"
+        ledger.write_bytes(raw)
+        with pytest.raises(daily.NativeError, match="artifact_invalid"):
+            reopened = daily.NativeDailyService(root)
+            reopened.close()
+        assert ledger.read_bytes() == raw
 
 
 def test_policy_expansion_is_counted_and_additional_experiment_is_explicit(tmp_path, monkeypatch):
