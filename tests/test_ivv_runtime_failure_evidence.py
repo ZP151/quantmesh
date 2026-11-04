@@ -218,12 +218,18 @@ def test_actual_child_session_callback_phase(monkeypatch):
 
 
 @pytest.mark.parametrize("ordering", ["channel", "pidfd", "both", "absent", "eof", "malformed"])
-def test_real_child_ipc_parent_wrap_main_reader_selector(monkeypatch, ordering):
-    r = runner()
-    plan, _ = origin_seams(r, monkeypatch, "EXECUTABLE")
-    with pytest.raises(r.Refused) as caught:
-        r._runtime(plan, None, 44, {}, None, origin_phase="SESSION")
-    original = caught.value
+def test_real_child_ipc_parent_wrap_main_reader_selector(
+    monkeypatch, ordering, executable_case=None
+):
+    if executable_case is None:
+        r = runner()
+        plan, _ = origin_seams(r, monkeypatch, "EXECUTABLE")
+        with pytest.raises(r.Refused) as caught:
+            r._runtime(plan, None, 44, {}, None, origin_phase="SESSION")
+        original = caught.value
+        expected_origin = evidence("SESSION", "EXECUTABLE")
+    else:
+        r, original, expected_origin = executable_case
     packets, written = [], []
     phase = {"child": True}
 
@@ -357,7 +363,7 @@ def test_real_child_ipc_parent_wrap_main_reader_selector(monkeypatch, ordering):
     # Fake _exit unwinds; the real child branch has already serialized its IPC.
     with pytest.raises(r.Refused):
         r._run({}, additional=False)
-    assert json.loads(packets[0])["origin_failure"] == evidence("SESSION", "EXECUTABLE")
+    assert json.loads(packets[0])["origin_failure"] == expected_origin
     if ordering == "absent":
         packets.clear()
     elif ordering == "malformed":
@@ -387,8 +393,10 @@ def test_real_child_ipc_parent_wrap_main_reader_selector(monkeypatch, ordering):
         "provider_mutation": False,
     }
     selected = r.select_failure_status(status, "a" * 64)
-    assert selected["origin_failure"] == evidence("SESSION", "EXECUTABLE")
+    assert selected["origin_failure"] == expected_origin
     assert selected["actual_contexts"] == "UNKNOWN"
+    if executable_case is not None:
+        return selected
 
 
 def test_unowned_wellformed_exception_attribute_is_not_evidence():

@@ -324,3 +324,101 @@ structural pass. Parent read/pinned the report. The next docs-only checkpoint
 records it, then actual new-head normal CI/exact-lock qualification is mandatory.
 The known PR thread remains unresolved until the published correction is verified;
 no source merge, native capture, real input acceptance or financial result follows.
+
+## Normal publication and first actual recovery —2026-11-05
+
+Parent verified final CI41909344046 at423113cf:7569PASS/149SKIP, frontend793,
+golden60. Actual locked Vite8.2.4/Vitest4.1.11 and all11 committed generated
+files were qualified against artifact13361738236,455057B/SHA16ae273aaeae69d58bcf5d3d5cec59ba2a258be77c9ee2ff8be23c70c325ebe7.
+The known PR thread was actually fixed/resolved; fresh head/base/checks/clean
+merge-policy checks preceded an ordinary expected-head squash. PR282 merged
+0e0d3cf4a45542b620a72df7f4bd5465909e61f8, fulltree38a21582af6e9eae86a4108a3da1843e5ea8a963,
+equal to the checked candidate tree. No human review fact or administrator
+bypass was fabricated. Parent retains the old423 branch and starts the next
+branch from actual origin/main0e0d, preserving squash history.
+
+Planner/Verifier wired the actual merged7 source roles, held installed Tailscale,
+four frozen operational modules, full4306-entry Git catalog and current canonical
+P8 policy. Publication5c054997/ops58fa9a42/catalog9b8f96da bind the actual bytes.
+Browser extension only confirmed authenticated Tailscale Machines and the
+selected original staging online. A current-task /usr/bin/true authentication
+through the existing128MiB/8-process transport completed after ordinary existing
+Google-account sign-in; finite normal transport close is recorded. No old
+one-shot authentication marker was accessed, and no OpenD SDK login was inferred.
+
+The pure prepared carrier227630B/SHA3306a0738e45fe6190410c9ad852d4d3d83ae77f14b2e8e24f6fdd3ed98adbe8
+and external anchor70af480c bound connection-000001, current P8b81fd831 and
+G10629509210/P4591436814. The first actual reviewed-driver submission stopped
+at RELEASED_RECOVERY_ATTEMPT/unitrc1, RUNTIME_ORIGIN INITIAL/FIRST_FALSE/EXECUTABLE.
+The earlier UNCLAIMED reconciliation snapshot does not make this later released
+attempt unspent. Actual contexts remain UNKNOWN; no capture/checkpoint/input,
+acceptance, computation, report or decision was produced. All prior histories
+and charges remain; no identical carrier was retried.
+
+The exact local transport closed normally. One current-only SDK-free read-only
+selected-output observation through the same transport completed in1.75s under
+a40s total/30s remote bound and4096B stdout cap. It proves bare-host Python3.12.3
+sys.executable/readlink/strict and non-strict resolution agree at/usr/bin/python3.12,
+and named/running executable share dev66305/inode3464, regular/nlink1. This is
+explicitly BARE_HOST_NOT_RELEASED_CHILD and does not reproduce child hardening.
+The exact current ledger records owner_stateCLOSED/externalUNKNOWN and
+unit-cleanup owned_cleanup_proven=true/input_publishable=false. Manager and
+client both returned1; retained Invocation694f00561e44440fa078115bebb72ebe matches
+the failed unit with MainPID0 and empty ControlGroup. The failed unit/history
+remain; cleanup evidence does not establish normal SDK close or zero old usage.
+
+Planner's bounded next slice is failure evidence in the existing actual child:
+retain the original single non-strict EXECUTABLE resolution and unchanged lazy
+comparison, then only after FIRST_FALSE/EXECUTABLE select finite public-path or
+classification/errno facts through existing authenticated IPC/strict codec/STOP.
+Auxiliary lookup failure must not replace rejection or owner state; legacy
+records remain readable. No observation-only mode/unit, generic sandbox,
+inode-based admission, guard relaxation, environment/dependency/provider change
+or financial qualification follows. The next changed entry is an ordinary
+accounted authorized recovery invocation; if the unchanged guard passes it may
+continue approved capture, so SDK0 is not promised. Original Source owns the
+bounded spec/plan/TDD delta, original readers inspect its actual producer-to-STOP
+seam, and Parent owns matching-head normal publication before actual continuation.
+
+Standing capacity08 records netlocal4MiB/remote0 once, common16->20 and software
+40->44MiB. The retained prior complete common15,286,272B plus two necessary
+future matching-head CI artifacts/logs/catalogs/carriers/Git/review metadata,
+current authentication/facts/wiring and failure reserve is19,742,720B<20MiB.
+Old80+new156=236MiB247463936B; every earlier hold/failure/future remains without
+deletion, borrowing or refund. G10633703514/P4595631118/all-parent4652254222
+remain within12GiB/6GiB/free50GiB. Current canonical P9 actual1425B/SHA
+c8e9ff02ebc9051bbbe7ddc6f2b52cd2227ad9af4129d61a464a86db39ba2d09 selects only
+the new storage/guard forecast. Actor/batch/rate/identity/data/math/counters are
+unchanged; actual merged RecoveryProfile confirms raw/canonical SHA equality.
+This is capacity registration, not runtime GO or additional quota.
+
+The first actual current entry began21:56:23UTC; necessary failure-source review/
+normal CI consumes the original1800s operating span. BATCH-WALL-EXTENSION-01
+registers only that same batch01 wall1800->7200s, net storage0. Contexts3,
+business32, numerical3, rate and per-entry480s remain unchanged; no batch or
+historical counter resets. Canonical current P10 actual1425B/SHA
+9c08ae8da2080cc4f80ebb19df58186688a1fdcf288589e1c47ad769235670c5 passes actual
+merged RecoveryProfile raw/canonical binding. P1-P9 and original failed entry
+remain. This timing extension avoids a predictable stale-batch refusal after
+mandatory publication; it does not grant runtime GO or assert SDK0.
+
+Original Source freezes the five-file bounded executable-evidence addendum with
+runner112687B/SHA21008d075ae2c28e0befe98c13138680a7b68c305a46f9100a7b1b554eca29e8.
+The optional closed observation retains the one original non-strict result and
+only recovery FIRST_FALSE/EXECUTABLE adds bounded lookup/path/namespace facts.
+Original guard, exception identity, ownership and legacy behavior remain.
+Complete operations-02 preserves the old four modules; only native_packet's
+three pure validator extraction dependencies and worst-status geometry differ.
+No native execution or root-cause fix is claimed by this software checkpoint.
+
+TDD retains13FAIL/9PASS before implementation and actual extraction2FAIL before
+the successor dependency correction. Final source evidence covers221 affected
+cases across220PASS/one subsequently corrected new-fixture failure plus99PASS;
+there was no single all-green221 invocation. Parent matches10 source/ops/test
+pins and13 artifact pins, independently runs the complete99-case new/original
+failure-evidence/actual-successor seam suite:99PASS/2.41s. Broad Ruff, changed
+eight-file formatting and whitespace pass; submodule pins remain unchanged and
+uninitialized. Current Server actual6,516,736B/fullforecast7,041,024B<7MiB,
+with all failures and524288B future retained. Both original independent readers
+now inspect this specific producer/authenticated-IPC/strict-STOP delta; actual
+new-head normal CI/publication must precede an ordinary accounted entry2.

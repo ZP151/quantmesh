@@ -6,8 +6,15 @@ Stable semantic research identity, durable external uncertainty/checkpoints and
 atomic accepted-input/result publication replace permanent one-shot blockers
 under actual human direction6db1254. Reuse existing stores/leases/native controls;
 retain every old SPENT/UNKNOWN and data/math/trading boundary. Two original
-writers consume one policy. Current caps12GiB/6GiB/free50GiB; old80+recovery152=
-232MiB reserved. [Current iteration](../iterations/0038-ivv-transaction-recovery.md).
+writers consume one policy. Current caps12GiB/6GiB/free50GiB; old80+recovery156=
+236MiB reserved. [Current iteration](../iterations/0038-ivv-transaction-recovery.md).
+
+PR282 merged0e0d3cf4 after matching-head normal CI and full-tree/catalog checks.
+The first actual recovery stopped at INITIAL/EXECUTABLE; no qualified input or
+study exists and actual SDK usage remains UNKNOWN. Current owned cleanup is
+proved. The next bounded slice observes only this actual child's failed origin
+predicate through the existing authenticated chain, retaining rejection, lazy
+evaluation, privacy and normal publication. Bare-host success is not child proof.
 
 ## Trusted-entry failure evidence — issue279, 2026-11-04
 
