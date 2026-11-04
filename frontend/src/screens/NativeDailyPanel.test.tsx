@@ -1,6 +1,7 @@
 import { createHash, webcrypto } from 'node:crypto'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import backendRecoveryDecision from './fixtures/native-daily-recovery-decision-v1.json?raw'
 
 const preferences = vi.hoisted(() => ({ locale: 'en' }))
 vi.mock('@/lib/preferences', () => ({ usePreferences: () => preferences }))
@@ -701,5 +702,112 @@ it('reads an already committed logical study before submitting refreshed review 
   fireEvent.change(screen.getByLabelText('Candidate grant'), { target: { value: refreshed.digest } })
   fireEvent.click(screen.getByRole('button', { name: 'Submit fixed study' }))
   await screen.findByRole('button', { name: 'Download report' })
+  expect(posts()).toHaveLength(0)
+})
+
+
+// Actual NativeDailyService.decide bytes over an authored archive lookup seed.
+// No actual input qualification, numerical execution or private originals.
+function declaredSerializedRecoveryDecision() {
+  const packet = JSON.parse(backendRecoveryDecision)
+  key = packet.job.job_id
+  vi.mocked(crypto.randomUUID).mockReset().mockReturnValue(packet.decision_key)
+  current = { ...packet.job }
+  Object.assign(artifacts, packet.artifacts)
+  history.replaceState(null, '', `/app/research/jobs?engine=native-daily-v2&native_job=${key}`)
+  return packet
+}
+
+it('cold reopens recovery decision v1 without use_basis and retains all three original artifacts without POST', async () => {
+  declaredSerializedRecoveryDecision()
+  const originals = { admission: artifacts.admission, report: artifacts.report, decision: artifacts.decision }
+  expect(JSON.parse(originals.decision)).not.toHaveProperty('use_basis')
+  const view = await mount()
+  await screen.findByRole('button', { name: 'Download decision' })
+  for (const name of ['Download admission', 'Download report']) expect(screen.getByRole('button', { name })).toBeVisible()
+  view.unmount(); await mount()
+  await screen.findByRole('button', { name: 'Download decision' })
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  const saved = await api.get(key)
+  for (const kind of ['admission', 'report', 'decision'] as const) {
+    const original = await api.artifact(saved, kind)
+    expect(new TextDecoder().decode(original.bytes)).toBe(originals[kind])
+    expect(artifacts[kind]).toBe(originals[kind])
+  }
+  expect(screen.getByRole('table', { name: 'Same-cost comparison' })).toBeVisible()
+  expect(posts()).toHaveLength(0)
+})
+
+it('saves a recovery decision v1 through the real API consumer and reopens its unchanged originals', async () => {
+  const packet = declaredSerializedRecoveryDecision()
+  const originalDecision = artifacts.decision
+  current.decision = null
+  const originalFetch = fetcher.getMockImplementation()!
+  fetcher.mockImplementation(async (url: string, init?: RequestInit) => {
+    if (url.endsWith('/decision') && init?.method === 'POST') {
+      const serialized = JSON.parse(originalDecision)
+      const fields = ['request_digest', 'admission_digest', 'report_digest', 'disposition', 'reason']
+      expect(JSON.parse(String(init.body))).toEqual(Object.fromEntries(fields.map(field => [field, serialized[field]])))
+      artifacts.decision = originalDecision
+      current.decision = packet.job.decision
+      return response(current)
+    }
+    return originalFetch(url, init)
+  })
+  const view = await mount()
+  await screen.findByRole('button', { name: 'Download report' })
+  fireEvent.change(screen.getByLabelText('Reason'), { target: { value: 'Authored recovery decision; engineering evidence only.' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Save research decision' }))
+  await screen.findByRole('button', { name: 'Download decision' })
+  expect(JSON.parse(artifacts.decision)).not.toHaveProperty('use_basis')
+  const originals = { admission: artifacts.admission, report: artifacts.report, decision: artifacts.decision }
+  expect(posts()).toHaveLength(1)
+  view.unmount(); await mount()
+  await screen.findByRole('button', { name: 'Download decision' })
+  for (const name of ['Download admission', 'Download report']) expect(screen.getByRole('button', { name })).toBeVisible()
+  expect({ admission: artifacts.admission, report: artifacts.report, decision: artifacts.decision }).toEqual(originals)
+  expect(posts()).toHaveLength(1)
+})
+
+it.each(['missing_admission_digest', 'missing_report_digest', 'admission_digest', 'report_digest', 'schema_id', 'job_id', 'request_digest', 'financial_qualification', 'paper_allowed', 'live_allowed'])('rejects correctly hashed recovery decision with mismatched contract field %s', async field => {
+  declaredSerializedRecoveryDecision()
+  const decision = JSON.parse(artifacts.decision)
+  if (field.startsWith('missing_')) delete decision[field.slice('missing_'.length)]
+  else decision[field] = ['paper_allowed', 'live_allowed'].includes(field) ? true : sha('wrong decision binding')
+  artifacts.decision = JSON.stringify(decision); current.decision = objectRef(artifacts.decision)
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  await expect(api.artifact(await api.get(key), 'decision')).rejects.toMatchObject({ code: 'artifact_invalid' })
+  expect(posts()).toHaveLength(0)
+})
+
+it.each([['admission', 'wrong'], ['report', 'wrong'], ['admission', 'missing'], ['report', 'missing']] as const)('still rejects recovery %s with %s research identity even when decision digests match', async (kind, defect) => {
+  declaredSerializedRecoveryDecision()
+  const original = JSON.parse(artifacts[kind])
+  if (defect === 'missing') delete original.use_basis.recovery_identity
+  else original.use_basis.recovery_identity.business_key = sha('wrong research identity')
+  artifacts[kind] = JSON.stringify(original); current[kind] = objectRef(artifacts[kind])
+  const decision = JSON.parse(artifacts.decision)
+  decision.admission_digest = (current.admission as { digest: string }).digest
+  decision.report_digest = (current.report as { digest: string }).digest
+  artifacts.decision = JSON.stringify(decision); current.decision = objectRef(artifacts.decision)
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  await expect(api.artifact(await api.get(key), kind)).rejects.toMatchObject({ code: 'artifact_invalid' })
+  await mount(); await screen.findByRole('alert')
+  expect(screen.queryByRole('button', { name: 'Download decision' })).not.toBeInTheDocument()
+  expect(posts()).toHaveLength(0)
+})
+
+it.each(['hash', 'length', 'header'])('still rejects recovery decision transport integrity defect %s', async defect => {
+  declaredSerializedRecoveryDecision()
+  if (defect === 'hash') current.decision = { ...objectRef(artifacts.decision), digest: sha('wrong bytes') }
+  if (defect === 'length') current.decision = { ...objectRef(artifacts.decision), byte_length: objectRef(artifacts.decision).byte_length + 1 }
+  if (defect === 'header') {
+    const originalFetch = fetcher.getMockImplementation()!
+    fetcher.mockImplementation(async (url: string, init?: RequestInit) => url.endsWith('artifact?kind=decision')
+      ? new Response(artifacts.decision, { headers: { 'X-Content-SHA256': sha('wrong header') } })
+      : originalFetch(url, init))
+  }
+  const api = (await import('@/lib/native-daily-api')).nativeDailyApi
+  await expect(api.artifact(await api.get(key), 'decision')).rejects.toMatchObject({ code: 'artifact_invalid' })
   expect(posts()).toHaveLength(0)
 })

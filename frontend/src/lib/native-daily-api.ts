@@ -258,7 +258,8 @@ async function artifact(saved: NativeJob, kind: 'admission' | 'report' | 'decisi
   let v: unknown
   try { v = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)) } catch { return artifactInvalid() }
   if (!object(v) || !safe(v) || v.job_id !== saved.job_id || v.request_digest !== saved.request_digest) return artifactInvalid()
-  if (saved.recovery_status && saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH') {
+  // Decision v1 binds admission/report digests; only those artifacts carry use_basis.
+  if ((kind === 'admission' || kind === 'report') && saved.recovery_status && saved.admission_status === 'ACCEPTED_DECLARED_RESEARCH') {
     const b = v.use_basis
     if (!object(b) || b.diagnostic_mode !== 'DEV_TRANSACTION_RECOVERY' || !object(b.recovery_identity)
       || b.recovery_identity.business_key !== saved.recovery_status.business_key
