@@ -213,3 +213,50 @@ ordinary merge and actual native/input/user acceptance remain separate gates.
 The producer seam ends at unreviewed input staging; Product recovery/report/cold
 checks use independent modeled fixtures. A full accepted real-input user loop is
 still outstanding and is not inferred from these separate engineering checks.
+
+PR282 publication head27929586, normal CI41879841989 failed at full pytest:
+1FAIL/7560PASS/149SKIP,3745.41s. The golden path did not run. Fast, research
+service and both actual locked8.2.4 bundle checks passed; all11 retained generated
+files match committed bytes. This is not green release qualification or runtime GO.
+No native/SDK/carrier/input acceptance/trial followed and nothing was merged.
+
+The sole failure is fixed synthetic F0 protocol digest in test_spy_sample_evidence
+(line112). Parent reproduced the original node1FAIL/4.18s. The protocol correctly
+records actual ObjectStore source provenance60ff53f6 after the opt-in durability
+change, where its original golden fingerprint embeds b77d8e47. A one-field
+in-memory counterfactual restores the exact original ac871ad8 digest from current
+60d4f620; data/member, engine/normalizer, window/cost and runtime fields otherwise
+stay identical. Original source/fixtures/expected digest remain frozen. Current
+artifact13354915074(138304B/SHAecac5364) and CI-F0-RED-01/CAUSE-01 retain evidence.
+Root explicitly authorizes the minimal CI regression correction, original-owner
+TDD, a same-reader narrow delta review and required new-head normal CI; this is
+not another whole structural review or permission to alter old SPY evidence.
+
+Original Product's test-only correction df6d33c3 integrates as f9863996, exactly
+one file34145B/SHA29effa0f477e9f22be8f3c9bec17a5e02a93eb44d737080ef0d6dd6521668f5f.
+It first verifies actual Objects source bytes and only accepts the two reviewed
+source revisions, then compares a deep copy with only that storage provenance
+field and the existing Python patch projection. The original ac871ad8/bars7e702
+pins and v1 bag bytes stay unchanged; actual protocol/snapshot/report provenance
+is retained. Unknown/false source pins refuse and six semantic drift cases remain
+visible. SPY engine/freezer/replay/calendar bytes, ObjectRef AST and the legacy
+default publication body are unchanged from main399b.
+
+Owner focused8PASS and related71PASS/1sparse standalone-child deselected/42.55s;
+Parent independently runs31PASS/13.94s including that separate-Python same-ID cold
+reader without deselection. Parent matches the test Git blob and five frozen log
+pins, and all16 frozen Source/ops/validation pins remain matched. Ruff/format/
+whitespace pass. Initial sparse harness failures are retained; one inherited-env
+argument line was redacted with before/after hashes and the original failure
+counts intact. No secret line is reproduced. One original Standards-reader narrow
+test delta review remains before the necessary new-head normal CI; old green
+checks are not transferred and actual real-input/financial acceptance is unmet.
+
+The original Standards reader's scoped CI-F0-DELTA-REVIEW-01 is READY at
+f986399607510d98b10b7732b955dc89ba9b94f6,1894B/SHA5a5fb801086ca4f84d0e0cb4e358e2dd9f406dafcac217f1d49c3cebde705e96.
+No material blocker. This checks only the new one-file test regression correction;
+the source/ops reviewed at92431f7d remain byte-identical. Parent read/pinned the
+report. The following documentation checkpoint records these facts; its actual
+new head must pass normal CI, exact-lock provenance and ordinary guarded merge.
+No old failed/green run is reused as qualification, and actual SDK/data/numeric
+admission remains pending.
