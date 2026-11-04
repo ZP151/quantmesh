@@ -21,7 +21,7 @@ new permit issuer.
 
 Preserve all old evidence/charges/futures and old-family interpretations. Current
 human direction6db1254 replaces repeated single-shot approval gates. Current
-12GiB/6GiB/free50GiB and complete224MiB hold apply; software32MiB is shared (Server7/Product12/common12/FS1). Data/math,
+12GiB/6GiB/free50GiB and complete228MiB hold apply; software36MiB is shared (Server7/Product16/common12/FS1). Data/math,
 credentials, no-paid, read-only protocol scope and paper/live boundaries remain.
 One integration branch/CI observer; no old PR280 revalidation or diagnostic sandbox.
 
@@ -78,7 +78,7 @@ WriterLease and JsonlStore remain the only job/result commit mechanism.
   prepared-report-before-committed pointer. New experiments require registration;
   recovery computations are not new published/OOS experiments.
 - [x] GREEN direct tests/static checks; freeze exact source/diff/owned paths and
-  complete12MiB subset accounting for Server integration. No Product host/CI work.
+  complete16MiB subset accounting for Server integration. No Product host/CI work.
 
 ## Task 4 â€” integration, independent review and normal publication (Server)
 

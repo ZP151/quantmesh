@@ -23,7 +23,7 @@ effects before the call; UNKNOWN is conservatively charged and never refunded.
 | Attempts | Distinct connection/request/compute IDs. Durable intent, MAY_HAVE_SENT, observed response original, closed/UNKNOWN and checkpoint state precede successor effects. Current owner lease serializes effects; uncertain owned cleanup requires exact-owner recovery before another owned context. Same unrepaired structural refusal stops for a concrete repair, not blind retries. |
 | Computation | Existing WriterLease+JsonlStore record running attempt before compute; ObjectStore report -> durable prepared_report pointer -> atomic committed job. Restart with validated prepared report commits without recomputation. Without a prepared result, bounded recorded recovery computation is allowed. Cumulative compute allowance counts the same logical task across all registered experiments/business keys and authority/batch versions; a validated prepared commit uses zero new computation. Committed report/decision stays immutable; lost acknowledgement reads the same originals. |
 | First operating batch | 1800s,3 contexts,32 read-only business sends,1 business/s,Init<=3,KeepAlive<=288,initial cumulative compute allowance3; one simultaneous context. These are recorded expandable operating allowances, not permanent authorization caps. Honor actual provider quota/rate responses. Own context retains512MiB/swap0/CPU50%/Tasks32/480s and existing transport/close protections. |
-| Capacity | Current caps12GiB global/6GiB parent/free50GiB. Old80MiB retained; recovery144MiB (software32,capture48local/48remote,review4,study8,close2local/2remote), total224MiB. Current P5 guardG10621120602/P4583048206/all-parent4639671310 fit. Software subsets Server7/Product12/commonGit-review-CI-catalog12/failureFS1 MiB; P1-P4 retained. This is a complete forecast, not runtime GO. |
+| Capacity | Current caps12GiB global/6GiB parent/free50GiB. Old80MiB retained; recovery148MiB (software36,capture48local/48remote,review4,study8,close2local/2remote), total228MiB. Current P6 guardG10625314906/P4587242510/all-parent4643865614 fit. Software subsets Server7/Product16/commonGit-review-CI-catalog12/failureFS1 MiB; P1-P5 retained. Complete forecast, not runtime GO. |
 
 Server exclusively owns shared policy/contracts/docs, capture/helper/issuer/runner,
 operational adapters and actual host work. Product exclusively owns admission,
@@ -59,3 +59,32 @@ actual local Vite mismatch and the need to retain exact-lock CI artifacts plus
 publication objects/catalog. Software32MiB, recovery144+old80=224MiB. Protected
 P5 is1425B/SHA2560d817811c3fd1db015451f700ec5a2531ba6855ec07fee032c3e0d0d31a56bf5;
 all initial policies remain historical without changing business or attempt counts.
+
+Consolidated R1 supplement06 adds4MiB only to Product (now16MiB) for exact-owned
+cleanup and scoped durable publication tests/failures. Software36MiB and
+recovery148+old80=228MiB; P6 actual1425B/SHA25605abb057cc5e3b3fb82e3ec40979aca2dad193d259717ddea3d79d082a378671.
+All old holds, originals and counts remain; study allowance still8MiB.
+
+Consolidated R1 entry clarification: local transport submissions and remote
+connection identities are distinct. Under the original claim lease, compare the
+expected remote identity before INTENT mutation; replay a claimed connection from
+its original startup/publication/policy pins, without another SDK invocation.
+INTENT atomically includes exact pre-dispatch controller and held/named claim-lock
+identity. DISPATCH_MAY is durable before Popen. A missing/uncertain dispatch binding
+stays UNKNOWN. Predispatch recovery requires the old controller gone, the same
+claim inode exclusively held, the fixed unit absent and no dispatch marker; this
+is cleanup-only, never a normal SDK close or input publication.
+
+Use the existing fixed systemd unit with a gated manager, original Invocation and
+exact cgroup/process ownership. Retain terminal unit identity through both success
+and failure until exact cleanup; the new command uses --remain-after-exit, without
+--wait or --collect. Observe manager exit independently of the original client,
+verify recursive emptiness, then stop the exact quiescent unit and reap that client.
+Uncertain identity/cleanup blocks successors. This describes the software contract;
+actual native lifecycle and resource admission remain execution gates.
+
+The recovery-only decoded packet ceiling is1MiB in both builder and bounded
+remote decompressor because the source/control/base64 envelope exceeds the old
+512KiB representation ceiling. Compressed carrier remains256KiB; existing source,
+capture, SDK-log, actor, deadline and per-connection disk limits are unchanged.
+Legacy families retain their original limits and interpretation.

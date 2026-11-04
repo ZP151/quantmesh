@@ -6,7 +6,7 @@
   "authority_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
   "policy_ref": {
     "algorithm": "sha256",
-    "digest": "0d817811c3fd1db015451f700ec5a2531ba6855ec07fee032c3e0d0d31a56bf5",
+    "digest": "05abb057cc5e3b3fb82e3ec40979aca2dad193d259717ddea3d79d082a378671",
     "media_type": "application/json",
     "byte_length": 1425
   },
@@ -156,16 +156,16 @@
       "closeout_local": 2097152,
       "closeout_remote": 2097152,
       "input_review": 4194304,
-      "software": 33554432,
+      "software": 37748736,
       "study": 8388608
     },
     "thresholds": {
       "G": 12884901888,
       "P": 6442450944,
-      "all_parent_stress": 4639671310,
+      "all_parent_stress": 4643865614,
       "free": 53687091200,
-      "guard_G": 10621120602,
-      "guard_P": 4583048206
+      "guard_G": 10625314906,
+      "guard_P": 4587242510
     }
   },
   "originals": "All old80MiB holds/futures/failures and UNKNOWN/SPENT remain; no old ledger inspection",
@@ -277,6 +277,12 @@
     {
       "algorithm": "sha256",
       "digest": "d55242c0510cda04c775a5725f10c3974a5c7d0c6c92e1ef9b44fbfbf0f2ebfc",
+      "media_type": "application/json",
+      "byte_length": 1425
+    },
+    {
+      "algorithm": "sha256",
+      "digest": "0d817811c3fd1db015451f700ec5a2531ba6855ec07fee032c3e0d0d31a56bf5",
       "media_type": "application/json",
       "byte_length": 1425
     }

@@ -627,6 +627,7 @@ def test_concurrent_control_callbacks_have_unique_durable_request_ids(tmp_path):
 def test_real_parent_entry_distinguishes_failed_capture_from_owned_cleanup(
     tmp_path, monkeypatch, failure, abort_errors, next_allowed
 ):
+    import contextlib
     from types import SimpleNamespace
 
     r, task = module("ivv_trusted_runner"), module("ivv_additional_task")
@@ -646,7 +647,12 @@ def test_real_parent_entry_distinguishes_failed_capture_from_owned_cleanup(
     monkeypatch.setattr(r, "_bootstrap", lambda *a, **kw: ctx)
     monkeypatch.setattr(r, "_seed", lambda *a, **kw: {"started_monotonic": 0})
     monkeypatch.setattr(r, "_stdio", lambda: None)
-    monkeypatch.setattr(r, "_fds", lambda: {0, 1, 2})
+    monkeypatch.setattr(r, "_fds", lambda: {0, 1, 2, 73})
+    monkeypatch.setattr(
+        r,
+        "_recovery_lifecycle",
+        lambda *a: contextlib.nullcontext(SimpleNamespace(fd=73, close=lambda: None)),
+    )
 
     class ProcPath:
         def __init__(self, value):
@@ -672,6 +678,7 @@ def test_real_parent_entry_distinguishes_failed_capture_from_owned_cleanup(
 
     class Scope:
         def __init__(self, stack, **kw):
+            self.parent = {"pid": 77, "start_ticks": 1}
             self.reaped = False
             self.leaf = 1
 
@@ -940,6 +947,7 @@ def test_recovery_ledger_never_reads_outside_owned_directory(tmp_path):
 def test_recovered_receipt_is_append_only_and_never_upgrades_old_unknown(
     tmp_path, monkeypatch, fault
 ):
+    import contextlib
     import os
     import sys
     from types import SimpleNamespace
@@ -965,6 +973,7 @@ def test_recovered_receipt_is_append_only_and_never_upgrades_old_unknown(
         runner, "_locations", lambda _: SimpleNamespace(ledger=tmp_path, control=tmp_path)
     )
     monkeypatch.setattr(runner, "protected", lambda _: None)
+    monkeypatch.setattr(runner, "_recovery_lease", lambda *a: contextlib.nullcontext())
     monkeypatch.setattr(os, "O_NOFOLLOW", getattr(os, "O_NOFOLLOW", 0), raising=False)
     monkeypatch.setattr(os, "O_CLOEXEC", getattr(os, "O_CLOEXEC", 0), raising=False)
     calls = []
@@ -1064,3 +1073,444 @@ def test_owner_binding_is_exclusive_durable_before_child_release(tmp_path, monke
     assert events == ["pid", "leaf", "directory_fsync", "pid", "leaf", "release"]
     with pytest.raises(FileExistsError):
         runner._persist_recovery_owner(book, attempt, scope)
+
+
+@pytest.mark.parametrize("expected", ["connection-000002", "../bad"])
+def test_r1_expected_connection_is_checked_before_any_intent(tmp_path, expected):
+    book = ledger(tmp_path)
+    with pytest.raises(ValueError):
+        book.begin("a" * 64, now=0, expected_connection=expected)
+    assert not list(tmp_path.glob("*.intent.json"))
+
+
+@pytest.mark.parametrize("failure", ["BOOTSTRAP", "SEED", "ENTRY", "STDIO", "FD_CHECK"])
+def test_r1_actual_entry_holds_lifecycle_before_preowner_failures(monkeypatch, failure):
+    import contextlib
+    from types import SimpleNamespace
+
+    runner = module("ivv_trusted_runner")
+    events = []
+
+    @contextlib.contextmanager
+    def lifecycle(startup, attempt):
+        events.append("BOUND_GATE")
+        try:
+            yield SimpleNamespace(fd=73, close=lambda: events.append("LEASE_CLOSED"))
+        finally:
+            events.append("GATE_CLOSED")
+
+    monkeypatch.setattr(runner, "_recovery_lifecycle", lifecycle, raising=False)
+
+    def refused(startup, *, additional, lifecycle=None):
+        assert events == ["BOUND_GATE"]
+        assert lifecycle.fd == 73
+        raise runner.Refused(failure)
+
+    monkeypatch.setattr(runner, "_run", refused)
+    with pytest.raises(ValueError, match=failure):
+        runner.run_recovery_attempt({"sha256": "a" * 64}, "connection-000001")
+    assert events == ["BOUND_GATE", "GATE_CLOSED"]
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        None,
+        "active",
+        "invocation",
+        "foreign",
+        "foreign_group",
+        "failed_terminal",
+        "retained_success",
+        "failed_gc",
+        "mount",
+        "inode",
+        "drift",
+    ],
+)
+def test_r1_actual_preowner_cleanup_requires_bound_terminal_empty_unit(monkeypatch, fault):
+    import types
+
+    runner = module("ivv_trusted_runner")
+    for flag in ("O_DIRECTORY", "O_NOFOLLOW", "O_CLOEXEC"):
+        monkeypatch.setattr(runner.os, flag, 0, raising=False)
+    book = types.SimpleNamespace(root=Path("/owned"), _write=lambda *a: None)
+    unit = "qm-ivv-recovery-connection-000001.service"
+    actor = dict(pid=111, start_ticks=12, uid=0, cgroup="/system.slice/" + unit + "/manager")
+    fields = dict(Id=unit, MainPID="111", InvocationID="a" * 32)
+    terminal = dict(fields, MainPID="0", ActiveState="inactive", SubState="dead")
+    if fault == "failed_terminal":
+        terminal.update(ActiveState="failed", SubState="failed")
+    if fault == "retained_success":
+        terminal.update(ActiveState="active", SubState="exited")
+    if fault == "failed_gc":
+        terminal["InvocationID"] = ""
+    if fault == "invocation":
+        terminal["InvocationID"] = "b" * 32
+    binding = dict(
+        connection_attempt_id="connection-000001",
+        startup_sha256="a" * 64,
+        manager=actor,
+        unit=fields,
+        group=[1, 2, 16832, 0],
+        mount={"id": 5, "namespace": [1, 3, 16832, 0]},
+    )
+
+    def process(pid):
+        if fault == "active":
+            return actor, 1
+        raise FileNotFoundError()
+
+    monkeypatch.setattr(runner, "_process", process)
+    calls = []
+
+    def query(name, **kwargs):
+        calls.append(name)
+        return (
+            dict(terminal, SubState="exited") if fault == "drift" and len(calls) > 1 else terminal
+        )
+
+    monkeypatch.setattr(runner, "_manager_fields", query)
+    monkeypatch.setattr(runner, "_cgroup_mount", lambda: 17)
+    monkeypatch.setattr(runner, "_mount_id", lambda fd: 18 if fault == "mount" else 17)
+    monkeypatch.setattr(
+        runner._Scope, "dirs", lambda fd: {"foreign"} if fault == "foreign_group" else set()
+    )
+    monkeypatch.setattr(runner.os, "open", lambda *a: 80)
+    monkeypatch.setattr(
+        runner.os,
+        "fstat",
+        lambda fd: types.SimpleNamespace(st_dev=1, st_ino=2, st_mode=16832, st_uid=0),
+    )
+    monkeypatch.setattr(runner.Path, "exists", lambda p: False)
+    monkeypatch.setattr(
+        runner.Path,
+        "lstat",
+        lambda p: types.SimpleNamespace(
+            st_dev=1, st_ino=3 if fault == "inode" else 2, st_mode=16832, st_uid=0
+        ),
+    )
+    monkeypatch.setattr(
+        runner,
+        "_kread",
+        lambda fd, name: (
+            ("999" if fault == "foreign" else "") if name == "cgroup.procs" else "populated 0"
+        ),
+    )
+    closed = []
+    monkeypatch.setattr(runner, "_close_fd", closed.append)
+    stopped = []
+    monkeypatch.setattr(runner, "_stop_quiescent_unit", lambda *a: stopped.append(a))
+    if fault not in (None, "failed_terminal", "retained_success"):
+        with pytest.raises(ValueError):
+            runner._recover_preowner(binding, book)
+    else:
+        assert runner._recover_preowner(binding, book) == dict(
+            owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+        )
+    assert bool(stopped) == (fault == "retained_success")
+    if fault not in ("active", "invocation", "failed_gc"):
+        assert closed == [80]
+
+
+@pytest.mark.parametrize("fault", ["BOOTSTRAP", "SEED", "ENTRY", "STDIO", "FD_CHECK"])
+def test_r1_real_prebootstrap_failure_persists_binding_and_can_recover_owned_state(
+    tmp_path, monkeypatch, fault
+):
+    import contextlib
+    import os
+    import sys
+    from types import SimpleNamespace
+
+    r, task = module("ivv_trusted_runner"), module("ivv_additional_task")
+    book = ledger(tmp_path)
+    attempt = "connection-000001"
+    profile = task.RecoveryProfile(contract, contract.DEFAULT_POLICY, attempt)
+    catalog = {k: "a" * 64 for k in r._sources(attempt)}
+    method = r.digest(r.raw_json(catalog))
+    book.begin(method, now=0)
+    events = []
+    binding = {"connection_attempt_id": attempt, "modeled_kernel_actor": "same exact actor"}
+
+    @contextlib.contextmanager
+    def lease(path):
+        events.append("LEASE_HELD")
+        try:
+            yield SimpleNamespace(fd=73, close=lambda: events.append("LEASE_CLOSED"))
+        finally:
+            events.append("LEASE_RELEASED")
+
+    monkeypatch.setattr(
+        r, "_locations", lambda _: SimpleNamespace(control=tmp_path, ledger=tmp_path)
+    )
+    monkeypatch.setattr(r, "_recovery_lease", lease)
+    monkeypatch.setattr(r, "_preowner_binding", lambda *a: binding)
+
+    def put(path, value):
+        task._claim(path, value, sync_dir=lambda _: events.append("FSYNC_DIR"))
+        return {"path": str(path), "sha256": r.digest(r.raw_json(value))}
+
+    monkeypatch.setattr(r, "put", put)
+    monkeypatch.setattr(r.select, "select", lambda *a: ([0], [], []))
+    real_read, real_open = os.read, os.open
+    monkeypatch.setattr(
+        os,
+        "read",
+        lambda fd, n: (
+            (r.digest(r.raw_json(binding)) + "\n").encode() if fd == 0 else real_read(fd, n)
+        ),
+    )
+    monkeypatch.setattr(
+        os,
+        "open",
+        lambda path, *a, **kw: 90 if str(path) == "/dev/null" else real_open(path, *a, **kw),
+    )
+    monkeypatch.setattr(os, "O_CLOEXEC", 0, raising=False)
+    monkeypatch.setattr(os, "dup2", lambda *a: None)
+    monkeypatch.setattr(r, "_close_fd", lambda fd: None if fd == 90 else os.close(fd))
+    values = dict(
+        _additional=profile, _recovery_mode=attempt, _recovery_task=task, catalog_ref=catalog
+    )
+
+    def refuse(code):
+        raise r.Refused(code)
+
+    def bootstrap(*a, **kw):
+        assert book._read(attempt + ".preowner.json") == binding
+        assert "FSYNC_DIR" in events and "LEASE_RELEASED" not in events
+        if fault == "BOOTSTRAP":
+            refuse(fault)
+        return {}, values, None, None, None, None
+
+    monkeypatch.setattr(r, "_bootstrap", bootstrap)
+    monkeypatch.setattr(
+        r, "_seed", lambda *a, **kw: refuse(fault) if fault == "SEED" else {"started_monotonic": 0}
+    )
+    if fault == "ENTRY":
+        monkeypatch.setattr(task.RecoveryLedger, "enter", lambda *a: refuse(fault))
+    monkeypatch.setattr(r, "_stdio", lambda: refuse(fault) if fault == "STDIO" else None)
+    monkeypatch.setattr(r, "_fds", lambda: {0, 1, 2, 73, 99})
+    original_path = r.Path
+    monkeypatch.setattr(
+        r,
+        "Path",
+        lambda p: (
+            SimpleNamespace(iterdir=lambda: iter([1]))
+            if p == "/proc/self/task"
+            else original_path(p)
+        ),
+    )
+    assert r.main(["--recovery-attempt", attempt, "c" * 64]) == 1
+    assert events.index("FSYNC_DIR") < events.index("LEASE_RELEASED")
+    assert not (tmp_path / (attempt + ".close.json")).exists()
+    # External kernel cleanup is modeled; the real missing-child-owner branch,
+    # ledger UNKNOWN and cleanup-only receipt are exercised and persisted.
+    monkeypatch.setattr(
+        r,
+        "_recover_preowner",
+        lambda *a: dict(
+            owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+        ),
+    )
+    monkeypatch.setattr(r, "protected", lambda p: None)
+    monkeypatch.setattr(os, "O_NOFOLLOW", 0, raising=False)
+    monkeypatch.setitem(
+        sys.modules, "fcntl", SimpleNamespace(flock=lambda *a: None, LOCK_EX=2, LOCK_NB=4)
+    )
+    r.recover_previous_attempt(book, lambda path, maximum: path.read_bytes())
+    assert book._read(attempt + ".close.json")["owner_state"] == "UNKNOWN"
+    assert book._read(attempt + ".recovered.json")["input_publishable"] is False
+    with pytest.raises(ValueError, match="unrepaired_structural_failure"):
+        book.begin(method, now=1)
+    assert (
+        book.begin("d" * 64, now=1, expected_connection="connection-000002") == "connection-000002"
+    )
+
+
+@pytest.mark.parametrize(
+    "fault", [None, "controller_active", "identity", "dispatch", "unit", "lease"]
+)
+def test_r1_predispatch_requires_original_controller_exit_and_same_exclusive_claim(
+    tmp_path, monkeypatch, fault
+):
+    from types import SimpleNamespace
+
+    r = module("ivv_trusted_runner")
+    book = ledger(tmp_path)
+    actor = dict(pid=123, start_ticks=456, uid=0, cgroup="/system.slice/ssh.service")
+    binding = dict(
+        controller=actor,
+        claim_inode=[1, 2, 0o100444, 0],
+        unit="qm-ivv-recovery-connection-000001.service",
+    )
+    attempt = book.begin(
+        "a" * 64, now=0, expected_connection="connection-000001", pre_dispatch=binding
+    )
+    intent = book._read(attempt + ".intent.json")
+    lease = r._RecoveryLease(81)
+    lease.controller = dict(actor, pid=222)
+    book._claim_lease = None if fault == "lease" else lease
+    if fault == "dispatch":
+        book._write(attempt + ".dispatch.json", {})
+
+    def proc(pid):
+        if fault == "controller_active":
+            return actor, 1
+        if pid == 222:
+            return lease.controller, 1
+        raise FileNotFoundError()
+
+    monkeypatch.setattr(r, "_controller_actor", proc, raising=False)
+    monkeypatch.setattr(r.os, "getpid", lambda: 222)
+    monkeypatch.setattr(
+        r.os,
+        "fstat",
+        lambda fd: SimpleNamespace(
+            st_dev=1, st_ino=3 if fault == "identity" else 2, st_mode=0o100444, st_uid=0
+        ),
+    )
+    real_lstat = r.Path.lstat
+    monkeypatch.setattr(
+        r.Path,
+        "lstat",
+        lambda p: (
+            SimpleNamespace(st_dev=1, st_ino=2, st_mode=0o100444, st_uid=0)
+            if p.name == "connection-000000.claim-lock.json"
+            else real_lstat(p)
+        ),
+    )
+    real_exists = r.Path.exists
+    monkeypatch.setattr(
+        r.Path,
+        "exists",
+        lambda p: (
+            False if str(p).replace("\\", "/").startswith(("/proc/", "/sys/")) else real_exists(p)
+        ),
+    )
+    monkeypatch.setattr(
+        r,
+        "_manager_fields",
+        lambda unit: dict(
+            Id=unit,
+            MainPID="0",
+            InvocationID="a" * 32 if fault == "unit" else "",
+            ActiveState="inactive",
+        ),
+    )
+    if fault:
+        with pytest.raises(ValueError):
+            r._recover_predispatch(book, intent)
+    else:
+        assert r._recover_predispatch(book, intent) == dict(
+            owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+        )
+
+
+def test_r1_normal_parent_close_does_not_skip_terminal_unit_gate(tmp_path):
+    book = ledger(tmp_path)
+    attempt = book.begin("a" * 64, now=0)
+    binding = {"modeled": "exact original manager"}
+    book._write(attempt + ".preowner.json", binding)
+    book.close(
+        attempt,
+        dict(
+            child_reaped=True,
+            recursive_populated=0,
+            owned_fds_closed=True,
+            resource_limit_event=False,
+            active_owned_processes=0,
+        ),
+        failure=None,
+        method_sha256="a" * 64,
+    )
+    with pytest.raises(ValueError, match="owned_unit_cleanup_unknown"):
+        book.begin("a" * 64, now=1)
+    book._write(
+        attempt + ".unit-cleanup.json",
+        dict(
+            preowner_sha256=contract.digest(contract.canonical(binding)),
+            owned_cleanup_proven=True,
+            external_effects="UNKNOWN",
+            input_publishable=False,
+        ),
+    )
+    assert book.begin("a" * 64, now=1) == "connection-000002"
+
+
+def test_r1_predispatch_receipt_uses_same_atomic_intent_and_preserves_debit(tmp_path, monkeypatch):
+    import contextlib
+    import os
+    import sys
+    from types import SimpleNamespace
+
+    runner = module("ivv_trusted_runner")
+    book = ledger(tmp_path)
+    binding = dict(
+        controller={"pid": 11},
+        claim_inode=[1, 2, 0o100444, 0],
+        unit="qm-ivv-recovery-connection-000001.service",
+    )
+    attempt = book.begin(
+        "a" * 64, now=0, expected_connection="connection-000001", pre_dispatch=binding
+    )
+    original = (tmp_path / (attempt + ".intent.json")).read_bytes()
+    monkeypatch.setattr(
+        runner, "_locations", lambda _: SimpleNamespace(ledger=tmp_path, control=tmp_path)
+    )
+    monkeypatch.setattr(runner, "protected", lambda p: None)
+    monkeypatch.setattr(runner, "_recovery_lease", lambda *a: contextlib.nullcontext())
+    monkeypatch.setattr(os, "O_NOFOLLOW", 0, raising=False)
+    monkeypatch.setattr(os, "O_CLOEXEC", 0, raising=False)
+    monkeypatch.setitem(
+        sys.modules, "fcntl", SimpleNamespace(flock=lambda *a: None, LOCK_EX=2, LOCK_NB=4)
+    )
+    seen = []
+
+    def kernel(actual_book, intent):
+        assert actual_book is book and intent["pre_dispatch"] == binding
+        seen.append(intent)
+        return dict(owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False)
+
+    monkeypatch.setattr(runner, "_recover_predispatch", kernel)
+    runner.recover_previous_attempt(book, lambda p, n: p.read_bytes())
+    assert len(seen) == 1 and book._read(attempt + ".close.json")["owner_state"] == "UNKNOWN"
+    assert book._read(attempt + ".recovered.json")["owner_binding_sha256"] == contract.digest(
+        original
+    )
+    assert (
+        book.begin("a" * 64, now=1, expected_connection="connection-000002") == "connection-000002"
+    )
+    assert (
+        book.usage()["contexts"] == 2
+        and (tmp_path / (attempt + ".intent.json")).read_bytes() == original
+    )
+
+
+def test_r1_quiescent_stop_retains_exact_helper_after_wait_uncertainty(monkeypatch):
+    from types import SimpleNamespace
+
+    r = module("ivv_trusted_runner")
+    events = []
+    fields = dict(MainPID="0", SubState="exited")
+    monkeypatch.setattr(r, "_manager_fields", lambda *a, **kw: fields)
+
+    class Child:
+        def wait(self, timeout):
+            events.append("wait")
+            if events.count("wait") < 3:
+                raise TimeoutError("modeled wait uncertainty")
+            return 0
+
+        def poll(self):
+            return None
+
+        def kill(self):
+            events.append("kill exact helper")
+
+    monkeypatch.setattr(
+        r, "subprocess", SimpleNamespace(Popen=lambda *a, **kw: Child(), DEVNULL=-1)
+    )
+    monkeypatch.setattr(r.time, "sleep", lambda t: None)
+    with pytest.raises(TimeoutError):
+        r._stop_quiescent_unit("qm-ivv-recovery-connection-000001.service", fields)
+    assert events == ["wait", "kill exact helper", "wait", "wait"]

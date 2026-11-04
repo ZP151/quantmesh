@@ -491,10 +491,24 @@ class RecoveryLedger:
         return rows
 
     @_serialized
-    def begin(self, method_sha256, *, now):
+    def begin(self, method_sha256, *, now, expected_connection=None, pre_dispatch=None):
+        if pre_dispatch is not None:
+            _need(
+                type(pre_dispatch) is dict
+                and set(pre_dispatch) == {"controller", "claim_inode", "unit"}
+                and expected_connection is not None
+                and pre_dispatch["unit"] == "qm-ivv-recovery-" + expected_connection + ".service"
+                and len(_canonical(pre_dispatch)) <= 4096,
+                "recovery_pre_dispatch",
+            )
         _need(self.contract._sha(method_sha256), "recovery_method")
         _need(type(now) in (int, float) and math.isfinite(now) and now >= 0, "recovery_clock")
         rows = self._intents()
+        attempt = f"connection-{len(rows) + 1:06d}"
+        _need(
+            expected_connection is None or expected_connection == attempt,
+            "recovery_attempt_sequence",
+        )
         if rows:
             previous = rows[-1]
             path = self.root / (previous["connection_attempt_id"] + ".close.json")
@@ -506,7 +520,17 @@ class RecoveryLedger:
                     "owned_cleanup_unknown",
                 )
                 recovered = self._read(previous["connection_attempt_id"] + ".recovered.json")
-                binding = self._read(previous["connection_attempt_id"] + ".owner.json")
+                stem = previous["connection_attempt_id"]
+                kind = (
+                    ".owner.json"
+                    if (self.root / (stem + ".owner.json")).exists()
+                    else (
+                        ".preowner.json"
+                        if (self.root / (stem + ".preowner.json")).exists()
+                        else ".intent.json"
+                    )
+                )
+                binding = self._read(stem + kind)
                 _need(
                     recovered
                     == {
@@ -518,6 +542,22 @@ class RecoveryLedger:
                         "input_publishable": False,
                     },
                     "owned_cleanup_unknown",
+                )
+            preowner = self.root / (previous["connection_attempt_id"] + ".preowner.json")
+            if closed["owner_state"] == "CLOSED" and preowner.exists():
+                receipt = self.root / (previous["connection_attempt_id"] + ".unit-cleanup.json")
+                _need(receipt.exists(), "owned_unit_cleanup_unknown")
+                _need(
+                    self._read(receipt.name)
+                    == {
+                        "preowner_sha256": self.contract.digest(
+                            self.contract.canonical(self._read(preowner.name))
+                        ),
+                        "owned_cleanup_proven": True,
+                        "external_effects": "UNKNOWN",
+                        "input_publishable": False,
+                    },
+                    "owned_unit_cleanup_unknown",
                 )
             _need(
                 closed["failure"]
@@ -538,6 +578,7 @@ class RecoveryLedger:
             {
                 "schema_id": "qm.ivv.connection-attempt.v1",
                 "state": "INTENT",
+                **({"pre_dispatch": pre_dispatch} if pre_dispatch is not None else {}),
                 "logical_task_id": self.contract.LOGICAL_TASK_ID,
                 "batch_id": self.policy["batch"]["batch_id"],
                 "policy_sha256": self.policy_sha,

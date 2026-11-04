@@ -332,6 +332,19 @@ def select_failure_status(status, publication_sha256):
     if "origin_failure" in status:
         need(status["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
         result["origin_failure"] = select_origin_failure(status["origin_failure"])
+    if "recovery_connection" in status:
+        item = status["recovery_connection"]
+        need(
+            type(item) is dict
+            and set(item) == {"requested", "next", "state"}
+            and all(
+                type(item[k]) is str and re.fullmatch(r"connection-[0-9]{6}", item[k])
+                for k in ("requested", "next")
+            )
+            and item["state"] in ("UNCLAIMED", "CLAIMED", "COMPLETE"),
+            "RECOVERY_RECONCILIATION",
+        )
+        result["recovery_connection"] = dict(item)
     return result
 
 
@@ -619,7 +632,7 @@ def _mount_id(fd):
     return int(next(line.split()[1] for line in raw if line.startswith("mnt_id:")))
 
 
-def _manager_fields(unit):
+def _manager_fields(unit, *, terminal=False):
     fields = (
         "Id",
         "MainPID",
@@ -632,6 +645,8 @@ def _manager_fields(unit):
         "ActiveState",
         "SubState",
     )
+    if terminal:
+        fields += ("ExecMainCode", "ExecMainStatus")
     child = subprocess.Popen(
         ["/usr/bin/systemctl", "show", "--no-pager", "--property=" + ",".join(fields), "--", unit],
         stdin=subprocess.DEVNULL,
@@ -1136,6 +1151,353 @@ def _recover_bound_owner(binding):
     return {"owned_cleanup_proven": True, "external_effects": "UNKNOWN", "input_publishable": False}
 
 
+@contextlib.contextmanager
+def recovery_claim_lease(book):
+    with _recovery_lease(book.root / "connection-000000.claim-lock.json") as lease:
+        lease.controller, _ = _controller_actor(os.getpid())
+        lease.origin = list(identity(os.fstat(lease.fd)))
+        book._claim_lease = lease
+        try:
+            yield lease
+        finally:
+            book._claim_lease = None
+
+
+class _RecoveryLease:
+    def __init__(self, fd):
+        self.fd = fd
+
+    def close(self):
+        if self.fd is not None:
+            fd, self.fd = self.fd, None
+            _close_fd(fd)
+
+
+@contextlib.contextmanager
+def _recovery_lease(path):
+    import fcntl
+
+    try:
+        put(path, {})
+    except FileExistsError:
+        pass
+    read_ref({"path": str(path), "sha256": digest(raw_json({}))}, path)
+    lease = _RecoveryLease(os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC))
+    try:
+        need(identity(os.fstat(lease.fd)) == identity(path.lstat()), "RECOVERY_LEASE_CHANGED")
+        fcntl.flock(lease.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield lease
+    finally:
+        lease.close()
+
+
+def _controller_actor(pid):
+    need(type(pid) is int and pid > 1, "RECOVERY_CONTROLLER_PID")
+    path = Path("/proc") / str(pid)
+    raw = (path / "stat").read_bytes()
+    group = (path / "cgroup").read_bytes()
+    need(len(raw) <= 8192 and len(group) <= 8192, "RECOVERY_CONTROLLER_METADATA")
+    fields = raw[raw.rindex(b")") + 2 :].split()
+    need(
+        int(raw.split(b" ", 1)[0]) == pid
+        and len(fields) > 19
+        and group.startswith(b"0::/")
+        and group.count(b"\n") == 1,
+        "RECOVERY_CONTROLLER_METADATA",
+    )
+    return {
+        "pid": pid,
+        "start_ticks": int(fields[19]),
+        "uid": path.stat().st_uid,
+        "cgroup": group[3:].decode("ascii").strip(),
+    }, int(fields[1])
+
+
+def _recover_predispatch(book, intent):
+    binding = intent.get("pre_dispatch")
+    attempt = intent["connection_attempt_id"]
+    need(
+        _recovery_mode(attempt)
+        and type(binding) is dict
+        and set(binding) == {"controller", "claim_inode", "unit"},
+        "RECOVERY_PRE_DISPATCH_MISSING",
+    )
+    actor = binding["controller"]
+    unit = "qm-ivv-recovery-" + attempt + ".service"
+    need(
+        type(actor) is dict
+        and set(actor) == {"pid", "start_ticks", "uid", "cgroup"}
+        and type(actor["pid"]) is int
+        and actor["pid"] > 1
+        and type(actor["start_ticks"]) is int
+        and actor["start_ticks"] > 0
+        and type(actor["uid"]) is int
+        and actor["uid"] == 0
+        and binding["unit"] == unit,
+        "RECOVERY_CONTROLLER_BINDING",
+    )
+    lease = getattr(book, "_claim_lease", None)
+    need(
+        type(lease) is _RecoveryLease
+        and lease.fd is not None
+        and lease.controller["pid"] == os.getpid()
+        and _controller_actor(os.getpid())[0] == lease.controller
+        and list(identity(os.fstat(lease.fd))) == binding["claim_inode"]
+        and identity(os.fstat(lease.fd))
+        == identity((book.root / "connection-000000.claim-lock.json").lstat()),
+        "RECOVERY_CLAIM_LEASE_REQUIRED",
+    )
+    need(not (book.root / (attempt + ".dispatch.json")).exists(), "RECOVERY_DISPATCH_UNKNOWN")
+    try:
+        actual, _ = _controller_actor(actor["pid"])
+    except FileNotFoundError:
+        need(not (Path("/proc") / str(actor["pid"])).exists(), "RECOVERY_CONTROLLER_UNCERTAIN")
+    else:
+        need(actual == actor, "RECOVERY_CONTROLLER_CHANGED")
+        raise Refused("RECOVERY_CONTROLLER_ACTIVE")
+    fields = _manager_fields(unit)
+    need(
+        fields["Id"] == unit
+        and fields["MainPID"] == "0"
+        and fields["InvocationID"] == ""
+        and fields["ActiveState"] == "inactive"
+        and not (CG / "system.slice" / unit).exists(),
+        "RECOVERY_UNEXPECTED_UNIT",
+    )
+    return {"owned_cleanup_proven": True, "external_effects": "UNKNOWN", "input_publishable": False}
+
+
+def _preowner_binding(attempt, startup):
+    loc = _locations(attempt)
+    actor, _ = _process(os.getpid())
+    fields = _manager_contract(actor)
+    unit = "qm-ivv-recovery-" + attempt + ".service"
+    need(
+        fields["Id"] == unit and actor["cgroup"] == "/system.slice/" + unit + "/manager",
+        "RECOVERY_MANAGER_SCOPE",
+    )
+    dispatch = read_ref(
+        {
+            "path": str(loc.ledger / (attempt + ".dispatch.json")),
+            "sha256": digest(raw_json({"unit": unit, "startup_sha256": startup})),
+        },
+        loc.ledger / (attempt + ".dispatch.json"),
+    )
+    need(json.loads(dispatch) == {"unit": unit, "startup_sha256": startup}, "RECOVERY_DISPATCH")
+    group = CG / "system.slice" / unit
+    mount = _cgroup_mount()
+    fd = os.open(group, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        origin = list(identity(os.fstat(fd)))
+        need(
+            origin == list(identity(group.lstat())) and _mount_id(fd) == mount,
+            "RECOVERY_CGROUP_CHANGED",
+        )
+    finally:
+        _close_fd(fd)
+    need(
+        _process(actor["pid"])[0] == actor and _manager_contract(actor) == fields,
+        "RECOVERY_MANAGER_CHANGED",
+    )
+    return {
+        "connection_attempt_id": attempt,
+        "startup_sha256": startup,
+        "manager": actor,
+        "unit": fields,
+        "group": origin,
+        "mount": {"id": mount, "namespace": list(identity(Path("/proc/self/ns/mnt").stat()))},
+    }
+
+
+@contextlib.contextmanager
+def _recovery_lifecycle(startup, attempt):
+    loc = _locations(attempt)
+    with _recovery_lease(loc.ledger / (attempt + ".lifecycle-lock.json")) as lease:
+        binding = _preowner_binding(attempt, startup["sha256"])
+        ref = put(loc.ledger / (attempt + ".preowner.json"), binding)
+        # systemd --pipe supplies a bounded controller gate, then original null stdio.
+        need(select.select([0], [], [], 8)[0] == [0], "RECOVERY_GATE_TIMEOUT")
+        token = os.read(0, 66)
+        need(token == (ref["sha256"] + "\n").encode("ascii"), "RECOVERY_GATE_TOKEN")
+        need(_preowner_binding(attempt, startup["sha256"]) == binding, "RECOVERY_MANAGER_CHANGED")
+        null = os.open("/dev/null", os.O_RDONLY | os.O_CLOEXEC)
+        try:
+            os.dup2(null, 0)
+        finally:
+            _close_fd(null)
+        yield lease
+
+
+def _recover_preowner(binding, book):
+    """Cleanup-only proof for a durably bound manager, never SDK-zero or normal close."""
+    need(
+        type(binding) is dict
+        and set(binding)
+        == {"connection_attempt_id", "startup_sha256", "manager", "unit", "group", "mount"},
+        "RECOVERY_PREOWNER_SHAPE",
+    )
+    attempt, actor, fields = (binding[k] for k in ("connection_attempt_id", "manager", "unit"))
+    need(_recovery_mode(attempt), "RECOVERY_ATTEMPT")
+    unit = "qm-ivv-recovery-" + attempt + ".service"
+    need(
+        type(actor) is dict
+        and set(actor) == {"pid", "start_ticks", "uid", "cgroup"}
+        and type(actor["pid"]) is int
+        and actor["pid"] > 1
+        and type(actor["start_ticks"]) is int
+        and actor["start_ticks"] > 0
+        and actor["uid"] == 0
+        and actor["cgroup"] == "/system.slice/" + unit + "/manager"
+        and fields["Id"] == unit
+        and fields["MainPID"] == str(actor["pid"])
+        and re.fullmatch("[0-9a-f]{32}", fields["InvocationID"]),
+        "RECOVERY_PREOWNER_ACTOR",
+    )
+    try:
+        actual, _ = _process(actor["pid"])
+    except FileNotFoundError:
+        need(not (Path("/proc") / str(actor["pid"])).exists(), "RECOVERY_PROCESS_UNCERTAIN")
+    else:
+        need(actual == actor, "RECOVERY_PID_CHANGED")
+        raise Refused("RECOVERY_MANAGER_ACTIVE")
+    observed = _manager_fields(unit, terminal=True)
+    name = attempt + ".terminal.json"
+    saved = book._read(name) if (book.root / name).exists() else None
+    terminal = observed
+    if observed["InvocationID"] != fields["InvocationID"]:
+        need(
+            saved is not None
+            and saved["preowner_sha256"] == digest(raw_json(binding))
+            and observed["Id"] == unit
+            and observed["InvocationID"] == ""
+            and observed["MainPID"] == "0"
+            and observed["ActiveState"] == "inactive",
+            "RECOVERY_UNIT_NOT_TERMINAL",
+        )
+        terminal = saved["terminal"]
+    need(
+        terminal["Id"] == unit
+        and terminal["InvocationID"] == fields["InvocationID"]
+        and terminal["MainPID"] == "0"
+        and (terminal["ActiveState"], terminal["SubState"])
+        in (("inactive", "dead"), ("failed", "failed"), ("active", "exited")),
+        "RECOVERY_UNIT_NOT_TERMINAL",
+    )
+    mount = _cgroup_mount()
+    group = CG / "system.slice" / unit
+    try:
+        fd = os.open(group, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    except FileNotFoundError:
+        need(not group.exists(), "RECOVERY_CGROUP_UNCERTAIN")
+    else:
+        try:
+            need(
+                list(identity(os.fstat(fd))) == binding["group"]
+                and identity(os.fstat(fd)) == identity(group.lstat())
+                and _mount_id(fd) == mount,
+                "RECOVERY_CGROUP_CHANGED",
+            )
+            need(
+                _Scope.dirs(fd)
+                <= {"manager", "ivv-owned-" + str(actor["pid"]) + "-" + str(actor["start_ticks"])},
+                "RECOVERY_FOREIGN_CGROUP",
+            )
+            # cgroup.events populated is recursive, so a post-fork unbound child blocks recovery.
+            need(
+                not _kread(fd, "cgroup.procs")
+                and "populated 0" in _kread(fd, "cgroup.events").splitlines(),
+                "RECOVERY_NOT_EMPTY",
+            )
+        finally:
+            _close_fd(fd)
+    need(_manager_fields(unit, terminal=True) == observed, "RECOVERY_UNIT_CHANGED")
+    record = {"preowner_sha256": digest(raw_json(binding)), "terminal": terminal}
+    if saved is None:
+        book._write(name, record)  # proof before stop can erase the unit's Invocation metadata
+    else:
+        need(saved == record, "RECOVERY_TERMINAL_CHANGED")
+    if observed["ActiveState"] == "active":
+        _stop_quiescent_unit(unit, observed)
+    proof = {
+        "owned_cleanup_proven": True,
+        "external_effects": "UNKNOWN",
+        "input_publishable": False,
+    }
+    final = {"preowner_sha256": digest(raw_json(binding)), **proof}
+    name = attempt + ".unit-cleanup.json"
+    if (book.root / name).exists():
+        need(book._read(name) == final, "RECOVERY_UNIT_RECEIPT")
+    else:
+        book._write(name, final)
+    return proof
+
+
+def _stop_quiescent_unit(unit, expected):
+    need(
+        _manager_fields(unit, terminal=True) == expected
+        and expected["MainPID"] == "0"
+        and expected["SubState"] == "exited",
+        "RECOVERY_UNIT_CHANGED",
+    )
+    child = subprocess.Popen(
+        ["/usr/bin/systemctl", "stop", "--", unit],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+        env={"PATH": "/usr/bin:/bin", "LC_ALL": "C"},
+    )
+    try:
+        need(child.wait(timeout=2) == 0, "RECOVERY_UNIT_STOP")
+    finally:
+        if child.poll() is None:
+            try:
+                child.kill()
+                child.wait(timeout=2)
+            except BaseException:
+                # Retain this exact helper until terminal proof or the carrier's
+                # existing outer deadline, never continue with normal authority.
+                while True:
+                    try:
+                        child.wait(timeout=0.1)
+                        break
+                    except BaseException:
+                        time.sleep(0.01)
+    fields = _manager_fields(unit)
+    need(
+        fields["Id"] == unit
+        and fields["MainPID"] == "0"
+        and fields["ActiveState"] in ("inactive", "failed")
+        and fields["InvocationID"] in (expected["InvocationID"], ""),
+        "RECOVERY_UNIT_STOP",
+    )
+
+
+def stop_bound_recovery_manager(book, attempt):
+    """Carrier timeout: stop only the recorded unit manager, never its client as proxy."""
+    binding = book._read(attempt + ".preowner.json")
+    actor = binding["manager"]
+    unit = "qm-ivv-recovery-" + attempt + ".service"
+    fields = _manager_fields(unit)
+    need(fields["InvocationID"] == binding["unit"]["InvocationID"], "RECOVERY_UNIT_CHANGED")
+    try:
+        actual, _ = _process(actor["pid"])
+    except FileNotFoundError:
+        need(not (Path("/proc") / str(actor["pid"])).exists(), "RECOVERY_PROCESS_UNCERTAIN")
+        return
+    need(actual == actor and fields["MainPID"] == str(actor["pid"]), "RECOVERY_PID_CHANGED")
+    fd = os.pidfd_open(actor["pid"])
+    try:
+        need(
+            _process(actor["pid"])[0] == actor and _manager_fields(unit) == fields,
+            "RECOVERY_PID_CHANGED",
+        )
+        signal.pidfd_send_signal(fd, signal.SIGKILL)
+        need(select.select([fd], [], [], 2)[0] == [fd], "RECOVERY_MANAGER_STOP_UNKNOWN")
+    finally:
+        _close_fd(fd)
+
+
 def recover_previous_attempt(book, read_owned):
     """Fixed carrier entry, before any new context intent or SDK opportunity."""
     import fcntl
@@ -1151,8 +1513,17 @@ def recover_previous_attempt(book, read_owned):
     close_path = book.root / (attempt + ".close.json")
     closed = book._read(close_path.name) if close_path.exists() else None
     if closed is not None and closed["owner_state"] == "CLOSED":
+        # Parent closure is written before that manager exits. A successor must
+        # independently close the retained unit as well, under the lifecycle lease.
+        if (book.root / (attempt + ".preowner.json")).exists():
+            with _recovery_lease(book.root / (attempt + ".lifecycle-lock.json")):
+                _recover_preowner(book._read(attempt + ".preowner.json"), book)
         return
-    binding = book._read(attempt + ".owner.json")
+    owner = (book.root / (attempt + ".owner.json")).exists()
+    preowner = (book.root / (attempt + ".preowner.json")).exists()
+    binding = book._read(
+        attempt + (".owner.json" if owner else (".preowner.json" if preowner else ".intent.json"))
+    )
     previous_failure = read_runner_failure(_locations(attempt).control, read_owned)
     ref = digest(raw_json(binding))
     receipt = {
@@ -1180,7 +1551,21 @@ def recover_previous_attempt(book, read_owned):
         )
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         need(not (book.root / done).exists(), "RECOVERY_ALREADY_COMMITTED")
-        proof = _recover_bound_owner(binding)
+        with _recovery_lease(book.root / (attempt + ".lifecycle-lock.json")):
+            proof = (
+                _recover_bound_owner(binding)
+                if owner
+                else (
+                    _recover_preowner(binding, book)
+                    if preowner
+                    else _recover_predispatch(book, binding)
+                )
+            )
+            if owner and (book.root / (attempt + ".preowner.json")).exists():
+                need(
+                    _recover_preowner(book._read(attempt + ".preowner.json"), book) == proof,
+                    "RECOVERY_UNIT_CLOSURE",
+                )
         need(proof == {k: receipt[k] for k in proof} and len(proof) == 3, "RECOVERY_PROOF")
     finally:
         _close_fd(lock)
@@ -2312,10 +2697,11 @@ def run_additional_once(startup_ref):
 
 def run_recovery_attempt(startup_ref, connection_attempt_id):
     need(_recovery_mode(connection_attempt_id), "RECOVERY_ATTEMPT")
-    return _run(startup_ref, additional=connection_attempt_id)
+    with _recovery_lifecycle(startup_ref, connection_attempt_id) as lifecycle:
+        return _run(startup_ref, additional=connection_attempt_id, lifecycle=lifecycle)
 
 
-def _run(startup_ref, *, additional):
+def _run(startup_ref, *, additional, lifecycle=None):
     loc = _locations(additional)
     started = time.monotonic() if additional else None
     context = _for_task(_bootstrap, additional)(startup_ref)
@@ -2336,7 +2722,8 @@ def _run(startup_ref, *, additional):
         values["_recovery_ledger"] = book
     _stdio()
     need(
-        _fds() == {0, 1, 2} and len(list(Path("/proc/self/task").iterdir())) == 1,
+        _fds() == ({0, 1, 2} | ({lifecycle.fd} if lifecycle is not None else set()))
+        and len(list(Path("/proc/self/task").iterdir())) == 1,
         "PARENT_FD_THREAD_CLOSURE",
     )
     os.umask(0o077)
@@ -2355,6 +2742,10 @@ def _run(startup_ref, *, additional):
             parent_side, child_side = _Channel(a), _Channel(b)
             endpoint = child_side.origin[1]
             parent = os.getpid()
+            if _recovery_mode(additional):
+                book._write(
+                    additional + ".fork-may.json", {"phase": "FORK_MAY", "manager": scope.parent}
+                )
             pid = os.fork()
             if pid == 0:
                 rc = 1
@@ -2392,6 +2783,11 @@ def _run(startup_ref, *, additional):
             failures = scope.abort()
             cleanup_failures = failures
             primary = [_failure_code(error), *failures]
+    if lifecycle is not None:
+        try:
+            lifecycle.close()
+        except BaseException:
+            stack.errors.append("RECOVERY_LEASE_CLOSE")
     if time.monotonic() - plan["started_monotonic"] > 480:
         primary = [*(primary or []), "FINAL_SEAL_DEADLINE"]
     if _recovery_mode(additional):

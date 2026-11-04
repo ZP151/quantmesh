@@ -78,35 +78,6 @@ bundle qualification is pending. No dependency installation/new environment.
 Server actual capture chain/owned cleanup is not yet frozen; connected integrated
 review, exact-head normal CI/merge and actual input/report/decision/cold read remain.
 
-Parent integration checkpoint 2026-11-04: original Product froze seven owned
-files at0a694327/90207b60; Parent cherry-picks027b4648/7d3e42be match all seven
-byte pins. Original Product remains frozen. Parent now owns only its located
-consumer fix/docs/integration; original Server remains the other source writer.
-Quant limited field readback resolved F1 to one actual epoch; F2 preserves every
-possible wire enqueue and separate control buckets; F3 exposed an inconsistent
-failed/prepared archive accepted by the consumer. A real prepared-ack-loss ledger
-reproduced DID NOT RAISE before the fix, then state/completion/failure/report
-consistency guards passed the corruption case and normal prepared/interrupted
-cases. The first RED invocation had a missing basetemp parent; both logs retained.
-Parent shared+Product affected regression now139PASS/1skip/78.20s. The skip is the
-missing private approval fixture, never a fabricated human original. Engineering
-fixtures do not establish actual capture, input acceptance or financial results.
-
-Capacity supplements03/04 retain all history/futures and complete138MiB recovery
-plus old80MiB=218MiB: software26(Server7/Product12/common6/FS1), local/remote48+48,
-review4,study8,close2+2. Net4MiB registration04 raises only Server/common forecasts;
-guardG10614829146/P4576756750/all-parent4633379854 fit12GiB/6GiB/free50GiB. Protected
-operator P4 d55242c0/1425B is distinct from initial source DEFAULT_POLICY; all old
-policies remain immutable and no identity/count is reset. This is not runtime GO.
-
-Browser-only readback: Edge extension shows authenticated Tailscale Machines and
-research/both staging Connected. No global desktop inspection or OpenD/SDK
-connection inference. Parent frontend build/type checks ran with existing Vite
-8.2.1, while the lock requires8.2.4; its output/log is retained but exact-lock
-bundle qualification is pending. No dependency installation/new environment.
-Server actual capture chain/owned cleanup is not yet frozen; connected integrated
-review, exact-head normal CI/merge and actual input/report/decision/cold read remain.
-
 Ruling: the existing local node_modules is8.2.1, so retain it as disclosed software
 evidence only. The necessary normal CI keeps its existing npm-ci lock and stale-
 bundle refusal, and now retains its actual built bundle plus actual checkout/tree,
@@ -156,3 +127,76 @@ Source provenance mismatch was fixed at the producer by consuming the single
 shared policy projection, preserving legacy aliases; issuer independently binds
 that projection. No consumer guard was weakened. Both source owners are now
 frozen; Parent owns joint review/publication and actual execution.
+
+Independent R1 at651117c8 is FIX_REQUIRED on both axes. Spec reportb512cc3d
+finds pre-owner refusal cannot recover without owner binding and local/remote
+sequence divergence mutates an orphan intent before refusal. Standards99769a19
+finds uncertain numeric cleanup may drop the owner/permit overlap (P1), missing
+JSONL/ObjectStore publication durability barriers (P2), and the same pre-owner
+problem. Four unique findings are in the sole consolidated correction, with
+original Server and original Product as the two disjoint writers. Parent does
+not edit their code; both original readers receive only one R2 after freeze.
+A remaining material structural R2 issue returns to Planner for scope reduction,
+not a third patch loop. No PR/CI/native/SDK/trial has started.
+
+Source correction separates local transport submissions from remote connection
+identity, validates expected ID under the claim lease before mutation, and adds
+a fixed existing-unit prebootstrap stdin gate with durable exact lifecycle
+identity before release. No binding/uncertain dispatch remains UNKNOWN, never
+zero or normal closure. Product correction retains exact uncertain child/Job/
+lease ownership, including cleanup failure/GC/partial construction, and adds
+scoped default-off durable publication through existing FS/JSONL/ObjectStore.
+Same-byte republish is limited to hash-verified owned-study objects under its
+WriterLease; external input/source objects and lock inode are not rewritten.
+No physical power-loss or native child guarantee is inferred from API/unit tests.
+
+Standing supplement06 registers Product12->16MiB/net4194304B, preserving
+Server7/common12/FS1 and all previous futures: software36, new148+old80=228MiB.
+GuardsG10625314906/P4587242510/all-parent4643865614 fit current caps; P6
+05abb057/1425B dynamically selects budget only, not business identity/counts.
+
+Root read the concrete candidate scope and recorded this issue-specific standard
+agent-review/ordinary merge authority at output/0038-orchestration/issue281-standard-review-merge-authority-20261105.json
+SHA256df0ae6f870cfd96a364a31a516251f86317259748a64610fec78e68c37f2c577. It records the actual human instruction to complete standard
+agent review and approve when clear. This is a human-authorized workflow, not
+a claim that an independent human inspected this source or submitted a GitHub
+approval. Final applicable reviewed/required-CI head and actual PR must be
+recorded; ordinary match-head merge only, no admin/force/protection bypass.
+Old PR280 exact-head exception is not used for this source. Actual literal
+GitHub protection or a new material permission/data/math/paid/trading boundary
+would require a concrete disposition. Source merge alone never ends this goal.
+
+Original Product froze dba70063; Parent cherry-pick b8bc0339 matches all ten raw
+pins and Git blobs. Parent independently ran the affected integration suite:
+169PASS/4skip/122.10s (PRODUCT-CORRECTION-INTEGRATED-03.log). Skips are three
+unavailable local symlink cases and the absent private approval fixture. Earlier
+sparse-checkout/collection harness failures remain distinct from behavioral RED.
+
+Before the sole R2, Parent's two modeled native-handle ACK-loss reproducers both
+failed: a close effect followed by interruption could retry a reassigned handle.
+Original Product's same-P1 follow-up0f44a5e, integrated as ab54c157, records
+OPEN/MAY_HAVE_CLOSED/CLOSED before touching FFI. Unknown acknowledgement blocks
+every further operation on that raw number and retains the exact owner/lease;
+observed closure permits bookkeeping only. All three source/test pins and Git
+blobs match. Parent's independent final check, including the original two cases,
+is47PASS/75.89s (HANDLE-ACK-LOSS-GREEN-01.log). This is modeled handle-table and
+real storage/service testing, not actual native process or financial acceptance.
+
+Parent independent final source seam run R1-SOURCE-PARENT-01 is107PASS/15.30s:
+capture/entry, tracked producer-consumer, private operations and actual-A ignored
+seam. Source's own final existing trusted/capture suite224PASS/58.79s, finite
+failure-evidence/connected suite60PASS/3.65s and terminal models14PASS/0.34s are
+separate overlapping checks, not a summed unique-test count. Parent broad
+Ruff(src/tests/tools),13 changed-file format and whitespace all pass. Native OS,
+provider behavior, input acceptance and numerical/financial outcomes remain
+unproved. Browser login is confirmed through the plugin; no global computer use.
+
+Source R1 final freeze17:35:41UTC: R1-PINS.json7190B SHA9708d2142097bbbf776daa87aa75b626ec8ee8e26bfad4902c3ccb83711bd266;
+R1-HANDOFF.md11498B SHA063f05df753fe3be6f1e3fc8e956b39c8561b79e5dfbd33e84b09a9280a1fb45.
+Parent independently matches all16 code/validation pins and11 frozen artifacts.
+Actual Server rounded6,123,520B, complete forecast6,647,808B<7MiB; no new net
+capacity supplement is needed. New decoded body upper532101B<1MiB, header843625B
+fits its850KiB reservation; compressed carrier remains256KiB. These are static
+representation/storage bounds, with no carrier construction or native execution.
+Both writers are frozen. Same two readers' sole R2 follows this coherent checkpoint;
+normal exact-head CI/publication and actual user outcome remain pending.

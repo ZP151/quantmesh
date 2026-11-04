@@ -6,13 +6,14 @@ Actual human direction6db1254 authorizes necessary reasonable capture/request/
 compute recovery and registered growth within the original fixed data/math/
 privacy/trading/no-paid scope. Permanent1/7, repeated whole-package approval and
 the pending4.6GB question are superseded. Current administrative caps12GiB/6GiB/
-free50GiB; old80MiB plus complete recovery144MiB=224MiB, all prior futures retained.
+free50GiB; old80MiB plus complete recovery148MiB=228MiB, all prior futures retained.
 
 Server and original Product froze one policy: stable task/registered experiment/
 semantic input version/math-cost spec determine business identity; authority,
 sourcepack and connection/request/compute attempts are provenance. Reuse existing
 leases/JSONL/objects with prepared-report then atomic commit. Old families and
-UNKNOWN/SPENT remain immutable. Two exclusive writers are implementing with TDD;
+UNKNOWN/SPENT remain immutable. Both exclusive writers froze the sole R1 correction;
+Parent independent affected checks pass and the same-reader final R2 is next;
 source merge alone never completes actual capture/Quant acceptance/report/
 decision/cold-read. See [current iteration](../iterations/0038-ivv-transaction-recovery.md).
 PR280/399b below is delivered; its old CI is not repeated or used as native GO.
