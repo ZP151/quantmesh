@@ -23,7 +23,7 @@ effects before the call; UNKNOWN is conservatively charged and never refunded.
 | Attempts | Distinct connection/request/compute IDs. Durable intent, MAY_HAVE_SENT, observed response original, closed/UNKNOWN and checkpoint state precede successor effects. Current owner lease serializes effects; uncertain owned cleanup requires exact-owner recovery before another owned context. Same unrepaired structural refusal stops for a concrete repair, not blind retries. |
 | Computation | Existing WriterLease+JsonlStore record running attempt before compute; ObjectStore report -> durable prepared_report pointer -> atomic committed job. Restart with validated prepared report commits without recomputation. Without a prepared result, bounded recorded recovery computation is allowed. Cumulative compute allowance counts the same logical task across all registered experiments/business keys and authority/batch versions; a validated prepared commit uses zero new computation. Committed report/decision stays immutable; lost acknowledgement reads the same originals. |
 | First operating batch | 1800s,3 contexts,32 read-only business sends,1 business/s,Init<=3,KeepAlive<=288,initial cumulative compute allowance3; one simultaneous context. These are recorded expandable operating allowances, not permanent authorization caps. Honor actual provider quota/rate responses. Own context retains512MiB/swap0/CPU50%/Tasks32/480s and existing transport/close protections. |
-| Capacity | Current caps12GiB global/6GiB parent/free50GiB. Old80MiB retained; recovery148MiB (software36,capture48local/48remote,review4,study8,close2local/2remote), total228MiB. Current P6 guardG10625314906/P4587242510/all-parent4643865614 fit. Software subsets Server7/Product16/commonGit-review-CI-catalog12/failureFS1 MiB; P1-P5 retained. Complete forecast, not runtime GO. |
+| Capacity | Current caps12GiB global/6GiB parent/free50GiB. Old80MiB retained; recovery152MiB (software40,capture48local/48remote,review4,study8,close2local/2remote), total232MiB. Current P8 guardG10629509210/P4591436814/all-parent4648059918 fit. Software subsets Server7/Product16/commonGit-review-CI-catalog16/failureFS1 MiB; P1-P7 retained. Complete forecast, not runtime GO. |
 
 Server exclusively owns shared policy/contracts/docs, capture/helper/issuer/runner,
 operational adapters and actual host work. Product exclusively owns admission,
@@ -88,3 +88,18 @@ remote decompressor because the source/control/base64 envelope exceeds the old
 512KiB representation ceiling. Compressed carrier remains256KiB; existing source,
 capture, SDK-log, actor, deadline and per-connection disk limits are unchanged.
 Legacy families retain their original limits and interpretation.
+
+Standing supplement07 registers net4MiB only to common integration (12->16MiB)
+for all retained CI evidence/trees, the necessary frontend consumer correction's
+bundle/third current-head artifact and final catalog. A conservative full-index
+census12,926,976B plus complete futures yields15,286,272B<16MiB. No old hold is
+reduced or borrowed. The first protected P7 is retained as1426B/SHA25660025969eae837b0205128b9b9a5db2cb8acd8b63a35766ac8f7fe35135f999d;
+source DEFAULT_POLICY remains historical convenience. Only storage forecast and
+guard provenance change, never actor/data/math/batch/counts or business identity.
+
+Before any carrier/host execution, the actual RecoveryProfile exposed one extra
+newline in P7: raw policy SHA differed from the profile's canonical policy SHA.
+Keep that record and pointer; canonical P8 has exactly the same dictionary,
+1425B/SHA256b81fd83161f477dcd8c37c2b08ccc16f9075fc27760c359ec9bfc3694d7e5346,
+and matches the real profile. Current selector points to P8. This serialization
+correction registers net0 against capacity07, never another4MiB or counter reset.

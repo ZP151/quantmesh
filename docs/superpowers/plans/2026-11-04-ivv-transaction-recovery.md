@@ -21,7 +21,7 @@ new permit issuer.
 
 Preserve all old evidence/charges/futures and old-family interpretations. Current
 human direction6db1254 replaces repeated single-shot approval gates. Current
-12GiB/6GiB/free50GiB and complete228MiB hold apply; software36MiB is shared (Server7/Product16/common12/FS1). Data/math,
+12GiB/6GiB/free50GiB and complete232MiB hold apply; software40MiB is shared (Server7/Product16/common16/FS1). Data/math,
 credentials, no-paid, read-only protocol scope and paper/live boundaries remain.
 One integration branch/CI observer; no old PR280 revalidation or diagnostic sandbox.
 

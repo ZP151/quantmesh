@@ -6,7 +6,7 @@ Actual human direction6db1254 authorizes necessary reasonable capture/request/
 compute recovery and registered growth within the original fixed data/math/
 privacy/trading/no-paid scope. Permanent1/7, repeated whole-package approval and
 the pending4.6GB question are superseded. Current administrative caps12GiB/6GiB/
-free50GiB; old80MiB plus complete recovery148MiB=228MiB, all prior futures retained.
+free50GiB; old80MiB plus complete recovery152MiB=232MiB, all prior futures retained.
 
 Server and original Product froze one policy: stable task/registered experiment/
 semantic input version/math-cost spec determine business identity; authority,

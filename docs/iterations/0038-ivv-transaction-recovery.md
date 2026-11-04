@@ -260,3 +260,58 @@ report. The following documentation checkpoint records these facts; its actual
 new head must pass normal CI, exact-lock provenance and ordinary guarded merge.
 No old failed/green run is reused as qualification, and actual SDK/data/numeric
 admission remains pending.
+
+New-head CI41894315906 at3f03c4d1 is SUCCESS:7568PASS/149SKIP and golden60;
+actual locked8.2.4 artifact13353898965(455037B/SHA574a51f0) matches that head's
+full/Frontend trees, lock/workflow and all11 generated files. This green is kept
+only for that head. The single fresh premerge read found actual base399b/head3f03
+unchanged but an unresolved PR282 thread PRRT_kwDOTwH6TM6zuTJq; no merge occurred.
+
+The reviewer identifies the new frontend recovery-use-basis guard applying to all
+artifact kinds. Actual backend decision.v1 serializes job/request/admission/report
+digest bindings and no use_basis, so a valid saved decision can be rejected before
+the existing kind-specific decision validator and block the Panel's combined load.
+Original Product owns a bounded schema-discriminated guard correction with actual
+backend-decide engineering bytes consumed by the frontend; no production backend,
+decision schema, old original, data/math or new SDK effect is changed. False digest,
+missing fields and mismatched admission/report recovery identity must still refuse.
+Root explicitly confirms same-scope repair, narrow review and necessary new-head
+CI/exact-lock bundle/ordinary merge; CI-green cannot resolve an unfixed finding.
+
+Standing capacity07 netlocal4MiB raises only common12->16MiB. The new conservative
+census12,926,976B includes full retained integration trees and both shared indexes
+(the full previously held Parent index is conservatively charged again); complete
+remaining bundle/third actual-head CI artifact/catalog/failure forecast15,286,272B
+fits16MiB. No old future or original is removed/reduced. Software40 and new152+
+old80=232MiB; G10629509210/P4591436814/all-parent4648059918 remain within caps.
+P7 actual1426B/SHA60025969eae837b0205128b9b9a5db2cb8acd8b63a35766ac8f7fe35135f999d,
+selected through CURRENT-POLICY; P1-P6 and the prior pointer remain. Pure validation
+passes and actor/batch/data/math/identity/counts are unchanged. This is forecast
+registration, not actual host admission or runtime GO.
+
+Parent's first P7 serialization added a newline, caught before any carrier/host
+action by an actual RecoveryProfile raw-SHA/canonical-SHA comparison (RED). P7
+and its pointer remain immutable evidence. Canonical P8 has the identical policy
+dictionary/guards and actual1425B/SHA b81fd83161f477dcd8c37c2b08ccc16f9075fc27760c359ec9bfc3694d7e5346;
+the actual profile binding passes (GREEN) and CURRENT-POLICY now selects08.
+CAPACITY-SOFTWARE-07-POLICY-CORRECTION records net0; capacity07 is imported once,
+not twice. Counts/identity/old UNKNOWN are unchanged; no runtime source was changed.
+
+Product's one consumer correction4719a8ee integrates as24e44325: the API recovery
+use_basis guard now applies only to admission/report; existing decision schema,
+job/request/admission/report digest, safety and transport checks are retained.
+An authored archive-lookup seed feeds actual NativeDailyService.decide/ObjectStore;
+its615B v1 output(SHA29840755) has no use_basis and is consumed unmodified by the
+frontend. It fails two cases under exact original3f03 guard, then passes the same
+two under the fix. Producer regression re-executes actual serialization/publication
+and same-key replay. This seed is not accepted real input or a numerical trial.
+
+Parent independently matches all4 source Git/raw pins and8 owner evidence pins,
+runs96PASS Panel/guard cases and1PASS backend producer. Cold reads preserve all
+three originals with0POST; saving adds1POST; missing/wrong decision binding and
+recovery identity negatives remain fail-closed with retied outer digests. All16
+capture-source/ops/validation pins remain unchanged. New bundle/type build passes,
+copied11 files after verifying only contained generated targets; old bytes remain
+in Git and qualified CI ZIPs. Local Vite8.2.1/Vitest3.2.7 differ from lock8.2.4/
+4.1.11, so this is local evidence only. Narrow delta review and actual new-head
+normal CI/exact-lock artifact remain before resolving the thread/ordinary merge.
