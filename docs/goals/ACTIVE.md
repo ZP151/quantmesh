@@ -1,5 +1,27 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current offline runtime-origin failure-evidence repair — issue279
+
+The real released runner stopped at RUNTIME_ORIGIN without recording the actual
+predicate or initial/session phase. A later same-PID Landlock/cap differential
+completed normally and did not reproduce that old failure; it is spent. Repair
+the actual entry-to-STOP evidence path only, with original rejection/lazy
+evaluation/exception behavior and no additional SDK/proc/provider observations.
+Original writer, directed TDD, fresh scoped R1/maxone located-fix R2, required
+normal CI and the final actual merge-policy gate precede software publication.
+No extra host/capture/context/RPC/trial or input acceptance is authorized, and no
+old SPENT/UNKNOWN/hold is refunded. Source32MiB and all80MiB reservations retain
+old failures/futures. No source repair or merge establishes the historical
+cause, SDK readiness or a real backtest. See [issue279 checkpoint](../iterations/0038-ivv-origin-failure-evidence.md)
+and its linked plan; the older pre-capture checkpoint below is historical.
+
+The source-to-consumer implementation and sole consolidated R1 correction are
+verified locally: Parent181 direct tests plus15 actual-adapter cases pass,
+broad Ruff/changed-file format/whitespace pass. Final same-reader R2 is READY,
+all three findings ADDRESSED with no new material blocker. Normal matching-head
+CI and the concrete Class B merge-policy decision remain pending.
+The successor operational files are inert; publication does not authorize use.
+
 ## Approved independent additional IVV task —2026-11-04
 
 Actual new human event595c2987 approves the full independent task277, new capture
