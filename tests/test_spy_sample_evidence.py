@@ -7,18 +7,39 @@ import json
 import platform
 import re
 import zlib
+from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 
+from quantmesh.data import objects
 from quantmesh.data.objects import ObjectRef, ObjectStore
 from quantmesh.research import spy_replay as replay
 from tests.native_daily_legacy_fixtures import seed_archive
 from tests.test_spy_replay import descriptor_fixture, request_for, synthetic_input
 from tests.test_spy_replay_api import BASE, app
+
+
+def _f0_golden_comparison(protocol):
+    """Normalize reviewed storage provenance only; never rewrite the actual protocol."""
+    storage = "src/quantmesh/data/objects.py"
+    baseline = "b77d8e4729e8673ebaf37b8734938c74add0c409d71cab8820ca521d0cc61404"
+    actual = replay.digest(Path(objects.__file__).read_bytes())
+    assert protocol["source_code_sha256"][storage] == actual
+    # Only the reviewed default-off durable-publication delta is comparable.
+    # An unknown future helper revision still requires explicit review.
+    assert actual in {
+        baseline,
+        "60ff53f611b00e7bf1144955da32a765e837121d31811412e6212aec24d00cba",
+    }
+    comparison = deepcopy(protocol)
+    comparison["runtime"]["python"] = "<python-patch>"
+    comparison["source_code_sha256"][storage] = baseline
+    return comparison
 
 
 def flat_input(*, named=False):
@@ -105,13 +126,12 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
         calendar="4.13.2", numpy="2.5.2", pandas="2.3.3", python=platform.python_version()
     )
     assert re.fullmatch(r"3\.13\.[0-9]+", protocol["runtime"]["python"]) is not None
-    # The protocol records the Python patch version and the normalizer source
-    # hash. Pin the reviewed offline event parser source bytes while accepting
-    # this runner's Python patch version; original stored reports are unchanged.
-    protocol["runtime"]["python"] = "<python-patch>"
-    assert replay.digest(replay.canonical(protocol)) == (
+    # Compare the frozen semantics while preserving actual source/runtime pins.
+    comparison = _f0_golden_comparison(protocol)
+    assert replay.digest(replay.canonical(comparison)) == (
         "ac871ad84cc1ee20808414d5e989dcce7b7d0d7f59474edbd4c038088cf53457"
     )
+    assert protocol == json.loads(value.protocol_bytes)
     assert value.snapshot_digest == replay.digest(
         b"INTERNAL SYNTHETIC121" + value.bars_csv + value.protocol_bytes
     )
@@ -122,6 +142,7 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
         assert report["sample_evidence"]["sample_id"] == "F0"
         assert report["sample_evidence"]["sample_version"] == "F0-v1"
         assert report["sample_evidence"]["sample_role"] == "fixed_golden"
+        assert report["protocol_digest"] == replay.digest(value.protocol_bytes)
         bars = value.verified()[1]
         control = replay.engine.calculate(bars, [], bars.index[100], bars.index[-1])
         for scenario in control["scenarios"].values():
@@ -142,6 +163,46 @@ def test_fixed_f0_has_zero_null_semantics_and_costed_buyhold(tmp_path):
             assert scenario["buyhold"]["metrics"]["friction_usd"] > 0
     finally:
         service.close()
+
+
+def test_f0_comparison_rejects_false_or_unreviewed_storage_provenance(tmp_path, monkeypatch):
+    protocol = json.loads(flat_input(named=True).protocol_bytes)
+    storage = "src/quantmesh/data/objects.py"
+    false_pin = deepcopy(protocol)
+    false_pin["source_code_sha256"][storage] = "0" * 64
+    with pytest.raises(AssertionError):
+        _f0_golden_comparison(false_pin)
+    unreviewed = tmp_path / "unreviewed-storage.py"
+    unreviewed.write_bytes(b"authored unreviewed storage revision")
+    monkeypatch.setattr(objects, "__file__", str(unreviewed))
+    false_pin["source_code_sha256"][storage] = replay.digest(unreviewed.read_bytes())
+    with pytest.raises(AssertionError):
+        _f0_golden_comparison(false_pin)
+
+
+@pytest.mark.parametrize(
+    "path,changed",
+    [
+        (("engine_original_sha256",), "0" * 64),
+        (("normalizer_sha256",), "0" * 64),
+        (("source_code_sha256", "src/quantmesh/data/calendars.py"), "0" * 64),
+        (("window", "sessions"), []),
+        (("costs", "base_one_way_bps"), 6),
+        (("members", "normalized-bars.csv", "digest"), "0" * 64),
+    ],
+)
+def test_f0_comparison_keeps_nonstorage_protocol_drift_visible(path, changed):
+    value = flat_input(named=True)
+    protocol = json.loads(value.protocol_bytes)
+    expected = replay.digest(replay.canonical(_f0_golden_comparison(protocol)))
+    altered = deepcopy(protocol)
+    item = altered
+    for key in path[:-1]:
+        item = item[key]
+    assert path[-1] in item and item[path[-1]] != changed
+    item[path[-1]] = changed
+    assert replay.digest(replay.canonical(_f0_golden_comparison(altered))) != expected
+    assert protocol == json.loads(value.protocol_bytes)
 
 
 def test_legacy_v1_get_with_b_configured_preserves_original_unknown_and_decision(
