@@ -168,3 +168,9 @@ def test_readonly_protocols_are_exact_integer_protocols_not_numeric_aliases():
     policy["read_only_protocols"][0] = 1002.0
     with pytest.raises(ValueError):
         r.validate_policy(policy)
+
+
+def test_capture_effect_is_preinput_and_distinct_from_capture_scope():
+    r = recovery()
+    assert r.capture_effect() != r.capture_scope_id()
+    assert len(r.capture_effect()) == 64

@@ -90,7 +90,7 @@ DEFAULT_POLICY = {
     },
     "actor": dict(_ACTOR),
     "storage": {
-        "software": 16 * MIB,
+        "software": 18 * MIB,
         "capture_local": 48 * MIB,
         "capture_remote": 48 * MIB,
         "input_review": 4 * MIB,
@@ -102,9 +102,9 @@ DEFAULT_POLICY = {
         "G": 12884901888,
         "P": 6442450944,
         "free": 53687091200,
-        "guard_G": 10604343386,
-        "guard_P": 4566270990,
-        "all_parent_stress": 4622894094,
+        "guard_G": 10606440538,
+        "guard_P": 4568368142,
+        "all_parent_stress": 4624991246,
     },
     "read_only_protocols": list(_READ_ONLY_PROTOCOLS),
     "assurance": dict(_ASSURANCE),
@@ -197,6 +197,18 @@ def research_effect(identity):
 def capture_scope_id():
     return digest(
         canonical({"logical_task_id": LOGICAL_TASK_ID, "purpose": "readonly_ivv_capture"})
+    )
+
+
+def capture_effect():
+    return digest(
+        canonical(
+            {
+                "logical_task_id": LOGICAL_TASK_ID,
+                "purpose": "collect_fixed_ivv_window",
+                "window_sha256": _SELECTION["window_sha256"],
+            }
+        )
     )
 
 

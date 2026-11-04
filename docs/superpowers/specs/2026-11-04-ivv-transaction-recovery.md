@@ -39,3 +39,9 @@ paid/security/data/math/trading differences or real OTP/device challenges.
 
 Server/Product field ACK recorded2026-11-04 before implementation. This is an
 implementation contract, not a provider guarantee or financial qualification.
+
+Operating supplement02: Product's full source/fixture forecast requires8MiB;
+software becomes18MiB (Server5/Product8/commonGit-review-CI-catalog4/FS1), recovery
+130MiB and all-old-plus-new210MiB. Net2MiB is registered under standing growth;
+guardG10606440538/P4568368142/all-parent4624991246 fit current caps. Initial policy
+P1 remains archived; P2 uses these current numbers without identity/count reset.

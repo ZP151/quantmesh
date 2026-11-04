@@ -33,3 +33,18 @@ All old failures/futures retained; new software16MiB is shared, not per writer.
 Initial shared-policy RED/GREEN, capture persistence, Product recovery integration,
 review, one normal publication and actual capture/input/ordinary-page evidence are
 pending. No host/SDK effect has occurred under this source checkpoint.
+
+Shared contract checkpoint cf1eebce:22initialRED->22GREEN; four strict-type
+regressions reproducedRED and corrected, then26GREEN. Pre-input capture-effect
+separation RED->GREEN brings27direct tests PASS/1.38s; broad Ruff and whitespace
+pass. Shared policy is genuinely consumed by Product's recovery tests. Product
+reports its first interrupted/concurrent/prepared-report/decision and expandable
+attempt cases GREEN; these remain modeled engineering evidence, not real input.
+
+Product's complete follow-up forecast7.5MiB exceeds6MiB subset. Standing net2MiB
+software supplement preserves Server5/common4/FS1 futures and gives Product8:
+software18MiB, recovery130+old80=210MiB total. CAPACITY-SOFTWARE-02 ID
+IVV_TRANSACTION_RECOVERY_PRODUCT6_TO8MiB_NET2MiB_20261104_01 records
+guardG10606440538/P4568368142/all-parent4624991246; all fit12GiB/6GiB, no paid
+resource/oldfuture/capture-pool borrowing. PolicyP1 is retained; P2 changes only
+storage forecast/guard provenance and never business identity or attempt counts.

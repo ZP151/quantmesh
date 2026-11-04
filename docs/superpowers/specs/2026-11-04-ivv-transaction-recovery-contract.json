@@ -6,7 +6,7 @@
   "authority_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
   "policy_ref": {
     "algorithm": "sha256",
-    "digest": "ae7ccc4c39273a01363db25fa58b4a033182de0b91a46080bf2e7531b8322013",
+    "digest": "0ddf5c191a38fe0642ca761cac740c86afddef417511778f681c8f2272634a34",
     "media_type": "application/json",
     "byte_length": 1425
   },
@@ -136,7 +136,7 @@
       "numeric_seconds": 80
     },
     "storage": {
-      "software": 16777216,
+      "software": 18874368,
       "capture_local": 50331648,
       "capture_remote": 50331648,
       "input_review": 4194304,
@@ -148,9 +148,9 @@
       "G": 12884901888,
       "P": 6442450944,
       "free": 53687091200,
-      "guard_G": 10604343386,
-      "guard_P": 4566270990,
-      "all_parent_stress": 4622894094
+      "guard_G": 10606440538,
+      "guard_P": 4568368142,
+      "all_parent_stress": 4624991246
     },
     "read_only_protocols": [
       1002,
@@ -169,5 +169,98 @@
     }
   },
   "originals": "All old80MiB holds/futures/failures and UNKNOWN/SPENT remain; no old ledger inspection",
-  "input_coherence": "Complete raw refs/asof/PIT/epoch manifest mandatory; semantic hash alone cannot prove cross-epoch coherence"
+  "input_coherence": "Complete raw refs/asof/PIT/epoch manifest mandatory; semantic hash alone cannot prove cross-epoch coherence",
+  "input_manifest": {
+    "schema_id": "qm.ivv.input-manifest.dev-transaction-recovery.v1",
+    "exact_fields": [
+      "schema_id",
+      "logical_task_id",
+      "semantic",
+      "capture_epoch",
+      "capture_refs",
+      "capture_go_refs",
+      "source_facts_ref",
+      "parent_close_refs",
+      "asof_pit"
+    ],
+    "parallel_refs": "capture_refs/capture_go_refs/parent_close_refs length1..8, index-aligned actual same-epoch originals",
+    "asof_pit_exact": [
+      "status",
+      "provider_asof",
+      "provider_version",
+      "basis_refs"
+    ],
+    "asof_pit": "actual source-only; unknown/null if unproved, known requires actual basis+provider version, never local attempt label as provider PIT",
+    "no_self_reference": "Manifest before acceptance; acceptance signs manifest; manifest excludes future acceptance ref"
+  },
+  "capture_go": {
+    "schema_id": "qm.ivv.root-go.dev-transaction-recovery.v1",
+    "decision": "GO_BOUNDED_CAPTURE_RECOVERY",
+    "scope_id": "48683f978b5d6974ee9511287ec90f3720e67edfa698afc9219b6c394e104470",
+    "capture_scope_id": "48683f978b5d6974ee9511287ec90f3720e67edfa698afc9219b6c394e104470",
+    "capture_effect_id": "ivv-trend-staged-20261029-capture",
+    "approval_sha256": "19c72a041a09ba81e229f933dd574d62b0bb8013099eaf2bb1357f4892e23e2c",
+    "execution_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "authorization_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "policy_sha256": "0ddf5c191a38fe0642ca761cac740c86afddef417511778f681c8f2272634a34",
+    "recovery_fields": [
+      "logical_task_id",
+      "batch_id",
+      "connection_attempt_id",
+      "policy_sha256"
+    ],
+    "actual_fields": [
+      "actor",
+      "catalog",
+      "source",
+      "native_controls"
+    ],
+    "no_study_job_before_inputs": true
+  },
+  "raw_binding": {
+    "scope_id": "capture_scope_id",
+    "effect_id": "logical_task_id+-capture",
+    "source_binding.root_go_sha256": "actual capture_go_ref.digest; NOT future studyGO",
+    "source_binding.approval_sha256": "19c72a041a09ba81e229f933dd574d62b0bb8013099eaf2bb1357f4892e23e2c",
+    "source_binding.execution_sha256": "6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd",
+    "recovery_required": [
+      "logical_task_id",
+      "batch_id",
+      "connection_attempt_id",
+      "policy_sha256",
+      "request_journal_ref",
+      "history_actual"
+    ]
+  },
+  "windows_policy": {
+    "schema_id": "qm.ivv.windows-policy.dev-transaction-recovery.v1",
+    "exact_fields": [
+      "schema_id",
+      "logical_task_id",
+      "recovery_identity",
+      "policy_sha256",
+      "planning_scope_id",
+      "planning_job_uuid",
+      "full_execution_approval_sha256",
+      "research_effect_sha256",
+      "windows_controls",
+      "shared_pagefile_growth"
+    ],
+    "windows_controls": {
+      "job_wide_committed_memory_max": 536870912,
+      "affinity_cores": 1,
+      "absolute_seconds": 80,
+      "owned_study_artifacts": 8388608,
+      "paging": "ORDINARY_WINDOWS_OS_MANAGED_ALLOWED"
+    },
+    "shared_pagefile_growth": "UNKNOWN_NOT_OWNED_ARTIFACTS"
+  },
+  "retained_previous_policy_refs": [
+    {
+      "algorithm": "sha256",
+      "digest": "ae7ccc4c39273a01363db25fa58b4a033182de0b91a46080bf2e7531b8322013",
+      "media_type": "application/json",
+      "byte_length": 1425
+    }
+  ]
 }
