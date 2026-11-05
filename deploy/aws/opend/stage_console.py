@@ -49,7 +49,7 @@ RECOVERY_HISTORY = Path("/etc/quantmesh/opend/persistent-recovery-c8-schema4-his
 RESTORE_NONCE = "4ae19a7fad3fdaf8e3d23c1a4eb4b3d4"
 RESTORE_AUTHORITY = "0d2965519662b53c448e003f6a8ddcf8d07834d399da2ece4ab2407475f9a945"
 RESTORE_CONTROL = Path("/etc/quantmesh/opend/operator-restores") / (RESTORE_NONCE + ".json")
-RESTORE_SOCKET = "/run/quantmesh-opend-restore-" + RESTORE_NONCE + ".sock"
+SESSION_NONCE = "eabdda557bc641fdbda60ecd993fb2a0"
 PRIVATE_STORAGE_NONCE = "c8f0d0de4ca641a491fca6df24c66ceb"
 PRIVATE_STORAGE_DROPIN = Path(
     "/etc/systemd/system/quantmesh-opend-console@"
@@ -135,8 +135,17 @@ class RestoreWindow(StagingWindow):
     control_sha256: str
 
 
-def _restore_bytes():
-    with _protected_fd(RESTORE_CONTROL) as fd:
+def _restore_path(nonce):
+    if type(nonce) is not str or not re.fullmatch(r"[0-9a-f]{32}", nonce):
+        raise StageDenied("permit_denied")
+    if nonce in (SESSION_NONCE, PRIVATE_STORAGE_NONCE):
+        raise StageDenied("permit_denied")
+    return RESTORE_CONTROL if nonce == RESTORE_NONCE else RESTORE_CONTROL.with_name(nonce + ".json")
+
+
+def _restore_bytes(nonce=RESTORE_NONCE):
+    path = _restore_path(nonce)
+    with _protected_fd(path) as fd:
         before = os.fstat(fd)
         if stat.S_IMODE(before.st_mode) != 0o444 or not 0 < before.st_size <= 8192:
             raise StageDenied("protected_path")
@@ -157,24 +166,25 @@ def _restore_bytes():
         if (
             len(raw) != before.st_size
             or stamp(os.fstat(fd)) != stamp(before)
-            or stamp(RESTORE_CONTROL.lstat()) != stamp(before)
+            or stamp(path.lstat()) != stamp(before)
         ):
             raise StageDenied("protected_path")
         return raw
 
 
-def _restore_window():
-    raw = _restore_bytes()
+def _restore_window(nonce):
+    raw = _restore_bytes(nonce)
+    version = "v1" if nonce == RESTORE_NONCE else "v2"
     value = _json(raw)
     if (
         type(value) is not dict
         or set(value) != {"schema", "authority_sha256", "claims"}
-        or value["schema"] != "qm.opend.operator-restore.v1"
+        or value["schema"] != "qm.opend.operator-restore." + version
         or value["authority_sha256"] != RESTORE_AUTHORITY
         or type(value["claims"]) is not dict
         or set(value["claims"]) != FIELDS | {"session_lifetime"}
         or value["claims"]["schema_version"] != 2
-        or value["claims"]["nonce"] != RESTORE_NONCE
+        or value["claims"]["nonce"] != nonce
     ):
         raise StageDenied("permit_denied")
     return RestoreWindow(value["claims"], hashlib.sha256(raw).hexdigest())
@@ -381,10 +391,20 @@ def load_staging_window(path=None, *, persistent=False):
 
 
 def select_console_window(nonce, *, persistent=False):
-    if nonce == RESTORE_NONCE:
+    restore = nonce == RESTORE_NONCE
+    if nonce is not None and nonce not in (RESTORE_NONCE, SESSION_NONCE, PRIVATE_STORAGE_NONCE):
+        try:
+            _restore_path(nonce).lstat()
+        except FileNotFoundError:
+            pass  # Only an exact historical control may serve an unregistered nonce.
+        except OSError:
+            raise StageDenied("protected_path") from None
+        else:
+            restore = True
+    if restore:
         if not persistent:
             raise StageDenied("permit_denied")
-        return _restore_window()
+        return _restore_window(nonce)
     if persistent:
         try:
             RECOVERY_PERMIT.lstat()
@@ -393,12 +413,15 @@ def select_console_window(nonce, *, persistent=False):
         else:
             module = _module(BASE / "same_unit_recovery.py", RECOVERY_SHA)
             return RecoveryWindow(module.load(sys.modules[__name__], nonce))
-    return load_staging_window(persistent=True) if persistent else load_staging_window()
+    selected = load_staging_window(persistent=True) if persistent else load_staging_window()
+    if nonce is not None and selected.nonce != nonce:
+        raise StageDenied("permit_denied")
+    return selected
 
 
 def reload_console_window(window):
     if isinstance(window, RestoreWindow):
-        current = _restore_window()
+        current = _restore_window(window.nonce)
         if current != window:
             raise StageDenied("pin_drift")
         return current
@@ -1687,7 +1710,9 @@ def _attribute_restore(window, context, child, executable, claim_fd):
 
     claim = claim_identity()
     packet = dict(
-        schema="qm.opend.attributed-launch.v1",
+        schema="qm.opend.attributed-launch.v1"
+        if window.nonce == RESTORE_NONCE
+        else "qm.opend.attributed-launch.v2",
         nonce=window.nonce,
         authority_sha256=RESTORE_AUTHORITY,
         control_sha256=window.control_sha256,
@@ -1707,7 +1732,7 @@ def _attribute_restore(window, context, child, executable, claim_fd):
         raise StageDenied("backend_denied")
     with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as channel:
         channel.settimeout(5)
-        channel.connect(RESTORE_SOCKET)
+        channel.connect("/run/quantmesh-opend-restore-" + window.nonce + ".sock")
         _, uid, _ = struct.unpack(
             "3i", channel.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
         )

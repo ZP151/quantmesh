@@ -656,12 +656,17 @@ def _operator_sources(producer, binding):
     else:
         _need(type(binding) is producer.OperatorLoginOrigin, "PROVIDER_IDENTITY")
         name, verify = "OPERATOR-LOGIN-ORIGIN.json", producer.validate_operator_login_origin
-    original = _protected_bytes(
-        "/var/lib/quantmesh-opend-restore-20261105-01/" + name, 4096, mode=0o444
+    nonce = binding.nonce
+    version = "v1" if nonce == producer.RESTORE_NONCE else "v2"
+    directory = (
+        "/var/lib/quantmesh-opend-restore-20261105-01"
+        if nonce == producer.RESTORE_NONCE
+        else "/var/lib/quantmesh-opend-operator-restores/" + nonce
     )
+    original = _protected_bytes(directory + "/" + name, 4096, mode=0o444)
     _need(verify(original, binding.receipt_sha) == binding, "PROVIDER_IDENTITY")
     control = _protected_bytes(
-        "/etc/quantmesh/opend/operator-restores/" + producer.RESTORE_NONCE + ".json",
+        "/etc/quantmesh/opend/operator-restores/" + nonce + ".json",
         8192,
         mode=0o444,
     )
@@ -670,10 +675,10 @@ def _operator_sources(producer, binding):
     _need(
         type(permit) is dict
         and set(permit) == {"schema", "authority_sha256", "claims"}
-        and permit["schema"] == "qm.opend.operator-restore.v1"
+        and permit["schema"] == "qm.opend.operator-restore." + version
         and permit["authority_sha256"] == producer.RESTORE_AUTHORITY
         and type(permit["claims"]) is dict
-        and permit["claims"].get("nonce") == producer.RESTORE_NONCE
+        and permit["claims"].get("nonce") == nonce
         and permit["claims"].get("launcher_sha256") == binding.launcher_sha
         and permit["claims"].get("gateway_uid") == 997
         and type(permit["claims"].get("gateway_gid")) is int

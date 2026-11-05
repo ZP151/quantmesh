@@ -11,7 +11,59 @@
 **Architecture:** Operator startup is outside the read-only collector. A fixed logical provider profile survives restarts; a versioned immutable operator receipt binds each actual execution. Processes are provenance, never experiment identity.
 **Authority/spec:** operator standing record0d2965519662b53c448e003f6a8ddcf8d07834d399da2ece4ab2407475f9a945 and Source proposal69982555 with its startup amendment. Collector6db does not acquire service-management permission. No new routine human question.
 
-## Active Planner reduction - Operator-only first delivery
+## Active successor - stable trusted instance data, 2026-11-05
+
+PR287 merged e12373cc after final fda1a7e6 normalCI41995998622:7823PASS,
+149SKIP/frontend793; exact11bundlebytes match. Coherent source installation and
+old public backups succeeded. The attempted Root controller stopped before
+systemctl at a public control read: entry umask077 reduced mkdir0755 to root:root
+0700. Actual UID997/GID987/groups[987] could not traverse the new registry. All
+three targeted units remaininactive/dead/Main0/emptyInvocation, no freshclaim,
+attribution or origin, no credential or SDK read. Control4ae was preserved0444
+and expired09:41:50; it is never edited or revived.
+
+One user action remains the actual persistent private service and ordinary login.
+The new Source contract keeps fixed trusted registry root, Operator authority0d,
+host/vendor/profile/template/port/resources; a Root-created immutable instance's
+strict32hex nonce, control and execution binding are data. Unit/socket/control
+and immutable original paths derive only within fixed trusted namespaces. No
+arbitrary caller path/PID/qualified field or mutablecurrent lookup. Versionedv2
+records preserve oldv1/staging/eab/c8/4ae routes and failures without replay. The
+original collector interfaces stay frozen; its private83-test successor is not
+part of this Operator release and connection6 is not sent.
+
+- [ ] Source owns stage_console, native_producer, dev_native and focused tests/
+  spec/plan. TDD two distinct legitimate new instances plus malformed/writable/
+  symlink/duplicate/oldreserved/expired/source/authority/path/unit substitutions;
+  exact claim FD custody, attributed peer, poststartidentity/resources/listener
+  and legacy rejection persist. Both independent axes and normal finalheadCI/
+  ordinary merge/publication precede live use.
+- [ ] Parent privatecontroller explicitly establishes only owned registry as
+  root:actualserviceGID0750 under entryumask077, using held nofollow directoryFDs,
+  owner/nonwritable/named-inode checks and durability. CausalRED extracts the old
+  production directory AST. Fakekernel tests cover defaultmask, existingowned
+  directory and foreign/writable/group/substitution refusal. OriginalopsreaderR2
+  precedes actual limited directory correction and UID997 read proof. No control
+  or service action is performed by that permission-only step.
+- [ ] Parent creates a fresh immutable instance/purpose/attempt under standing0d
+  and records all capacity beforeeffects. Nonce is data; software is not republished
+  for each new short window. Generate the short admissionwindow only after actual
+  Source publication and ops readiness, immediately before one guarded start.
+  Preserve the expired4ae control and every failure/UNKNOWN without refunds.
+- [ ] Actual same-host source/rootcontrol/kernel/resource/free/ownedcleanup gates,
+  singleton persistent start, durable attributedv2 origin, strictpoststartproof,
+  existing vault/privateTTY ordinary login and independent endpoint proof remain
+  required. Only realOTP/device/missing-invalidcredential/newlegalterms asks human.
+  No generic restart/auth loop; structural failure returns one specific cause.
+
+P24 capacity is registered: Source13/common75/Product16/FS1software105MiB;
+Operator3MiBlocal+3MiBremote includes both failed and fresh purpose plus all old
+futures. Net6MiB, all431MiB451936256; G10838175834/P4800103438/all4856726542 fit
+12/6GiB/free50GiB. Source old12210176 and524288future, common DB32MiB hold and all
+oldRED/history/fixtures remain. Batch counts/actor/wall16h unchanged. Capacity
+is notstartup/capture qualification; financialINSUFFICIENT remains.
+
+## Previous Operator-only delivery - published, startup stopped
 
 Latest explicit supervisory direction replaces the whole-slice alternative below.
 One user action: restore the already approved persistent private OpenD provider

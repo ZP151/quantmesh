@@ -187,3 +187,22 @@ receipts are not a new capture authority. The failed combined pre-GO/cadence
 candidate is excluded from this delivery. Publication/start/login/endpoint and
 later collector/Quant acceptance remain distinct evidence gates. Historical
 UNKNOWN and existing data/math/trading/external-tail boundaries remain unchanged.
+
+## Trusted Operator instance data v2 - 2026-11-05
+
+A new restoration epoch is Root-created immutable data under fixed trusted
+registry/original namespaces. The nonce is exactly32lowerhex; fixed unit/socket/
+file names derive from it only after validation. It is not a caller path, PID or
+qualified flag. Authority0d, host/binary/profile/template/resource bounds and
+independently held actual kernel identity remain fixed. The registry and each
+original retain owner/mode/singlelink/held-named byte checks; no mutablecurrent
+lookup participates. Historicalstaging/eab/c8/4ae routes and schema-v1 originals
+remain distinct and cannot be reissued asv2.
+
+This corrects the hardcoded restoration nonce without requiring a source release
+for every legitimate fresh startup window. The shortwindow is created only when
+publication and operational preparation have completed. An expired original is
+preserved, never rewritten or revived. The observed Rootumask077/registry0700
+failure is corrected only in the owned root:serviceGID0750 creator and must have
+actual service traversal evidence before startup. Collector and its namespace/
+periodic-sampling successor remain separate delivery and runtime gates.

@@ -22,14 +22,16 @@ def launcher(monkeypatch):
     return m
 
 
-def envelope(m):
+def envelope(m, nonce=NONCE):
     return {
-        "schema": "qm.opend.operator-restore.v1",
+        "schema": "qm.opend.operator-restore.v1"
+        if nonce == NONCE
+        else "qm.opend.operator-restore.v2",
         "authority_sha256": AUTH,
         "claims": dict(
             schema_version=2,
             purpose="opend_persistent_private_console",
-            nonce=NONCE,
+            nonce=nonce,
             approved_build="b" * 40,
             launcher_sha256="a" * 64,
             tmux_version="3.4",
@@ -62,7 +64,7 @@ def test_fresh_selector_beside_occupied_expired_controls(monkeypatch, tmp_path):
 
     monkeypatch.setattr(m, "_module", lambda *args: SimpleNamespace(load=historical))
     raw = json.dumps(envelope(m), sort_keys=True).encode()
-    monkeypatch.setattr(m, "_restore_bytes", lambda: raw, raising=False)
+    monkeypatch.setattr(m, "_restore_bytes", lambda nonce: raw, raising=False)
     restored = m.select_console_window(NONCE, persistent=True)
     assert restored.nonce == NONCE and restored.control_sha256 == hashlib.sha256(raw).hexdigest()
     assert m.reload_console_window(restored) == restored
@@ -89,7 +91,7 @@ def test_restore_invalid_refuses_without_historical_fallback(monkeypatch, fault)
     if fault == "duplicate":
         raw = b'{"schema":"other",' + raw[1:]
 
-    def read():
+    def read(nonce):
         if fault == "missing":
             raise m.StageDenied("protected_path")
         return raw
@@ -103,7 +105,7 @@ def test_restore_invalid_refuses_without_historical_fallback(monkeypatch, fault)
 def test_existing_expiry_and_exact_restore_reload(monkeypatch):
     m = launcher(monkeypatch)
     raw = json.dumps(envelope(m)).encode()
-    monkeypatch.setattr(m, "_restore_bytes", lambda: raw)
+    monkeypatch.setattr(m, "_restore_bytes", lambda nonce: raw)
     window = m.select_console_window(NONCE, persistent=True)
     kwargs = dict(
         identity={"machine_sha256": m.MACHINE_SHA, "gateway_uid": 997, "gateway_gid": 997},
@@ -169,7 +171,7 @@ def test_exclusive_restore_claim_binds_created_inode_and_two_flushes(monkeypatch
 
     m = launcher(monkeypatch)
     raw = json.dumps(envelope(m)).encode()
-    monkeypatch.setattr(m, "_restore_bytes", lambda: raw)
+    monkeypatch.setattr(m, "_restore_bytes", lambda nonce: raw)
     win = m.select_console_window(NONCE, persistent=True)
     events = []
 
@@ -219,16 +221,22 @@ def test_exclusive_restore_claim_binds_created_inode_and_two_flushes(monkeypatch
         "post_ack",
     ],
 )
-def test_owned_post_exec_packet_is_bounded_and_root_ack_closes_channel(monkeypatch, fault):
+@pytest.mark.parametrize("nonce", [NONCE, "1" * 32, "f" * 32])
+def test_owned_post_exec_packet_is_bounded_and_root_ack_closes_channel(
+    monkeypatch, tmp_path, fault, nonce
+):
     import struct
     from contextlib import nullcontext
 
     m = launcher(monkeypatch)
-    raw = json.dumps(envelope(m)).encode()
-    monkeypatch.setattr(m, "_restore_bytes", lambda: raw)
-    win = m.select_console_window(NONCE, persistent=True)
+    raw = json.dumps(envelope(m, nonce)).encode()
+    monkeypatch.setattr(m, "_restore_bytes", lambda nonce: raw)
+    control = tmp_path / (nonce + ".json")
+    control.write_bytes(raw)
+    monkeypatch.setattr(m, "RESTORE_CONTROL", tmp_path / (NONCE + ".json"))
+    win = m.select_console_window(nonce, persistent=True)
     manager = {
-        "Id": "quantmesh-opend-console@" + NONCE + ".service",
+        "Id": "quantmesh-opend-console@" + nonce + ".service",
         "ControlGroup": "/system.slice/unit",
         "InvocationID": "1" * 32,
         "MainPID": "11",
@@ -248,7 +256,7 @@ def test_owned_post_exec_packet_is_bounded_and_root_ack_closes_channel(monkeypat
 
     def info(path, **kw):
         return SimpleNamespace(
-            st_nlink=1, st_dev=1, st_ino=(22 if fault == "claim" else 2) if path == NONCE else 9
+            st_nlink=1, st_dev=1, st_ino=(22 if fault == "claim" else 2) if path == nonce else 9
         )
 
     monkeypatch.setattr(
@@ -277,7 +285,7 @@ def test_owned_post_exec_packet_is_bounded_and_root_ack_closes_channel(monkeypat
             events.append("closed")
 
         def connect(self, path):
-            assert path == "/run/quantmesh-opend-restore-" + NONCE + ".sock"
+            assert path == "/run/quantmesh-opend-restore-" + nonce + ".sock"
 
         def settimeout(self, n):
             assert 0 < n <= 5
@@ -309,8 +317,10 @@ def test_owned_post_exec_packet_is_bounded_and_root_ack_closes_channel(monkeypat
     else:
         m._attribute_restore(win, context, child, 14, 21)
         assert events[0] == dict(
-            schema="qm.opend.attributed-launch.v1",
-            nonce=NONCE,
+            schema="qm.opend.attributed-launch.v1"
+            if nonce == NONCE
+            else "qm.opend.attributed-launch.v2",
+            nonce=nonce,
             authority_sha256=AUTH,
             control_sha256=win.control_sha256,
             launcher_sha256="a" * 64,
@@ -325,3 +335,148 @@ def test_owned_post_exec_packet_is_bounded_and_root_ack_closes_channel(monkeypat
             claim_ino=2,
         )
         assert events[-1] == "closed"
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "wrong_nonce",
+        "authority",
+        "duplicate",
+        "changed",
+        "removed",
+        "expired",
+        "wrong_source",
+        "not_persistent",
+    ],
+)
+def test_instance_control_substitution_never_falls_back(monkeypatch, tmp_path, fault):
+    m = launcher(monkeypatch)
+    nonce = "5" * 32
+    doc = envelope(m, nonce)
+    monkeypatch.setattr(m, "RESTORE_CONTROL", tmp_path / (NONCE + ".json"))
+    path = tmp_path / (nonce + ".json")
+    raw = json.dumps(doc).encode()
+    if fault == "wrong_nonce":
+        doc["claims"]["nonce"] = "6" * 32
+        raw = json.dumps(doc).encode()
+    if fault == "authority":
+        doc["authority_sha256"] = "e" * 64
+        raw = json.dumps(doc).encode()
+    if fault == "duplicate":
+        raw = b'{"claims":{},' + raw[1:]
+    path.write_bytes(raw)
+
+    def read(selected):
+        assert selected == nonce
+        if not path.exists():
+            raise m.StageDenied("protected_path")
+        return path.read_bytes()
+
+    monkeypatch.setattr(m, "_restore_bytes", read)
+    monkeypatch.setattr(m, "load_staging_window", lambda **kw: pytest.fail("legacy fallback"))
+    with pytest.raises(m.StageDenied):
+        w = m.select_console_window(nonce, persistent=fault != "not_persistent")
+        if fault == "removed":
+            path.unlink()
+            m.reload_console_window(w)
+        elif fault == "changed":
+            path.write_bytes(raw + b" ")
+            m.reload_console_window(w)
+        elif fault in {"expired", "wrong_source"}:
+            m.validate_staging_window(
+                w,
+                now=w.expires if fault == "expired" else m._utc(doc["claims"]["not_before"]),
+                identity=dict(machine_sha256=m.MACHINE_SHA, gateway_uid=997, gateway_gid=997),
+                hashes=dict(
+                    launcher_sha256="e" * 64 if fault == "wrong_source" else "a" * 64,
+                    tmux_sha256=m.TMUX_SHA,
+                ),
+            )
+
+
+@pytest.mark.parametrize("nonce", ["../other", "A" * 32, "", "é" * 32, "f" * 33])
+def test_invalid_instance_never_reaches_a_control_path(monkeypatch, nonce):
+    m = launcher(monkeypatch)
+    monkeypatch.setattr(m, "RESTORE_CONTROL", object())
+    monkeypatch.setattr(m, "load_staging_window", lambda **kw: pytest.fail("legacy fallback"))
+    with pytest.raises(m.StageDenied):
+        m.select_console_window(nonce, persistent=True)
+
+
+def test_unknown_instance_cannot_select_other_occupied_control(monkeypatch, tmp_path):
+    m = launcher(monkeypatch)
+    monkeypatch.setattr(m, "RESTORE_CONTROL", tmp_path / (NONCE + ".json"))
+    monkeypatch.setattr(m, "RECOVERY_PERMIT", tmp_path / "absent")
+    monkeypatch.setattr(
+        m, "load_staging_window", lambda **kw: m.StagingWindow(envelope(m)["claims"])
+    )
+    with pytest.raises(m.StageDenied):
+        m.select_console_window("7" * 32, persistent=True)
+
+
+@pytest.mark.parametrize(
+    "fault", [None, "parent_write", "file_write", "links", "symlink", "renamed"]
+)
+def test_v2_registry_read_uses_same_held_ancestry_and_named_identity(monkeypatch, tmp_path, fault):
+    m = launcher(monkeypatch)
+    nonce = "b" * 32
+    target = tmp_path / (nonce + ".json")
+    monkeypatch.setattr(m, "RESTORE_CONTROL", tmp_path / (NONCE + ".json"))
+    raw = json.dumps(envelope(m, nonce)).encode()
+    held = {}
+
+    def acquire(name, flags, *, dir_fd=None):
+        assert flags & 4  # O_NOFOLLOW for every component
+        if dir_fd is None:
+            assert name == "/"
+        else:
+            assert dir_fd in held
+        if name == target.name:
+            if fault == "symlink":
+                raise OSError
+            mode = 0o100644 if fault == "file_write" else 0o100444
+        else:
+            assert flags & 2  # O_DIRECTORY
+            mode = 0o40770 if fault == "parent_write" else 0o40750
+        fd = len(held) + 10
+        held[fd] = SimpleNamespace(
+            st_uid=0,
+            st_mode=mode,
+            st_nlink=2 if fault == "links" else 1,
+            st_dev=22,
+            st_ino=fd,
+            st_size=len(raw),
+            st_mtime_ns=5,
+            st_ctime_ns=5,
+        )
+        return fd
+
+    def named(path):
+        assert path == target
+        values = vars(held[max(held)]).copy()
+        if fault == "renamed":
+            values["st_ino"] += 1
+        return SimpleNamespace(**values)
+
+    monkeypatch.setattr(type(target), "lstat", named)
+    monkeypatch.setattr(
+        m,
+        "os",
+        SimpleNamespace(
+            open=acquire,
+            close=held.pop,
+            fstat=held.__getitem__,
+            O_RDONLY=0,
+            O_DIRECTORY=2,
+            O_NOFOLLOW=4,
+            O_NONBLOCK=8,
+            pread=lambda fd, n, offset: raw[:n],
+        ),
+    )
+    if fault:
+        with pytest.raises(m.StageDenied):
+            m._restore_window(nonce)
+    else:
+        assert m._restore_window(nonce).nonce == nonce
+    assert held == {}
