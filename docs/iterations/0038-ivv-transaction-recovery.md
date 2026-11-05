@@ -2,6 +2,26 @@
 
 ## Current checkpoint - initialization evidence, 2026-11-05
 
+Actual PR285 run41957084003 at96928949 fails fast:792 frontend cases pass and
+the existing InstrumentWorkspace polling assertion fails after findByText has
+returned a detached child node. No frontend bundle qualifies. Original Product
+locates the real action-result/navigation/key-remount window: retaining the old
+node until the actual child route commits yields detached old node/current same-ID
+node still attached. That causal schedule is RED for the old assertion and GREEN
+for a fresh synchronous query/assert inside waitFor. Final source removes all
+diagnostic hooks, extra navigation waiting and temporary logs; only the assertion
+and its explanatory comment change, with every later lineage assertion retained.
+
+Parent matches Product74812d06 pins, patchdc325939/report68855825 and six evidence
+logs. Frozen test52031B/SHA c725cd0cffc8c7b5188af4f2b336c16f50a910bc8734112cad79b7b80845aee6
+independently passes37/11.88s; Source8 files and operations04 remain unchanged.
+Local Vitest3.2.7/Vite8.2.1 is disclosed engineering evidence, not the required
+CI4.1.11/8.2.4 qualification. Product actual+metadata/record reserve13,150,696B
+fits16MiB; current failed CI log fits the same-purpose common headroom at net0.
+No SDK/host/data/math/production UI or dependency change. Next is original
+Standards narrow test-delta review, then one final-head normal CI; no blind rerun
+of the failed head. All old failures/futures and three UNKNOWN intents remain.
+
 Both original independent narrow R1 axes are READY at code5f0b373775583f9b91b6884c30833b6772c48c4a.
 Spec3933B/SHAeea7d346efd174b4b7f94c188afd476019a3516ff6666c36d5703f7541bc108e
 and Standards4197B/SHAf014b3bfdcb848ca252b9b2b9318a121f7c7fc23f4c2fca268b730f10252b697

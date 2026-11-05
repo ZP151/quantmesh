@@ -386,7 +386,8 @@ describe('InstrumentWorkspaceScreen', () => {
 
     await user.type(await screen.findByLabelText('Decision reason'), 'Keep the action lineage')
     await user.click(screen.getByRole('button', { name: 'Watch decision' }))
-    expect(await screen.findByText(child.packet_id)).toBeInTheDocument()
+    // Navigation can remount the rail after findByText has resolved.
+    await waitFor(() => expect(screen.getByText(child.packet_id)).toBeInTheDocument())
 
     await act(async () => publishLiveUpdate({
       data_time: '2026-08-08T12:00:30Z',
