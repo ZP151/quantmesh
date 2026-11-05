@@ -2,6 +2,15 @@
 
 ## Current immutable-instance successor - 2026-11-05
 
+Both original Source axes return READY at1af81445911a41d3838b458eb30232a7fd37b833
+for the bounded trusted-instance DATA delta. SPEC2455B/SHA26004a34dd16a53588318969e772179176114e7bcc7eaef7c2d3a20703bec30b;
+STANDARDS2015B/SHAdd12059f5dc8187daac32197abca497766ebb33748d089e83f7659c97df90691.
+Parent read and pinned both. This final checkpoint only changes this iteration
+record; normal finalheadCI/exact-lock publication remains required. Root directory
+creation/actualUIDread and newdata-driven privatewiring are separately checked by
+originalOpsR2 before host effects. No newshortwindow/noncecontrol was generated,
+no systemctl start, credential read, SDK context or connection6 issued.
+
 PR287 normally merged e12373cc832a96bc184315b9b039f8f8cbe1be76/tree7e134d8d
 following actualfinalfda1a7e6 CI41995998622 success7823PASS/149SKIP/frontend793.
 ExactVitest4.1.11/Vite8.2.4/all11frontendbytes match. The optional GitHubCodex
