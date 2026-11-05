@@ -1,5 +1,25 @@
 # Active Goal — iteration0038 local workstation product loop
 
+Latest actual checkpoint - issue281, 2026-11-05
+
+PR284 merged8839b437 after CI7669PASS/149SKIP/frontend793. Ordinary connection3
+passed SESSION/NAMED_OBJECT then stopped SDK_CLOSE_UNKNOWN. Primary initialize
+failure remains generic; exact owned cleanup is proved, actual SDK effects stay
+UNKNOWN, responses0 and no input/study exists. Positive offline admission/IPC
+fixture passes without establishing a native cause. Failure-only primary/close
+evidence and the fresh-claim reporting correction are under focused TDD, then
+Parent verification/independent review/normal publication before ordinary recovery.
+All original admission, normal-close and independent Quant data gates remain.
+
+Current P17: samebatch01 contexts/init6, keepalive576, wall43200s; business32/
+compute3/rate1/actor unchanged. Capture96MiB each, software50MiB(Source9/Product16/
+common24/FS1), old80+new258=338MiB all holds/futures retained. Conservative
+G10740658266/P4702585870/all4759208974 remain within12/6GiB/free50GiB. Policy is
+capacity, not runtime GO; historical UNKNOWN is never refunded. Source merge
+alone does not complete capture/Quant acceptance/report/decision/cold-read.
+See the current iteration for exact evidence and prior retained registrations.
+
+
 ## Current IVV transaction recovery — issue281,2026-11-04
 
 Actual human direction6db1254 authorizes necessary reasonable capture/request/

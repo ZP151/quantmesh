@@ -574,6 +574,374 @@ def _failure_code(error):
     return "ORIGIN_EVALUATION_EXCEPTION"
 
 
+def _capture_refusal_codes():
+    # Frozen literals from owning runtime/channel and capture/held/provider guards.
+    return {
+        "Refused": (
+            "CHILD_WRITE_MOUNTS",
+            "CONTROL_DIGEST",
+            "CONTROL_EOF",
+            "CONTROL_FD_SWAPPED",
+            "CONTROL_METADATA",
+            "CONTROL_OWNERSHIP",
+            "CONTROL_PATH_ALIAS",
+            "CONTROL_RACE",
+            "CONTROL_REF",
+            "CONTROL_SEND",
+            "CONTROL_SENDER",
+            "EXECUTABLE_IDENTITY_SHAPE",
+            "EXECUTABLE_OBSERVATION_SHAPE",
+            "EXECUTABLE_ORIGIN_SHAPE",
+            "HOME_LOG_PREREQUISITE",
+            "HOME_NOT_READY",
+            "IDENTITY",
+            "ORIGIN_FAILURE_SHAPE",
+            "OWN_NAMESPACE_DRIFT",
+            "PROTO_AND_QUOTE_ORIGIN",
+            "PYTHON_EXECUTABLE",
+            "PYTHON_SEARCH_PATH",
+            "PYTHON_SEARCH_WRITABLE",
+            "RUNTIME_ORIGIN",
+            "SDK_IMPORT_ORIGIN",
+            "SDK_PINS_COUNT",
+            "SDK_PIN_DRIFT",
+            "SDK_PIN_ROLE",
+            "SESSION_OWNER",
+            "SOURCE_WRITABLE",
+        ),
+        "CaptureRejected": (
+            "second_context",
+            "second_initialization",
+            "request_budget_or_order",
+            "fixed_request_parameters",
+            "request_wire_binding",
+            "control_wire_budget",
+            "unregistered_or_duplicate_send",
+            "data_asof_stale",
+            "absolute_deadline",
+            "action_coverage_not_proven_before_price",
+            "action_flag_missing",
+            "additional_provenance",
+            "ambiguous_or_unmatched_cash",
+            "ambiguous_rehab_event",
+            "capture_dates",
+            "capture_incomplete",
+            "cash_amount_or_pay_conflict",
+            "cash_currency_conflict",
+            "cash_currency_missing",
+            "cash_currency_or_amount_ambiguous",
+            "cash_statement_missing",
+            "cash_sum_nonfinite",
+            "clock_binding",
+            "daily_timestamp_unsupported",
+            "date_invalid",
+            "date_missing",
+            "dev_monitor_stale",
+            "dev_monitor_threshold",
+            "dev_native_binding",
+            "dev_native_session_binding",
+            "dev_provenance",
+            "dev_provider_resources",
+            "duplicate_json_key",
+            "effect_id_invalid",
+            "encrypted_transport_not_prepared_no_downgrade",
+            "field_presence_mismatch",
+            "fixed_scope_or_authority",
+            "foreign_sdk_connection",
+            "fresh_capture_capacity",
+            "history_page_incomplete",
+            "history_quota_unproved",
+            "instrument_metadata",
+            "invalid_json",
+            "json_object_required",
+            "metadata_clock_age",
+            "native_actor_lifetime",
+            "native_cgroup_v2",
+            "native_cpu",
+            "native_memory_swap",
+            "native_tasks",
+            "native_unit_binding",
+            "noncanonical_input",
+            "nonfinite_json",
+            "normal_close_deadline",
+            "normal_close_not_proven",
+            "numeric_missing_or_nonfinite",
+            "numeric_out_of_range",
+            "original_endpoint_binding",
+            "protobuf_not_initialized",
+            "protobuf_scalar_type",
+            "provider_original_bound",
+            "provider_ret_error",
+            "provider_rows_shape",
+            "provider_version_metadata",
+            "quota_metadata_shape",
+            "quota_shape",
+            "quote_not_logged_in",
+            "raw_fields_missing",
+            "receipt_byte_bound",
+            "receipt_name",
+            "receipt_parent_alias",
+            "receipt_short_write",
+            "recovery_provenance",
+            "release_source_binding",
+            "response_asset_mismatch",
+            "response_request_binding",
+            "root_control_file",
+            "root_control_sha_or_lifetime",
+            "root_permit_fd_required",
+            "root_ref_alias",
+            "root_ref_file",
+            "root_ref_sha_or_lifetime",
+            "root_ref_shape",
+            "sdk_import_origin",
+            "sdk_initial_connection_failed",
+            "sdk_log_directory_not_ready",
+            "sdk_pack_failed",
+            "sdk_preloaded_before_intent",
+            "second_network_manager",
+            "single_instrument_metadata",
+            "spent_capture_root",
+            "split_terminal_presence",
+            "trusted_external_boundary",
+            "unapproved_endpoint",
+            "unapproved_query_processor",
+            "unregistered_or_duplicate_send",
+            "unsupported_action",
+            "unsupported_split",
+            "wire_header",
+        ),
+    }
+
+
+def _capture_lifecycle_contract():
+    return {
+        "phase": {
+            "UNKNOWN",
+            "ENTRY_GUARD",
+            "MAY_CONNECT",
+            "SDK_LOAD",
+            "CONTEXT_RESERVE_GUARD",
+            "BASE_LOOKUP",
+            "SUBCLASS",
+            "CONFIG",
+            "ALLOCATE",
+            "CTOR_ARGUMENTS",
+            "CONSTRUCTOR",
+            "INIT_CONNECT",
+            "READY_CHECK",
+            "BUSINESS",
+            "FINAL_GUARD",
+            "SDK_CLOSE",
+            "STATUS_WAIT",
+            "CALLBACK_JOIN",
+            "CONNECTION_CHECK",
+            "WIRE_RESTORE",
+            "LOG_CLOSE",
+            "EVIDENCE",
+        },
+        "guard": {
+            "NOT_APPLICABLE",
+            "HELD_STAMP",
+            "HELD_JSON",
+            "PLAN",
+            "NATIVE_ACTOR",
+            "CGROUP",
+            "SPACE",
+            "CONTROL_REFS",
+            "PROVIDER_SESSION",
+        },
+        "type": {
+            "UNKNOWN",
+            "OTHER",
+            "CaptureRejected",
+            "Refused",
+            "Exception",
+            "ValueError",
+            "TypeError",
+            "AttributeError",
+            "KeyError",
+            "RuntimeError",
+            "OSError",
+            "PermissionError",
+            "FileNotFoundError",
+            "TimeoutError",
+            "MemoryError",
+            "KeyboardInterrupt",
+            "AssertionError",
+            "BlockingIOError",
+            "BrokenPipeError",
+            "ConnectionAbortedError",
+            "ConnectionRefusedError",
+            "ConnectionResetError",
+            "InterruptedError",
+        },
+        "code": {
+            "UNKNOWN",
+            *_capture_refusal_codes()["Refused"],
+            *_capture_refusal_codes()["CaptureRejected"],
+        },
+        "errno": {1, 2, 4, 5, 9, 11, 12, 13, 22, 24, 28, 32, 103, 104, 110, 111},
+    }
+
+
+def classify_capture_exception(error, helper_refusal):
+    """Only exact built-ins and authenticated owning refusal classes; no user hooks."""
+    contract = _capture_lifecycle_contract()
+    classes = (
+        Exception,
+        ValueError,
+        TypeError,
+        AttributeError,
+        KeyError,
+        RuntimeError,
+        OSError,
+        PermissionError,
+        FileNotFoundError,
+        TimeoutError,
+        MemoryError,
+        KeyboardInterrupt,
+        AssertionError,
+        BlockingIOError,
+        BrokenPipeError,
+        ConnectionAbortedError,
+        ConnectionRefusedError,
+        ConnectionResetError,
+        InterruptedError,
+    )
+    cls = type(error)
+    kind = next((item.__name__ for item in classes if cls is item), "OTHER")
+    code, number = "UNKNOWN", None
+    if cls is Refused or cls is helper_refusal:
+        kind = "Refused" if cls is Refused else "CaptureRejected"
+        args = BaseException.args.__get__(error, BaseException)
+        if len(args) == 1 and type(args[0]) is str and args[0] in _capture_refusal_codes()[kind]:
+            code = args[0]
+    if any(
+        cls is item
+        for item in (
+            OSError,
+            PermissionError,
+            FileNotFoundError,
+            TimeoutError,
+            BlockingIOError,
+            BrokenPipeError,
+            ConnectionAbortedError,
+            ConnectionRefusedError,
+            ConnectionResetError,
+            InterruptedError,
+        )
+    ):
+        candidate = OSError.errno.__get__(error, OSError)
+        if type(candidate) is int and candidate in contract["errno"]:
+            number = candidate
+    return {"type": kind, "code": code, "errno": number}
+
+
+def select_capture_lifecycle(value):
+    contract = _capture_lifecycle_contract()
+    need(
+        type(value) is dict
+        and set(value)
+        == {
+            "schema",
+            "primary",
+            "close",
+            "ctx_assigned",
+            "constructor_returned",
+            "evidence_kind",
+            "normal_close",
+        },
+        "CAPTURE_LIFECYCLE_SHAPE",
+    )
+    need(
+        value["schema"] == "qm.ivv.capture-lifecycle.v1"
+        and type(value["ctx_assigned"]) is bool
+        and type(value["constructor_returned"]) is bool
+        and value["evidence_kind"] in ("DEFAULT", "OBSERVED"),
+        "CAPTURE_LIFECYCLE_SHAPE",
+    )
+    result = {
+        k: value[k] for k in ("schema", "ctx_assigned", "constructor_returned", "evidence_kind")
+    }
+    for role in ("primary", "close"):
+        item = value[role]
+        if item is not None:
+            need(
+                type(item) is dict and set(item) == {"phase", "guard", "type", "code", "errno"},
+                "CAPTURE_LIFECYCLE_SHAPE",
+            )
+            for key in ("phase", "guard", "type", "code"):
+                need(
+                    type(item[key]) is str and item[key] in contract[key], "CAPTURE_LIFECYCLE_SHAPE"
+                )
+            need(
+                item["errno"] is None
+                or type(item["errno"]) is int
+                and item["errno"] in contract["errno"],
+                "CAPTURE_LIFECYCLE_SHAPE",
+            )
+            owner_codes = _capture_refusal_codes().get(item["type"], ())
+            need(
+                item["code"] == "UNKNOWN" or item["code"] in owner_codes, "CAPTURE_LIFECYCLE_SHAPE"
+            )
+            need(
+                item["errno"] is None
+                or item["type"]
+                in {
+                    "OSError",
+                    "PermissionError",
+                    "FileNotFoundError",
+                    "TimeoutError",
+                    "BlockingIOError",
+                    "BrokenPipeError",
+                    "ConnectionAbortedError",
+                    "ConnectionRefusedError",
+                    "ConnectionResetError",
+                    "InterruptedError",
+                },
+                "CAPTURE_LIFECYCLE_SHAPE",
+            )
+        result[role] = None if item is None else dict(item)
+    normal = value["normal_close"]
+    need(
+        type(normal) is dict
+        and set(normal) == {"context_closed", "callbacks_stopped", "data_socket_closed"}
+        and all(type(v) is bool for v in normal.values()),
+        "CAPTURE_LIFECYCLE_SHAPE",
+    )
+    result["normal_close"] = dict(normal)
+    return result
+
+
+_CAPTURE_LIFECYCLE_MARK = object()
+
+
+def _carry_capture_lifecycle(error, value):
+    store = _exception_storage(error)
+    if store is not None:
+        store.pop("_qm_capture_lifecycle", None)
+    if value is not None:
+        try:
+            selected = select_capture_lifecycle(value)
+        except BaseException:
+            return error  # Optional diagnostics never replace the original primary.
+        store = _exception_storage(error)
+        if store is not None:
+            store["_qm_capture_lifecycle"] = (_CAPTURE_LIFECYCLE_MARK, selected)
+    return error
+
+
+def _capture_lifecycle_from_error(error):
+    store = _exception_storage(error)
+    item = store.get("_qm_capture_lifecycle") if store is not None else None
+    if type(item) is tuple and len(item) == 2 and item[0] is _CAPTURE_LIFECYCLE_MARK:
+        try:
+            return select_capture_lifecycle(item[1])
+        except BaseException:
+            pass
+    return None
+
+
 def _failure_record(error):
     value = {"state": "STOP", "reason": _failure_code(error)}
     origin = _origin_from_error(error)
@@ -582,6 +950,9 @@ def _failure_record(error):
     executable = _executable_from_error(error)
     if executable is not None:
         value["executable_origin"] = executable
+    capture = _capture_lifecycle_from_error(error)
+    if capture is not None:
+        value["capture_lifecycle"] = capture
     return value
 
 
@@ -590,7 +961,11 @@ def _failed_packet(error):
     return {
         "op": "failed",
         "code": value["reason"],
-        **{key: value[key] for key in ("origin_failure", "executable_origin") if key in value},
+        **{
+            key: value[key]
+            for key in ("origin_failure", "executable_origin", "capture_lifecycle")
+            if key in value
+        },
     }
 
 
@@ -600,7 +975,7 @@ def _child_failure(packet):
         or packet.get("op") != "failed"
         or not {"op", "code"}
         <= set(packet)
-        <= {"op", "code", "origin_failure", "executable_origin"}
+        <= {"op", "code", "origin_failure", "executable_origin", "capture_lifecycle"}
         or type(packet.get("code")) is not str
         or re.fullmatch("[A-Za-z0-9_+]{1,256}", packet["code"]) is None
     ):
@@ -611,6 +986,8 @@ def _child_failure(packet):
     error = _carry_origin(Refused(packet["code"]), origin, packet["code"])
     if "executable_origin" in packet:
         _carry_executable_origin(error, select_executable_origin(packet["executable_origin"]))
+    if "capture_lifecycle" in packet:
+        _carry_capture_lifecycle(error, select_capture_lifecycle(packet["capture_lifecycle"]))
     return error
 
 
@@ -634,7 +1011,7 @@ def read_runner_failure(control, read_owned):
         type(value) is dict
         and {"state", "reason"}
         <= set(value)
-        <= {"state", "reason", "origin_failure", "executable_origin"}
+        <= {"state", "reason", "origin_failure", "executable_origin", "capture_lifecycle"}
         and value["state"] == "STOP"
         and type(value["reason"]) is str
         and re.fullmatch("[A-Za-z0-9_+]{1,256}", value["reason"]),
@@ -646,6 +1023,8 @@ def read_runner_failure(control, read_owned):
         result["origin_failure"] = select_origin_failure(value["origin_failure"])
     if "executable_origin" in value:
         result["executable_origin"] = select_executable_origin(value["executable_origin"])
+    if "capture_lifecycle" in value:
+        result["capture_lifecycle"] = select_capture_lifecycle(value["capture_lifecycle"])
     return result
 
 
@@ -691,6 +1070,8 @@ def select_failure_status(status, publication_sha256):
         result["origin_failure"] = select_origin_failure(status["origin_failure"])
     if "executable_origin" in status:
         result["executable_origin"] = select_executable_origin(status["executable_origin"])
+    if "capture_lifecycle" in status:
+        result["capture_lifecycle"] = select_capture_lifecycle(status["capture_lifecycle"])
     if "recovery_connection" in status:
         item = status["recovery_connection"]
         need(
@@ -2633,6 +3014,21 @@ class _ChildSession:
         self.snapshot()
 
 
+def _check_capture_result(result, *, recovery):
+    if result["state"] == "CAPTURED_UNREVIEWED":
+        return
+    code = "CHILD_CAPTURE_FAILED"
+    if recovery:
+        if result.get("close_failure"):
+            code = "SDK_CLOSE_UNKNOWN"
+        elif (result.get("primary_failure") or {}).get("code") == "absolute_deadline":
+            code = "CAPTURE_TIMEOUT"
+    error = Refused(code)
+    if recovery:
+        _carry_capture_lifecycle(error, result.get("capture_lifecycle"))
+    raise error
+
+
 def _child(channel, parent, context, plan):
     startup, values, issuer, m, native, producer = context
     extra = values.get("_additional")
@@ -2691,6 +3087,9 @@ def _child(channel, parent, context, plan):
     state.trusted_issuer = issuer
     state.additional_task = extra
     if _recovery_mode(additional):
+        state.capture_classifier = lambda error: classify_capture_exception(
+            error, m.CaptureRejected
+        )
         state.recovery_profile = extra
         state.recovery_ledger = values["_recovery_ledger"]
         state.recovery_attempt = additional
@@ -2738,12 +3137,7 @@ def _child(channel, parent, context, plan):
             )
         finally:
             _close_fd(fd)
-        if _recovery_mode(additional) and result["state"] != "CAPTURED_UNREVIEWED":
-            if result.get("close_failure"):
-                raise Refused("SDK_CLOSE_UNKNOWN")
-            if (result.get("primary_failure") or {}).get("code") == "absolute_deadline":
-                raise Refused("CAPTURE_TIMEOUT")
-        need(result["state"] == "CAPTURED_UNREVIEWED", "CHILD_CAPTURE_FAILED")
+        _check_capture_result(result, recovery=_recovery_mode(additional))
         channel.send(
             {
                 "op": "terminal",
@@ -3239,6 +3633,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
     primary = None
     primary_origin = None
     primary_executable = None
+    primary_capture = None
     cleanup_failures = None
     pending = None
     committed = False
@@ -3292,6 +3687,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
+            primary_capture = _capture_lifecycle_from_error(error)
             primary_origin = _origin_from_error(error)
             primary_executable = _executable_from_error(error) or values.get("_executable_origin")
             failures = scope.abort()
@@ -3337,6 +3733,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
                 failures.append("SEAL_RETIRE_" + reason(error))
         code = "+".join(failures)
         failure = _carry_origin(Refused(code), primary_origin, code)
+        _carry_capture_lifecycle(failure, primary_capture)
         raise _carry_executable_origin(
             failure, primary_executable or values.get("_executable_origin")
         ) from None

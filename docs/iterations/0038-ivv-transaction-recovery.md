@@ -1,5 +1,75 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Current checkpoint - initialization evidence, 2026-11-05
+
+Parent independent affected gate:529PASS/2FAIL/128.07s, with17 frozen raw files
+unchanged. Both failures are the old normal-family issuer bootstrap refusing
+DEV_NATIVE_SOURCE_PIN because its fixed helper digest remained aced2a5a after the
+canonical helper changed to000b406b. The pin check is retained; the same original
+Source now updates only that release constant and rechecks the actual bootstrap
+cases before REV2 freeze. All first-freeze reports/pins and failed fixtures remain.
+This compatibility defect is separate from connection3's unproven native cause.
+
+REV2 preserves first-freeze evidence. Parent proves the sole byte delta is the
+issuer's fixed helper digest and all16 other frozen files are unchanged; actual
+helper bytes match that pin. Parent reruns the three bootstrap cases plus all47
+new lifecycle/operations cases:50PASS/5.01s. Original529 passing cases are not
+duplicated solely for one verified constant. Source REV2 pinsb7efdf4f/16990B and
+handoffe10efbf4/2561B are read/matched; complete Source8,880,128B including all
+524288B future fits9MiB. Parent matches8 tracked files,4 operations and all final
+artifacts/private test. Independent narrow review and matching-head CI remain
+required; this resolves software bootstrap compatibility, not native SDK cause.
+
+Planner/Verifier: PR284 normally merged8839b437/treecaba6e37 after actual
+head441a6fd8 CI41941420237 SUCCESS:7669PASS/149SKIP, frontend793. Exact-lock
+artifact13375653576,455057B/SHA833fba86c267abbc44af4685adc5024128bfcdf2c2258ee1b4b06424cbec472e
+matches the actual merged tree; ordinary connection3 used that publication.
+
+Actual connection3 passed complete SESSION/NAMED_OBJECT in namespace4026532643,
+then stopped SDK_CLOSE_UNKNOWN. Current-only manifest separately records primary
+initialize/Exception/exception and close close/CaptureRejected/normal_close_not_proven,
+three default false close flags, reserved contexts1/init0/application0, responses0.
+Actual SDK effects remain UNKNOWN. No reusable response/checkpoint, publishable
+input or study exists. Exact current termination is proved: owner CLOSED,
+owned_cleanup_proven=true, retainedInvocation6da01d5cdf1644ec8f70071dd479db16
+matches, MainPID0/empty cgroup, local transport normally closed. Failed units and
+history remain. This is owned termination, not normal SDK closure.
+
+Planner/Quant: fixed public SDK constructor/callback/async-close source was read
+without SDK import/call. Its signature matches; no guessed SDK/sleep repair is
+justified. Actual positive witness as an explicitly offline fixture reaches
+context-created held/native guards, issuer refs, native snapshot and authenticated
+ChildSession/Channel/strict catalog+namespace, constructor sentinel, authored SDK
+operations and parent seal (baseline04:1PASS/0.99s). Three earlier fixture errors
+(global PathFinder stub, missing SecurityFirm.NONE, socket stub without seal open)
+are retained and are not native causes. No actual consumer break was reproduced.
+
+Implementer: minimal failure-only lifecycle evidence keeps primary operation/guard,
+exact trusted type/code/finite errno and independent close evidence through the
+existing authenticated chain. Normal success format and every original refusal,
+deadline, ownership and publication predicate remain. Fresh UNCLAIMED is a stale
+preclaim reporting projection; update it only after successful durable begin,
+without ledger/sequence/debit changes. Focused44PASS/4.11s is an engineering
+checkpoint; final freeze, Parent verification, independent review and normal CI
+remain pending. No new SDK/carrier effect has been issued. Actual initialization
+cause, normal SDK close, capture and independent H1/H2/H3 acceptance remain open.
+
+Capacity: current P17 raw1428B/SHA
+ff1e2ead377cf59151b01a9d3b3ef045c9e729e49174eb65cc62786470de1f5a
+is canonically bound by actual merged RecoveryProfile. Same batch01 now has
+contexts/init6, keepalive576, wall43200s; business32/compute3/rate1/actor unchanged.
+Capture96MiB local and remote fully funds each nominal context. Source9/Product16/
+common24/FS1 gives software50MiB; old80+new258=338MiB354418688B. Complete Source
+forecast and original524288B future fit9MiB; common24133632B fits24MiB including
+one further publication and Parent affected fixtures. Conservative G10740658266/
+P4702585870/all4759208974 fit12/6GiB/free50GiB. All policies/receipts/old futures
+and three UNKNOWN intents remain. P14 added96MiB capture, P15 net0 corrected full
+single-parent stress, P16 Source+1MiB, P17 common+4MiB; global charged each net
+increase once. Capacity is not runtime GO. No data/window/math/PIT/paper/live or
+financial qualification changes. See BATCH-CAPACITY-EXTENSION-01,
+CAPACITY-STRESS-CORRECTION-01 and CAPACITY-SOFTWARE-10/11 retained artifacts.
+
+
 Issue [281](https://github.com/ZP151/quantmesh/issues/281);
 [frozen boundary](../superpowers/specs/2026-11-04-ivv-transaction-recovery.md).
 
