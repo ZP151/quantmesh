@@ -1,5 +1,22 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Final collector review checkpoint - 2026-11-05
+
+Both original axes return READY at8c33e2dda6a7fe5a50cb452ec563a3631e621c67 after
+the single listener-continuity correction. Spec2301B/SHAa0a899f854c4efaf16ddaeff3109630f601cfe0c34a4b74a33e98eeb15fb3adb;
+Standards1503B/SHA4c13a1911778535a892e27f54f2a7da7f777c8433b654d49b4e3b1dcd8bbf2df.
+Parent read both and independently reran124PASS/171deselected plus5subtests,6.06s.
+This checkpoint changes only this iteration record; code remains the reviewed8c33
+bytes. Originalce11/R1/RED and allfutures remain. Sourcecomplete13615104/13631488
+includes final-record allowance; P24/all431MiB holds unchanged. Ops07path-only
+reviewREADY a54342b1 plus actualwinningcapsule/input replay5PASS are separate
+from normal complete finalheadLinuxCI, merged publication and finalgeometry.
+Actual provider437852bed remains bound; private terminal/password/SDKloginUNKNOWN,
+no freshhealth/login retry or context6. Continue actual fixed capture only after
+normal expected-head merge/catalog and fresh source/identity/resource/ownedclose
+admission; independentH1H2H3 before any realstudy. No data/math/live change.
+
+
 ## Current collector-only successor — 2026-11-05
 
 R1 Standards found one actual pre-GO continuity defect: a fresh stable listener
