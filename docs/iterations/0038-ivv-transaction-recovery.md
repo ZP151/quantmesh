@@ -2,6 +2,17 @@
 
 ## Current Operator-only checkpoint - 2026-11-05
 
+Original independent Spec and Standards both return READY for the reduced
+Operator-only source at5e26f943003082d6a307648b5c8ced3e69692d5e. Reports: SPEC2493B/
+SHA5f7c38c92ff7cfbd92cc19dcfe847271ef138a185eff60bad759573f0096c3c2,
+STANDARDS2150B/SHA9f986599a83f7078512fd1e6e0105a6f36e390bfa88a6c971298697e333bf40c.
+Parent read/pinned both; only source-spec final emptyEOFline differs from the
+original freeze, recorded in OPERATOR-ONLY-DOC-WHITESPACE-01.json. Python5 unchanged.
+This checkpoint is iteration-only. Next is matching-final-head normalCI/exact-lock
+ordinary merge/catalog, then separately reviewed actual Operator installation,
+one persistent start, private ordinary login and endpoint evidence. No SDK or
+connection6 is allowed by this smaller delivery.
+
 Planner scope is actual persistent OpenD service restoration and ordinary secure
 login under Operator authority0d296551, separate from collector6db. Earlier
 whole-slice candidate7a15b0c9 remains FIX_REQUIRED (R2 pre-GO sample changes the
