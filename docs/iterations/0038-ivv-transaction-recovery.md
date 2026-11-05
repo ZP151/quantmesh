@@ -2,6 +2,17 @@
 
 ## Current checkpoint - initialization evidence, 2026-11-05
 
+Both original readers return READY for the narrow hot-fixture correction at
+6e8663ec3d611b856baef76038a58cd9a30e3fa1. Parent reads and pins SPEC2366B/SHA
+363897a721045a5a9416e95908a821c020c53aa27ce46504e8d81031df015954 and
+STANDARDS2294B/SHA05340652259607121731da143eb63eb14dc4707fc18624b35cf82eaaf390b937.
+They verify temporary-root ownership, dependency restoration, the exact real
+threshold and needed bytes, preserved low-space/directory-sync/crash assertions
+and separate child models. No blocker is found. This final review checkpoint
+changes only the iteration record; new final-head normal CI remains mandatory,
+then actual merged publication and ordinary connection4. Earlier SDK and polling
+reviews retain their exact unchanged source bindings. No SDK was invoked here.
+
 Latest CI blocker: run41958558834 actually ends76FAIL/7633PASS/149SKIP/2440.80s.
 All76 enter the unchanged hot-cache free-space predicate:72 parent traces,3 fresh
 child traces and1 API capacity fallback. Physical CI free bytes were not reported;
