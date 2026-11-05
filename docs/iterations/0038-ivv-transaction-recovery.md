@@ -1,5 +1,84 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Final collector review checkpoint - 2026-11-05
+
+Both original axes return READY at8c33e2dda6a7fe5a50cb452ec563a3631e621c67 after
+the single listener-continuity correction. Spec2301B/SHAa0a899f854c4efaf16ddaeff3109630f601cfe0c34a4b74a33e98eeb15fb3adb;
+Standards1503B/SHA4c13a1911778535a892e27f54f2a7da7f777c8433b654d49b4e3b1dcd8bbf2df.
+Parent read both and independently reran124PASS/171deselected plus5subtests,6.06s.
+This checkpoint changes only this iteration record; code remains the reviewed8c33
+bytes. Originalce11/R1/RED and allfutures remain. Sourcecomplete13615104/13631488
+includes final-record allowance; P24/all431MiB holds unchanged. Ops07path-only
+reviewREADY a54342b1 plus actualwinningcapsule/input replay5PASS are separate
+from normal complete finalheadLinuxCI, merged publication and finalgeometry.
+Actual provider437852bed remains bound; private terminal/password/SDKloginUNKNOWN,
+no freshhealth/login retry or context6. Continue actual fixed capture only after
+normal expected-head merge/catalog and fresh source/identity/resource/ownedclose
+admission; independentH1H2H3 before any realstudy. No data/math/live change.
+
+
+## Current collector-only successor — 2026-11-05
+
+R1 Standards found one actual pre-GO continuity defect: a fresh stable listener
+on the same vendor could differ from monitor.first's listener. Source verified
+OperatorReader.identity owns listener_inode and finish rechecks that same inode;
+_authorize publishes monitor.first. R2-RED.log runs the real supervisor on ce11
+and records GOt1 with the old900 digest while READY sees stable901. One minimal
+comparison of digest([reader.listener_inode]) against the initial sample now
+refuses PROVIDER_DRIFT before authorization, preserving all original held
+namespace/provider/child/close/deadline gates and periodic state. Regression
+asserts no authorization/GO, growth/resources[0] and both readers closed.
+R2-GREEN:124PASS/171deselected plus5subtests; positive due5/sample0/5/age1.25
+unchanged. Full Ruff and changed2file format pass. R2 RAM ops07 carrier269333/
+270336 margin1003, packed170710/262144, decoded608736/1MiB; unchanged codec
+roundtrip header843485/870400. Original ce11 freeze/history remain byteidentical.
+Source conservative complete13615104/13631488 includes old13533184 and R2
+81920 allowance, all old futures/REDs retained. Original readers' R2 is the final
+correction round; any further structural blocker returns to Planner. Root's
+normal CI/merge/catalog/final geometry/admission remain mandatory; no SDK effect.
+
+
+Planner: issue281's one action is the fixed capture on the attributed restored
+provider. This separate slice excludes Operator/service/login and all data/math
+changes. Quant: no leakage, cost, selection or confidence semantics change;
+financialINSUFFICIENT/livefalse and historical5UNKNOWN remain.
+Implementer: recovery _Provider uses supplied verified ProviderExecution,
+OperatorReader, validated instance runtime growth and immediate pre-GO ns/net
+proof; legacy constructors and periodic loop remain. Source RED records absent
+recovery binding/growth support. The older frozen CLOCK-RED remains the causal
+successful-GO cadence regression; it is not a new review of the stopped slice.
+Verifier: affected123PASS/171deselected plus5subtests; actualGOt1 leaves due5,
+resource/growth0/5, snapshotT5 served6.25/age1.25. Operations07 original winning
+capsule/decoded-bound/command5PASS/18deselected. Existing calendar deprecation
+remains. Full src/tests/tools Ruff and changed3file format pass; whitespace and
+submodule pins checked. Bare sparse collection1880 succeeds but is not a full
+suite execution; complete Linux matching-head CI remains mandatory.
+RAM geometry uses actualv2receipt437852bed/P24/all7candidate roles and prospective
+publication built from actualf599metadata: ops07 carrier269393/270336 margin943,
+packed170755/262144, decoded608516/1MiB; modeled normal return header843485/870400
+and total8183521/9437184 round-trip through actual codec. No carrier persisted.
+Reviewer: Root's two independent axes and normal publication remain pending;
+Source's local GREEN is not a human inspection or capture/login qualification.
+Conservative all-retained Source complete13533184/13631488 includes
+prior13139968, old524288future and newincrement393216; every failed log and
+fixture remains. The fresh frozen source patch and canonical Git pins live under
+output/ivv-transaction-recovery-20261104-01/server/collector-successor-02.
+
+
+PR288 merged f5998dd7/tree179e5643 with normal CI7903PASS/149SKIP/frontend793.
+Root reports actual attributed persistent provider active, strict BIND0SDK and
+private socket0600; terminal/password/SDK login remain UNKNOWN. The collector
+is explicitly unfrozen only for a separate offline binding/GO-cadence slice.
+It reuses authenticated v2 ProviderExecution/OperatorReader and derives the
+runtime growth role from the validated instance data. The immediate ns/net
+proof precedes GO without changing periodic resource/growth state or cadence.
+Old7a15b0c9 remains FIX_REQUIRED; operations06 and all five UNKNOWN stay intact.
+P24 Source13/common75/software105/all431MiB and all old futures remain. No
+connection6, SDK, data/math, financial or live qualification is produced here.
+See docs/superpowers/plans/2026-11-05-ivv-collector-provider-go.md. Root owns
+independent reviews, normal CI/merge/catalog and fresh actual admission.
+
+
 ## Current immutable-instance successor - 2026-11-05
 
 Both original Source axes return READY at1af81445911a41d3838b458eb30232a7fd37b833

@@ -167,6 +167,8 @@ _ROLE_PATHS = (
 class RoleGrowth:
     """Positive per-inode high water in the fixed roles; samples cannot bound the provider tail."""
 
+    _role_paths = _ROLE_PATHS
+
     def __init__(self):
         self.baseline = None
         self.peaks = {}
@@ -249,7 +251,7 @@ class RoleGrowth:
                 "ROLE_TREE_RACE",
             )
 
-        for path in _ROLE_PATHS:
+        for path in self._role_paths:
             with _held(reader, reader.held_path(path, reader.root)) as ref:
                 with _held(reader, reader.keep(os.open(".", flags, dir_fd=ref))) as fd:
                     role_mount = mount_id(ref)
@@ -266,6 +268,19 @@ class RoleGrowth:
         _need(incremental < 33554432, "PROVIDER_GROWTH")
         tick()
         return incremental
+
+
+class RestoredRoleGrowth(RoleGrowth):
+    """Use only the runtime role of the authenticated Operator execution."""
+
+    def __init__(self, producer, binding):
+        _need(type(binding) is producer.ProviderExecution, "PROVIDER_IDENTITY")
+        nonce = binding.nonce
+        self._role_paths = tuple(
+            "/run/quantmesh-opend-console-" + nonce if path == _RUNTIME else path
+            for path in _ROLE_PATHS
+        )
+        super().__init__()
 
 
 def _quote_settings(client_code, sdk_code, version):

@@ -1,5 +1,21 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current collector-only successor — 2026-11-05
+
+PR288 merged f5998dd7/tree179e5643 with normal CI7903PASS/149SKIP/frontend793.
+Root reports actual attributed persistent provider active, strict BIND0SDK and
+private socket0600; terminal/password/SDK login remain UNKNOWN. The collector
+is explicitly unfrozen only for a separate offline binding/GO-cadence slice.
+It reuses authenticated v2 ProviderExecution/OperatorReader and derives the
+runtime growth role from the validated instance data. The immediate ns/net
+proof precedes GO without changing periodic resource/growth state or cadence.
+Old7a15b0c9 remains FIX_REQUIRED; operations06 and all five UNKNOWN stay intact.
+P24 Source13/common75/software105/all431MiB and all old futures remain. No
+connection6, SDK, data/math, financial or live qualification is produced here.
+See docs/superpowers/plans/2026-11-05-ivv-collector-provider-go.md. Root owns
+independent reviews, normal CI/merge/catalog and fresh actual admission.
+
+
 ## Current successor - trusted Operator instance data, 2026-11-05
 
 PR287/e12373cc software/normalCI7823PASS is published and installed. Actual startup

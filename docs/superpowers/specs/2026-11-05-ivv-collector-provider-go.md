@@ -1,0 +1,11 @@
+# Collector provider binding and GO cadence — issue281
+
+One operator action remains the fixed IVV recovery capture using the already restored logical provider. This separate collector-only slice allows its authenticated catalog ProviderExecution to reach the real supervisor without changing the periodic five-second resource/growth loop. Success is controlled GO at t=1 with the deadline still5, observations at0/5, and the t=5 snapshot served at6.25 (age1.25).
+
+ProviderExecution.verified_record authenticates the supplied recovery binding. The existing OperatorReader and protected source/control/original validation recheck the current provider. RestoredRoleGrowth accepts only that exact binding type and derives its single changed runtime role from its validated immutable nonce; other five roles and legacy constructors stay fixed. No source literal identifies the current instance or process.
+
+Before _authorize, _Provider.verify_network brackets the owned child PID/pidfd, holds provider and child ns/net objects simultaneously, checks device+inode, current named objects and expected net, then final provider/child proof, close and deadline. It never writes first/last/next/peak, resource/growth history or sample timestamps/counts. Different namespace/device, named substitution, provider drift, uncertain close, deadline or lost child identity refuses before GO. Existing periodic sample and peer ownership checks remain.
+
+PR288 merged f5998dd7/tree179e5643 after normal CI7903PASS/149SKIP/frontend793. Root reports actual persistent service active and BIND0SDK; private socket0600 is fixed. Private terminal and ordinary password/SDK login remain UNKNOWN. This software cannot certify login, financialH1/H2/H3, data acceptance, a numerical trial or paper/live qualification.
+
+Non-goals: Operator/service/login/credentials, operations06 changes, SDK/context calls, data/math/strategy changes, thresholds, quota refunds, general monitor/platform work or runtime permission. Historical7a15b0c9 remains FIX_REQUIRED and all five UNKNOWN outcomes remain spent. P24 retains all431MiB; Source13MiB includes prior13139968 and old524288future. Source owns only this offline branch/commit/freeze; Root owns two independent review axes, normal CI/merge/catalog and fresh actual admission before connection6.
