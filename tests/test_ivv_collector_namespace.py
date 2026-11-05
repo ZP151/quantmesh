@@ -42,6 +42,7 @@ class ClockTest(unittest.TestCase):
         r, p = module("ivv_trusted_runner"), module("ivv_native_producer")
         doc = receipt(p)
         closed = []
+        reader_closed = []
         now = [0.0]
         growth, resources, namespaces, sent, pending = [], [], [], [], []
         scope = NS(
@@ -73,12 +74,14 @@ class ClockTest(unittest.TestCase):
 
         def acquire(b):
             held = []
+            listener = 901 if fault == "listener" and now[0] >= 1 else 900
 
             def retain(fd):
                 held.append(fd)
                 return fd
 
             def close():
+                reader_closed.append(now[0])
                 if held:
                     closed.append(tuple(held))
                     if fault == "close":
@@ -94,8 +97,11 @@ class ClockTest(unittest.TestCase):
                 keep=retain,
                 finish=lambda: ["PROVIDER_RACE"] if held and fault == "drift" else [],
                 close=close,
-                socket_inodes=lambda fd: {900},
-                read=lambda *a: b"hdr\n0: 0100007F:2B68 00000000:0000 0A 0 0 0 0 0 900\n",
+                listener_inode=listener,
+                socket_inodes=lambda fd: {listener},
+                read=lambda *a: (
+                    "hdr\n0: 0100007F:2B68 00000000:0000 0A 0 0 0 0 0 " + str(listener) + "\n"
+                ).encode(),
             )
             return reader
 
@@ -176,6 +182,24 @@ class ClockTest(unittest.TestCase):
         wanted = OSError if fault == "close" else r.Refused if fault else Observed
         with self.assertRaises(wanted):
             r._supervise(scope, channel, 700, context, {"started_monotonic": 0})
+        if fault == "listener":
+            print(
+                "listener rebind",
+                dict(
+                    growth=growth,
+                    resources=resources,
+                    grants=pending,
+                    sent=sent,
+                    closed=reader_closed,
+                ),
+                flush=True,
+            )
+            self.assertEqual(pending, [])
+            self.assertEqual(sent, [{"op": "enter"}])
+            self.assertEqual((growth, resources), ([0.0], [0.0]))
+            self.assertEqual(reader_closed, [0.0, 1.0])
+            self.assertEqual(closed, [])
+            return
         if fault:
             self.assertEqual(closed, [(112, 111)])
             self.assertEqual((namespaces, pending, sent), ([1.0], [], [{"op": "enter"}]))
@@ -204,6 +228,9 @@ class ClockTest(unittest.TestCase):
                 resource=5.0,
             ),
         )
+
+    def test_listener_rebind_stops_before_grant_without_sampling(self):
+        self.run_clock(fault="listener")
 
     def test_different_namespace_stops_before_grant(self):
         self.run_clock(fault="different")

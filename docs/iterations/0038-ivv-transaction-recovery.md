@@ -2,6 +2,25 @@
 
 ## Current collector-only successor — 2026-11-05
 
+R1 Standards found one actual pre-GO continuity defect: a fresh stable listener
+on the same vendor could differ from monitor.first's listener. Source verified
+OperatorReader.identity owns listener_inode and finish rechecks that same inode;
+_authorize publishes monitor.first. R2-RED.log runs the real supervisor on ce11
+and records GOt1 with the old900 digest while READY sees stable901. One minimal
+comparison of digest([reader.listener_inode]) against the initial sample now
+refuses PROVIDER_DRIFT before authorization, preserving all original held
+namespace/provider/child/close/deadline gates and periodic state. Regression
+asserts no authorization/GO, growth/resources[0] and both readers closed.
+R2-GREEN:124PASS/171deselected plus5subtests; positive due5/sample0/5/age1.25
+unchanged. Full Ruff and changed2file format pass. R2 RAM ops07 carrier269333/
+270336 margin1003, packed170710/262144, decoded608736/1MiB; unchanged codec
+roundtrip header843485/870400. Original ce11 freeze/history remain byteidentical.
+Source conservative complete13615104/13631488 includes old13533184 and R2
+81920 allowance, all old futures/REDs retained. Original readers' R2 is the final
+correction round; any further structural blocker returns to Planner. Root's
+normal CI/merge/catalog/final geometry/admission remain mandatory; no SDK effect.
+
+
 Planner: issue281's one action is the fixed capture on the attributed restored
 provider. This separate slice excludes Operator/service/login and all data/math
 changes. Quant: no leakage, cost, selection or confidence semantics change;

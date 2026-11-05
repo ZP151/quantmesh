@@ -2809,6 +2809,10 @@ class _Provider:
         reader.deadline = deadline
         try:
             self.native._operator_identity(self.producer, self.binding, gid, reader)
+            need(
+                digest(raw_json([reader.listener_inode])) == self.first["listener_binding_sha256"],
+                "PROVIDER_DRIFT",
+            )
             scope.check_pid()
             vendor = reader.processes[self.binding.cohort[2][0]][0]
             child = reader.directory(str(scope.pid), reader.directory("/proc"))

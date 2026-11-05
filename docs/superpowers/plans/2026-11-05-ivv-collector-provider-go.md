@@ -15,3 +15,9 @@
 - [x] Make one coherent green commit with iteration/roadmap/goal evidence; freeze HANDOFF/PINS. Stop without push/PR/CI/merge/publication/host/UI/vault/SDK effects.
 
 Quant role: no source data, leakage, costs, mathematical definitions, selections or confidence semantics change; financialINSUFFICIENT and livefalse remain. Review must inspect strict source/receipt validation, actual GO path and no sampling-state mutation. No third review of the stopped combined candidate. Final release repeats merged-source geometry, immutable binding/current cohort and original input gates under Root authority.
+
+## Consolidated R2 correction
+
+- [x] Verify the owning OperatorReader listener API and _authorize baseline; preserve R1 reports and ce11 frozen evidence.
+- [x] Causal production-supervisor RED for stable900-to901 rebind at READY, then one listener-baseline comparison before the existing GO proof;124affectedPASS plus5subtests and unchanged positive cadence.
+- [x] Fresh ops07 RAM geometry/static checks, one green fix commit and new R2 freeze only. Complete Source13615104/13631488 retains all old futures. Root sends the actual candidate to the same readers for the final R2; no third structural patch loop.
