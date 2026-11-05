@@ -12,11 +12,12 @@ import pytest
 
 from quantmesh.live import buffer as buffer_module
 from quantmesh.live.buffer import HotCacheBudget, LiveBuffer
+from tests.hot_volume import ample_hot_space as ample_hot_space
 from tests.test_market_history_hot_cache import budget_spec, candles
 
 
 @pytest.fixture
-def prepared(tmp_path, monkeypatch):
+def prepared(tmp_path, monkeypatch, ample_hot_space):
     import importlib
 
     root = tmp_path / "hot"
@@ -142,6 +143,7 @@ def test_prepared_mount_first_start_writes_only_real_admission(prepared):
     assert len(list(root.glob("budget-intent-*.json"))) == 3
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_legacy_header_bytes_and_existing_directory_refusal_are_unchanged(tmp_path):
     root = tmp_path / "legacy"
     spec = budget_spec(root)
@@ -436,10 +438,12 @@ def test_actual_process_crash_keeps_unclosed_prepared_session(prepared, tmp_path
             "    return result",
             "pm._observe = observe  # explicit mount model; no actual mount is performed",
             "HotCacheBudget._require_directory_sync = lambda self: None",
-            "budget = HotCacheBudget(root, json.loads(sys.argv[2]))",
-            "hot = LiveBuffer(root, retention_days=0, write_budget=budget)",
-            "hot.append(MarketUpdate.model_validate_json(sys.argv[5]))",
-            "os._exit(0)",
+            "from tests.hot_volume import modeled_hot_space",
+            "with modeled_hot_space(root.parent):",
+            "    budget = HotCacheBudget(root, json.loads(sys.argv[2]))",
+            "    hot = LiveBuffer(root, retention_days=0, write_budget=budget)",
+            "    hot.append(MarketUpdate.model_validate_json(sys.argv[5]))",
+            "    os._exit(0)",
         ]
     )
     result = subprocess.run(

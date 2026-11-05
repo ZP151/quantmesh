@@ -2,6 +2,44 @@
 
 ## Current checkpoint - initialization evidence, 2026-11-05
 
+Latest CI blocker: run41958558834 actually ends76FAIL/7633PASS/149SKIP/2440.80s.
+All76 enter the unchanged hot-cache free-space predicate:72 parent traces,3 fresh
+child traces and1 API capacity fallback. Physical CI free bytes were not reported;
+fresh children exclude parent monkeypatch leakage as a sufficient explanation.
+The first platform case needs9,000,000B before its intended directory-sync refusal.
+Actual constructor RED at modeled50,008,999,999B refuses without mkdir; exact
+50,009,000,000B passes. This is an ambient test-precondition dependency, separate
+from the unproven native IVV initialization cause.
+
+Original Source freezes four explicitly opted-in test modules and one test helper.
+Only buffer_module.shutil is rebound inside a function-scoped temporary-root
+context; the shared shutil module and every production file remain unchanged.
+The actual50,000,000,000B+needed predicate executes, explicit low-space overrides
+still win, and directory-sync/ledger/receipt/crash assertions remain. Two existing
+child programs receive the same explicit local model; the archive-only child is
+unchanged. New tests cover ample/equal/one-byte-low, effects, escaped probe paths,
+restoration and independent process scope. No global autouse disk model or new
+environment is introduced. Model PASS is not physical/native qualification.
+
+Source RED1/2.17s becomes focused5PASS/2.45s. Parent's first serial run records
+52PASS/1SKIP then a child imported an old local editable worktree; its2,371,584B
+fixture and log remain. Parent corrects only its run-scoped child PYTHONPATH,
+verifies the current source path and reruns identical frozen files:132PASS/2SKIP/
+33.38s. No new failed fixture remains. Windows skips do not replace Linux CI.
+Five-file/artifact pinsdb23eb15 and report949d6953 match; old Source8/ops4 remain
+byte-identical to b7efdf4f. Final Source forecast9,162,752B fits9MiB, retaining the
+original524288B future. Narrow review and actual new-head normal CI remain open.
+
+Current P19 raw1428B/SHA6db05b7ddfe1f34abd053d3e01b762dfb9d712dbe65924070d11051eed69353a
+is canonically bound by the actual merged profile. Source9/Product16/common58/FS1
+gives software84MiB; old80+new292=372MiB390070272B. CAPACITY-SOFTWARE-12 adds one
+necessary publication/verification4MiB; -13 raises the existing serial DuckDB
+scratch2->32MiB, net30MiB. The32MiB is an operational forecast, not a physical
+DuckDB upper bound; one serial -x/failed-only suite uses it. All prior holds and
+futures remain. Conservative G10776309850/P4738237454/all4794860558 fit12/6GiB,
+free50GiB and all context/rate/time/math/native admission limits remain unchanged.
+No new SDK/carrier effect, input or study has been produced.
+
 The original Standards reviewer returns READY for the exact narrow polling-test
 delta at3f5cf6be0060232ce3b34c4c21414a8566feae78:2616B/SHA
 dd433545fcf5a07aebb204b11cf95515548f3db01958846d8bb0a02f8eeb4152.

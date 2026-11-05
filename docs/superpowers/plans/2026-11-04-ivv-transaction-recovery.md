@@ -1,5 +1,14 @@
 # Fixed IVV recovery implementation plan
 
+Current hot-headroom CI correction: four explicit test opt-ins model only a temporary
+volume fact; production50GB and actual-entry50GiB resource gates are unchanged.
+Parent serial132PASS/2SKIP/33.38s follows the controlled boundary RED/GREEN.
+Source8/ops4 stay frozen, native IVV cause remains unproven. Current P19 funds
+Source9/Product16/common58/FS1software84MiB and372MiB complete holds, including
+32MiB serial operational DuckDB scratch. All old futures/UNKNOWN remain; new-head
+review/normal CI and actual recovery are still required. See current iteration.
+
+
 Latest actual checkpoint - issue281, 2026-11-05
 
 PR284 merged8839b437 after CI7669PASS/149SKIP/frontend793. Ordinary connection3

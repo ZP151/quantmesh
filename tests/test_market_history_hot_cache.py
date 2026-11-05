@@ -13,6 +13,7 @@ from quantmesh.live import buffer as buffer_module
 from quantmesh.live.buffer import LiveBuffer
 from quantmesh.live.contract import ContinuityState, MarketUpdate, SourceState, UpdateKind
 from quantmesh.live.feed import LiveFeed
+from tests.hot_volume import ample_hot_space as ample_hot_space
 from tests.test_live_history import _candle
 
 AT = datetime(2026, 10, 24, 0, 10, tzinfo=UTC)
@@ -155,6 +156,7 @@ def budget_spec(root, *, operations=3):
     }
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_hot_budget_consumes_reservations_before_io_without_restart_refund(tmp_path):
     root = tmp_path / "hot"
     spec = budget_spec(root)
@@ -170,6 +172,7 @@ def test_hot_budget_consumes_reservations_before_io_without_restart_refund(tmp_p
     assert len(list(root.glob("budget-intent-*.json"))) == 3
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_hot_budget_failure_keeps_charge_and_atomic_book_validation(tmp_path, monkeypatch):
     root = tmp_path / "hot"
     budget = buffer_module.HotCacheBudget(root, budget_spec(root, operations=2))
@@ -187,6 +190,7 @@ def test_hot_budget_failure_keeps_charge_and_atomic_book_validation(tmp_path, mo
     assert len(list(root.glob("budget-intent-*.json"))) == 2
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_hot_budget_refuses_unknown_peak_or_wrong_root_before_materialization(tmp_path):
     root = tmp_path / "hot"
     for key, value in [("peak_bound_sha256", "0" * 64), ("root", str(tmp_path))]:
@@ -197,6 +201,7 @@ def test_hot_budget_refuses_unknown_peak_or_wrong_root_before_materialization(tm
         assert not root.exists()
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_hot_budget_never_enables_retention_or_replenishes_existing_data(tmp_path):
     root = tmp_path / "hot"
     seed(root, candles())
@@ -208,6 +213,7 @@ def test_hot_budget_never_enables_retention_or_replenishes_existing_data(tmp_pat
         LiveBuffer(fresh, retention_days=7, write_budget=budget)
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_capacity_stop_joins_providers_and_keeps_original_history_url(tmp_path):
     from tests.test_live_feed_owned_persistence import ScriptedSupervisor
 
@@ -240,6 +246,7 @@ def test_capacity_stop_joins_providers_and_keeps_original_history_url(tmp_path):
         assert len(response.json()["primary"]["bars"]) == 3
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_exhausted_hot_reopens_read_only_without_consuming_new_budget(tmp_path):
     root = tmp_path / "hot"
     spec = budget_spec(root, operations=2)
@@ -289,6 +296,7 @@ def test_duplicate_identity_cannot_hide_new_unknown_continuity(tmp_path):
         assert "conflict" in response.json()["detail"].lower()
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_capacity_refusal_is_durable_and_does_not_auto_rearm(tmp_path):
     root = tmp_path / "hot"
     spec = budget_spec(root, operations=1)
@@ -305,6 +313,7 @@ def test_capacity_refusal_is_durable_and_does_not_auto_rearm(tmp_path):
     assert (root / "budget-stop.json").read_bytes() == stop
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_final_admitted_commit_is_delivered_then_stops_without_next_write(tmp_path):
     from tests.test_live_feed_owned_persistence import ScriptedSupervisor
 
@@ -329,6 +338,7 @@ def test_final_admitted_commit_is_delivered_then_stops_without_next_write(tmp_pa
         asyncio.run(scenario())
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_archive_and_bounded_hot_cannot_spill_into_unbudgeted_disk(tmp_path):
     archive = tmp_path / "archive"
     seed(archive, candles()[:2])
@@ -346,6 +356,7 @@ def test_archive_and_bounded_hot_cannot_spill_into_unbudgeted_disk(tmp_path):
         )
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_budget_syncs_parent_directory_before_storage_dispatch(tmp_path, monkeypatch):
     import os
     import stat
@@ -432,6 +443,7 @@ os._exit(0)
     assert {p: (p.read_bytes(), p.stat().st_mtime_ns) for p in (path, wal)} == original
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("hot_unreadable", [False, True])
 def test_manifest_history_stays_first_even_if_archive_is_unavailable(tmp_path, hot_unreadable):
     from quantmesh.data.lake import Lake
@@ -492,6 +504,7 @@ def test_manifest_history_stays_first_even_if_archive_is_unavailable(tmp_path, h
         assert response.json()["primary"]["dataset_id"] == "observed-btc"
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_main_binds_only_new_hot_writer_and_keeps_archive_for_same_api(tmp_path, monkeypatch):
     import json
     import sys
@@ -538,6 +551,7 @@ def test_main_binds_only_new_hot_writer_and_keeps_archive_for_same_api(tmp_path,
     assert (archive / "live/updates.duckdb").read_bytes() == original
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_budget_intent_types_cannot_reset_or_mask_reserved_attempts(tmp_path):
     import json
 
@@ -553,6 +567,7 @@ def test_budget_intent_types_cannot_reset_or_mask_reserved_attempts(tmp_path):
         buffer_module.HotCacheBudget(root, spec)
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("cause", ["expired", "insufficient", "free_floor", "zero"])
 def test_first_start_without_admitted_hot_keeps_archive_http_and_no_providers(
     tmp_path, monkeypatch, caplog, cause
@@ -599,6 +614,7 @@ def test_first_start_without_admitted_hot_keeps_archive_http_and_no_providers(
     assert "hot capacity exhausted" in caplog.text
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("failure", ["write", "sync_after_create", "both_receipts"])
 def test_postcommit_stop_record_failure_still_delivers_then_stops_and_records_failure(
     tmp_path, monkeypatch, caplog, failure
@@ -644,6 +660,7 @@ def test_postcommit_stop_record_failure_still_delivers_then_stops_and_records_fa
         assert hot.read_only and len(hot.replay()) == 1
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_double_stop_write_failure_and_recovered_free_space_cannot_rearm(tmp_path, monkeypatch):
     from tests.test_live_feed_owned_persistence import ScriptedSupervisor
 
@@ -704,6 +721,7 @@ def test_double_stop_write_failure_and_recovered_free_space_cannot_rearm(tmp_pat
     assert (archive / "live/updates.duckdb").read_bytes() == original_archive
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("failure", ["write", "fsync"])
 def test_session_marker_must_be_durable_before_any_hot_database_io(tmp_path, monkeypatch, failure):
     root = tmp_path / "hot"
@@ -730,6 +748,7 @@ def test_session_marker_must_be_durable_before_any_hot_database_io(tmp_path, mon
     assert len(list(root.glob("budget-intent-*.json"))) == 1
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("failure", ["write", "fsync", "publish", "database", "context_exception"])
 def test_failed_clean_close_never_authorizes_restart(tmp_path, monkeypatch, failure):
     root = tmp_path / "hot"
@@ -779,6 +798,7 @@ def test_failed_clean_close_never_authorizes_restart(tmp_path, monkeypatch, fail
     assert len(list(root.glob("budget-intent-*.json"))) == 2
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_normal_clean_close_allows_restart_without_refunding_intents(tmp_path):
     root = tmp_path / "hot"
     spec = budget_spec(root, operations=4)
@@ -793,6 +813,7 @@ def test_normal_clean_close_allows_restart_without_refunding_intents(tmp_path):
     assert len(list(root.glob("budget-intent-*.json"))) == 4
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("after_commit", [False, True])
 def test_crashed_process_leaves_session_read_only_and_archive_http_available(
     tmp_path, after_commit
@@ -819,12 +840,14 @@ def test_crashed_process_leaves_session_read_only_and_archive_http_available(
                     "if not hasattr(os, 'O_DIRECTORY'):",
                     "    HotCacheBudget._require_directory_sync = lambda self: None",
                     "root = Path(sys.argv[1])",
-                    "budget = HotCacheBudget(root, json.loads(sys.argv[2]))",
-                    "hot = LiveBuffer(root, retention_days=0, write_budget=budget)",
-                    "if sys.argv[3] != 'none':",
-                    "    from quantmesh.live.contract import MarketUpdate",
-                    "    hot.append(MarketUpdate.model_validate_json(sys.argv[3]))",
-                    "os._exit(0)",
+                    "from tests.hot_volume import modeled_hot_space",
+                    "with modeled_hot_space(root.parent):",
+                    "    budget = HotCacheBudget(root, json.loads(sys.argv[2]))",
+                    "    hot = LiveBuffer(root, retention_days=0, write_budget=budget)",
+                    "    if sys.argv[3] != 'none':",
+                    "        from quantmesh.live.contract import MarketUpdate",
+                    "        hot.append(MarketUpdate.model_validate_json(sys.argv[3]))",
+                    "    os._exit(0)",
                 ]
             ),
             str(root),
@@ -858,6 +881,7 @@ def test_crashed_process_leaves_session_read_only_and_archive_http_available(
     assert len(list(root.glob("budget-intent-*.json"))) == attempts
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("damage", ["partial", "foreign", "missing", "extra", "closed", "ready"])
 def test_unknown_session_evidence_never_grants_restart(tmp_path, damage):
     root = tmp_path / "hot"
@@ -886,6 +910,7 @@ def test_unknown_session_evidence_never_grants_restart(tmp_path, damage):
     assert len(list(root.glob("budget-intent-*.json"))) == 1
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_normal_shutdown_joins_accepted_commit_before_clean_close(tmp_path):
     from tests.test_live_feed_owned_persistence import CommitGate, ScriptedSupervisor
 
@@ -926,6 +951,7 @@ def test_normal_shutdown_joins_accepted_commit_before_clean_close(tmp_path):
         assert not reopened.read_only and len(reopened.replay()) == 1
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_close_with_live_owner_cannot_issue_clean_close(tmp_path):
     from tests.test_live_feed_owned_persistence import ScriptedSupervisor
 
@@ -948,6 +974,7 @@ def test_close_with_live_owner_cannot_issue_clean_close(tmp_path):
         assert reopened.read_only
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("gate", ["expiry", "free", "cumulative"])
 def test_clean_close_does_not_bypass_original_restart_admission(tmp_path, monkeypatch, gate):
     from collections import namedtuple
@@ -969,6 +996,7 @@ def test_clean_close_does_not_bypass_original_restart_admission(tmp_path, monkey
     assert len(list(root.glob("budget-intent-*.json"))) == 1
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_header_without_intents_cannot_adopt_unaccounted_database(tmp_path):
     root = tmp_path / "hot"
     spec = budget_spec(root, operations=4)
@@ -980,6 +1008,7 @@ def test_header_without_intents_cannot_adopt_unaccounted_database(tmp_path):
     assert not list(root.glob("budget-intent-*.json"))
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_native_session_directory_fsync_failure_precedes_duckdb_io(tmp_path, monkeypatch):
     import os
     import stat
@@ -1013,6 +1042,7 @@ def test_native_session_directory_fsync_failure_precedes_duckdb_io(tmp_path, mon
     assert len(list(root.glob("budget-intent-*.json"))) == 1
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_actual_app_normal_shutdown_closes_session_and_allows_fresh_restart(tmp_path):
     from tests.test_live_feed_owned_persistence import ScriptedSupervisor
 
@@ -1035,6 +1065,7 @@ def test_actual_app_normal_shutdown_closes_session_and_allows_fresh_restart(tmp_
         hot.close()
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_recursive_creation_syncs_existing_ancestor_before_database_open(tmp_path, monkeypatch):
     import os
     from pathlib import Path
@@ -1097,6 +1128,7 @@ def unreadable_hot(tmp_path, *, normal_close=False):
     return root, path
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("damage", ["unreadable", "missing"])
 @pytest.mark.parametrize("normal_close", [False, True])
 def test_unreadable_admitted_hot_keeps_http_but_never_silent_archive_only_success(
@@ -1130,6 +1162,7 @@ def test_unreadable_admitted_hot_keeps_http_but_never_silent_archive_only_succes
     assert (archive / "live/updates.duckdb").read_bytes() == original
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_partial_crash_accounting_refuses_acquisition_but_retains_readable_history(tmp_path):
     import json
 

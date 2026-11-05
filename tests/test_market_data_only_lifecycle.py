@@ -15,6 +15,7 @@ from quantmesh.live.buffer import HotCacheBudget, LiveBuffer
 from quantmesh.live.contract import ContinuityState, UpdateKind
 from quantmesh.live.feed import LiveFeed
 from quantmesh.live.hyperliquid import CandleObservation, HyperliquidVenueSupervisor
+from tests.hot_volume import ample_hot_space as ample_hot_space
 from tests.test_hyperliquid_candle_only import frame, row
 
 MIB = 1024 * 1024
@@ -175,16 +176,19 @@ def run_stream(tmp_path, monkeypatch, allowance):
         assert len(cold.replay(kinds={"candle"})) == 2
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_two_new_minute_observations_and_normal_close_use_four_actual_intents(
     tmp_path, monkeypatch
 ):
     run_stream(tmp_path, monkeypatch, 64)
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 def test_real_budget_exhaustion_stops_provider_keeps_http_then_closes(tmp_path, monkeypatch):
     run_stream(tmp_path, monkeypatch, 20)
 
 
+@pytest.mark.usefixtures("ample_hot_space")
 @pytest.mark.parametrize("phase", ["boundary", "recovery"])
 def test_shutdown_during_synchronous_rest_joins_request_before_cache_close(
     tmp_path, monkeypatch, phase
