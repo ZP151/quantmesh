@@ -6,8 +6,8 @@ Stable semantic research identity, durable external uncertainty/checkpoints and
 atomic accepted-input/result publication replace permanent one-shot blockers
 under actual human direction6db1254. Reuse existing stores/leases/native controls;
 retain every old SPENT/UNKNOWN and data/math/trading boundary. Two original
-writers consume one policy. Current caps12GiB/6GiB/free50GiB; old80+recovery156=
-236MiB reserved. [Current iteration](../iterations/0038-ivv-transaction-recovery.md).
+writers consume one policy. Current caps12GiB/6GiB/free50GiB; old80+recovery157=
+237MiB reserved. [Current iteration](../iterations/0038-ivv-transaction-recovery.md).
 
 PR282 merged0e0d3cf4 after matching-head normal CI and full-tree/catalog checks.
 The first actual recovery stopped at INITIAL/EXECUTABLE; no qualified input or
@@ -15,6 +15,14 @@ study exists and actual SDK usage remains UNKNOWN. Current owned cleanup is
 proved. The next bounded slice observes only this actual child's failed origin
 predicate through the existing authenticated chain, retaining rejection, lazy
 evaluation, privacy and normal publication. Bare-host success is not child proof.
+
+PR283 merged d27720c3 after actual full CI7605PASS/149SKIP and exact bundle/tree
+qualification. The second actual child shows same namespace, redacted successful
+kernel readlink and strict ENOENT; a trusted alias is still unproved. The next
+bounded repair must establish the full approved executable-object relationship,
+immutability and lifecycle under unchanged isolation, with precise refusal when
+proof is missing. Both owned cleanups are proved; inputs and financial results
+remain unqualified.
 
 ## Trusted-entry failure evidence — issue279, 2026-11-04
 

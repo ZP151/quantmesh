@@ -245,7 +245,7 @@ def test_recovery_root_go_is_preinput_and_exact_actual_actor(tmp_path, monkeypat
     assert not {"job_id", "research_scope_id", "max_trials"} & set(go)
 
 
-def connected_recovery_capture(tmp_path, monkeypatch, fault=None):
+def connected_recovery_capture(tmp_path, monkeypatch, fault=None, kernel_extra=None):
     import contextlib
     import os
     import sys
@@ -289,7 +289,9 @@ def connected_recovery_capture(tmp_path, monkeypatch, fault=None):
     )
     catalog = json.loads(Path(pins["catalog_ref"]["path"]).read_bytes())
     catalog.update(
-        python_sha256="b" * 64,
+        python_sha256=kernel_extra["executable_origin"]["initial"]["python_sha256"]
+        if kernel_extra
+        else "b" * 64,
         additional_task_sha256=contract.digest(Path(task.__file__).read_bytes()),
         recovery_contract_sha256=contract.digest(Path(contract.__file__).read_bytes()),
         trusted_runner_sha256=contract.digest(Path(runner.__file__).read_bytes()),
@@ -460,7 +462,7 @@ def connected_recovery_capture(tmp_path, monkeypatch, fault=None):
         grant,
         scope,
         monitor,
-        {"capture_actor": actor},
+        {"capture_actor": actor, **(kernel_extra or {})},
         {
             "manifest_sha256": contract.digest((root / "capture-manifest.json").read_bytes()),
             "permit_sha256": sha,
