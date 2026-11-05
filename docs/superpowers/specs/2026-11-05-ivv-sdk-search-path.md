@@ -1,0 +1,7 @@
+# Recovery SESSION protobuf search directory (issue 281)
+
+An ordinary recovery child may retain the fixed release's protobuf package directory after its official SDK import. The actual connection 4 guard reported PYTHON_SEARCH_PATH before context assignment. The rejected operand was unavailable. Public source hashes for moomoo, common.constant and common.pb bind an import chain that appends the package directory. Its 64-byte initializer has SHA-256 49f94f30ceac89078d784ddcad041e637100bd1e61f6e238b1347c8256d26907. This pin describes observed release bytes.
+
+Bind one optional suffix to the path sequence validated at INITIAL in the current child. Every SESSION must see that sequence or that sequence followed by exactly one raw canonical SDK/moomoo/common/pb. Check the live package's origin, package search location and source loader against the named initializer. Verify root-owned protected ancestry, read-only storage, held/named file stability and the pinned source bytes on every admission of the suffix. Existing origin, isolation, SDK pins, close and publication guards still run. INITIAL and older families keep their original path policy. The child never edits away a path change or permits other SDK siblings.
+
+Success means the actual SESSION guard allows the modeled verified append and rejects substitution or drift before the constructor. Defer native qualification to the ordinary reviewed release. Preserve the four historical UNKNOWN outcomes and existing attempt budgets.
