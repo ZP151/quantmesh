@@ -1,5 +1,17 @@
 # QuantMesh Product Roadmap
 
+## Current successor - trusted Operator instance data, 2026-11-05
+
+PR287/e12373cc software/normalCI7823PASS is published and installed. Actual startup
+stopped before systemctl: entryumask077 created the public registry0700, denying
+serviceUID997 traversal. No claim/service/credential/SDK effect. Expired4aecontrol
+is retained unchanged. Current successor keeps fixed trust/role boundaries and
+uses immutable nonce/instance DATA rather than code literals; Parent explicitly
+prepares ownedregistryroot:actualGID0750 and verifies real service access. Source
+09765ad4 awaits two-axis review/newheadCI/publication; fresh shortwindow is created
+only immediatelybeforestart. Collector/conn6 frozen; FinancialINSUFFICIENT. P24
+software105MiB, Source13/common75, Operator3MiBeach, all431MiB retained.
+
 ## Current scope - Operator-only restoration, 2026-11-05
 
 Issue281 first restores the existing authorized persistent private OpenD service

@@ -1,5 +1,50 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Current immutable-instance successor - 2026-11-05
+
+PR287 normally merged e12373cc832a96bc184315b9b039f8f8cbe1be76/tree7e134d8d
+following actualfinalfda1a7e6 CI41995998622 success7823PASS/149SKIP/frontend793.
+ExactVitest4.1.11/Vite8.2.4/all11frontendbytes match. The optional GitHubCodex
+bot stopped at usage quota; it produced no inline findings and was not reported
+as a completed review. No extra credit, review rerun or admin bypass was used.
+Publication662886301b43b93375438b8ebb54eabf8f64c0fa26f31a62cd532384db2ea143,
+fullcatalog566912B/b8387dada9123b983a023096e220563cfae49bde3248cf715fcbbcc14d986033.
+
+Actual Operator STAGE installed coherent3publicsources and durably retained old
+public bytes/metadata. START stopped before systemctl at UID997 read_control:
+Root entryumask077 reduced mkdir0755 to root:root0700. Exact current-only facts
+show original/c8/4ae unitsinactive/dead/Main0/emptyInvocation, port11112absent,
+no4aeclaim/attribution/origin. Free144595558400/MemAvailable7388168192; service
+UID997/GID987/groups[987] verified. No credential metadata/material or SDK call.
+The4aecontrol remains unchanged0444 and expired09:41:50. Do not revive it.
+
+Planner selects stable logicalrole and trusted immutable runtimeDATA, not repeated
+literalnonce publication. Source v2 derives validated32hex nonce's control/unit/
+socket/protectedoriginal only inside fixed trusted roots, retaining0dauthority,
+source/host/vendor/profile/template/resource/kernel proof and all legacy routes.
+Present malformedrecord cannotfallback; eab/c8/4ae cannotbe reusedasv2. Source
+PINS2850B/SHA09765ad4a5733f57e87de379a529dfaaa2bb04375d300491e3f1c4dc61e696dc,
+HANDOFF4727B/e66ab6b1d62f642323e90c2ed593256cdd4361d2a1ac3356e1747b873183dde1.
+Source395affectedpasses plus6held-readerchecks. Parent independently453PASS/
+36platformSKIP across7modules (332/6.08s plus121/7.43s), frozen7bytesstable.
+Runner/collector and private83-test successor stay unchanged; connection6notissued.
+Normalnewheadreview/CI/publication and actualRootOps verification remain gates.
+
+Parent private umask causalRED executes original directory-creation AST; new
+explicitroot:serviceGID0750 permission-only helper has6fakekernelGREENcases,
+including existingowned directory and foreign/writable/group/inode-substitution
+refusal. Originalopsreader R2 and actualUID997 traversal proof precede its live
+correction. Newinstance/purpose and shortwindow are generated only after actual
+publication/opsreadiness, immediatelybefore guardedstart. Oldcontrol/failures stay.
+
+P24 canonical1429B/SHA49ba1296bb930f1787d49bd0979305ec68d24e38330fc8178066a110c985ed69
+binds via actualmerged e123 RecoveryProfile. Source13/common75/Product16/FS1software
+105MiB, Operator3MiBlocal+3MiBremote include old/newpurposes and allfutures. Net6MiB
+centrallyregistered once, all431MiB451936256; G10838175834/P4800103438/all4856726542
+fit12/6GiB/free50GiB. Sourcecomplete13139968<13631488 preserves old524288future,
+allREDs and fullDB32MiBhold. Samebatchactor/counts/wall16h remain, oldUNKNOWN not
+refunded. Capacity and privateGREEN are not startup/capture/financialqualification.
+
 ## Current Operator-only checkpoint - 2026-11-05
 
 Original independent Spec and Standards both return READY for the reduced

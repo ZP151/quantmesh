@@ -218,13 +218,21 @@ def test_listener_is_unique_and_vendor_owned(fault):
         "finish",
     ],
 )
+@pytest.mark.parametrize("nonce", [NONCE, "1" * 32, "f" * 32])
 def test_current_snapshot_checks_owned_origin_without_prelogin_endpoint_assumption(
-    monkeypatch, operator, fault
+    monkeypatch, operator, fault, nonce
 ):
     p, n = producer(), native_module()
     obj = receipt(p)
+    version = "v1" if nonce == NONCE else "v2"
+    unit = "quantmesh-opend-console@" + nonce + ".service"
+    group = "/system.slice/" + unit
+    obj["schema"] = "qm.opend.provider-binding." + version
+    obj["launch"].update(
+        schema="qm.opend.attributed-launch." + version, nonce=nonce, unit=unit, cgroup=group
+    )
     if operator:
-        obj["schema"] = "qm.opend.operator-login-origin.v1"
+        obj["schema"] = "qm.opend.operator-login-origin." + version
     import hashlib
     import json
 
@@ -237,10 +245,10 @@ def test_current_snapshot_checks_owned_origin_without_prelogin_endpoint_assumpti
     source = b"observed merged launcher"
     control = encode(
         {
-            "schema": "qm.opend.operator-restore.v1",
+            "schema": "qm.opend.operator-restore." + version,
             "authority_sha256": AUTH,
             "claims": {
-                "nonce": NONCE,
+                "nonce": nonce,
                 "launcher_sha256": sha(source),
                 "gateway_gid": 987,
                 "gateway_uid": 997,
@@ -251,14 +259,20 @@ def test_current_snapshot_checks_owned_origin_without_prelogin_endpoint_assumpti
     raw = encode(obj)
     validate = p.validate_operator_login_origin if operator else p.validate_provider_binding
     binding = validate(raw, sha(raw))
+    assert binding.nonce == nonce
     folder = Path(__file__).resolve().parents[1] / "deploy/aws/opend"
     name = "OPERATOR-LOGIN-ORIGIN.json" if operator else "PROVIDER-BINDING.json"
 
     def protected(path, limit, *, mode=None):
-        if path.endswith(name):
+        directory = (
+            "/var/lib/quantmesh-opend-restore-20261105-01"
+            if nonce == NONCE
+            else "/var/lib/quantmesh-opend-operator-restores/" + nonce
+        )
+        if path == directory + "/" + name:
             assert mode == 0o444
             return raw
-        if path.endswith(NONCE + ".json"):
+        if path == "/etc/quantmesh/opend/operator-restores/" + nonce + ".json":
             assert mode == 0o444
             return b"{}" if fault == "current_control" else control
         if path.endswith("stage_console.py"):
@@ -274,12 +288,12 @@ def test_current_snapshot_checks_owned_origin_without_prelogin_endpoint_assumpti
     reader.directory = lambda path, *a, **kw: int(path) if path.isdigit() else 2
     reader.verify_machine = lambda raw: None
     observed = {
-        "Id": UNIT,
+        "Id": unit,
         "InvocationID": INV,
         "ActiveState": "active",
         "SubState": "running",
         "MainPID": "3001",
-        "ControlGroup": GROUP,
+        "ControlGroup": group,
     }
     reader.manager = lambda: observed
     names = {row["pid"]: role for role, row in obj["processes"].items()}
@@ -293,7 +307,7 @@ def test_current_snapshot_checks_owned_origin_without_prelogin_endpoint_assumpti
             uids=[997] * 4,
             nnp=1,
             caps=0,
-            cgroup_unit=UNIT,
+            cgroup_unit=unit,
         )
         if fault == "process_drift" and role == "VENDOR":
             row["start"] += 1
@@ -377,3 +391,54 @@ def test_collector_entry_does_not_take_operator_binding(entry):
         else:
             p._check_identity({}, binding)
     assert p.PosixReader().unit == p.UNIT
+
+
+@pytest.mark.parametrize(
+    "fault",
+    [
+        "reserved_restore",
+        "reserved_session",
+        "reserved_recovery",
+        "path",
+        "uppercase",
+        "unit",
+        "v1_packet",
+        "v1_original",
+        "other_role",
+        "duplicate",
+    ],
+)
+def test_v2_receipt_must_bind_one_new_instance_before_any_path(fault):
+    import hashlib
+    import json
+
+    p = producer()
+    nonce = {
+        "reserved_restore": NONCE,
+        "reserved_session": p.NONCE,
+        "reserved_recovery": "c8f0d0de4ca641a491fca6df24c66ceb",
+        "path": "../" + "e" * 29,
+        "uppercase": "F" * 32,
+    }.get(fault, "b" * 32)
+    obj = receipt(p)
+    unit = "quantmesh-opend-console@" + nonce + ".service"
+    obj["schema"] = "qm.opend.operator-login-origin.v2"
+    obj["launch"].update(
+        nonce=nonce,
+        unit=unit,
+        cgroup="/system.slice/" + unit,
+        schema="qm.opend.attributed-launch.v2",
+    )
+    if fault == "unit":
+        obj["launch"]["unit"] = UNIT
+    elif fault == "v1_packet":
+        obj["launch"]["schema"] = "qm.opend.attributed-launch.v1"
+    elif fault == "v1_original":
+        obj["schema"] = "qm.opend.operator-login-origin.v1"
+    elif fault == "other_role":
+        obj["schema"] = "qm.opend.provider-binding.v2"
+    raw = json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()
+    if fault == "duplicate":
+        raw = b'{"schema":"qm.opend.operator-login-origin.v2",' + raw[1:]
+    with pytest.raises(p.FeasibilityRejected):
+        p.validate_operator_login_origin(raw, hashlib.sha256(raw).hexdigest())

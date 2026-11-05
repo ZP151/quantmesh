@@ -184,9 +184,19 @@ RESTORE_PROFILE = "0e0b15be83e2b7b435d4e6dbb94f2cbd9c7833e681c4af517e361f5b80b40
 VENDOR_SHA = "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601"
 
 
+def _restore_version(nonce):
+    _require(
+        type(nonce) is str
+        and re.fullmatch(r"[0-9a-f]{32}", nonce)
+        and nonce not in (NONCE, "c8f0d0de4ca641a491fca6df24c66ceb"),
+        "PROVIDER_IDENTITY",
+    )
+    return "v1" if nonce == RESTORE_NONCE else "v2"
+
+
 @dataclass(frozen=True)
 class ProviderExecution:
-    schema = "qm.opend.provider-binding.v1"
+    schema_family = "qm.opend.provider-binding"
     unit: str
     invocation: str
     cgroup: str
@@ -196,6 +206,22 @@ class ProviderExecution:
     receipt_sha: str
     control_sha: str
     launcher_sha: str
+
+    @property
+    def nonce(self):
+        match = (
+            re.fullmatch(r"quantmesh-opend-console@([0-9a-f]{32})\.service", self.unit)
+            if type(self.unit) is str
+            else None
+        )
+        _require(match is not None, "PROVIDER_IDENTITY")
+        nonce = match.group(1)
+        _restore_version(nonce)
+        return nonce
+
+    @property
+    def schema(self):
+        return self.schema_family + "." + _restore_version(self.nonce)
 
     @classmethod
     def verified_record(cls, record):
@@ -222,14 +248,12 @@ class ProviderExecution:
             }
         )
         require(
-            record["schema"] == cls.schema
-            and record["machine_sha256"] == MACHINE
+            record["machine_sha256"] == MACHINE
             and record["template_sha256"] == RESTORE_TEMPLATE
             and record["vendor_sha256"] == VENDOR_SHA
             and record["profile_sha256"] == RESTORE_PROFILE
         )
         launch = record["launch"]
-        unit = "quantmesh-opend-console@" + RESTORE_NONCE + ".service"
         require(
             type(launch) is dict
             and set(launch)
@@ -250,9 +274,12 @@ class ProviderExecution:
                 "claim_ino",
             }
         )
+        nonce = launch["nonce"]
+        version = _restore_version(nonce)
+        unit = "quantmesh-opend-console@" + nonce + ".service"
         require(
-            launch["schema"] == "qm.opend.attributed-launch.v1"
-            and launch["nonce"] == RESTORE_NONCE
+            record["schema"] == cls.schema_family + "." + version
+            and launch["schema"] == "qm.opend.attributed-launch." + version
             and launch["authority_sha256"] == RESTORE_AUTHORITY
             and launch["unit"] == unit
             and hexadecimal(launch["invocation"], 32)
@@ -320,7 +347,7 @@ class ProviderExecution:
 
 
 class OperatorLoginOrigin(ProviderExecution):
-    schema = "qm.opend.operator-login-origin.v1"
+    schema_family = "qm.opend.operator-login-origin"
 
 
 def _validated_record(kind, raw, expected_sha256):
