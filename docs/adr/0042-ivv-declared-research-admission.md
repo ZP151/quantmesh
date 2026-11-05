@@ -150,3 +150,22 @@ The recovery helper records finite call-site facts for the actual primary operat
 The optional closed capture_lifecycle object exists on failed capture manifests only. Authenticated child IPC, parent cleanup aggregation, protected runner-failure bytes and versioned private STOP selectors preserve it without promoting ownership, actual usage or input admission. A private exception marker is cleared before reattachment; unowned/corrupt metadata cannot become current evidence. DEFAULT means the three close booleans were not replaced by the actual close-observation block, not that no SDK effects occurred. The shared network manager is not stopped by context cleanup. An absent/partial context never proves normal close. Old absent metadata and all legacy families remain readable.
 
 Fresh remote reconciliation changes to CLAIMED only after the existing durable begin succeeds. This corrects reporting only; attempts, debits, uncertain external effects and cleanup requirements are unchanged. Offline modeled lifecycle/IPC/consumer tests establish software behavior, not the cause of connection3 or actual SDK success.
+
+## Recovery SESSION protobuf path role - 2026-11-05, issue281
+
+The owned child retains the search-path tuple validated at INITIAL. Recovery
+SESSION accepts that tuple or precisely one final canonical SDK/moomoo/common/pb
+entry. Each session verifies protected ancestry, directory/read-only attributes,
+the exact loaded package/module-spec/source-loader/file/search-location fields,
+and the held named initializer against the observed64-byte release digest. A
+final sequence check catches mutation during validation. This is release-observed
+SDK compatibility; it does not establish vendor qualification. No SDK source or
+search path is rewritten. INITIAL and older families retain their original policy.
+
+Causal RED reaches the real observer/session verifier before the constructor;
+GREEN reaches a modeled constructor sentinel. Negative paths, aliases, duplicates,
+extra/reordered entries, source/metadata substitution, writable/unprotected bytes
+and later drift refuse. Source49 and Parent210 tests pass. These modeled checks
+do not establish the historical connection4 operand, native success, actual SDK
+counts or data admission. All four prior UNKNOWN outcomes remain unchanged;
+normal independent review/publication/native/Quant gates precede accepted input.

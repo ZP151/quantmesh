@@ -2,6 +2,77 @@
 
 ## Current checkpoint - initialization evidence, 2026-11-05
 
+Both original independent readers return READY for the narrow SDK-path delta at
+818fc6b6318ca7a5661a6e42eee09d09770b55ae. Parent reads and pins SPEC2399B/SHA
+412437328d90d21d4b8a0b2966277d1ff0b125d8a8baaba207272d019fa5f89c and
+STANDARDS2090B/SHA91d8a93f3d9bf623b64fa2424820fe43917d9bfc17c08ba6a60200b29e39e375.
+No material blocker: owned INITIAL baseline, exact optional terminal role, exact
+loaded-source types/identities, repeated protected held-byte proof, path drift and
+legacy semantics are checked. The actual rejected conn4 operand remains unknown.
+This final checkpoint changes only the iteration record. Next is necessary
+matching-final-head normal CI/exact-lock bundle, ordinary guarded merge and
+new-publication compressed carrier measurement before actual connection5.
+
+Original Source freezes the exact-role implementation: runner142582B/SHA
+738662465f5a5ecfaf8f11537052aa565684dc74bd980f55f50c71d9e6cbbe14, new test and
+narrow spec/plan. PINS3e47660b binds all4 tracked/12 artifacts/7 roles/4 ops. Parent
+verifies all bytes; other6 release roles and operations04 stay unchanged. The
+causal RED02 reaches the real owned INITIAL->preimport SESSION->observer path
+and refuses before constructor; initialRED01 import-order failure is retained.
+Causal GREEN reaches the sentinel; forged metadata and mutation-during-read REDs
+become GREEN with exact types and final sequence recheck. Source49PASS/11.62s.
+Parent independent210PASS/12.75s on new cases, lifecycle, executable-origin,
+runtime-failure, original runtime and bootstrap checks; frozen4 stable, zero
+failed-fixture bytes, under the2MiB reserve. Broad Ruff/scoped format/LF/whitespace
+pass. Complete Source9596928<10MiB keeps all old futures. Decoded body585217<1MiB,
+worst all-control header843611<870400 and status2911 remain bounded; the new actual
+compressed carrier is still a publication-build gate. Independent narrow review
+and actual final-head normal CI remain open. No new native/SDK effect was issued.
+
+Planner accepts the bounded exact SDK protobuf-path compatibility proposal
+3f67c3db under the actual standing recovery direction. One user action remains
+fixed IVV capture; the outcome is a normally sealed capture suitable for separate
+Quant review. No provider changes, path deletion, generic descendant trust or new
+research/trading/data/math scope. Quant boundaries and actual H1/H2/H3 remain
+unmodified. Source must first reproduce the actual SESSION refusal offline, then
+implement one versioned exact canonical protected/readonly role bound to the
+INITIAL-owned path tuple, the observed initializer and loaded package origin.
+Negative aliases, extra/duplicate/reordered entries, writable/unprotected/source
+mismatch paths and unchanged legacy/INITIAL behavior require regression evidence.
+Original independent readers and new final-head normal CI precede connection5.
+
+Current P20 raw1428B/SHA39cc66258006aebeba55c509fbe901be735ed589d8f7fb9061c6a352c9d2441c
+binds through actual merged74b RecoveryProfile. Capacity-SOFTWARE-14 registers
+net5MiB: Source9->10 (complete9596928 including old524288 future) and common58->62
+(complete64438272 includes all old60112896/full32MiB DB hold, new publication2031616,
+Parent SDK verification2MiB, RO records65536 and reviews/final131072). All old
+80+new297=377MiB395313152 retained; Source10/Product16/common62/FS1 software89MiB.
+Conservative G10781552730/P4743480334/all4800103438 remain within12/6GiB/free50GiB.
+Same batch6/init6/keep576/wall43200/business32/compute3/rate1, actor unchanged.
+Policy20 is capacity, not runtime GO or vendor qualification; no new effect issued.
+
+PR285 is normally merged74b141a743f49b25cdc6c1604583ef7fe31e0549/tree35ee3accccb243af3dc34eafe411d5cfa5f1b667.
+Final0e135a7f actualCI41966308180 succeeds:7713PASS/149SKIP/frontend793. Exact
+Vitest4.1.11/Vite8.2.4 and all11 generated files match. Current-head/base/checks
+and empty review threads precede ordinary expected-head squash merge. Ops04
+publicationa74392c2/catalog21a648db derives from actual merged blobs and all7
+source roles. This is software qualification, not an accepted input.
+
+Actual connection4 uses256512B carrier under262144B, same P19 and nominal6 batch.
+SESSION/NAMED_OBJECT passes. New finite lifecycle evidence identifies primary
+Refused/PYTHON_SEARCH_PATH at CONTEXT_RESERVE_GUARD/PROVIDER_SESSION before context
+assignment/construction returns. Secondary close is unproved/DEFAULT. All4 nominal
+slots and actual external effects remain UNKNOWN; response entries0, no input or
+study. Current-only zero-SDK readback proves CLOSED, owned cleanup, MainPID0 and
+matching invocationda99411480ea4b4d8039170d1893c41c. Local transport normally closes.
+Fixed public SDK source64B/SHA49f94f30 shows moomoo/common/pb/__init__.py appending
+its directory. The current guard admits only the SDK root or standard-library
+paths. This is a causal hypothesis until an offline reproduction; the actual
+rejected path was not output. Original Source prepares a minimal compatibility
+proposal and complete forecast before implementation. No path-clearing bypass,
+broad SDK descendant allowance, provider restart or extra diagnostic context.
+New branch codex/0038-ivv-sdk-path starts from actual origin/main74b.
+
 Both original readers return READY for the narrow hot-fixture correction at
 6e8663ec3d611b856baef76038a58cd9a30e3fa1. Parent reads and pins SPEC2366B/SHA
 363897a721045a5a9416e95908a821c020c53aa27ce46504e8d81031df015954 and

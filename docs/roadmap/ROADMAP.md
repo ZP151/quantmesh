@@ -1,5 +1,17 @@
 # QuantMesh Product Roadmap
 
+Current SDK-path checkpoint: PR285 merged74b141a7 after actual new-head CI
+7713PASS/149SKIP/frontend793 and exact-lock/full-tree/source-role verification.
+Connection4 passed executable SESSION proof then stopped PYTHON_SEARCH_PATH
+before context assignment. Its exact owned cleanup is proved; all4 UNKNOWN and
+reserved counts remain, no accepted input/study. The observed fixed SDK protobuf
+initializer appends its directory; a causal offline RED must precede the minimal
+versioned exact canonical protected/readonly compatibility role. Original
+independent review and new normal CI precede actual connection5. Current P20
+software89MiB(Source10/Product16/common62/FS1), old80+new297=377MiB all retained;
+complete Source9596928/common64438272 includes old futures and32MiB DB hold.
+Scope/data/math/free50GiB/actor/samebatch6/43200s unchanged. See current iteration.
+
 Current hot-headroom CI correction: four explicit test opt-ins model only a temporary
 volume fact; production50GB and actual-entry50GiB resource gates are unchanged.
 Parent serial132PASS/2SKIP/33.38s follows the controlled boundary RED/GREEN.

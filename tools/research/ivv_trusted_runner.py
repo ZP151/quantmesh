@@ -2512,7 +2512,69 @@ def _child_namespace(channel, producer, *, additional=False):
     return ns
 
 
-def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_phase="UNKNOWN"):
+# Release-observed raw bytes of the fixed SDK protobuf package initializer.
+_SDK_PB_INITIALIZER_SHA256 = "49f94f30ceac89078d784ddcad041e637100bd1e61f6e238b1347c8256d26907"
+
+
+def _session_pb_directory(initial_path, current):
+    need(all(type(entry) is str for entry in current), "PYTHON_SEARCH_PATH")
+    if current == initial_path:
+        return None
+
+    package = SDK / "moomoo/common/pb"
+    directory = str(package)
+    need(
+        directory not in initial_path and current == (*initial_path, directory),
+        "PYTHON_SEARCH_PATH",
+    )
+    protected(package)
+    need(stat.S_ISDIR(package.stat().st_mode), "PYTHON_SEARCH_PATH")
+    need(os.statvfs(package).f_flag & os.ST_RDONLY, "PYTHON_SEARCH_WRITABLE")
+
+    name = "moomoo.common.pb"
+    initializer = package / "__init__.py"
+    source = str(initializer)
+    module = sys.modules.get(name)
+    need(type(module) is types.ModuleType, "PYTHON_SEARCH_PATH")
+    fields = vars(module)
+    spec = fields.get("__spec__")
+    loader = fields.get("__loader__")
+    need(
+        type(spec) is importlib.machinery.ModuleSpec
+        and type(loader) is importlib.machinery.SourceFileLoader
+        and vars(spec).get("loader") is loader,
+        "PYTHON_SEARCH_PATH",
+    )
+    names = (fields.get("__name__"), vars(spec).get("name"), vars(loader).get("name"))
+    origins = (fields.get("__file__"), vars(spec).get("origin"), vars(loader).get("path"))
+    locations = (fields.get("__path__"), vars(spec).get("submodule_search_locations"))
+    need(
+        all(type(item) is str and item == name for item in names)
+        and all(type(item) is str and item == source for item in origins)
+        and all(
+            type(paths) is list
+            and len(paths) == 1
+            and type(paths[0]) is str
+            and paths[0] == directory
+            for paths in locations
+        ),
+        "PYTHON_SEARCH_PATH",
+    )
+    read_ref({"path": source, "sha256": _SDK_PB_INITIALIZER_SHA256}, initializer, 64, True)
+    return package
+
+
+def _runtime(
+    plan,
+    helper,
+    ns,
+    catalog,
+    producer,
+    *,
+    additional=False,
+    origin_phase="UNKNOWN",
+    initial_path=None,
+):
     loc = _locations(additional)
     need(os.stat("/proc/self/ns/mnt").st_ino == ns, "OWN_NAMESPACE_DRIFT")
     _for_task(_writable_mounts, additional)(producer)
@@ -2599,11 +2661,18 @@ def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_ph
         for key, name in _sources(additional).items():
             path = loc.release / name
             read_ref({"path": str(path), "sha256": catalog[key]}, path, 262144, True)
-        for path in sys.path:
+        checked_session = (
+            _recovery_mode(additional) and origin_phase == "SESSION" and initial_path is not None
+        )
+        search_path = tuple(sys.path) if checked_session else sys.path
+        pb = _session_pb_directory(initial_path, search_path) if checked_session else None
+        for path in search_path:
             if Path(path).exists():
                 resolved = Path(path).resolve(strict=True)
                 need(
-                    resolved.is_relative_to("/usr/lib/python3.12") or resolved == SDK,
+                    resolved.is_relative_to("/usr/lib/python3.12")
+                    or resolved == SDK
+                    or (pb is not None and resolved == pb),
                     "PYTHON_SEARCH_PATH",
                 )
                 protected(resolved)
@@ -2645,8 +2714,14 @@ def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_ph
             "PROTO_AND_QUOTE_ORIGIN",
         )
         # PathFinder performs no package import. Production imports only after once.
-        spec = importlib.machinery.PathFinder.find_spec("moomoo", sys.path)
+        spec = importlib.machinery.PathFinder.find_spec("moomoo", search_path)
         need(spec and Path(spec.origin) == SDK / "moomoo/__init__.py", "SDK_IMPORT_ORIGIN")
+        if checked_session:
+            current = tuple(sys.path)
+            need(
+                all(type(entry) is str for entry in current) and current == search_path,
+                "PYTHON_SEARCH_PATH",
+            )
         if _recovery_mode(additional) and executable_origin is None:
             executable_origin = select_executable_origin(
                 {
@@ -3041,15 +3116,25 @@ def _child(channel, parent, context, plan):
     if str(SDK) not in sys.path:
         sys.path.append(str(SDK))
 
+    initial_path = None
+
     def runtime(phase):
         checked = _for_task(_runtime, additional)(
-            plan, m, ns, values["catalog_ref"], producer, origin_phase=phase
+            plan,
+            m,
+            ns,
+            values["catalog_ref"],
+            producer,
+            origin_phase=phase,
+            **({"initial_path": initial_path} if initial_path is not None else {}),
         )
         if _recovery_mode(additional):
             values["_executable_origin"] = select_executable_origin(checked["executable_origin"])
         return checked
 
     runtime("INITIAL")
+    if _recovery_mode(additional):
+        initial_path = tuple(sys.path)
     # Validate all immutable material, actor limits and available space before parent GO.
     actor = m._native_actor()
     m._admit_material(
