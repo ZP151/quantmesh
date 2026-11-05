@@ -177,30 +177,210 @@ def _require(value, code):
         raise FeasibilityRejected(code)
 
 
+RESTORE_NONCE = "4ae19a7fad3fdaf8e3d23c1a4eb4b3d4"
+RESTORE_AUTHORITY = "0d2965519662b53c448e003f6a8ddcf8d07834d399da2ece4ab2407475f9a945"
+RESTORE_TEMPLATE = "b23d91ec4d5b377d57d8a0cae1971974d4268f1faa3a5fed06dc0d0add867890"
+RESTORE_PROFILE = "0e0b15be83e2b7b435d4e6dbb94f2cbd9c7833e681c4af517e361f5b80b40e17"
+VENDOR_SHA = "e05b901dbe9107061b954a7fe3c059916c4a1e580d8f0a57277d402438898601"
+
+
+@dataclass(frozen=True)
+class ProviderExecution:
+    schema = "qm.opend.provider-binding.v1"
+    unit: str
+    invocation: str
+    cgroup: str
+    cohort: tuple
+    mnt: int
+    net: int
+    receipt_sha: str
+    control_sha: str
+    launcher_sha: str
+
+    @classmethod
+    def verified_record(cls, record):
+        def require(value):
+            _require(value, "PROVIDER_IDENTITY")
+
+        def positive(value):
+            return type(value) is int and 0 < value < 2**63
+
+        def hexadecimal(value, width):
+            return type(value) is str and re.fullmatch(rf"[0-9a-f]{{{width}}}", value)
+
+        require(
+            type(record) is dict
+            and set(record)
+            == {
+                "schema",
+                "launch",
+                "machine_sha256",
+                "template_sha256",
+                "vendor_sha256",
+                "profile_sha256",
+                "processes",
+            }
+        )
+        require(
+            record["schema"] == cls.schema
+            and record["machine_sha256"] == MACHINE
+            and record["template_sha256"] == RESTORE_TEMPLATE
+            and record["vendor_sha256"] == VENDOR_SHA
+            and record["profile_sha256"] == RESTORE_PROFILE
+        )
+        launch = record["launch"]
+        unit = "quantmesh-opend-console@" + RESTORE_NONCE + ".service"
+        require(
+            type(launch) is dict
+            and set(launch)
+            == {
+                "schema",
+                "nonce",
+                "authority_sha256",
+                "control_sha256",
+                "launcher_sha256",
+                "unit",
+                "invocation",
+                "cgroup",
+                "main_pid",
+                "pane_pid",
+                "vendor_pid",
+                "vendor_start",
+                "claim_dev",
+                "claim_ino",
+            }
+        )
+        require(
+            launch["schema"] == "qm.opend.attributed-launch.v1"
+            and launch["nonce"] == RESTORE_NONCE
+            and launch["authority_sha256"] == RESTORE_AUTHORITY
+            and launch["unit"] == unit
+            and hexadecimal(launch["invocation"], 32)
+            and hexadecimal(launch["control_sha256"], 64)
+            and hexadecimal(launch["launcher_sha256"], 64)
+            and all(
+                positive(launch[k])
+                for k in (
+                    "main_pid",
+                    "pane_pid",
+                    "vendor_pid",
+                    "vendor_start",
+                    "claim_dev",
+                    "claim_ino",
+                )
+            )
+        )
+        group = launch["cgroup"]
+        require(
+            type(group) is str
+            and len(group) <= 384
+            and group.endswith("/" + unit)
+            and (
+                group == r"/system.slice/system-quantmesh\x2dopend\x2dconsole.slice/" + unit
+                or re.fullmatch(r"/system\.slice/(?:[A-Za-z0-9_@.\:-]+/)*[A-Za-z0-9_@.\:-]+", group)
+            )
+            and not {".", ".."}.intersection(group.split("/"))
+        )
+        rows = record["processes"]
+        require(type(rows) is dict and set(rows) == {"TMUX", "PYTHON", "VENDOR"})
+        members = []
+        for role, key, parent in (
+            ("TMUX", "main_pid", 1),
+            ("PYTHON", "pane_pid", launch["main_pid"]),
+            ("VENDOR", "vendor_pid", launch["pane_pid"]),
+        ):
+            row = rows[role]
+            require(
+                type(row) is dict
+                and set(row) == {"pid", "start", "ppid", "mnt", "net"}
+                and all(positive(v) for v in row.values())
+                and row["pid"] == launch[key]
+                and row["pid"] > 1
+                and row["ppid"] == parent
+            )
+            require((row["mnt"], row["net"]) == (rows["TMUX"]["mnt"], rows["TMUX"]["net"]))
+            members.append((row["pid"], row["start"], row["ppid"], role))
+        require(
+            len({row[0] for row in members}) == 3
+            and rows["VENDOR"]["start"] == launch["vendor_start"]
+        )
+        encoded = json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
+        require(len(encoded) <= 4096)
+        return cls(
+            unit,
+            launch["invocation"],
+            group,
+            tuple(members),
+            rows["TMUX"]["mnt"],
+            rows["TMUX"]["net"],
+            hashlib.sha256(encoded).hexdigest(),
+            launch["control_sha256"],
+            launch["launcher_sha256"],
+        )
+
+
+class OperatorLoginOrigin(ProviderExecution):
+    schema = "qm.opend.operator-login-origin.v1"
+
+
+def _validated_record(kind, raw, expected_sha256):
+    _require(
+        type(raw) is bytes
+        and 0 < len(raw) <= 4096
+        and hashlib.sha256(raw).hexdigest() == expected_sha256,
+        "PROVIDER_IDENTITY",
+    )
+    binding = kind.verified_record(json.loads(raw))
+    _require(binding.receipt_sha == expected_sha256, "PROVIDER_IDENTITY")
+    return binding
+
+
+def validate_provider_binding(raw, expected_sha256):
+    return _validated_record(ProviderExecution, raw, expected_sha256)
+
+
+def validate_operator_login_origin(raw, expected_sha256):
+    return _validated_record(OperatorLoginOrigin, raw, expected_sha256)
+
+
 def _check_identity(value):
+    _check_subject(value, None)
+
+
+def _check_subject(value, binding):
+    members = (
+        PROCESSES
+        if binding is None
+        else {pid: (start, ppid, role) for pid, start, ppid, role in binding.cohort}
+    )
+    unit = UNIT if binding is None else binding.unit
     _require(
         value.get("machine") == MACHINE
-        and value.get("unit") == UNIT
-        and value.get("invocation") == INVOCATION
-        and value.get("main_pid") == 705646
+        and value.get("unit") == unit
+        and value.get("invocation") == (INVOCATION if binding is None else binding.invocation)
+        and value.get("main_pid") == (705646 if binding is None else binding.cohort[0][0])
         and value.get("active") == "active"
         and value.get("substate") == "running"
-        and value.get("vendor_loopback11112") is True,
+        and (
+            "vendor_loopback11112" not in value
+            if type(binding) is OperatorLoginOrigin
+            else value.get("vendor_loopback11112") is True
+        ),
         "PROVIDER_IDENTITY",
     )
     rows = value.get("processes", [])
-    _require(len(rows) == 3 and {x.get("pid") for x in rows} == set(PROCESSES), "PROVIDER_IDENTITY")
+    _require(len(rows) == 3 and {x.get("pid") for x in rows} == set(members), "PROVIDER_IDENTITY")
     for row in rows:
-        start, parent, role = PROCESSES[row["pid"]]
+        start, parent, role = members[row["pid"]]
         _require(
             row.get("start") == start
             and row.get("ppid") == parent
             and row.get("role") == role
             and row.get("uids") == [997] * 4
             and row.get("exe_verified") is True
-            and row.get("mnt") == 4026532217
-            and row.get("net") == 4026531833
-            and row.get("cgroup_unit") == UNIT
+            and row.get("mnt") == (4026532217 if binding is None else binding.mnt)
+            and row.get("net") == (4026531833 if binding is None else binding.net)
+            and row.get("cgroup_unit") == unit
             and row.get("caps") == 0
             and row.get("nnp") == 1,
             "PROVIDER_IDENTITY",
@@ -478,6 +658,9 @@ class PosixReader:
     """Fixed-subject read-only Linux metadata collector. Raw values stay in RAM."""
 
     def __init__(self):
+        self.binding = None
+        self.unit = UNIT
+        self.vendor_pid = 705711
         self.deadline = time.monotonic() + 25
         self.fds = []
         self.close_failed = False
@@ -681,13 +864,16 @@ class PosixReader:
 
     def manager(self):
         self.tick()
+        properties = "Id,ActiveState,SubState,MainPID,InvocationID,ControlGroup"
+        if self.binding is not None:
+            properties += ",FragmentPath,DropInPaths"
         command = [
             "/usr/bin/systemctl",
             "show",
             "--no-pager",
-            "--property=Id,ActiveState,SubState,MainPID,InvocationID,ControlGroup",
+            "--property=" + properties,
             "--",
-            UNIT,
+            self.unit,
         ]
         child = subprocess.Popen(
             command,
@@ -746,16 +932,42 @@ class PosixReader:
             _require(sep and key not in fields, "MANAGER_UNAVAILABLE")
             fields[key] = value
         _require(
-            set(fields)
-            == {"Id", "ActiveState", "SubState", "MainPID", "InvocationID", "ControlGroup"},
+            set(fields) == set(properties.split(",")),
             "MANAGER_UNAVAILABLE",
         )
         _require(
             fields["MainPID"].isdigit()
             and fields["ControlGroup"].startswith("/system.slice/")
-            and fields["ControlGroup"].endswith("/" + UNIT),
+            and fields["ControlGroup"].endswith("/" + self.unit),
             "PROVIDER_IDENTITY",
         )
+        if self.binding is not None:
+            b = self.binding
+            _require(
+                fields["Id"] == b.unit
+                and fields["ActiveState"] == "active"
+                and fields["SubState"] == "running"
+                and fields["InvocationID"] == b.invocation
+                and fields["MainPID"] == str(b.cohort[0][0])
+                and fields["ControlGroup"] == b.cgroup
+                and fields["DropInPaths"] == ""
+                and fields["FragmentPath"]
+                == "/etc/systemd/system/quantmesh-opend-console@.service",
+                "PROVIDER_IDENTITY",
+            )
+            fd = self.directory("/sys/fs/cgroup" + b.cgroup)
+            try:
+                members = self.read(fd, "cgroup.procs", 128).splitlines()
+                _require(
+                    len(members) == 3 and set(members) == {str(x[0]).encode() for x in b.cohort},
+                    "PROVIDER_IDENTITY",
+                )
+                _require(
+                    self.read(fd, "cgroup.stat", 4096).splitlines().count(b"nr_descendants 0") == 1,
+                    "PROVIDER_IDENTITY",
+                )
+            finally:
+                self.release(fd)
         return fields
 
     def executable(self, d, role):
@@ -812,7 +1024,7 @@ class PosixReader:
         _require(
             cg == b"0::" + self.manager_fields["ControlGroup"].encode() + b"\n", "PROVIDER_IDENTITY"
         )
-        row["cgroup_unit"] = UNIT
+        row["cgroup_unit"] = self.unit
         for key in ("mnt", "net"):
             link = os.readlink("ns/" + key, dir_fd=d)
             match = re.fullmatch(key + r":\[([0-9]+)\]", link)
@@ -849,6 +1061,24 @@ class PosixReader:
         _require(hashlib.sha256(raw).hexdigest() == MACHINE, "HOST_CONTEXT")
         return True
 
+    def bound_listener(self, vendor):
+        rows = []
+        for table in ("net/tcp", "net/tcp6"):
+            lines = self.read(vendor, table, 262144).splitlines()
+            _require(0 < len(lines) <= 4096, "TCP_BOUND")
+            for line in lines[1:]:
+                fields = line.split()
+                _require(len(fields) >= 10 and fields[9].isdigit(), "TCP_METADATA")
+                if fields[3] == b"0A" and fields[1].endswith(b":2B68"):
+                    rows.append((fields[1], int(fields[9])))
+        _require(
+            len(rows) == 1
+            and rows[0][0] == b"0100007F:2B68"
+            and rows[0][1] in self.socket_inodes(vendor),
+            "PROVIDER_IDENTITY",
+        )
+        return rows[0][1]
+
     def identity(self):
         _require(sys.platform == "linux" and os.geteuid() == 0, "HOST_CONTEXT")
         etc = self.directory("/etc")
@@ -857,7 +1087,12 @@ class PosixReader:
         self.manager_fields = self.manager()
         rows = []
         proc = self.directory("/proc")
-        for pid, (_, _, role) in PROCESSES.items():
+        roles = (
+            ((pid, row[2]) for pid, row in PROCESSES.items())
+            if self.binding is None
+            else ((pid, role) for pid, _, _, role in self.binding.cohort)
+        )
+        for pid, role in roles:
             d = self.directory(str(pid), proc)
             row = self.process(pid, d)
             exe, stamp = self.executable(d, role)
@@ -866,12 +1101,18 @@ class PosixReader:
             self.groups.update(row["groups"])
             self.groups.update(row["gids"])
             rows.append(row)
-        self.root = self.directory("root", self.processes[705711][0], magic=True)
-        inodes = self.socket_inodes(self.processes[705711][0])
-        endpoint = self.fixed_endpoint(
-            self.read(self.processes[705711][0], "net/tcp", 262144), inodes
-        )
-        self.endpoint_collected = True
+        self.root = self.directory("root", self.processes[self.vendor_pid][0], magic=True)
+        vendor = self.processes[self.vendor_pid][0]
+        if type(self.binding) is OperatorLoginOrigin:
+            endpoint = None
+        elif self.binding is not None:
+            self.listener_inode = self.bound_listener(vendor)
+            endpoint = True
+        else:
+            endpoint = self.fixed_endpoint(
+                self.read(vendor, "net/tcp", 262144), self.socket_inodes(vendor)
+            )
+        self.endpoint_collected = endpoint is not None
         return {
             "machine": MACHINE,
             "unit": self.manager_fields["Id"],
@@ -880,11 +1121,11 @@ class PosixReader:
             "substate": self.manager_fields["SubState"],
             "main_pid": int(self.manager_fields["MainPID"]),
             "processes": rows,
-            "vendor_loopback11112": endpoint,
+            **({"vendor_loopback11112": endpoint} if endpoint is not None else {}),
         }
 
     def mountinfo(self):
-        raw = self.read(self.processes[705711][0], "mountinfo", 262144)
+        raw = self.read(self.processes[self.vendor_pid][0], "mountinfo", 262144)
         if self.raw_mounts is None:
             self.raw_mounts = raw
         return raw
@@ -1012,10 +1253,17 @@ class PosixReader:
         if self.endpoint_collected:
 
             def endpoint():
+                if self.binding is not None:
+                    _require(
+                        self.bound_listener(self.processes[self.vendor_pid][0])
+                        == self.listener_inode,
+                        "ENDPOINT_RACE",
+                    )
+                    return
                 _require(
                     self.fixed_endpoint(
-                        self.read(self.processes[705711][0], "net/tcp", 262144),
-                        self.socket_inodes(self.processes[705711][0]),
+                        self.read(self.processes[self.vendor_pid][0], "net/tcp", 262144),
+                        self.socket_inodes(self.processes[self.vendor_pid][0]),
                     ),
                     "ENDPOINT_RACE",
                 )
@@ -1073,6 +1321,17 @@ class PosixReader:
                 errors.append(True)
         if errors or self.close_failed or self.resource_cleanup:
             raise OSError("owned descriptor close not established")
+
+
+class OperatorReader(PosixReader):
+    """Read a protected operator receipt's subject; the legacy reader stays fixed."""
+
+    def __init__(self, binding):
+        _require(type(binding) in (ProviderExecution, OperatorLoginOrigin), "PROVIDER_IDENTITY")
+        super().__init__()
+        self.binding = binding
+        self.unit = binding.unit
+        self.vendor_pid = binding.cohort[2][0]
 
 
 def main(argv=None):

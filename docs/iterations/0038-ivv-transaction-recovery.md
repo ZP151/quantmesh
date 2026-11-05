@@ -1,5 +1,48 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Current Operator-only checkpoint - 2026-11-05
+
+Planner scope is actual persistent OpenD service restoration and ordinary secure
+login under Operator authority0d296551, separate from collector6db. Earlier
+whole-slice candidate7a15b0c9 remains FIX_REQUIRED (R2 pre-GO sample changes the
+periodic deadline) and is preserved at branchcodex/0038-opend-provider-restore,
+checkpointc3504589. It was not pushed/published/deployed. Latest explicit Planner
+selects Operator-only delivery, replacing the whole-slice successor alternative.
+Collector, trusted-runner and operations06 remain frozen; connection6 is not sent.
+
+Source freezes standalone Operator origin and strict readonly snapshot plus fresh
+immutable startup registry/attribution, preserving actual escaped systemd slice,
+single-link claim FD held throughBOUND, supplementary groups and memory.high.
+Legacy PosixReader/RoleGrowth/NativeSession signatures and fixed defaults remain;
+only OperatorReader accepts the protected Operator receipt. No SDK/login/start
+API enters collector code. Active scope/spec/restore plan name the separation.
+SourcePINS4099B/SHA7b711227ff54ea98b3e81d7bc92458b682c5ab4e6cd36dd386916049020a95bd,
+HANDOFF3887B/SHA3c69a7f1f863cc7494760d239cbe78d22a7ca73115075b8f2d1c135bf3a66cab.
+Source200PASS with5excludedLinuxcases; Parent independently252PASS/36platformSKIP/
+3.42s with all six Operator/legacy modules and fixed6bytesstable. All runner Git
+bytes remain exactly10db5651. Source complete11472896<11534336 preserves old524288
+future/allfailedcandidates. Source review and new-head normalCI remain gates.
+
+Private Parent operational wiring is separately frozen CODE-PINS951B/SHA
+24c6790651c1220814f9eb7e0de6b3447a30c85163983273732d19f189aafe01 with57 model
+checksPASS/0.26s. It reuses exact Windows vault target/SID and mature CB1 framing,
+privateTTY guards and progress journal; no secret output. Independent operational
+review, actual merged-source installation/start/origin/private ordinary login/
+endpoint evidence remain open. No hostwrite/start/vaultmetadata/material/SDK was
+performed. Tailscale browser extension shows Authorization successful; this is
+only network authorization, not an OpenD login/SDK proof. No globalcomputeruse.
+
+P22 policy1429B/SHAaaee2ca9d7033d7d93b845e6dd5b26c94dc6e4c461b2ba559b0a867f9154ec81
+is raw/canonically validated by actualmerged10db RecoveryProfile. It honestly
+records Parent retained synthetic fixture5083136B versus original2MiB scratch
+estimate. Automatic approval blocked recursive cleanup, no deletion performed;
+all883fixtures and original test/failure logs remain. Net3MiB centrally recorded
+once: common66->69MiB, software94->97MiB, all421MiB441450496 retained. Complete
+common71942144<72351744, guardsG10827690074/P4789617678/all4846240782 within12/6GiB
+andfree50GiB. Batchctx/init6/keep576/business32/compute3/wall16h unchanged, no old
+UNKNOWN/debit refund. Historical scratch excess is not represented as compliant.
+Capacity is not service/capture/data qualification. FinancialINSUFFICIENT remains.
+
 ## Current checkpoint - initialization evidence, 2026-11-05
 
 Both original independent readers return READY for the narrow SDK-path delta at

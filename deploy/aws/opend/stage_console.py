@@ -17,14 +17,16 @@ import platform
 import re
 import select
 import signal
+import socket
 import stat
+import struct
 import subprocess
 import sys
 import tempfile
 import threading
 import time
 import types
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -44,6 +46,10 @@ PERMIT = Path("/etc/quantmesh/opend/staging-window.json")
 PERSISTENT_PERMIT = Path("/etc/quantmesh/opend/persistent-session.json")
 RECOVERY_PERMIT = Path("/etc/quantmesh/opend/persistent-recovery.json")
 RECOVERY_HISTORY = Path("/etc/quantmesh/opend/persistent-recovery-c8-schema4-history.json")
+RESTORE_NONCE = "4ae19a7fad3fdaf8e3d23c1a4eb4b3d4"
+RESTORE_AUTHORITY = "0d2965519662b53c448e003f6a8ddcf8d07834d399da2ece4ab2407475f9a945"
+RESTORE_CONTROL = Path("/etc/quantmesh/opend/operator-restores") / (RESTORE_NONCE + ".json")
+RESTORE_SOCKET = "/run/quantmesh-opend-restore-" + RESTORE_NONCE + ".sock"
 PRIVATE_STORAGE_NONCE = "c8f0d0de4ca641a491fca6df24c66ceb"
 PRIVATE_STORAGE_DROPIN = Path(
     "/etc/systemd/system/quantmesh-opend-console@"
@@ -122,6 +128,56 @@ class StagingWindow:
     @property
     def persistent(self):
         return self.claims.get("schema_version") == 2
+
+
+@dataclass(frozen=True)
+class RestoreWindow(StagingWindow):
+    control_sha256: str
+
+
+def _restore_bytes():
+    with _protected_fd(RESTORE_CONTROL) as fd:
+        before = os.fstat(fd)
+        if stat.S_IMODE(before.st_mode) != 0o444 or not 0 < before.st_size <= 8192:
+            raise StageDenied("protected_path")
+        raw = os.pread(fd, before.st_size + 1, 0)
+
+        def stamp(value):
+            return (
+                value.st_dev,
+                value.st_ino,
+                value.st_mode,
+                value.st_size,
+                value.st_uid,
+                value.st_nlink,
+                value.st_mtime_ns,
+                value.st_ctime_ns,
+            )
+
+        if (
+            len(raw) != before.st_size
+            or stamp(os.fstat(fd)) != stamp(before)
+            or stamp(RESTORE_CONTROL.lstat()) != stamp(before)
+        ):
+            raise StageDenied("protected_path")
+        return raw
+
+
+def _restore_window():
+    raw = _restore_bytes()
+    value = _json(raw)
+    if (
+        type(value) is not dict
+        or set(value) != {"schema", "authority_sha256", "claims"}
+        or value["schema"] != "qm.opend.operator-restore.v1"
+        or value["authority_sha256"] != RESTORE_AUTHORITY
+        or type(value["claims"]) is not dict
+        or set(value["claims"]) != FIELDS | {"session_lifetime"}
+        or value["claims"]["schema_version"] != 2
+        or value["claims"]["nonce"] != RESTORE_NONCE
+    ):
+        raise StageDenied("permit_denied")
+    return RestoreWindow(value["claims"], hashlib.sha256(raw).hexdigest())
 
 
 @dataclass(frozen=True)
@@ -325,6 +381,10 @@ def load_staging_window(path=None, *, persistent=False):
 
 
 def select_console_window(nonce, *, persistent=False):
+    if nonce == RESTORE_NONCE:
+        if not persistent:
+            raise StageDenied("permit_denied")
+        return _restore_window()
     if persistent:
         try:
             RECOVERY_PERMIT.lstat()
@@ -337,6 +397,11 @@ def select_console_window(nonce, *, persistent=False):
 
 
 def reload_console_window(window):
+    if isinstance(window, RestoreWindow):
+        current = _restore_window()
+        if current != window:
+            raise StageDenied("pin_drift")
+        return current
     if isinstance(window, RecoveryWindow):
         module = _module(BASE / "same_unit_recovery.py", RECOVERY_SHA)
         return RecoveryWindow(module.load(sys.modules[__name__], window.nonce))
@@ -553,6 +618,10 @@ def _validate_manager(window, properties, *, preparing=False):
         or ".." in cg.split("/")
     ):
         raise StageDenied("backend_denied")
+    if isinstance(window, RestoreWindow) and not re.fullmatch(
+        "[0-9a-f]{32}", properties.get("InvocationID", "")
+    ):
+        raise StageDenied("backend_denied")
     if not preparing and not re.fullmatch(r"[1-9][0-9]*", properties.get("MainPID", "")):
         raise StageDenied("backend_denied")
 
@@ -582,13 +651,17 @@ def _manager(window, *, preparing=False):
     _bytes(Path(contract["FragmentPath"]), PERSISTENT_UNIT_SHA if window.persistent else UNIT_SHA)
     if isinstance(window, RecoveryWindow) and window.nonce == PRIVATE_STORAGE_NONCE:
         _bytes(PRIVATE_STORAGE_DROPIN, PRIVATE_STORAGE_DROPIN_SHA)
-    names = list(contract) + [
-        "Id",
-        "MainPID",
-        "ActiveState",
-        "ControlGroup",
-        "RuntimeDirectory",
-    ]
+    names = (
+        list(contract)
+        + (["InvocationID"] if isinstance(window, RestoreWindow) else [])
+        + [
+            "Id",
+            "MainPID",
+            "ActiveState",
+            "ControlGroup",
+            "RuntimeDirectory",
+        ]
+    )
     output = _command(
         ["/usr/bin/systemctl", "show", "--no-pager", "--property=" + ",".join(names), _unit(window)]
     )
@@ -691,7 +764,8 @@ def _runtime_config(window):
             os.close(fd)
 
 
-def _claim(window, directory):
+@contextmanager
+def _claim_fd(window, directory):
     try:
         fd = os.open(
             window.nonce,
@@ -705,8 +779,14 @@ def _claim(window, directory):
         os.fchmod(fd, 0o600)
         os.fsync(fd)
         os.fsync(directory)
+        yield fd
     finally:
         os.close(fd)
+
+
+def _claim(window, directory):
+    with _claim_fd(window, directory):
+        pass
 
 
 def _unclaimed(window):
@@ -834,6 +914,7 @@ def start_staging_console(window):
         window.claims["max_seconds"], (window.expires - datetime.now(UTC)).total_seconds()
     )
     runtime_persistent = _runtime_persistent(window)
+    claim_custody = ExitStack()
     diagnostic_deadline = None
     if isinstance(window, RecoveryWindow) and window.control.is_diagnostic:
         diagnostic_deadline = window.control.runtime_deadline
@@ -846,7 +927,10 @@ def start_staging_console(window):
         _unclaimed(window)
         if not isinstance(window, RecoveryWindow):
             with _owned_dir(STATE) as directory:
-                _claim(window, directory)
+                if isinstance(window, RestoreWindow):
+                    claim_fd = claim_custody.enter_context(_claim_fd(window, directory))
+                else:
+                    _claim(window, directory)
         for fd in (0, 1, 2):
             held.append(os.dup(fd))
         proof = helper.inspect_private_terminal(*held, expected_uid=os.getuid())
@@ -930,6 +1014,9 @@ def start_staging_console(window):
                     )
             else:
                 child.release(final_admission, deadline=deadline, expires=window.expires)
+            if isinstance(window, RestoreWindow):
+                _attribute_restore(window, context, child, executable, claim_fd)
+                claim_custody.close()
             while child.alive():
                 if runtime_persistent:
                     # Freshness was checked immediately before release. Once released,
@@ -961,9 +1048,12 @@ def start_staging_console(window):
         )
     finally:
         try:
-            for known in reversed(registered):
-                if not known.closed:
-                    known.close()
+            try:
+                for known in reversed(registered):
+                    if not known.closed:
+                        known.close()
+            finally:
+                claim_custody.close()
         finally:
             for fd in held:
                 os.close(fd)
@@ -1552,6 +1642,79 @@ def _witness_reaped(child):
         _witness_safe_event("CHILD_REAPED", **values)
     except BaseException:
         _WITNESS.failed = True
+
+
+def _attribute_restore(window, context, child, executable, claim_fd):
+    # Only the actual releasing pane can attest its still-owned child after exec.
+    # The operator authenticates kernel peer credentials before durably recording it.
+    limit = time.monotonic() + 5
+    pinned = os.fstat(executable)
+    manager = context["manager"]
+
+    def check():
+        if (
+            not child.released
+            or not child.acknowledged
+            or _identity(child.pid, child.pidfd) != child.identity
+            or select.select([context["backend_pidfd"]], [], [], 0)[0]
+            or os.getppid() != int(manager["MainPID"])
+        ):
+            raise StageDenied("identity_denied")
+
+    while True:
+        check()
+        current = os.stat(f"/proc/{child.pid}/exe")
+        if (current.st_dev, current.st_ino) == (pinned.st_dev, pinned.st_ino):
+            break
+        if time.monotonic() >= limit:
+            raise StageDenied("identity_denied")
+        select.select([child.pidfd], [], [], 0.025)
+    check()
+    if not _same_manager(_manager(window), manager):
+        raise StageDenied("backend_denied")
+
+    def claim_identity():
+        with _owned_dir(STATE) as directory:
+            named = os.stat(window.nonce, dir_fd=directory, follow_symlinks=False)
+            held = os.fstat(claim_fd)
+            if (
+                held.st_nlink != 1
+                or named.st_nlink != 1
+                or (named.st_dev, named.st_ino) != (held.st_dev, held.st_ino)
+            ):
+                raise StageDenied("duplicate_nonce")
+            return held.st_dev, held.st_ino
+
+    claim = claim_identity()
+    packet = dict(
+        schema="qm.opend.attributed-launch.v1",
+        nonce=window.nonce,
+        authority_sha256=RESTORE_AUTHORITY,
+        control_sha256=window.control_sha256,
+        launcher_sha256=window.claims["launcher_sha256"],
+        unit=manager["Id"],
+        invocation=manager["InvocationID"],
+        cgroup=manager["ControlGroup"],
+        main_pid=int(manager["MainPID"]),
+        pane_pid=os.getpid(),
+        vendor_pid=child.pid,
+        vendor_start=child.identity["start_ticks"],
+        claim_dev=claim[0],
+        claim_ino=claim[1],
+    )
+    raw = json.dumps(packet, sort_keys=True, separators=(",", ":")).encode()
+    if len(raw) > 2048:
+        raise StageDenied("backend_denied")
+    with socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET) as channel:
+        channel.settimeout(5)
+        channel.connect(RESTORE_SOCKET)
+        _, uid, _ = struct.unpack(
+            "3i", channel.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12)
+        )
+        if uid != 0 or channel.send(raw) != len(raw) or channel.recv(6) != b"BOUND":
+            raise StageDenied("backend_denied")
+    check()
+    claim_identity()
 
 
 def _witness_vendor_identity(child):

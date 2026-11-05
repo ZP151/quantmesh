@@ -1,0 +1,7 @@
+# Issue 281 — restore the Operator’s existing OpenD service
+
+The Operator can restore the approved persistent private OpenD service and perform ordinary login. Standing authority 0d2965519662b53c448e003f6a8ddcf8d07834d399da2ece4ab2407475f9a945 covers one fresh startup under nonce 4ae19a7fad3fdaf8e3d23c1a4eb4b3d4. Its immutable root-owned record binds existing persistent claims and is checked again before release. The pane retains the original exclusive nonce claim FD through the root receiver’s BOUND acknowledgement and verifies that its single link still names that same file. Startup expiry controls release. The released service retains its ordinary operator-stop lifetime.
+
+Before private input, validate_operator_login_origin and verified_operator_login_snapshot require the attributed pane/vendor, protected public sources, active exact unit and process cohort, expected primary and supplementary groups, and manager resource limits including memory.high=805306368. They use the literal cgroup path observed by the manager and the processes. This step can run before a listener exists. For the Operator’s later endpoint check, validate_provider_binding and verified_provider_snapshot require a distinct immutable record and the sole vendor-owned IPv4 loopback listener at 11112. A live listener and successful login each require their own evidence.
+
+The launcher does not read credentials. Collection, SDK initialization, connection 6 and research admission are outside this delivery. The five previous attempts retain their recorded unknown external outcomes.
