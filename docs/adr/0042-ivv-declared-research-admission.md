@@ -1,5 +1,24 @@
 # ADR0042 — one internally approved IVV retrospective admission
 
+## Recovery executable object-origin refinement —2026-11-05
+
+A recovery-only false executable-path guard may continue only on complete
+simultaneous-held canonical-named/kernel-live object proof, with named root-owned
+regular single-link metadata, full stamp/devino equality, readonly named mount,
+authenticated named-file hash, namespace stability and observed closure. Kernel
+live handle is O_PATH; its bytes/private name are never read/hashed. Its mount
+readonly state is observational: post-exec namespace/bind changes may retain an
+earlier executable mount association. Do not compare cross-namespace mount IDs.
+Existing trusted-host, readonly owned view, Landlock no-write/no-execute, zero
+caps/NNP/FD/parent actor/SESSION checks remain; no hostile-root guarantee or
+inode-only/path whitelist is introduced. Authenticated positive witnesses enter
+existing kernel-close evidence; any missing proof retains RUNTIME_ORIGIN with a
+finite failure stage. Positive relation evidence also survives later failure through
+the existing finite failure channel without implying closure/admission. The digest
+is the authenticated release-observed pin, not vendor qualification. See the
+executable-identity spec/plan; native proof remains
+separate from offline software validation.
+
 ## Actual human transaction-recovery amendment —2026-11-04
 
 Direction6db1254 supersedes fixed-one-context/seven-request and cross-authority

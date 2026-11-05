@@ -6,7 +6,7 @@ Actual human direction6db1254 authorizes necessary reasonable capture/request/
 compute recovery and registered growth within the original fixed data/math/
 privacy/trading/no-paid scope. Permanent1/7, repeated whole-package approval and
 the pending4.6GB question are superseded. Current administrative caps12GiB/6GiB/
-free50GiB; old80MiB plus complete recovery156MiB=236MiB, all prior futures retained.
+free50GiB; old80MiB plus complete recovery157MiB=237MiB, all prior futures retained.
 
 Server and original Product froze one policy: stable task/registered experiment/
 semantic input version/math-cost spec determine business identity; authority,
@@ -23,11 +23,18 @@ head423113cf CI41909344046 success and exact-lock bundle qualification. Its firs
 actual recovery invocation stopped INITIAL/FIRST_FALSE/EXECUTABLE; SDK actual
 counts remain UNKNOWN, no input/checkpoint or study was created. Current-only
 read-only evidence proves owned cleanup; bare-host pathname/inode agree but do
-not establish the hardened child's cause. A bounded original-owner failure
-observation delta must preserve the original guard and authenticated evidence
-chain, pass targeted TDD/narrow independent review/normal publication, then
-resume the same task with actual accounting. No new mode/unit/sandbox or SDK0
-claim is introduced. Source merge alone never completes actual capture/Quant
+not establish the hardened child's cause. The bounded failure-observation delta
+passed both original narrow reviewers and CI41924907038:7605PASS/149SKIP,
+frontend793; PR283 normally merged d27720c3/tree1ed1af92. Actual connection2
+still refuses INITIAL/EXECUTABLE: same child namespace, successful but redacted
+kernel readlink, and strict resolution ENOENT. This does not establish a trusted
+alias or executable identity. Both exact owned cleanups are proved; actual SDK
+counts remain UNKNOWN and no capture/input/study exists. The next bounded slice
+requires complete actual-child named-object/kernel-object/catalog/read-only/
+namespace/FD/lifecycle proof before any equally strong repair can admit it;
+inode equality alone and arbitrary paths remain insufficient. Current same
+batch01 wall14400s, contexts3/business32/compute3 and historical counters retained.
+No new mode/unit/sandbox or SDK0 claim is introduced. Source merge alone never completes actual capture/Quant
 acceptance/report/decision/cold-read. See [current iteration](../iterations/0038-ivv-transaction-recovery.md).
 PR280/399b below is delivered; its old CI is not repeated or used as native GO.
 

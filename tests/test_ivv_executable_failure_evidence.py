@@ -158,7 +158,15 @@ def test_actual_retained_result_privacy_projection(monkeypatch, value, want):
 @pytest.mark.parametrize("ordering", ["channel", "pidfd", "both"])
 def test_observation_crosses_actual_authenticated_ipc_main_reader_and_stop(monkeypatch, ordering):
     r, error, _ = runtime_case(monkeypatch)
-    expected = {**base.evidence("INITIAL", "EXECUTABLE"), "executable_observation": observation()}
+    expected = {
+        **base.evidence("INITIAL", "EXECUTABLE"),
+        "executable_observation": observation(),
+        "executable_identity": {
+            "schema": "qm.ivv.executable-identity-failure.v1",
+            "stage": "CATALOG",
+            "descriptor_close": "CLOSED",
+        },
+    }
     result = base.test_real_child_ipc_parent_wrap_main_reader_selector(
         monkeypatch, ordering, (r, error, expected)
     )
@@ -234,9 +242,14 @@ def test_auxiliary_internal_failure_cannot_replace_original(monkeypatch):
     with pytest.raises(r.Refused) as caught:
         r._runtime(plan, None, 44, {}, None, additional="connection-000002", origin_phase="INITIAL")
     assert caught.value.args == ("RUNTIME_ORIGIN",)
-    assert r._failure_record(caught.value)["origin_failure"] == base.evidence(
-        "INITIAL", "EXECUTABLE"
-    )
+    assert r._failure_record(caught.value)["origin_failure"] == {
+        **base.evidence("INITIAL", "EXECUTABLE"),
+        "executable_identity": {
+            "schema": "qm.ivv.executable-identity-failure.v1",
+            "stage": "CATALOG",
+            "descriptor_close": "CLOSED",
+        },
+    }
 
 
 def test_actual_child_initial_reaches_observation_before_native_admission(monkeypatch):

@@ -280,6 +280,188 @@ def _observe_executable(resolved, namespace):
     return select_executable_observation(result)
 
 
+def select_executable_identity_failure(value):
+    need(
+        type(value) is dict
+        and set(value) == {"schema", "stage", "descriptor_close"}
+        and value["schema"] == "qm.ivv.executable-identity-failure.v1"
+        and type(value["stage"]) is str
+        and value["stage"]
+        in (
+            "CATALOG",
+            "NAMESPACE",
+            "NAMED_PATH",
+            "NAMED_OPEN",
+            "NAMED_METADATA",
+            "NAMED_READONLY",
+            "NAMED_BINDING",
+            "KERNEL_OPEN",
+            "KERNEL_METADATA",
+            "ROLE_BINDING",
+            "NAMED_BYTES",
+            "FINAL_BINDING",
+            "DESCRIPTOR_CLOSE",
+            "INTERNAL",
+        )
+        and type(value["descriptor_close"]) is str
+        and value["descriptor_close"] in ("CLOSED", "UNKNOWN"),
+        "EXECUTABLE_IDENTITY_SHAPE",
+    )
+    return dict(value)
+
+
+def select_executable_origin(value):
+    need(
+        type(value) is dict
+        and set(value)
+        == {
+            "schema",
+            "method",
+            "phase",
+            "python_sha256",
+            "namespace_inode",
+            "kernel_mount_readonly",
+        }
+        and value["schema"] == "qm.ivv.executable-origin.v1"
+        and type(value["method"]) is str
+        and value["method"] in ("EXACT_PATH", "NAMED_OBJECT")
+        and type(value["phase"]) is str
+        and value["phase"] in ("INITIAL", "SESSION", "UNKNOWN")
+        and type(value["python_sha256"]) is str
+        and re.fullmatch("[0-9a-f]{64}", value["python_sha256"])
+        and type(value["namespace_inode"]) is int
+        and 0 < value["namespace_inode"] < 2**64
+        and (
+            type(value["kernel_mount_readonly"]) is bool
+            or type(value["kernel_mount_readonly"]) is str
+            and value["kernel_mount_readonly"] == "UNKNOWN"
+        )
+        and (value["method"] != "EXACT_PATH" or value["kernel_mount_readonly"] == "UNKNOWN"),
+        "EXECUTABLE_ORIGIN_SHAPE",
+    )
+    return dict(value)
+
+
+def _carry_executable_origin(error, value):
+    try:
+        storage = _exception_storage(error)
+        if storage is not None:
+            # A reused exception must not attribute another call's relationship.
+            storage.pop("_qm_executable_owner", None)
+            storage.pop("_qm_executable_origin", None)
+            if value is not None:
+                selected = select_executable_origin(value)
+                storage["_qm_executable_origin"] = selected
+                storage["_qm_executable_owner"] = _EXECUTABLE_MARKER
+    except BaseException:
+        pass
+    return error
+
+
+def _executable_from_error(error):
+    try:
+        storage = _exception_storage(error)
+        if storage is not None and storage.get("_qm_executable_owner") is _EXECUTABLE_MARKER:
+            return select_executable_origin(storage.get("_qm_executable_origin"))
+    except BaseException:
+        pass
+    return None
+
+
+def _prove_executable_identity(expected_sha256, namespace):
+    # Only the named public role supplies bytes. O_PATH follows the one fixed
+    # kernel magic link without granting a read or relying on its pathname.
+    named = Path("/usr/bin/python3.12")
+    held = []
+    stage, failed, closed, kernel_ro = "CATALOG", None, True, "UNKNOWN"
+    try:
+        need(
+            type(expected_sha256) is str and re.fullmatch("[0-9a-f]{64}", expected_sha256),
+            "IDENTITY",
+        )
+        stage = "NAMESPACE"
+        need(
+            type(namespace) is int
+            and namespace > 0
+            and os.stat("/proc/self/ns/mnt").st_ino == namespace,
+            "IDENTITY",
+        )
+        stage = "NAMED_PATH"
+        protected(named)
+        stage = "NAMED_OPEN"
+        named_fd = os.open(named, os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC | os.O_NONBLOCK)
+        held.append(named_fd)
+        stage = "NAMED_METADATA"
+        first = os.fstat(named_fd)
+        need(
+            stat.S_ISREG(first.st_mode)
+            and first.st_uid == 0
+            and first.st_nlink == 1
+            and not first.st_mode & 0o022
+            and 0 < first.st_size <= 32 * 1024 * 1024,
+            "IDENTITY",
+        )
+        stage = "NAMED_READONLY"
+        need(os.fstatvfs(named_fd).f_flag & os.ST_RDONLY, "IDENTITY")
+        stage = "NAMED_BINDING"
+        need(_file_stamp(first) == _file_stamp(os.stat(named, follow_symlinks=False)), "IDENTITY")
+        stage = "KERNEL_OPEN"
+        kernel_fd = os.open("/proc/self/exe", os.O_PATH | os.O_CLOEXEC)
+        held.append(kernel_fd)
+        stage = "KERNEL_METADATA"
+        kernel = os.fstat(kernel_fd)
+        need(
+            stat.S_ISREG(kernel.st_mode)
+            and kernel.st_uid == 0
+            and kernel.st_nlink == 1
+            and not kernel.st_mode & 0o022
+            and 0 < kernel.st_size <= 32 * 1024 * 1024,
+            "IDENTITY",
+        )
+        stage = "ROLE_BINDING"
+        need(
+            _file_stamp(first)
+            == _file_stamp(kernel)
+            == _file_stamp(os.fstat(named_fd))
+            == _file_stamp(os.stat(named, follow_symlinks=False)),
+            "IDENTITY",
+        )
+        need(os.stat("/proc/self/ns/mnt").st_ino == namespace, "IDENTITY")
+        try:
+            kernel_ro = bool(os.fstatvfs(kernel_fd).f_flag & os.ST_RDONLY)
+        except BaseException:
+            pass  # Direct FD_MOUNT_RO observation only; never infer a current-tree mount.
+        stage = "NAMED_BYTES"
+        raw = os.pread(named_fd, first.st_size + 1, 0)
+        need(
+            type(raw) is bytes and len(raw) == first.st_size and digest(raw) == expected_sha256,
+            "IDENTITY",
+        )
+        stage = "FINAL_BINDING"
+        need(
+            _file_stamp(first)
+            == _file_stamp(os.fstat(named_fd))
+            == _file_stamp(os.fstat(kernel_fd))
+            == _file_stamp(os.stat(named, follow_symlinks=False))
+            and os.fstatvfs(named_fd).f_flag & os.ST_RDONLY
+            and os.stat("/proc/self/ns/mnt").st_ino == namespace,
+            "IDENTITY",
+        )
+    except BaseException:
+        failed = stage
+    finally:
+        for fd in reversed(held):
+            try:
+                _close_fd(fd)
+            except BaseException:
+                closed = False  # Never retry/probe a possibly reused numeric descriptor.
+    return {
+        "stage": failed or ("VERIFIED" if closed else "DESCRIPTOR_CLOSE"),
+        "descriptor_close": "CLOSED" if closed else "UNKNOWN",
+        "kernel_mount_readonly": kernel_ro,
+    }
+
+
 def select_origin_failure(value):
     """Select only finite origin facts; absent legacy evidence remains absent."""
     if value is None:
@@ -287,11 +469,16 @@ def select_origin_failure(value):
     need(
         type(value) is dict
         and all(type(key) is str for key in value)
-        and set(value)
-        in (
-            {"schema", "phase", "predicate", "outcome"},
-            {"schema", "phase", "predicate", "outcome", "executable_observation"},
-        )
+        and {"schema", "phase", "predicate", "outcome"}
+        <= set(value)
+        <= {
+            "schema",
+            "phase",
+            "predicate",
+            "outcome",
+            "executable_observation",
+            "executable_identity",
+        }
         and all(type(value[key]) is str for key in ("schema", "phase", "predicate", "outcome"))
         and value["schema"] == "qm.ivv.runtime-origin-failure.v1"
         and value["phase"] in ("INITIAL", "SESSION", "UNKNOWN")
@@ -309,10 +496,19 @@ def select_origin_failure(value):
         result["executable_observation"] = select_executable_observation(
             value["executable_observation"]
         )
+    if "executable_identity" in value:
+        need(
+            value["predicate"] == "EXECUTABLE" and value["outcome"] == "FIRST_FALSE",
+            "EXECUTABLE_IDENTITY_SHAPE",
+        )
+        result["executable_identity"] = select_executable_identity_failure(
+            value["executable_identity"]
+        )
     return result
 
 
 _ORIGIN_MARKER = object()
+_EXECUTABLE_MARKER = object()
 _EXCEPTION_DICT = BaseException.__dict__.get("__dict__")
 
 
@@ -383,6 +579,9 @@ def _failure_record(error):
     origin = _origin_from_error(error)
     if origin is not None:
         value["origin_failure"] = origin
+    executable = _executable_from_error(error)
+    if executable is not None:
+        value["executable_origin"] = executable
     return value
 
 
@@ -391,7 +590,7 @@ def _failed_packet(error):
     return {
         "op": "failed",
         "code": value["reason"],
-        **({"origin_failure": value["origin_failure"]} if "origin_failure" in value else {}),
+        **{key: value[key] for key in ("origin_failure", "executable_origin") if key in value},
     }
 
 
@@ -399,7 +598,9 @@ def _child_failure(packet):
     if (
         type(packet) is not dict
         or packet.get("op") != "failed"
-        or set(packet) not in ({"op", "code"}, {"op", "code", "origin_failure"})
+        or not {"op", "code"}
+        <= set(packet)
+        <= {"op", "code", "origin_failure", "executable_origin"}
         or type(packet.get("code")) is not str
         or re.fullmatch("[A-Za-z0-9_+]{1,256}", packet["code"]) is None
     ):
@@ -407,7 +608,10 @@ def _child_failure(packet):
     if "origin_failure" in packet:
         need(packet["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
     origin = select_origin_failure(packet.get("origin_failure"))
-    return _carry_origin(Refused(packet["code"]), origin, packet["code"])
+    error = _carry_origin(Refused(packet["code"]), origin, packet["code"])
+    if "executable_origin" in packet:
+        _carry_executable_origin(error, select_executable_origin(packet["executable_origin"]))
+    return error
 
 
 def read_runner_failure(control, read_owned):
@@ -428,7 +632,9 @@ def read_runner_failure(control, read_owned):
     value = json.loads(data, object_pairs_hook=unique)
     need(
         type(value) is dict
-        and set(value) in ({"state", "reason"}, {"state", "reason", "origin_failure"})
+        and {"state", "reason"}
+        <= set(value)
+        <= {"state", "reason", "origin_failure", "executable_origin"}
         and value["state"] == "STOP"
         and type(value["reason"]) is str
         and re.fullmatch("[A-Za-z0-9_+]{1,256}", value["reason"]),
@@ -438,6 +644,8 @@ def read_runner_failure(control, read_owned):
     if "origin_failure" in value:
         need(value["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
         result["origin_failure"] = select_origin_failure(value["origin_failure"])
+    if "executable_origin" in value:
+        result["executable_origin"] = select_executable_origin(value["executable_origin"])
     return result
 
 
@@ -481,6 +689,8 @@ def select_failure_status(status, publication_sha256):
     if "origin_failure" in status:
         need(status["origin_failure"] is not None, "ORIGIN_FAILURE_SHAPE")
         result["origin_failure"] = select_origin_failure(status["origin_failure"])
+    if "executable_origin" in status:
+        result["executable_origin"] = select_executable_origin(status["executable_origin"])
     if "recovery_connection" in status:
         item = status["recovery_connection"]
         need(
@@ -1939,6 +2149,7 @@ def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_ph
         return expression()
 
     resolved_executable = None
+    executable_origin = None
 
     def executable():
         nonlocal resolved_executable
@@ -1954,78 +2165,128 @@ def _runtime(plan, helper, ns, catalog, producer, *, additional=False, origin_ph
             _origin=origin,
         )
     except BaseException as error:
+        _carry_executable_origin(error, None)
         if (
             _recovery_mode(additional)
             and origin["predicate"] == "EXECUTABLE"
             and origin["outcome"] == "FIRST_FALSE"
         ):
             try:
-                origin["executable_observation"] = _observe_executable(resolved_executable, ns)
+                proof = _prove_executable_identity(catalog.get("python_sha256"), ns)
+                if proof["stage"] == "VERIFIED" and proof["descriptor_close"] == "CLOSED":
+                    executable_origin = select_executable_origin(
+                        {
+                            "schema": "qm.ivv.executable-origin.v1",
+                            "method": "NAMED_OBJECT",
+                            "phase": origin["phase"],
+                            "namespace_inode": ns,
+                            "python_sha256": catalog["python_sha256"],
+                            "kernel_mount_readonly": proof["kernel_mount_readonly"],
+                        }
+                    )
+                else:
+                    origin["executable_identity"] = {
+                        "schema": "qm.ivv.executable-identity-failure.v1",
+                        "stage": proof["stage"],
+                        "descriptor_close": proof["descriptor_close"],
+                    }
             except BaseException:
-                pass  # Optional evidence cannot replace the original refusal or ownership.
-        _carry_origin(error, origin)
-        raise
-    home = os.environ.get("HOME")
-    need(home and Path(home).is_absolute(), "HOME_NOT_READY")
-    log = Path(home) / ".com.moomoo.OpenD" / "Log"
-    need(
-        log.resolve(strict=True) == log
-        and stat.S_ISDIR(log.stat().st_mode)
-        and os.statvfs(log).f_flag & os.ST_RDONLY,
-        "HOME_LOG_PREREQUISITE",
-    )
-    for key, name in _sources(additional).items():
-        path = loc.release / name
-        read_ref({"path": str(path), "sha256": catalog[key]}, path, 262144, True)
-    for path in sys.path:
-        if Path(path).exists():
-            resolved = Path(path).resolve(strict=True)
-            need(
-                resolved.is_relative_to("/usr/lib/python3.12") or resolved == SDK,
-                "PYTHON_SEARCH_PATH",
+                executable_origin = None
+                origin["executable_identity"] = {
+                    "schema": "qm.ivv.executable-identity-failure.v1",
+                    "stage": "INTERNAL",
+                    "descriptor_close": "UNKNOWN",
+                }
+            if executable_origin is None:
+                try:
+                    origin["executable_observation"] = _observe_executable(resolved_executable, ns)
+                except BaseException:
+                    pass  # Optional evidence cannot replace the original refusal or ownership.
+        if executable_origin is None:
+            _carry_origin(error, origin)
+            raise
+    try:
+        home = os.environ.get("HOME")
+        need(home and Path(home).is_absolute(), "HOME_NOT_READY")
+        log = Path(home) / ".com.moomoo.OpenD" / "Log"
+        need(
+            log.resolve(strict=True) == log
+            and stat.S_ISDIR(log.stat().st_mode)
+            and os.statvfs(log).f_flag & os.ST_RDONLY,
+            "HOME_LOG_PREREQUISITE",
+        )
+        for key, name in _sources(additional).items():
+            path = loc.release / name
+            read_ref({"path": str(path), "sha256": catalog[key]}, path, 262144, True)
+        for path in sys.path:
+            if Path(path).exists():
+                resolved = Path(path).resolve(strict=True)
+                need(
+                    resolved.is_relative_to("/usr/lib/python3.12") or resolved == SDK,
+                    "PYTHON_SEARCH_PATH",
+                )
+                protected(resolved)
+                need(os.statvfs(resolved).f_flag & os.ST_RDONLY, "PYTHON_SEARCH_WRITABLE")
+        need(Path(sys.executable).resolve() == Path("/usr/bin/python3.12"), "PYTHON_EXECUTABLE")
+        exe = Path("/usr/bin/python3.12")
+        read_ref(
+            {"path": str(exe), "sha256": catalog["python_sha256"]}, exe, 32 * 1024 * 1024, True
+        )
+        source_pins = json.loads(read_ref(plan["sdk_pins_ref"], loc.control / "sdk-pins.json"))
+        rows = source_pins["pins"]
+        need(type(rows) is list and 12 <= len(rows) <= 128, "SDK_PINS_COUNT")
+        names = set()
+        for r in rows:
+            rel = (
+                r.get("relative_path")
+                or str(r.get("path", "")).replace(chr(92), "/").split("/site-packages/")[-1]
             )
-            protected(resolved)
-            need(os.statvfs(resolved).f_flag & os.ST_RDONLY, "PYTHON_SEARCH_WRITABLE")
-    need(Path(sys.executable).resolve() == Path("/usr/bin/python3.12"), "PYTHON_EXECUTABLE")
-    exe = Path("/usr/bin/python3.12")
-    read_ref({"path": str(exe), "sha256": catalog["python_sha256"]}, exe, 32 * 1024 * 1024, True)
-    source_pins = json.loads(read_ref(plan["sdk_pins_ref"], loc.control / "sdk-pins.json"))
-    rows = source_pins["pins"]
-    need(type(rows) is list and 12 <= len(rows) <= 128, "SDK_PINS_COUNT")
-    names = set()
-    for r in rows:
-        rel = (
-            r.get("relative_path")
-            or str(r.get("path", "")).replace(chr(92), "/").split("/site-packages/")[-1]
-        )
+            need(
+                re.fullmatch(
+                    r"(?:moomoo|google/protobuf|google/_upb)/[A-Za-z0-9_./-]+\.(?:py|so)", rel
+                )
+                and ".." not in Path(rel).parts
+                and rel not in names,
+                "SDK_PIN_ROLE",
+            )
+            names.add(rel)
+            path = SDK / rel
+            protected(path)
+            need(
+                path.resolve(strict=True) == path
+                and os.statvfs(path).f_flag & os.ST_RDONLY
+                and digest(path.read_bytes().replace(b"\r\n", b"\n")) == r["LF_sha256"],
+                "SDK_PIN_DRIFT",
+            )
         need(
-            re.fullmatch(r"(?:moomoo|google/protobuf|google/_upb)/[A-Za-z0-9_./-]+\.(?:py|so)", rel)
-            and ".." not in Path(rel).parts
-            and rel not in names,
-            "SDK_PIN_ROLE",
+            any("/pb/" in n or "_pb2.py" in n for n in names)
+            and "moomoo/quote/open_quote_context.py" in names,
+            "PROTO_AND_QUOTE_ORIGIN",
         )
-        names.add(rel)
-        path = SDK / rel
-        protected(path)
-        need(
-            path.resolve(strict=True) == path
-            and os.statvfs(path).f_flag & os.ST_RDONLY
-            and digest(path.read_bytes().replace(b"\r\n", b"\n")) == r["LF_sha256"],
-            "SDK_PIN_DRIFT",
-        )
-    need(
-        any("/pb/" in n or "_pb2.py" in n for n in names)
-        and "moomoo/quote/open_quote_context.py" in names,
-        "PROTO_AND_QUOTE_ORIGIN",
-    )
-    # PathFinder performs no package import. Production imports only after once.
-    spec = importlib.machinery.PathFinder.find_spec("moomoo", sys.path)
-    need(spec and Path(spec.origin) == SDK / "moomoo/__init__.py", "SDK_IMPORT_ORIGIN")
-    return {
-        "namespace_inode": ns,
-        "sdk_pins_sha256": plan["sdk_pins_sha256"],
-        "python_sha256": catalog["python_sha256"],
-    }
+        # PathFinder performs no package import. Production imports only after once.
+        spec = importlib.machinery.PathFinder.find_spec("moomoo", sys.path)
+        need(spec and Path(spec.origin) == SDK / "moomoo/__init__.py", "SDK_IMPORT_ORIGIN")
+        if _recovery_mode(additional) and executable_origin is None:
+            executable_origin = select_executable_origin(
+                {
+                    "schema": "qm.ivv.executable-origin.v1",
+                    "method": "EXACT_PATH",
+                    "phase": origin["phase"],
+                    "namespace_inode": ns,
+                    "python_sha256": catalog["python_sha256"],
+                    "kernel_mount_readonly": "UNKNOWN",
+                }
+            )
+        return {
+            **({"executable_origin": executable_origin} if executable_origin is not None else {}),
+            "namespace_inode": ns,
+            "sdk_pins_sha256": plan["sdk_pins_sha256"],
+            "python_sha256": catalog["python_sha256"],
+        }
+
+    except BaseException as error:
+        _carry_executable_origin(error, executable_origin)
+        raise
 
 
 def _environment():
@@ -2357,8 +2618,15 @@ class _ChildSession:
     def snapshot(self):
         need(os.getpid() == self.owner, "SESSION_OWNER")
         with self.lock:
-            self.check()
-            self.channel.send({"op": "observe"})
+            checked = self.check()
+            witness = (
+                select_executable_origin(checked["executable_origin"])
+                if type(checked) is dict and "executable_origin" in checked
+                else None
+            )
+            self.channel.send(
+                {"op": "observe", **({"executable_origin": witness} if witness is not None else {})}
+            )
             return self.channel.recv(self.parent)["snapshot"]
 
     def before_effect(self):
@@ -2378,9 +2646,12 @@ def _child(channel, parent, context, plan):
         sys.path.append(str(SDK))
 
     def runtime(phase):
-        return _for_task(_runtime, additional)(
+        checked = _for_task(_runtime, additional)(
             plan, m, ns, values["catalog_ref"], producer, origin_phase=phase
         )
+        if _recovery_mode(additional):
+            values["_executable_origin"] = select_executable_origin(checked["executable_origin"])
+        return checked
 
     runtime("INITIAL")
     # Validate all immutable material, actor limits and available space before parent GO.
@@ -2393,7 +2664,16 @@ def _child(channel, parent, context, plan):
         None,
         None,
     )
-    channel.send({"op": "ready"})
+    channel.send(
+        {
+            "op": "ready",
+            **(
+                {"executable_origin": values["_executable_origin"]}
+                if _recovery_mode(additional)
+                else {}
+            ),
+        }
+    )
     grant = channel.recv(parent)
     need(set(grant) == {"op", "plan_ref", "go_ref"} and grant["op"] == "go", "CHILD_GO_GATE")
     final = m._strict_json(read_ref(grant["plan_ref"], loc.control / "plan.json"))
@@ -2698,12 +2978,25 @@ def _seal(context, grant, scope, monitor, kernel, terminal, peer, elapsed):
     }
 
 
+def _accept_executable_origin(value, values, *, phase=None, namespace=None):
+    selected = select_executable_origin(value)
+    need(
+        selected["python_sha256"] == values["catalog_ref"]["python_sha256"]
+        and (phase is None or selected["phase"] == phase)
+        and (namespace is None or selected["namespace_inode"] == namespace),
+        "EXECUTABLE_ORIGIN_BINDING",
+    )
+    return selected
+
+
 def _supervise(scope, channel, endpoint, context, plan):
     startup, values, issuer, m, native, producer = context
     additional = _task_mode(values)
     monitor = _for_task(_Provider, additional)(native, producer, m, plan, startup["budget_ref"])
     start = plan["started_monotonic"]
     kernel = grant = terminal = peer = None
+    origin_initial = origin_last = None
+    origin_checks = 0
     scope.check_pid()
     channel.send({"op": "enter"})
     while True:
@@ -2729,13 +3022,41 @@ def _supervise(scope, channel, endpoint, context, plan):
                     raise
                 # EOF is verified again after actual wait/recursive empty below.
                 packet = None
-            if packet == {"op": "ready"} and grant is None:
+            if packet and packet.get("op") == "ready" and grant is None:
+                need(
+                    set(packet)
+                    == ({"op", "executable_origin"} if _recovery_mode(additional) else {"op"}),
+                    "CHILD_PROTOCOL",
+                )
                 kernel = _for_task(_child_kernel, additional)(scope, producer, endpoint, True)
+                if _recovery_mode(additional):
+                    origin_initial = origin_last = _accept_executable_origin(
+                        packet["executable_origin"],
+                        values,
+                        phase="INITIAL",
+                        namespace=kernel["namespace_inode"],
+                    )
+                    origin_checks = 1
+                    values["_executable_origin"] = origin_last
                 need(time.monotonic() - start < 180, "ROOT_GO_EXPIRED")
                 grant = _authorize(context, plan, scope, monitor)
                 scope.check_pid()
                 channel.send({"op": "go", "plan_ref": grant[0], "go_ref": grant[1]})
-            elif packet == {"op": "observe"} and grant and not terminal:
+            elif packet and packet.get("op") == "observe" and grant and not terminal:
+                need(
+                    set(packet)
+                    == ({"op", "executable_origin"} if _recovery_mode(additional) else {"op"}),
+                    "CHILD_PROTOCOL",
+                )
+                if _recovery_mode(additional):
+                    origin_last = _accept_executable_origin(
+                        packet["executable_origin"],
+                        values,
+                        phase="SESSION",
+                        namespace=kernel["namespace_inode"],
+                    )
+                    origin_checks += 1
+                    values["_executable_origin"] = origin_last
                 need(
                     _for_task(_child_kernel, additional)(scope, producer, endpoint, False)
                     == kernel,
@@ -2754,6 +3075,12 @@ def _supervise(scope, channel, endpoint, context, plan):
                 )
                 terminal = packet
             elif packet is not None:
+                if _recovery_mode(additional) and "executable_origin" in packet:
+                    _accept_executable_origin(
+                        packet["executable_origin"],
+                        values,
+                        namespace=kernel["namespace_inode"] if kernel else None,
+                    )
                 raise _child_failure(packet)
         if scope.pidfd in ready:
             rc = scope.reap()
@@ -2770,6 +3097,12 @@ def _supervise(scope, channel, endpoint, context, plan):
                     if reason(error) != "CONTROL_EOF":
                         raise
                 else:
+                    if _recovery_mode(additional) and "executable_origin" in failed:
+                        _accept_executable_origin(
+                            failed["executable_origin"],
+                            values,
+                            namespace=kernel["namespace_inode"] if kernel else None,
+                        )
                     raise _child_failure(failed)
             need(rc == 0 and grant and kernel, "CHILD_TERMINAL_MISSING")
             # select may have checked the channel before the child's final
@@ -2808,7 +3141,21 @@ def _supervise(scope, channel, endpoint, context, plan):
         grant,
         scope,
         monitor,
-        {**kernel, "child_exit_observed_seconds": exited},
+        {
+            **kernel,
+            "child_exit_observed_seconds": exited,
+            **(
+                {
+                    "executable_origin": {
+                        "initial": origin_initial,
+                        "last": origin_last,
+                        "checks": origin_checks,
+                    }
+                }
+                if _recovery_mode(additional)
+                else {}
+            ),
+        },
         terminal,
         peer,
         elapsed,
@@ -2891,6 +3238,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
     os.umask(0o077)
     primary = None
     primary_origin = None
+    primary_executable = None
     cleanup_failures = None
     pending = None
     committed = False
@@ -2916,6 +3264,9 @@ def _run(startup_ref, *, additional, lifecycle=None):
                     _child(child_side, parent, context, plan)
                     rc = 0
                 except BaseException as error:
+                    _carry_executable_origin(
+                        error, _executable_from_error(error) or values.get("_executable_origin")
+                    )
                     with contextlib.suppress(OSError, ValueError):
                         child_side.send(_failed_packet(error))
                 finally:
@@ -2942,6 +3293,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
             primary_origin = _origin_from_error(error)
+            primary_executable = _executable_from_error(error) or values.get("_executable_origin")
             failures = scope.abort()
             cleanup_failures = failures
             primary = [_failure_code(error), *failures]
@@ -2984,7 +3336,10 @@ def _run(startup_ref, *, additional, lifecycle=None):
             except BaseException as error:
                 failures.append("SEAL_RETIRE_" + reason(error))
         code = "+".join(failures)
-        raise _carry_origin(Refused(code), primary_origin, code) from None
+        failure = _carry_origin(Refused(code), primary_origin, code)
+        raise _carry_executable_origin(
+            failure, primary_executable or values.get("_executable_origin")
+        ) from None
     return result
 
 

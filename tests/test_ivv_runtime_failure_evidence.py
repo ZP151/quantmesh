@@ -230,6 +230,8 @@ def test_real_child_ipc_parent_wrap_main_reader_selector(
         expected_origin = evidence("SESSION", "EXECUTABLE")
     else:
         r, original, expected_origin = executable_case
+    expected_executable = r._executable_from_error(original)
+    expected_code = r._failure_code(original)
     packets, written = [], []
     phase = {"child": True}
 
@@ -363,7 +365,8 @@ def test_real_child_ipc_parent_wrap_main_reader_selector(
     # Fake _exit unwinds; the real child branch has already serialized its IPC.
     with pytest.raises(r.Refused):
         r._run({}, additional=False)
-    assert json.loads(packets[0])["origin_failure"] == expected_origin
+    assert json.loads(packets[0]).get("origin_failure") == expected_origin
+    assert json.loads(packets[0]).get("executable_origin") == expected_executable
     if ordering == "absent":
         packets.clear()
     elif ordering == "malformed":
@@ -382,7 +385,7 @@ def test_real_child_ipc_parent_wrap_main_reader_selector(
             else "ORIGIN_FAILURE_SHAPE+CLEANUP_UNKNOWN"
         )
         return
-    assert record["reason"] == "RUNTIME_ORIGIN+CLEANUP_UNKNOWN"
+    assert record["reason"] == expected_code + "+CLEANUP_UNKNOWN"
     status = {
         **record,
         "stage": "RELEASED_ADDITIONAL_RUNNER_ONCE",
@@ -393,7 +396,8 @@ def test_real_child_ipc_parent_wrap_main_reader_selector(
         "provider_mutation": False,
     }
     selected = r.select_failure_status(status, "a" * 64)
-    assert selected["origin_failure"] == expected_origin
+    assert selected.get("origin_failure") == expected_origin
+    assert selected.get("executable_origin") == expected_executable
     assert selected["actual_contexts"] == "UNKNOWN"
     if executable_case is not None:
         return selected
