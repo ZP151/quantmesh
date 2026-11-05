@@ -386,7 +386,7 @@ def _paired_pty(endpoints, process_stat, mounts):
     return master
 
 
-def _protected_bytes(path, maximum):
+def _protected_bytes(path, maximum, *, mode=None):
     """Only used for the fixed controls and reviewed public code. Never include data in errors."""
     parts = PurePosixPath(path).parts
     _need(
@@ -425,6 +425,7 @@ def _protected_bytes(path, maximum):
             and info.st_uid == 0
             and info.st_nlink == 1
             and not info.st_mode & 0o6022
+            and (mode is None or stat.S_IMODE(info.st_mode) == mode)
             and 0 < info.st_size <= maximum,
             "CONFIG_CONTROL_ORIGIN",
         )
@@ -630,6 +631,8 @@ def _provider_controls(reader):
         "PROVIDER_CGROUP",
     )
     with _held(reader, reader.directory("/sys/fs/cgroup" + group)) as fd:
+        if getattr(reader, "binding", None) is not None:
+            _need(reader.read(fd, "memory.high", 128).strip() == b"805306368", "PROVIDER_RESOURCES")
         values = {
             k: reader.read(fd, k, 128).decode("ascii").strip()
             for k in ("memory.max", "memory.swap.max", "cpu.max", "pids.max")
@@ -645,6 +648,86 @@ def _provider_controls(reader):
         "PROVIDER_RESOURCES",
     )
     return values
+
+
+def _operator_sources(producer, binding):
+    if type(binding) is producer.ProviderExecution:
+        name, verify = "PROVIDER-BINDING.json", producer.validate_provider_binding
+    else:
+        _need(type(binding) is producer.OperatorLoginOrigin, "PROVIDER_IDENTITY")
+        name, verify = "OPERATOR-LOGIN-ORIGIN.json", producer.validate_operator_login_origin
+    original = _protected_bytes(
+        "/var/lib/quantmesh-opend-restore-20261105-01/" + name, 4096, mode=0o444
+    )
+    _need(verify(original, binding.receipt_sha) == binding, "PROVIDER_IDENTITY")
+    control = _protected_bytes(
+        "/etc/quantmesh/opend/operator-restores/" + producer.RESTORE_NONCE + ".json",
+        8192,
+        mode=0o444,
+    )
+    _need(hashlib.sha256(control).hexdigest() == binding.control_sha, "PROVIDER_IDENTITY")
+    permit = json.loads(control)
+    _need(
+        type(permit) is dict
+        and set(permit) == {"schema", "authority_sha256", "claims"}
+        and permit["schema"] == "qm.opend.operator-restore.v1"
+        and permit["authority_sha256"] == producer.RESTORE_AUTHORITY
+        and type(permit["claims"]) is dict
+        and permit["claims"].get("nonce") == producer.RESTORE_NONCE
+        and permit["claims"].get("launcher_sha256") == binding.launcher_sha
+        and permit["claims"].get("gateway_uid") == 997
+        and type(permit["claims"].get("gateway_gid")) is int
+        and 0 < permit["claims"]["gateway_gid"] < 2**31,
+        "PROVIDER_IDENTITY",
+    )
+    for path, pin, maximum in (
+        ("/opt/quantmesh/opend/stage_console.py", binding.launcher_sha, 262144),
+        ("/etc/systemd/system/quantmesh-opend-console@.service", producer.RESTORE_TEMPLATE, 4096),
+        ("/etc/quantmesh/opend/gateway-profile.json", producer.RESTORE_PROFILE, 32768),
+    ):
+        _need(
+            hashlib.sha256(_protected_bytes(path, maximum)).hexdigest() == pin, "PROVIDER_IDENTITY"
+        )
+    return permit["claims"]["gateway_gid"]
+
+
+def _operator_identity(producer, binding, gid, reader):
+    actual = reader.identity()
+    producer._check_subject(actual, binding)
+    _need(
+        all(
+            row["gids"] == [gid] * 4 and all(group == gid for group in row["groups"])
+            for row in actual["processes"]
+        ),
+        "PROVIDER_IDENTITY",
+    )
+    return actual
+
+
+def verified_provider_snapshot(producer, binding):
+    """Read-only kernel witness for the attributed operator. Never start or use an SDK."""
+    _need(type(binding) is producer.ProviderExecution, "PROVIDER_IDENTITY")
+    return _verified_snapshot(producer, binding)
+
+
+def verified_operator_login_snapshot(producer, binding):
+    """Public process attribution only, before private ordinary login; no endpoint admission."""
+    _need(type(binding) is producer.OperatorLoginOrigin, "PROVIDER_IDENTITY")
+    return _verified_snapshot(producer, binding)
+
+
+def _verified_snapshot(producer, binding):
+    limit = time.monotonic() + 2
+    gid = _operator_sources(producer, binding)
+    reader = producer.OperatorReader(binding)
+    reader.deadline = limit
+    try:
+        actual = _operator_identity(producer, binding, gid, reader)
+        _provider_controls(reader)
+        _need(not reader.finish() and time.monotonic() < limit, "PROVIDER_DRIFT")
+        return actual
+    finally:
+        reader.close()
 
 
 def _fresh_provider(reader, producer, plan, budget, series):

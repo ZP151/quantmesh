@@ -169,3 +169,21 @@ and later drift refuse. Source49 and Parent210 tests pass. These modeled checks
 do not establish the historical connection4 operand, native success, actual SDK
 counts or data admission. All four prior UNKNOWN outcomes remain unchanged;
 normal independent review/publication/native/Quant gates precede accepted input.
+
+## Standalone Operator execution origin - 2026-11-05
+
+A root-owned immutable startup registry and kernel-attributed release identify
+one fresh execution of the approved logical OpenD provider. The releasing pane
+holds its exclusive single-link claim descriptor through root BOUND. That ACK
+only covers durable attribution. After systemd start completes, an independent
+OperatorReader validates exact current manager/cohort/executables/UIDs/GIDs and
+supplementary groups/namespaces/source/config plus cgroup memory.high/max/swap,
+CPU/tasks. The identity-only origin admits ordinary private input before a
+listener exists. A separate provider-binding schema additionally requires the
+sole vendor-owned IPv4 loopback11112 listener. Neither is SDK/data qualification.
+
+The existing collector keeps its fixed reader/growth/session interface; Operator
+receipts are not a new capture authority. The failed combined pre-GO/cadence
+candidate is excluded from this delivery. Publication/start/login/endpoint and
+later collector/Quant acceptance remain distinct evidence gates. Historical
+UNKNOWN and existing data/math/trading/external-tail boundaries remain unchanged.

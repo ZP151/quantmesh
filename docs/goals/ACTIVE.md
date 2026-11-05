@@ -1,5 +1,17 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current scope - Operator-only restoration, 2026-11-05
+
+Issue281 first restores the existing authorized persistent private OpenD service
+and ordinary saved-credential login. Standalone attributed origin/read-only
+snapshot preserve claim/inode, escaped cgroup, groups and memory.high guards.
+Whole-slice7a15b0c9 remains FIX_REQUIRED; collector/trusted-runner/ops06 are frozen,
+connection6 is not issued. Source7b711227 and privateOps24c67906 await independent
+review plus normal final-headCI/publication before actual host/login effects.
+See docs/superpowers/plans/2026-11-05-opend-provider-restore.md and the iteration.
+P22 records retained fixture estimate correction, common69/software97MiB, all421MiB,
+no old count refund or financial qualification. No routine reapproval requested.
+
 Current SDK-path checkpoint: PR285 merged74b141a7 after actual new-head CI
 7713PASS/149SKIP/frontend793 and exact-lock/full-tree/source-role verification.
 Connection4 passed executable SESSION proof then stopped PYTHON_SEARCH_PATH
