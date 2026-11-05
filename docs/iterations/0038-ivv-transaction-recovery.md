@@ -1,5 +1,165 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Current checkpoint - initialization evidence, 2026-11-05
+
+Both original readers return READY for the narrow hot-fixture correction at
+6e8663ec3d611b856baef76038a58cd9a30e3fa1. Parent reads and pins SPEC2366B/SHA
+363897a721045a5a9416e95908a821c020c53aa27ce46504e8d81031df015954 and
+STANDARDS2294B/SHA05340652259607121731da143eb63eb14dc4707fc18624b35cf82eaaf390b937.
+They verify temporary-root ownership, dependency restoration, the exact real
+threshold and needed bytes, preserved low-space/directory-sync/crash assertions
+and separate child models. No blocker is found. This final review checkpoint
+changes only the iteration record; new final-head normal CI remains mandatory,
+then actual merged publication and ordinary connection4. Earlier SDK and polling
+reviews retain their exact unchanged source bindings. No SDK was invoked here.
+
+Latest CI blocker: run41958558834 actually ends76FAIL/7633PASS/149SKIP/2440.80s.
+All76 enter the unchanged hot-cache free-space predicate:72 parent traces,3 fresh
+child traces and1 API capacity fallback. Physical CI free bytes were not reported;
+fresh children exclude parent monkeypatch leakage as a sufficient explanation.
+The first platform case needs9,000,000B before its intended directory-sync refusal.
+Actual constructor RED at modeled50,008,999,999B refuses without mkdir; exact
+50,009,000,000B passes. This is an ambient test-precondition dependency, separate
+from the unproven native IVV initialization cause.
+
+Original Source freezes four explicitly opted-in test modules and one test helper.
+Only buffer_module.shutil is rebound inside a function-scoped temporary-root
+context; the shared shutil module and every production file remain unchanged.
+The actual50,000,000,000B+needed predicate executes, explicit low-space overrides
+still win, and directory-sync/ledger/receipt/crash assertions remain. Two existing
+child programs receive the same explicit local model; the archive-only child is
+unchanged. New tests cover ample/equal/one-byte-low, effects, escaped probe paths,
+restoration and independent process scope. No global autouse disk model or new
+environment is introduced. Model PASS is not physical/native qualification.
+
+Source RED1/2.17s becomes focused5PASS/2.45s. Parent's first serial run records
+52PASS/1SKIP then a child imported an old local editable worktree; its2,371,584B
+fixture and log remain. Parent corrects only its run-scoped child PYTHONPATH,
+verifies the current source path and reruns identical frozen files:132PASS/2SKIP/
+33.38s. No new failed fixture remains. Windows skips do not replace Linux CI.
+Five-file/artifact pinsdb23eb15 and report949d6953 match; old Source8/ops4 remain
+byte-identical to b7efdf4f. Final Source forecast9,162,752B fits9MiB, retaining the
+original524288B future. Narrow review and actual new-head normal CI remain open.
+
+Current P19 raw1428B/SHA6db05b7ddfe1f34abd053d3e01b762dfb9d712dbe65924070d11051eed69353a
+is canonically bound by the actual merged profile. Source9/Product16/common58/FS1
+gives software84MiB; old80+new292=372MiB390070272B. CAPACITY-SOFTWARE-12 adds one
+necessary publication/verification4MiB; -13 raises the existing serial DuckDB
+scratch2->32MiB, net30MiB. The32MiB is an operational forecast, not a physical
+DuckDB upper bound; one serial -x/failed-only suite uses it. All prior holds and
+futures remain. Conservative G10776309850/P4738237454/all4794860558 fit12/6GiB,
+free50GiB and all context/rate/time/math/native admission limits remain unchanged.
+No new SDK/carrier effect, input or study has been produced.
+
+The original Standards reviewer returns READY for the exact narrow polling-test
+delta at3f5cf6be0060232ce3b34c4c21414a8566feae78:2616B/SHA
+dd433545fcf5a07aebb204b11cf95515548f3db01958846d8bb0a02f8eeb4152.
+Parent reads/pins that report. It verifies current-document query/assert atomicity,
+normal remount causality and unchanged later lineage assertions, and declines
+exact-CI/native acceptance. Source5f0b3737 and all private operations remain
+byte-identical to their prior two-axis READY freeze. This final checkpoint changes
+only the iteration record; next is actual final-head normal CI and its own bundle,
+not a retry or inferred qualification of the failed96928949 run.
+
+Actual PR285 run41957084003 at96928949 fails fast:792 frontend cases pass and
+the existing InstrumentWorkspace polling assertion fails after findByText has
+returned a detached child node. No frontend bundle qualifies. Original Product
+locates the real action-result/navigation/key-remount window: retaining the old
+node until the actual child route commits yields detached old node/current same-ID
+node still attached. That causal schedule is RED for the old assertion and GREEN
+for a fresh synchronous query/assert inside waitFor. Final source removes all
+diagnostic hooks, extra navigation waiting and temporary logs; only the assertion
+and its explanatory comment change, with every later lineage assertion retained.
+
+Parent matches Product74812d06 pins, patchdc325939/report68855825 and six evidence
+logs. Frozen test52031B/SHA c725cd0cffc8c7b5188af4f2b336c16f50a910bc8734112cad79b7b80845aee6
+independently passes37/11.88s; Source8 files and operations04 remain unchanged.
+Local Vitest3.2.7/Vite8.2.1 is disclosed engineering evidence, not the required
+CI4.1.11/8.2.4 qualification. Product actual+metadata/record reserve13,150,696B
+fits16MiB; current failed CI log fits the same-purpose common headroom at net0.
+No SDK/host/data/math/production UI or dependency change. Next is original
+Standards narrow test-delta review, then one final-head normal CI; no blind rerun
+of the failed head. All old failures/futures and three UNKNOWN intents remain.
+
+Both original independent narrow R1 axes are READY at code5f0b373775583f9b91b6884c30833b6772c48c4a.
+Spec3933B/SHAeea7d346efd174b4b7f94c188afd476019a3516ff6666c36d5703f7541bc108e
+and Standards4197B/SHAf014b3bfdcb848ca252b9b2b9318a121f7c7fc23f4c2fca268b730f10252b697
+were read and pinned by Parent. They find no material blocker in the bounded
+failure-evidence/private-codec delta; neither claims native cause, SDK effects,
+input or financial acceptance. This records actual agent review under standing
+operator-delegated workflow, not independent human commit inspection. The final
+checkpoint changes only this iteration record; code and private frozen operations
+remain unchanged. Next is one actual matching-head required CI, exact-lock/full-tree
+qualification and ordinary guarded merge/publication before a bounded invocation.
+
+Parent independent affected gate:529PASS/2FAIL/128.07s, with17 frozen raw files
+unchanged. Both failures are the old normal-family issuer bootstrap refusing
+DEV_NATIVE_SOURCE_PIN because its fixed helper digest remained aced2a5a after the
+canonical helper changed to000b406b. The pin check is retained; the same original
+Source now updates only that release constant and rechecks the actual bootstrap
+cases before REV2 freeze. All first-freeze reports/pins and failed fixtures remain.
+This compatibility defect is separate from connection3's unproven native cause.
+
+REV2 preserves first-freeze evidence. Parent proves the sole byte delta is the
+issuer's fixed helper digest and all16 other frozen files are unchanged; actual
+helper bytes match that pin. Parent reruns the three bootstrap cases plus all47
+new lifecycle/operations cases:50PASS/5.01s. Original529 passing cases are not
+duplicated solely for one verified constant. Source REV2 pinsb7efdf4f/16990B and
+handoffe10efbf4/2561B are read/matched; complete Source8,880,128B including all
+524288B future fits9MiB. Parent matches8 tracked files,4 operations and all final
+artifacts/private test. Independent narrow review and matching-head CI remain
+required; this resolves software bootstrap compatibility, not native SDK cause.
+
+Planner/Verifier: PR284 normally merged8839b437/treecaba6e37 after actual
+head441a6fd8 CI41941420237 SUCCESS:7669PASS/149SKIP, frontend793. Exact-lock
+artifact13375653576,455057B/SHA833fba86c267abbc44af4685adc5024128bfcdf2c2258ee1b4b06424cbec472e
+matches the actual merged tree; ordinary connection3 used that publication.
+
+Actual connection3 passed complete SESSION/NAMED_OBJECT in namespace4026532643,
+then stopped SDK_CLOSE_UNKNOWN. Current-only manifest separately records primary
+initialize/Exception/exception and close close/CaptureRejected/normal_close_not_proven,
+three default false close flags, reserved contexts1/init0/application0, responses0.
+Actual SDK effects remain UNKNOWN. No reusable response/checkpoint, publishable
+input or study exists. Exact current termination is proved: owner CLOSED,
+owned_cleanup_proven=true, retainedInvocation6da01d5cdf1644ec8f70071dd479db16
+matches, MainPID0/empty cgroup, local transport normally closed. Failed units and
+history remain. This is owned termination, not normal SDK closure.
+
+Planner/Quant: fixed public SDK constructor/callback/async-close source was read
+without SDK import/call. Its signature matches; no guessed SDK/sleep repair is
+justified. Actual positive witness as an explicitly offline fixture reaches
+context-created held/native guards, issuer refs, native snapshot and authenticated
+ChildSession/Channel/strict catalog+namespace, constructor sentinel, authored SDK
+operations and parent seal (baseline04:1PASS/0.99s). Three earlier fixture errors
+(global PathFinder stub, missing SecurityFirm.NONE, socket stub without seal open)
+are retained and are not native causes. No actual consumer break was reproduced.
+
+Implementer: minimal failure-only lifecycle evidence keeps primary operation/guard,
+exact trusted type/code/finite errno and independent close evidence through the
+existing authenticated chain. Normal success format and every original refusal,
+deadline, ownership and publication predicate remain. Fresh UNCLAIMED is a stale
+preclaim reporting projection; update it only after successful durable begin,
+without ledger/sequence/debit changes. Focused44PASS/4.11s is an engineering
+checkpoint; final freeze, Parent verification, independent review and normal CI
+remain pending. No new SDK/carrier effect has been issued. Actual initialization
+cause, normal SDK close, capture and independent H1/H2/H3 acceptance remain open.
+
+Capacity: current P17 raw1428B/SHA
+ff1e2ead377cf59151b01a9d3b3ef045c9e729e49174eb65cc62786470de1f5a
+is canonically bound by actual merged RecoveryProfile. Same batch01 now has
+contexts/init6, keepalive576, wall43200s; business32/compute3/rate1/actor unchanged.
+Capture96MiB local and remote fully funds each nominal context. Source9/Product16/
+common24/FS1 gives software50MiB; old80+new258=338MiB354418688B. Complete Source
+forecast and original524288B future fit9MiB; common24133632B fits24MiB including
+one further publication and Parent affected fixtures. Conservative G10740658266/
+P4702585870/all4759208974 fit12/6GiB/free50GiB. All policies/receipts/old futures
+and three UNKNOWN intents remain. P14 added96MiB capture, P15 net0 corrected full
+single-parent stress, P16 Source+1MiB, P17 common+4MiB; global charged each net
+increase once. Capacity is not runtime GO. No data/window/math/PIT/paper/live or
+financial qualification changes. See BATCH-CAPACITY-EXTENSION-01,
+CAPACITY-STRESS-CORRECTION-01 and CAPACITY-SOFTWARE-10/11 retained artifacts.
+
+
 Issue [281](https://github.com/ZP151/quantmesh/issues/281);
 [frozen boundary](../superpowers/specs/2026-11-04-ivv-transaction-recovery.md).
 

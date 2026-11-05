@@ -645,6 +645,7 @@ class _CaptureObserver:
         verifier = self.plan.get("_live_verifier")
         if verifier is not None:
             verifier()
+            _lifecycle_mark(self.plan, guard="NOT_APPLICABLE")
         _require(self.poison is None, self.poison or "poisoned")
         _require(
             0 <= self.clock.mono() - self.plan["started_monotonic"] < limit, "absolute_deadline"
@@ -899,6 +900,45 @@ def _failure(stage, error):
     return {"stage": stage, "class": kind, "code": code}
 
 
+class _CaptureLifecycle:
+    """Private recovery call-site facts, never SDK or provider introspection."""
+
+    def __init__(self, classify):
+        self.classify = classify
+        self.owner = threading.get_ident()
+        self.phase, self.guard = "ENTRY_GUARD", "NOT_APPLICABLE"
+        self.value = dict(
+            schema="qm.ivv.capture-lifecycle.v1",
+            primary=None,
+            close=None,
+            ctx_assigned=False,
+            constructor_returned=False,
+            evidence_kind="DEFAULT",
+            normal_close=dict(
+                context_closed=False, callbacks_stopped=False, data_socket_closed=False
+            ),
+        )
+
+    def failed(self, role, error):
+        if self.value[role] is None:
+            try:
+                facts = self.classify(error)
+            except BaseException:
+                facts = dict(type="UNKNOWN", code="UNKNOWN", errno=None)
+            self.value[role] = dict(phase=self.phase, guard=self.guard, **facts)
+
+
+def _lifecycle_mark(plan, phase=None, guard=None, **facts):
+    trace = plan.get("_capture_lifecycle") if type(plan) is dict else None
+    if type(trace) is _CaptureLifecycle and trace.owner == threading.get_ident():
+        if phase is not None:
+            trace.phase, trace.guard = phase, "NOT_APPLICABLE"
+        if guard is not None:
+            trace.guard = guard
+        trace.value.update(facts)
+    return trace
+
+
 def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=False, dates=None):
     suffix = DEV_SUFFIX if plan.get("schema_id") == "qm.ivv.capture-plan" + DEV_SUFFIX else ".v1"
     if plan.get("schema_id") == "qm.ivv.capture-plan" + TRUSTED_SUFFIX:
@@ -932,6 +972,10 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
             "catalog_sha256": plan["catalog_sha256"],
         },
     )
+    trace = None
+    if suffix == RECOVERY_SUFFIX and callable(plan.get("_capture_classifier")):
+        trace = _CaptureLifecycle(plan["_capture_classifier"])
+        plan["_capture_lifecycle"] = trace
     observer = _CaptureObserver(plan, writer, clock)
     backend = None
     primary = close_failure = None
@@ -942,10 +986,13 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         observer.check(180)
         with _phase(clock, plan["started_monotonic"] + 180):
             if observer.recovery is not None:
+                _lifecycle_mark(plan, "MAY_CONNECT")
                 observer.recovery.may_connect(observer.attempt)
+            _lifecycle_mark(plan, "SDK_LOAD")
             backend = backend_factory(observer, writer, plan, clock)
             backend.open()
         for tag in ORDER:
+            _lifecycle_mark(plan, "BUSINESS")
             stage = tag
             observer.check(360 if tag in DATA else 180)
             wall = plan["started_monotonic"] + (360 if tag in DATA else 180)
@@ -1008,12 +1055,15 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
             "history_page_incomplete",
         )
     except BaseException as error:
+        if trace is not None:
+            trace.failed("primary", error)
         primary = _failure(stage, error)
     finally:
         if backend is not None:
             try:
                 with _phase(clock, min(plan["started_monotonic"] + 390, clock.mono() + 30)):
                     backend.close()
+                _lifecycle_mark(plan, "EVIDENCE")
                 normal = backend.close_evidence()
                 _require(
                     type(normal) is dict
@@ -1023,6 +1073,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
                 )
                 _require(clock.mono() - plan["started_monotonic"] < 390, "normal_close_deadline")
             except BaseException as error:
+                if trace is not None:
+                    trace.failed("close", error)
                 close_failure = _failure("close", error)
     if observer.poison is not None and primary is None:
         primary = {"stage": "late_guard", "class": "CaptureRejected", "code": observer.poison}
@@ -1074,9 +1126,12 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
         },
     )
     try:
+        _lifecycle_mark(plan, "FINAL_GUARD")
         observer.check(480) if observer.poison is None else None
     except BaseException as error:
         if manifest["primary_failure"] is None:
+            if trace is not None:
+                trace.failed("primary", error)
             manifest["primary_failure"] = _failure("final_guard", error)
         manifest["state"] = "FAILED_CAPTURE_REQUIRES_PARENT_SEAL"
     if observer.recovery is not None:
@@ -1094,6 +1149,8 @@ def _run_capture(plan, root, *, backend_factory, clock, sync_dir, synthetic=Fals
             },
             "history_actual": "UNKNOWN",
         }
+    if trace is not None and manifest["state"] != "CAPTURED_UNREVIEWED":
+        manifest["capture_lifecycle"] = trace.value
     writer.json("capture-manifest.json", manifest)
     return manifest
 
@@ -1304,12 +1361,16 @@ class _OfficialBackend:
         return parent(guarded_pack, observed_unpack)
 
     def open(self):
+        _lifecycle_mark(self.plan, "CONTEXT_RESERVE_GUARD")
         self.o.context_created()
         backend = self
+        _lifecycle_mark(self.plan, "BASE_LOOKUP")
         base = self.sdk.OpenQuoteContext
+        _lifecycle_mark(self.plan, "SUBCLASS")
 
         class OneShot(base):
             def _init_connect_sync(ctx):
+                _lifecycle_mark(backend.plan, "INIT_CONNECT")
                 backend.o.initializing()
                 ctx._auto_reconnect = False
                 backend._install_wire(ctx)
@@ -1318,20 +1379,27 @@ class _OfficialBackend:
             def _get_sync_query_processor(ctx, pack, unpack):
                 return backend._processor(ctx, super()._get_sync_query_processor, pack, unpack)
 
+        _lifecycle_mark(self.plan, "CONFIG")
         _require(
             self.plan["endpoint"]["is_encrypt"] is False,
             "encrypted_transport_not_prepared_no_downgrade",
         )
         # Hold partial construction so finally can close it after any failure.
+        _lifecycle_mark(self.plan, "ALLOCATE")
         self.ctx = OneShot.__new__(OneShot)
-        OneShot.__init__(
-            self.ctx,
+        _lifecycle_mark(self.plan, "CTOR_ARGUMENTS", ctx_assigned=True)
+        initialize, ctx = OneShot.__init__, self.ctx
+        security_firm = getattr(self.sdk.SecurityFirm, self.plan["endpoint"]["security_firm"])
+        _lifecycle_mark(self.plan, "CONSTRUCTOR")
+        initialize(
+            ctx,
             host="127.0.0.1",
             port=11112,
             is_encrypt=False,
             is_async_connect=False,
-            security_firm=getattr(self.sdk.SecurityFirm, self.plan["endpoint"]["security_firm"]),
+            security_firm=security_firm,
         )
+        _lifecycle_mark(self.plan, "READY_CHECK", constructor_returned=True)
         _require(
             self.ctx.status == self.constants.ContextStatus.READY, "sdk_initial_connection_failed"
         )
@@ -1394,32 +1462,46 @@ class _OfficialBackend:
         return result[1]
 
     def close(self):
+        _lifecycle_mark(self.plan, "SDK_CLOSE")
         try:
             if self.ctx is None:
                 return
             cb = getattr(getattr(self.ctx, "_callback_executor", None), "_thread", None)
             conn = getattr(self.ctx, "_conn_id", None)
             self.ctx.close()
+            _lifecycle_mark(self.plan, "STATUS_WAIT")
             until = min(self.plan["started_monotonic"] + 390, self.clock.mono() + 30)
             while (
                 self.ctx.status != self.constants.ContextStatus.CLOSED and self.clock.mono() < until
             ):
                 self.clock.sleep(min(0.02, max(0, until - self.clock.mono())))
             context_closed = self.ctx.status == self.constants.ContextStatus.CLOSED
+            _lifecycle_mark(self.plan, "CALLBACK_JOIN")
             if cb is not None:
                 cb.join(timeout=max(0, until - self.clock.mono()))
-            self._closed = {
-                "context_closed": context_closed,
-                "callbacks_stopped": cb is not None and not cb.is_alive(),
-                "data_socket_closed": self._net is not None
-                and conn is not None
-                and self._net._get_conn(conn) is None,
-            }
+            callbacks_stopped = cb is not None and not cb.is_alive()
+            _lifecycle_mark(self.plan, "CONNECTION_CHECK")
+            data_socket_closed = (
+                self._net is not None and conn is not None and self._net._get_conn(conn) is None
+            )
+            self._closed = dict(
+                context_closed=context_closed,
+                callbacks_stopped=callbacks_stopped,
+                data_socket_closed=data_socket_closed,
+            )
+            _lifecycle_mark(self.plan, evidence_kind="OBSERVED", normal_close=dict(self._closed))
+        except BaseException as error:
+            trace = _lifecycle_mark(self.plan)
+            if trace is not None:
+                trace.failed("close", error)
+            raise
         finally:
+            _lifecycle_mark(self.plan, "WIRE_RESTORE")
             if self._net is not None:
                 self._net.send = self._old_send
                 self._net.connect = self._old_connect
             if self.sink is not None:
+                _lifecycle_mark(self.plan, "LOG_CLOSE")
                 self.sink.close()
 
     def close_evidence(self):
@@ -1545,18 +1627,21 @@ def _native_actor():
     }
 
 
-def _native_recheck(actor, root_parent, *, additional=False, live=False):
+def _native_recheck(actor, root_parent, *, additional=False, live=False, trace_plan=None):
+    _lifecycle_mark(trace_plan, guard="NATIVE_ACTOR")
     _require(_native_actor() == actor, "native_actor_lifetime")
     cgroup = actor["cgroup"]
     _require(
         cgroup.startswith("/system.slice/") and ".." not in cgroup.split("/"), "native_unit_binding"
     )
     base = Path("/sys/fs/cgroup") / cgroup.lstrip("/")
+    _lifecycle_mark(trace_plan, guard="CGROUP")
     limits = {
         name: (base / name).read_text().strip()
         for name in ("memory.max", "memory.swap.max", "pids.max", "cpu.max")
     }
     _check_limits(limits)
+    _lifecycle_mark(trace_plan, guard="SPACE")
     fs = os.statvfs(root_parent)
     # Additional preflight covers its registered 16 MiB capture and 2 MiB closure.
     reserve = (0 if live else 18 * MIB) if additional else 64 * MIB
@@ -1731,14 +1816,19 @@ def _admit_material(plan, plan_path, receipt_root, permit, fd, expected_sha256):
     held_stamp = _fd_stamp(os.fstat(fd))
 
     def live():
+        _lifecycle_mark(plan, guard="HELD_STAMP")
         _require(_fd_stamp(os.fstat(fd)) == held_stamp, "held_permit_replaced")
+        _lifecycle_mark(plan, guard="HELD_JSON")
         _read_held_json(fd, expected_sha256)
+        _lifecycle_mark(plan, guard="PLAN")
         _read_root_ref(
             {"path": str(plan_path), "sha256": permit["plan_sha256"]},
             maximum=32768,
             exact_mode=True,
         )
-        _native_recheck(actor, Path(receipt_root).parent, additional=additional, live=True)
+        _native_recheck(
+            actor, Path(receipt_root).parent, additional=additional, live=True, trace_plan=plan
+        )
 
     plan["_live_verifier"] = live
     plan["_verified_binding"] = {
@@ -1979,6 +2069,7 @@ def _capture_owned(
     state.session.before_effect()
     if suffix == RECOVERY_SUFFIX:
         _require(getattr(state, "recovery_ledger", None) is not None, "recovery_owned_ledger")
+        plan["_capture_classifier"] = getattr(state, "capture_classifier", None)
         plan["_recovery_ledger"] = state.recovery_ledger
         plan["_recovery_attempt"] = state.recovery_attempt
     elif suffix == ADDITIONAL_SUFFIX:

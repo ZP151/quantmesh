@@ -23,7 +23,7 @@ PROVENANCE_KEYS = (
 
 # The independently reviewed helper is fixed for this release. No code from the
 # plan, catalog, or helper runs to establish this initial trust anchor.
-_CAPTURE_HELPER_SHA256 = "aced2a5a98915a4dadbe055d176e98aa4db527a1d4b504a63ad9b298582932b8"
+_CAPTURE_HELPER_SHA256 = "000b406ba7429571342760c6b9258e401f5894dd2a2c40764c5f1412a818e8e3"
 
 
 def _capture():
@@ -559,6 +559,7 @@ def _admit_family(
 
     def live():
         inherited()
+        m._lifecycle_mark(plan, guard="CONTROL_REFS")
         for ref in (
             plan["policy_ref"],
             plan["provider_evidence_ref"],
@@ -567,6 +568,7 @@ def _admit_family(
             permit["catalog_ref"],
         ):
             m._read_root_ref(ref, maximum=32768, exact_mode=True)
+        m._lifecycle_mark(plan, guard="PROVIDER_SESSION")
         native_provider_snapshot(m, plan, evidence)
 
     plan["_live_verifier"] = live

@@ -245,7 +245,9 @@ def test_recovery_root_go_is_preinput_and_exact_actual_actor(tmp_path, monkeypat
     assert not {"job_id", "research_scope_id", "max_trials"} & set(go)
 
 
-def connected_recovery_capture(tmp_path, monkeypatch, fault=None, kernel_extra=None):
+def connected_recovery_capture(
+    tmp_path, monkeypatch, fault=None, kernel_extra=None, entry_hook=None, capture_failure=False
+):
     import contextlib
     import os
     import sys
@@ -397,7 +399,12 @@ def connected_recovery_capture(tmp_path, monkeypatch, fault=None, kernel_extra=N
             self.o.before_send(1001, 1)
 
     monkeypatch.setattr(m, "_NativeClock", NativeClock)
-    monkeypatch.setattr(m, "_OfficialBackend", lambda o, w, p, c: Backend(m, o, w, c, root))
+    factory = (
+        entry_hook(m, d, runner, state, final, profile, snapshot, root)
+        if entry_hook is not None
+        else lambda o, w, p, c: Backend(m, o, w, c, root)
+    )
+    monkeypatch.setattr(m, "_OfficialBackend", factory)
     try:
         args = {k: v for k, v in pins.items() if k.startswith("expected_")}
         if fault == "held_pin":
@@ -412,6 +419,9 @@ def connected_recovery_capture(tmp_path, monkeypatch, fault=None, kernel_extra=N
         )
     finally:
         os.close(fd)
+    if capture_failure:
+        assert result["state"] == "FAILED_CAPTURE_REQUIRES_PARENT_SEAL"
+        return dict(result=result, helper=m, runner=runner, root=root, profile=profile)
     assert result["state"] == "CAPTURED_UNREVIEWED"
     for key, value in contract.policy_provenance(contract.DEFAULT_POLICY).items():
         assert result[key] == value
