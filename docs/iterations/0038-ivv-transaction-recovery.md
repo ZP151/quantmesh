@@ -2,6 +2,17 @@
 
 ## Current checkpoint - initialization evidence, 2026-11-05
 
+Both original independent readers return READY for the narrow SDK-path delta at
+818fc6b6318ca7a5661a6e42eee09d09770b55ae. Parent reads and pins SPEC2399B/SHA
+412437328d90d21d4b8a0b2966277d1ff0b125d8a8baaba207272d019fa5f89c and
+STANDARDS2090B/SHA91d8a93f3d9bf623b64fa2424820fe43917d9bfc17c08ba6a60200b29e39e375.
+No material blocker: owned INITIAL baseline, exact optional terminal role, exact
+loaded-source types/identities, repeated protected held-byte proof, path drift and
+legacy semantics are checked. The actual rejected conn4 operand remains unknown.
+This final checkpoint changes only the iteration record. Next is necessary
+matching-final-head normal CI/exact-lock bundle, ordinary guarded merge and
+new-publication compressed carrier measurement before actual connection5.
+
 Original Source freezes the exact-role implementation: runner142582B/SHA
 738662465f5a5ecfaf8f11537052aa565684dc74bd980f55f50c71d9e6cbbe14, new test and
 narrow spec/plan. PINS3e47660b binds all4 tracked/12 artifacts/7 roles/4 ops. Parent
