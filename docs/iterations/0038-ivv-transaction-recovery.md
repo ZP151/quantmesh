@@ -2,6 +2,16 @@
 
 ## Current checkpoint - initialization evidence, 2026-11-05
 
+The original Standards reviewer returns READY for the exact narrow polling-test
+delta at3f5cf6be0060232ce3b34c4c21414a8566feae78:2616B/SHA
+dd433545fcf5a07aebb204b11cf95515548f3db01958846d8bb0a02f8eeb4152.
+Parent reads/pins that report. It verifies current-document query/assert atomicity,
+normal remount causality and unchanged later lineage assertions, and declines
+exact-CI/native acceptance. Source5f0b3737 and all private operations remain
+byte-identical to their prior two-axis READY freeze. This final checkpoint changes
+only the iteration record; next is actual final-head normal CI and its own bundle,
+not a retry or inferred qualification of the failed96928949 run.
+
 Actual PR285 run41957084003 at96928949 fails fast:792 frontend cases pass and
 the existing InstrumentWorkspace polling assertion fails after findByText has
 returned a detached child node. No frontend bundle qualifies. Original Product
