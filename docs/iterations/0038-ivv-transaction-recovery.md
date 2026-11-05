@@ -1,5 +1,48 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Current collector-only successor — 2026-11-05
+
+Planner: issue281's one action is the fixed capture on the attributed restored
+provider. This separate slice excludes Operator/service/login and all data/math
+changes. Quant: no leakage, cost, selection or confidence semantics change;
+financialINSUFFICIENT/livefalse and historical5UNKNOWN remain.
+Implementer: recovery _Provider uses supplied verified ProviderExecution,
+OperatorReader, validated instance runtime growth and immediate pre-GO ns/net
+proof; legacy constructors and periodic loop remain. Source RED records absent
+recovery binding/growth support. The older frozen CLOCK-RED remains the causal
+successful-GO cadence regression; it is not a new review of the stopped slice.
+Verifier: affected123PASS/171deselected plus5subtests; actualGOt1 leaves due5,
+resource/growth0/5, snapshotT5 served6.25/age1.25. Operations07 original winning
+capsule/decoded-bound/command5PASS/18deselected. Existing calendar deprecation
+remains. Full src/tests/tools Ruff and changed3file format pass; whitespace and
+submodule pins checked. Bare sparse collection1880 succeeds but is not a full
+suite execution; complete Linux matching-head CI remains mandatory.
+RAM geometry uses actualv2receipt437852bed/P24/all7candidate roles and prospective
+publication built from actualf599metadata: ops07 carrier269393/270336 margin943,
+packed170755/262144, decoded608516/1MiB; modeled normal return header843485/870400
+and total8183521/9437184 round-trip through actual codec. No carrier persisted.
+Reviewer: Root's two independent axes and normal publication remain pending;
+Source's local GREEN is not a human inspection or capture/login qualification.
+Conservative all-retained Source complete13533184/13631488 includes
+prior13139968, old524288future and newincrement393216; every failed log and
+fixture remains. The fresh frozen source patch and canonical Git pins live under
+output/ivv-transaction-recovery-20261104-01/server/collector-successor-02.
+
+
+PR288 merged f5998dd7/tree179e5643 with normal CI7903PASS/149SKIP/frontend793.
+Root reports actual attributed persistent provider active, strict BIND0SDK and
+private socket0600; terminal/password/SDK login remain UNKNOWN. The collector
+is explicitly unfrozen only for a separate offline binding/GO-cadence slice.
+It reuses authenticated v2 ProviderExecution/OperatorReader and derives the
+runtime growth role from the validated instance data. The immediate ns/net
+proof precedes GO without changing periodic resource/growth state or cadence.
+Old7a15b0c9 remains FIX_REQUIRED; operations06 and all five UNKNOWN stay intact.
+P24 Source13/common75/software105/all431MiB and all old futures remain. No
+connection6, SDK, data/math, financial or live qualification is produced here.
+See docs/superpowers/plans/2026-11-05-ivv-collector-provider-go.md. Root owns
+independent reviews, normal CI/merge/catalog and fresh actual admission.
+
+
 ## Current immutable-instance successor - 2026-11-05
 
 Both original Source axes return READY at1af81445911a41d3838b458eb30232a7fd37b833

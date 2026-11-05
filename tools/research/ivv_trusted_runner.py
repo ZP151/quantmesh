@@ -2765,7 +2765,9 @@ def _environment():
 class _Provider:
     """Single independently sampled provider, with monotonic per-inode growth."""
 
-    def __init__(self, native, producer, helper, plan, budget_ref, *, additional=False):
+    def __init__(
+        self, native, producer, helper, plan, budget_ref, *, additional=False, binding=None
+    ):
         self.locations = _locations(additional)
         self.recovery = _recovery_mode(additional)
         self.native = native
@@ -2773,20 +2775,84 @@ class _Provider:
         self.helper = helper
         self.plan = plan
         self.budget_ref = budget_ref
-        self.series = native.RoleGrowth()
+        self.binding = None
+        if self.recovery:
+            self.binding = producer.ProviderExecution.verified_record(binding)
+        self.series = (
+            native.RestoredRoleGrowth(producer, self.binding)
+            if self.binding is not None
+            else native.RoleGrowth()
+        )
         self.first = None
         self.last = None
         self.next = 0
         self.peak = 0
 
+    def peer(self, pid):
+        reader = self.producer.OperatorReader(self.binding)
+        reader.deadline = min(time.monotonic() + 2, self.plan["started_monotonic"] + 480)
+        try:
+            self.native._operator_identity(self.producer, self.binding, self.gateway_gid, reader)
+            fd = reader.processes[self.binding.cohort[2][0]][0]
+            sockets = reader.socket_inodes(fd)
+            pair = _owned_peer(pid, vendor_sockets=sockets)
+            need(sockets == reader.socket_inodes(fd) and not reader.finish(), "PROVIDER_DRIFT")
+            return pair
+        finally:
+            reader.close()
+
+    def verify_network(self, scope):
+        """Immediate pre-GO proof, independent of periodic growth and resource sampling."""
+        deadline = min(time.monotonic() + 2, self.plan["started_monotonic"] + 480)
+        gid = self.native._operator_sources(self.producer, self.binding)
+        reader = self.producer.OperatorReader(self.binding)
+        reader.deadline = deadline
+        try:
+            self.native._operator_identity(self.producer, self.binding, gid, reader)
+            scope.check_pid()
+            vendor = reader.processes[self.binding.cohort[2][0]][0]
+            child = reader.directory(str(scope.pid), reader.directory("/proc"))
+            held = [
+                reader.keep(os.open("ns/net", os.O_RDONLY | os.O_CLOEXEC, dir_fd=process))
+                for process in (vendor, child)
+            ]
+            identities = []
+            for process, fd in zip((vendor, child), held, strict=True):
+                named = os.stat("ns/net", dir_fd=process)
+                current = os.fstat(fd)
+                identity = (current.st_dev, current.st_ino)
+                need(
+                    current.st_ino == self.binding.net and identity == (named.st_dev, named.st_ino),
+                    "PROVIDER_IDENTITY",
+                )
+                identities.append(identity)
+            need(identities[0] == identities[1], "PROVIDER_IDENTITY")
+            need(not reader.finish(), "PROVIDER_DRIFT")
+            scope.check_pid()
+        finally:
+            reader.close()
+        need(time.monotonic() < deadline, "PROVIDER_SAMPLE_DEADLINE")
+
     def sample(self):
         start = time.monotonic()
-        reader = self.producer.PosixReader()
+        if self.binding is not None:
+            self.gateway_gid = self.native._operator_sources(self.producer, self.binding)
+        reader = (
+            self.producer.OperatorReader(self.binding)
+            if self.binding is not None
+            else self.producer.PosixReader()
+        )
         reader.deadline = min(start + 2, self.plan["started_monotonic"] + 480)
         try:
-            identity_doc = reader.identity()
-            self.producer._check_identity(identity_doc)
-            vendor = reader.processes[705711][0]
+            if self.binding is not None:
+                identity_doc = self.native._operator_identity(
+                    self.producer, self.binding, self.gateway_gid, reader
+                )
+            else:
+                identity_doc = reader.identity()
+                self.producer._check_identity(identity_doc)
+            vendor_pid = self.binding.cohort[2][0] if self.binding is not None else 705711
+            vendor = reader.processes[vendor_pid][0]
 
             def listeners():
                 inodes = reader.socket_inodes(vendor)
@@ -2825,7 +2891,7 @@ class _Provider:
                 "MONITOR_THRESHOLD",
             )
             need(not reader.finish() and listener == listeners(), "PROVIDER_DRIFT")
-            row = reader.processes[705711][2]
+            row = reader.processes[vendor_pid][2]
             actual = {
                 "provider_actor": {
                     "pid": row["pid"],
@@ -2903,7 +2969,7 @@ def _child_kernel(scope, producer, endpoint, initial, *, additional=False):
     return {"namespace_inode": ns, "mountinfo_sha256": digest(raw), "capture_actor": scope.child}
 
 
-def _owned_peer(pid):
+def _owned_peer(pid, *, vendor_sockets=None):
     def sockets(path):
         out = set()
         for entry in path.iterdir():
@@ -2918,7 +2984,7 @@ def _owned_peer(pid):
     rows = (Path("/proc") / str(pid) / "net/tcp").read_bytes().splitlines()
     need(len(rows) <= 4096, "PEER_TABLE_BOUND")
     child = sockets(Path("/proc") / str(pid) / "fd")
-    vendor = sockets(Path("/proc/705711/fd"))
+    vendor = sockets(Path("/proc/705711/fd")) if vendor_sockets is None else vendor_sockets
     table = [line.split() for line in rows[1:]]
     pairs = []
     for row in table:
@@ -3471,7 +3537,15 @@ def _accept_executable_origin(value, values, *, phase=None, namespace=None):
 def _supervise(scope, channel, endpoint, context, plan):
     startup, values, issuer, m, native, producer = context
     additional = _task_mode(values)
-    monitor = _for_task(_Provider, additional)(native, producer, m, plan, startup["budget_ref"])
+    binding = values["catalog_ref"].get("provider_binding") if _recovery_mode(additional) else None
+    monitor = _for_task(_Provider, additional)(
+        native,
+        producer,
+        m,
+        plan,
+        startup["budget_ref"],
+        **({"binding": binding} if binding is not None else {}),
+    )
     start = plan["started_monotonic"]
     kernel = grant = terminal = peer = None
     origin_initial = origin_last = None
@@ -3517,6 +3591,8 @@ def _supervise(scope, channel, endpoint, context, plan):
                     )
                     origin_checks = 1
                     values["_executable_origin"] = origin_last
+                if binding is not None:
+                    monitor.verify_network(scope)
                 need(time.monotonic() - start < 180, "ROOT_GO_EXPIRED")
                 grant = _authorize(context, plan, scope, monitor)
                 scope.check_pid()
@@ -3541,7 +3617,7 @@ def _supervise(scope, channel, endpoint, context, plan):
                     == kernel,
                     "CHILD_NAMESPACE_DRIFT",
                 )
-                pair = _owned_peer(scope.pid)
+                pair = monitor.peer(scope.pid) if binding is not None else _owned_peer(scope.pid)
                 if pair:
                     need(peer is None or pair == peer, "CAPTURE_PEER_CHANGED")
                     peer = pair
