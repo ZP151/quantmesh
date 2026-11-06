@@ -1,5 +1,123 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Complete Init-query vector — issue297, 2026-11-07
+
+Planner consumes the new independent ADDENDUM2 (15565B/SHA68d6852c604aec5d76a62b482ce632a8e7ae7d00c5c37b04487f56158e866844),
+explicitly bound to published d0aaf291 and reference10 STOP f127ae9e. Request1001
+MAY is from wire.before_send, not the constructor reserve. It excludes initial
+status/connect/pack/pre-send-status failures as this call's terminal branch.
+Remaining send, wait/PacketErr and unpack families need one complete method.
+ReqInfo.wait returns None and late notify can overwrite err; the preliminary
+post-return err==Ok candidate was withdrawn before implementation. Actual
+unpack entry is required. No concrete evidence supports changing timeout,
+connection, READY, threads, provider configuration or login.
+
+PR296/CI577 completed normally:8175PASS/149SKIP, frontend793, terminal8324PASSED,
+rc0/missing[], full-suite2843.339104s and18release stages. Normal merge
+d0aaf291/tree8af2bc1f equals final3141befd and all seven reviewed runtime sources.
+Actual publication1088B/SHA524fb419e3d1d4f7ad79be45649eaad8f34a3b540e2a8109d2c15ccce58e8e51
+and full catalog570154B/SHA6ef7dcafb187754e34b5d01fa3235cba2a428ade5fd62d555e5807ab30c755e0
+are immutable. All previous source/review/failure originals remain.
+
+Actual reference10 dispatched19:04:04UTC and returned19:04:54UTC on2026-11-06.
+Its v2 NON_OK/NOT_READY has operation_failed=false/close_failed=false and all
+SDK/parent closure true. Same-invocation manager/unit1 and independent owned
+cleanup prove CLOSED; no recovery was needed. Own journal request1/protocol1001
+has MAY=true/response-record=false; this is not wire/vendorACK evidence, and
+the reference has no Init-response journal writer. Actual context/external
+counts and historical cumulative remain UNKNOWN. Capture11 carrier/once intent/
+submission were never created; Parent did not evaluate its condition claim.
+The negative pair is retired locally, without inventing remote claim state.
+Closeout8034B/SHAe789c9e0dc132581fde066a911dfb9ca315d1d9fd0ad3c9d699f07673eeb88da
+is under integration/reference-init-outcome-20261107-01/preparation. No capture,
+accepted input, trial, report, decision or H1/H2/H3 qualification followed.
+
+Implementer now owns only helper/runner/new tests for the complete issue297
+vector. Parent owns tracked scope/docs, issuer digest and separate private Ops.
+Pure reference v1/v2 and its absence-of-hook checks stay intact. New immutable
+control.v2 selects init-query-vector-v1; closed terminal/observation.v3 carries
+the entire vector. Existing reviewed send/unpack/receive observation is reused
+only in that mode. One bound Event.wait hook is explicitly new; original call,
+arguments, identity, exception and finally restoration remain required.
+Own-socket metadata is one sequential non-consuming snapshot; unavailable or
+racy optional facts are UNKNOWN and cannot become vendor failure or a new
+data-send gate. No recv/peek/SO_ERROR/newFD/SDK-poller consumption/permission
+expansion is allowed. See the new tracked specification and plan.
+
+Quant Researcher: original data/window/math/cost/OOS and paper/live boundaries
+are unchanged. No diagnostic output is research input or financial evidence.
+Verifier independently read the actual core final-targeted receipt and output:
+339PASS/21.08s (22.0319774s wall), with exact source pins and no SDK/host action.
+The first causal RED/GREEN uses frozen ReqInfo.wait/_query_sync/Init and actual
+Event false, then a real modeled late receive/notify that overwrites err to Ok
+without unpack. A RAM wrong-classifier mutant is rejected. Pure/default/receive
+collector AST and ABI proof is retained. Parent final audit identified original
+exception masking when diagnostic recording fails; a narrow fault-injection
+supplement is active before final source qualification. Private plain/framed
+v3 STOP and legacy/malformed controls pass; the interim maximum status8206B and
+carrier-cap failures are retained. Complete finite geometry and exact bounded
+codec compression must pass unchanged8192/327680 caps before publication.
+Independent R1: Spec found one P2, lost initial LIVE guard before backend
+assignment; Standards found no documented breach. A one-line fallback correction
+retains the observer first guard. Actual RED2FAIL/1PASS then GREEN10PASS proves
+initial refusal and factory-before-assignment refusal, without creating a backend
+or sending. Parent final full new-file/bootstrap run159PASS/10.91s (12.2560131s
+wall) passes helper623e0fe2/runner6a2f699c/issuer3245336f/testd5d7d708. The original
+exception masking supplement passed46 affected tests, with the later full-file
+run closing its final-byte gap. All prior failures and immutable source copies
+remain. Parent global Ruff and changed-file format pass; nine Gitlinks stay
+uninitialized and unchanged. Final SpecR2 and StandardsR2 are READY with zero
+open actionable findings; Parent read both exact reports and final pin manifests.
+The redundant-super handler advisory is nonblocking and no unrelated cleanup
+was added. Broad local contract and normal matching-head CI remain pending.
+
+Private Ops adds exact bounded zlib/base64 transport for the already selected
+standalone failure-codec source at its existing compile point; no Source7 bytes
+are stripped or altered. The entire valid maximum receive vector and all closed
+v3/legacy plain/framed STOP controls pass4+4 methods. Parent48 hypothetical
+final-source builds measure carrier327041/327680, packed215356/262144, body788228/
+1048576, status6958/8192, frame8227337, header887301, IPC1238 and complete local
+future16697861/25165824. Carrier639B margin is a measured candidate sample, never
+a universal bound; the eventual actual publication/carrier must pass its own
+hard cap. No carrier was persisted by geometry. One Parent boundary command
+omitted its required runner-path argument and failed before tests; the corrected
+command alone passes4 methods, with the failed original retained. The checker
+pre-freeze12598B/1e6198 audit and final12197B/f5cd freeze are reconciled additively;
+production native_packet5b24bab1 is unchanged throughout that test-only edit.
+Reviewed source checkpoint a62fb215e9b1ff02758aca680e10790172f3d1e1 is committed.
+The complete documented local contract ran against its actual Git source:
+637PASS/16SKIP/1 unchanged Windows POSIX-path assertion failure,37.63s pytest
+(39.8066788s wall). The identical failed node alone passes on the existing Linux
+runtime1PASS/2.51s, without installing or changing an environment. All local
+contract originals, unique failed fixture and JUnit/controller evidence remain.
+Normal Linux CI must still pass the entire contract and full release. Reviewed
+Source7 manifest1255B/SHAe13c6d51854983feacf247e77b406bf89e5996b83626957762f4b34a86f6328b
+and canonical Ops manifest673B/SHAb6839a55801a974a591376c59c4abeec1cb79330edd3f80622a28c23122db507
+bind the actual reviewed source/Code4. One normal matching-head CI/publication
+still follows the final documentation commit; no partial software result creates
+runtime authority. No SDK/provider/host activity is
+allowed during software work and no per-bit release sequence is planned.
+
+Reuse the isolated managed worktree on new codex/0038-init-query-vector from
+fresh actual origin/main d0aaf291. Retain the old source branch/Git and all
+published directories. Existing Source64MiB remains charged once; new full
+software common64MiB plus one-CI16MiB nets80MiB. Actual local registration
+CAPACITY-INIT-QUERY-VECTOR-SOFTWARE-01.json1719B/SHAb888550b5d33ad8a6e819f511ef8b437cba911f8c147f5c43859565d3e27e678
+has unique-once central mirror1997B/SHA512fd13a66bffc8ace112cc81c83cef0de426fbf9b11c3a67cf5def1b58751c9.
+All holds1147142144B/software532676608B;12/6GiB/free50GiB and no-paid remain.
+No old future is repurposed/refunded, no new runtime future or grant is issued.
+
+The separate bounded existing-login check preserved the user's logged-in
+statement but found no same-instance vendor-success machine receipt. Existing
+origin maps to the exact provider instance; LOGIN-RESULT is BRIDGE_REFUSED and
+latest SDK0 metadata deliberately says SDK_login UNKNOWN. The mature login
+prefix is not assumed to type because of its verb: direct Tunnel/event can
+withhold vault/frames, but remote claim/progress writes precede events and
+LOGIN_TEXT is SDK_STATUS_REQUIRED. Freshness/arbitrary-client-stop guarantees
+are not jointly established. No live login/status prefix, credential retrieval,
+pane/log/XML/key/cache read, restart or logout followed. This does not block the
+source diagnostic or introduce a new login gate.
+
 ## Reference Init return diagnostic successor — 2026-11-07
 
 Issue293 continues after the actual reference9 NOT_READY/owned CLOSED result.

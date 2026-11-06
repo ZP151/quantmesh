@@ -1,5 +1,32 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current complete Init-query vector — 2026-11-07
+
+Issue297 supersedes the completed return-only software slice for new work;
+pure reference v1/v2 stays unchanged. PR296/CI577 is normally merged/published
+at d0aaf291. Actual reference10 NON_OK/NOT_READY is owned CLOSED and capture11
+was withheld. The new bound independent causal report excludes the pre-send
+branches and rejects post-return err==Ok as unpack evidence.
+One explicitly identified instrumented Init-only method now delivers guard,
+saved-send, actual wait, actual unpack, finite receive and own-socket facts in
+one software slice. The one new request Event.wait hook, finally restoration,
+late-response races and optional probe UNKNOWN are explicit in its spec/plan.
+There is no confirmed behavior repair, new SDK opportunity, vendor-login proof,
+data/input/trial/report/decision or financial qualification. No ordinary Root or
+human ACK is added under actual standing recovery direction6db.
+The original managed worktree is reused from fresh origin/main; old branch/Git,
+published source, negative pairs and futures remain. New complete software
+common64MiB/oneCI16MiB nets80MiB, with no source64 double charge, refund, paid
+resource or runtime grant. See the active IVV iteration and
+docs/superpowers/plans/2026-11-07-init-query-vector.md.
+
+Reviewed issue297 source checkpoint a62fb215 is committed: final159 targeted
+tests, independent SpecR2/StandardsR2 READY and full finite geometry pass. The
+complete local contract has637PASS/16SKIP plus one unchanged Windows/POSIX
+assertion; the same node passes on existing Linux. Normal matching-head full CI,
+merge and actual publication remain pending. No new SDK action is authorized by
+this software checkpoint.
+
 ## Current bounded diagnostic successor — 2026-11-07
 
 Issue293: preserve the existing synchronous Init delegate return as a finite v2

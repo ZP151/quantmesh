@@ -1,6 +1,7 @@
 # ADR0043: Immutable reference Init conditional transition
 
-Status: Proposed implementation; offline qualification only (issue293).
+Status: Accepted architecture in PR295/PR296; issue297 instrumented successor
+remains in offline qualification. No real-input or financial qualification.
 
 R2 clarification: the unchanged systemd-run --pipe client propagates the normal
 diagnostic manager exit, so this exact reference STOP requires integer manager1
@@ -77,3 +78,33 @@ The scalar never changes READY, conditional admission or closure. Its offline
 contract tests distinguish official Init failure from OK followed by loss of
 READY before first sample, without claiming a root-cause repair. Ordinary
 release/publication and physical admission still govern any new diagnostic.
+
+## Explicit complete instrumented method (issue297,2026-11-07)
+
+Actual reference10 returned NON_OK/NOT_READY with normal owned close and no
+capture11. Its request MAY localizes execution beyond the guarded-send entry;
+later err==Ok cannot establish unpack because late notify can overwrite err.
+The existing pure reference and historical v1/v2 artifacts remain unchanged.
+
+A new closed control.v2 adds only method=init-query-vector-v1. It explicitly
+selects instrumented Init-only behavior and terminal/observation.v3 with one
+complete closed query vector. Reuse existing reviewed send/query/unpack/receive
+observation; the one newly introduced request hook wraps the bound Event.wait
+call exactly once, preserving arguments, returned object, exception and finally
+ordering. Record actual unpack entry and finite retType only. Do not infer
+historical control flow from later mutable object state or response-journal
+absence. No SDK fork, global hook, new observer platform or business path.
+
+One snapshot of the already-owned connection/socket reads selector mapping,
+independent zero-time readiness and unread-size category without consuming
+events/bytes or changing state. No recv/MSG_PEEK/SO_ERROR/dup/newFD/registration
+or permission expansion. Optional unavailability and sequential-sample races
+remain UNKNOWN and do not imply vendor failure or a new data-send gate.
+Mandatory source/once/FD/lease/resource/close and actual READY remain unchanged;
+diagnostic fields cannot mint input or relax the conditional transition.
+
+This is a software decision, not a concrete behavior repair or runtime grant.
+The complete vector, actual wait/late-response semantics, restored hook lifetime,
+legacy/default behavior and bounded geometry must be qualified in one slice,
+followed by ordinary review/CI/merge/publication and separately applicable
+actual admission. No automatic retry or old negative-pair reuse follows.

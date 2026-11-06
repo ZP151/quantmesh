@@ -1081,6 +1081,174 @@ def _capture_lifecycle_from_error(error):
 
 def select_reference_observation(value):
     """Closed non-data STOP observation; parent closure never comes from child IPC."""
+
+    def _select_init_query_vector(value, require):
+        """Closed scalar contract, also embedded in the standalone STOP selector."""
+
+        def check(condition):
+            require(condition, "INIT_QUERY_VECTOR_SHAPE")
+
+        def enum(item, allowed):
+            return type(item) is str and item in allowed.split()
+
+        fields = (
+            "schema attribution guard send primitive_wait packet_err_snapshot "
+            "unpack ret_type receive socket errors"
+        ).split()
+        check(type(value) is dict and set(value) == set(fields))
+        check(type(value["schema"]) is str and value["schema"] == "qm.ivv.init-query-vector.v1")
+        for name, allowed in (
+            ("attribution", "BOUND UNBOUND RACE_OR_UNKNOWN"),
+            ("send", "UNOBSERVED ENTERED OK NON_OK RAISED UNKNOWN"),
+            ("primitive_wait", "UNOBSERVED TRUE FALSE RAISED UNKNOWN"),
+            ("packet_err_snapshot", "UNOBSERVED Ok Timeout Invalid Disconnect SendFail UNKNOWN"),
+            ("unpack", "UNOBSERVED ENTERED OK NON_OK RAISED UNKNOWN"),
+            ("ret_type", "UNOBSERVED OK NON_OK UNKNOWN"),
+        ):
+            check(enum(value[name], allowed))
+        errors = value["errors"]
+        check(type(errors) is dict and set(errors) == {"send", "wait", "unpack"})
+        os_labels = (
+            "OS BLOCKED BROKEN_PIPE CONN_ABORTED CONN_REFUSED CONN_RESET TIMEOUT PERMISSION".split()
+        )
+        for name, error in errors.items():
+            check(type(error) is dict and set(error) == {"type", "errno"})
+            check(
+                enum(
+                    error["type"],
+                    "NONE UNKNOWN GUARD OS BLOCKED BROKEN_PIPE CONN_ABORTED CONN_REFUSED "
+                    "CONN_RESET TIMEOUT PERMISSION TYPE VALUE ATTRIBUTE KEY INDEX RUNTIME "
+                    "ASSERTION MEMORY OVERFLOW EXCEPTION INTERRUPT SYSTEM_EXIT GENERATOR_EXIT",
+                )
+                and (
+                    error["errno"] is None
+                    or type(error["errno"]) is int
+                    and 0 <= error["errno"] <= 65535
+                )
+                and (error["errno"] is None or error["type"] in os_labels)
+            )
+            outcome = value["primitive_wait" if name == "wait" else name]
+            check((outcome == "RAISED") == (error["type"] != "NONE"))
+        guard = value["guard"]
+        check(type(guard) is dict and set(guard) == {"stage", "code"})
+        check(
+            enum(guard["stage"], "NONE WIRE LIVE REQUEST POST_CONSTRUCTOR RESTORE UNKNOWN")
+            and enum(
+                guard["code"],
+                "NONE REFERENCE_LIVE_REFUSED REFERENCE_SEND_REFUSED "
+                "REFERENCE_INIT_ONLY OTHER_GUARD UNKNOWN",
+            )
+            and ((guard["stage"] == "NONE") == (guard["code"] == "NONE"))
+        )
+        sock = value["socket"]
+        check(
+            type(sock) is dict
+            and set(sock)
+            == set("identity selector readable unread wait_delta_ms sample_order".split())
+        )
+        for name, allowed in (
+            ("identity", "UNBOUND VERIFIED DRIFT UNKNOWN"),
+            ("selector", "ABSENT READ NO_READ UNKNOWN"),
+            ("readable", "TRUE FALSE UNKNOWN"),
+            ("unread", "ZERO LE_1K LE_64K GT_64K UNKNOWN"),
+            ("sample_order", "SEQUENTIAL"),
+        ):
+            check(enum(sock[name], allowed))
+        check(
+            sock["wait_delta_ms"] is None
+            or type(sock["wait_delta_ms"]) is int
+            and 0 <= sock["wait_delta_ms"] <= 480000
+        )
+        trace = value["receive"]
+        enums = dict(
+            callback_error="NONE OS_ERROR VALUE_ERROR TYPE_ERROR RUNTIME_ERROR MEMORY_ERROR OTHER",
+            loop_error="NONE OS_ERROR VALUE_ERROR TYPE_ERROR RUNTIME_ERROR MEMORY_ERROR OTHER",
+            read_error="NONE OS_ERROR VALUE_ERROR TYPE_ERROR RUNTIME_ERROR MEMORY_ERROR OTHER",
+            tcp_progress="UNOBSERVED NONE PARTIAL FULL UNKNOWN",
+            target_notify_err="UNOBSERVED Ok Timeout Invalid Disconnect SendFail UNKNOWN",
+            notify_when="UNOBSERVED BEFORE_WAIT_END AFTER_WAIT_END",
+            network_thread="ALIVE DEAD UNKNOWN",
+        )
+        booleans = (
+            "complete_candidate_seen target_candidate_seen scan_unknown "
+            "wait_ended overflow recorder_error"
+        ).split()
+        counts = "polls dequeues read_events read_callbacks".split()
+        check(
+            type(trace) is dict
+            and set(trace)
+            == {
+                "schema",
+                "first_ms",
+                "last_ms",
+                "read_bytes",
+                "tcp_accepted",
+                "tcp_pending",
+                *enums,
+                *booleans,
+                *counts,
+            }
+        )
+        check(type(trace["schema"]) is str and trace["schema"] == "qm.ivv.init-receive-trace.v1")
+        check(
+            all(type(trace[k]) is bool for k in booleans)
+            and all(type(trace[k]) is int and 0 <= trace[k] <= 4096 for k in counts)
+            and all(enum(trace[k], allowed) for k, allowed in enums.items())
+            and type(trace["read_bytes"]) is int
+            and 0 <= trace["read_bytes"] <= 2147483647
+            and all(
+                trace[k] is None or type(trace[k]) is int and 0 <= trace[k] <= 2147483647
+                for k in ("tcp_accepted", "tcp_pending")
+            )
+        )
+        phases = set("poll dequeue write read frame notify wait unpack".split())
+        for name in ("first_ms", "last_ms"):
+            check(
+                type(trace[name]) is dict
+                and set(trace[name]) == phases
+                and all(
+                    t is None or type(t) is int and 0 <= t <= 480000 for t in trace[name].values()
+                )
+            )
+        check(
+            all(
+                (trace["first_ms"][k] is None and trace["last_ms"][k] is None)
+                or (
+                    type(trace["first_ms"][k]) is int
+                    and type(trace["last_ms"][k]) is int
+                    and trace["first_ms"][k] <= trace["last_ms"][k]
+                )
+                for k in phases
+            )
+        )
+        accepted, pending, progress = (
+            trace["tcp_accepted"],
+            trace["tcp_pending"],
+            trace["tcp_progress"],
+        )
+        check(
+            (
+                (progress in ("UNKNOWN", "UNOBSERVED") and accepted is None and pending is None)
+                or (progress == "NONE" and accepted == 0 and type(pending) is int and pending > 0)
+                or (
+                    progress == "PARTIAL"
+                    and type(accepted) is int
+                    and accepted > 0
+                    and type(pending) is int
+                    and pending > 0
+                )
+                or (progress == "FULL" and type(accepted) is int and accepted > 0 and pending == 0)
+            )
+            and (not trace["target_candidate_seen"] or trace["complete_candidate_seen"])
+            and (
+                (trace["target_notify_err"] == "UNOBSERVED")
+                == (trace["notify_when"] == "UNOBSERVED")
+            )
+            and (trace["notify_when"] != "AFTER_WAIT_END" or trace["wait_ended"])
+            and len(json.dumps(trace, sort_keys=True, separators=(",", ":")).encode()) <= 2048
+        )
+        return json.loads(json.dumps(value, sort_keys=True, separators=(",", ":")))
+
     keys = {
         "schema_id",
         "reference_control_sha256",
@@ -1090,8 +1258,13 @@ def select_reference_observation(value):
         "normal_close",
         "parent_closed",
     }
-    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-observation.v2":
+    if type(value) is dict and value.get("schema_id") in (
+        "qm.ivv.reference-init-observation.v2",
+        "qm.ivv.reference-init-observation.v3",
+    ):
         keys.add("init_delegate_return")
+    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-observation.v3":
+        keys.update(("method", "query_vector"))
     need(
         type(value) is dict and set(value) == keys,
         "REFERENCE_OBSERVATION_SHAPE",
@@ -1104,7 +1277,11 @@ def select_reference_observation(value):
         )
     need(
         value["schema_id"]
-        in ("qm.ivv.reference-init-observation.v1", "qm.ivv.reference-init-observation.v2")
+        in (
+            "qm.ivv.reference-init-observation.v1",
+            "qm.ivv.reference-init-observation.v2",
+            "qm.ivv.reference-init-observation.v3",
+        )
         and type(value["reference_control_sha256"]) is str
         and re.fullmatch("[0-9a-f]{64}", value["reference_control_sha256"])
         and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
@@ -1130,7 +1307,14 @@ def select_reference_observation(value):
         ),
         "REFERENCE_OBSERVATION_PARENT",
     )
-    return {**value, "normal_close": dict(normal)}
+    result = {**value, "normal_close": dict(normal)}
+    if "query_vector" in keys:
+        need(
+            type(value["method"]) is str and value["method"] == "init-query-vector-v1",
+            "REFERENCE_OBSERVATION_METHOD",
+        )
+        result["query_vector"] = _select_init_query_vector(value["query_vector"], need)
+    return result
 
 
 _REFERENCE_OBSERVATION_MARK = object()
@@ -2799,7 +2983,15 @@ def reference_capture_condition(book, pair_sha256, read_owned, native, producer)
             "sdk_pins_sha256": pair["sdk_pins_sha256"],
             "policy_sha256": pair["policy_sha256"],
         }
-        need(json.loads(control) == expected_control, "REFERENCE_CONTROL_BINDING")
+        parsed_control = json.loads(control)
+        if (
+            type(parsed_control) is dict
+            and parsed_control.get("schema_id") == "qm.ivv.reference-control.v2"
+        ):
+            expected_control.update(
+                schema_id="qm.ivv.reference-control.v2", method="init-query-vector-v1"
+            )
+        need(parsed_control == expected_control, "REFERENCE_CONTROL_BINDING")
         plan = json.loads(original(loc.control / "plan.json"))
         need(
             digest(original(loc.control / "reference-pair.json", 4096)) == pair_sha256,
@@ -3821,7 +4013,8 @@ def _check_capture_result(result, *, recovery):
 
 
 def _reference_result(result):
-    v2 = result["schema_id"] == "qm.ivv.reference-init-terminal.v2"
+    version = result["schema_id"].rsplit(".", 1)[-1]
+    v2 = version in ("v2", "v3")
     primary = result["primary_failure"]
     not_ready = (
         result["constructor_returned"] is True
@@ -3835,9 +4028,12 @@ def _reference_result(result):
     )
     value = select_reference_observation(
         {
-            "schema_id": "qm.ivv.reference-init-observation.v2"
-            if v2
-            else "qm.ivv.reference-init-observation.v1",
+            "schema_id": "qm.ivv.reference-init-observation." + version,
+            **(
+                {"method": result["method"], "query_vector": result["query_vector"]}
+                if version == "v3"
+                else {}
+            ),
             **({"init_delegate_return": result["init_delegate_return"]} if v2 else {}),
             "reference_control_sha256": result["reference_control_sha256"],
             "constructor_status": result["constructor_status"],

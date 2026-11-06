@@ -1,5 +1,27 @@
 # QuantMesh Product Roadmap
 
+## Current complete Init-query vector — 2026-11-07
+
+Issue297 preserves the completed pure-reference control and introduces one
+explicit instrumented Init-only diagnostic. Its outcome is a complete finite
+guard/send/wait/unpack/receive/own-socket vector or honest UNKNOWN, not broker or
+financial qualification. One bound Event.wait hook captures the real discarded
+boolean; a later err snapshot is not unpack-entry evidence. Mandatory source,
+once/lease, FD, resource, closure and READY/data gates remain unchanged.
+PR296/CI577 (8175PASS149SKIP/frontend793) is merged as d0aaf291 and published.
+The actual reference10 NON_OK/NOT_READY closed normally; conditional capture11
+was not dispatched. No real input or financial result exists. New source follows
+the tracked complete-vector spec/plan, targeted TDD, independent two-axis review
+and one normal matching-head CI/publication before any separately qualified
+new immutable method. No per-bit CI releases, new platform or permission change.
+
+Reviewed issue297 source checkpoint a62fb215 is committed: final159 targeted
+tests, independent SpecR2/StandardsR2 READY and full finite geometry pass. The
+complete local contract has637PASS/16SKIP plus one unchanged Windows/POSIX
+assertion; the same node passes on existing Linux. Normal matching-head full CI,
+merge and actual publication remain pending. No new SDK action is authorized by
+this software checkpoint.
+
 ## Current bounded diagnostic successor — 2026-11-07
 
 Issue293: preserve the existing synchronous Init delegate return as a finite v2
