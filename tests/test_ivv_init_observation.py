@@ -160,6 +160,8 @@ def sdk_transport(case):
         ctx = state.ctx
         if case == "send_raise":
             raise OSError(CANARY)
+        if case == "send_interrupt":
+            raise state.failure
         req = ctx._req_map.pop((1001, 7))
         state.request_ref = weakref.ref(req)
         req.msg = CANARY
@@ -178,6 +180,8 @@ def sdk_transport(case):
         )
         if case in ("Invalid", "Disconnect", "SendFail"):
             req.err = getattr(packet, case)
+        if case == "wrong_req_invalid":
+            req.err = packet.Invalid
         if case in ("unknown_packet", "unknown_ready"):
             req.err = CANARY
         if case == "unpack_raise":
@@ -208,12 +212,13 @@ def sdk_transport(case):
 
         quote.__init__ = ready_after_failure
 
-    if case == "wrong_req":
+    if case in ("wrong_req", "wrong_req_invalid"):
 
         class SubstitutedMap(dict):
             def get(self, key, default=None):
                 actual = super().get(key, default)
                 substitute = copy(actual)
+                state.bound_request_ref = weakref.ref(substitute)
                 return substitute
 
         def connect_with_foreign_req(ctx):
@@ -319,11 +324,12 @@ def test_closed_selector_preserves_only_finite_facts():
             r.select_capture_lifecycle({**life, "init_observation": {**facts, **patch}})
 
 
-def test_failed_manifest_to_stop(monkeypatch, tmp_path):
+@pytest.mark.parametrize("case", ["Disconnect", "forwarding_pack", "wrong_req_invalid"])
+def test_failed_manifest_to_stop(monkeypatch, tmp_path, case):
     import test_ivv_runtime_failure_evidence as chain
     from test_ivv_recovery_capture import connected_recovery_capture
 
-    modules, state = sdk_transport("Disconnect")
+    modules, state = sdk_transport("normal" if case == "forwarding_pack" else case)
 
     def entry(m, issuer, runner, session, *args):
         session.capture_classifier = lambda e: runner.classify_capture_exception(
@@ -333,7 +339,17 @@ def test_failed_manifest_to_stop(monkeypatch, tmp_path):
         modules[0].SecurityFirm.FUTUSECURITIES = "FUTUSECURITIES"
         modules[0].SecurityFirm.FUTUSG = "FUTUSG"
         modules[0].SecurityFirm.FUTUINC = "FUTUINC"
-        return lambda o, w, p, c: cls(o, w, p, c, modules=modules)
+
+        def factory(o, w, p, c):
+            backend = cls(o, w, p, c, modules=modules)
+            if case == "forwarding_pack":
+                observe = backend._observe_init_query
+                backend._observe_init_query = lambda ctx, query, pack, unpack, kw: observe(
+                    ctx, query, lambda **args: pack(**args), unpack, kw
+                )
+            return backend
+
+        return factory
 
     value = connected_recovery_capture(
         tmp_path, monkeypatch, entry_hook=entry, capture_failure=True
@@ -341,7 +357,14 @@ def test_failed_manifest_to_stop(monkeypatch, tmp_path):
     manifest = value["result"]
     assert json.loads((value["root"] / "capture-manifest.json").read_bytes()) == manifest
     life = manifest["capture_lifecycle"]
-    assert life["init_observation"]["packet_err"] == "Disconnect"
+    expected_error = "Disconnect" if case == "Disconnect" else "UNOBSERVED"
+    assert life["init_observation"]["packet_err"] == expected_error
+    assert manifest["counts"]["application_sends"] == 0
+    assert manifest["counts"]["control_sends"] == {"1001": 1, "1004": 0}
+    journal = json.loads((value["root"] / "request-journal.json").read_bytes())
+    assert [row["state"] for row in journal["records"]].count("MAY_HAVE_SENT") == 1
+    if case != "Disconnect":
+        assert manifest["primary_failure"]["code"] == "init_observation_binding"
     assert all(life["normal_close"].values()) and state.sends == 1
     runner = value["runner"]
     with pytest.raises(runner.Refused) as caught:
@@ -465,3 +488,110 @@ def test_unknown_even_if_sdk_accepts_equal_value(case, field):
     r = module("ivv_trusted_runner")
     facts = r.select_capture_lifecycle(trace.value)["init_observation"]
     assert facts[field] == "UNKNOWN" and facts["ever_ready"] and state.callbacks == 1
+
+
+@pytest.mark.parametrize("case", ["normal", "send_fail", "send_raise", "send_interrupt"])
+def test_forwarding_pack_preserves_original_query_and_may(tmp_path, case):
+    from test_ivv_recovery_capture import ledger
+
+    m, backend, trace, state = open_fixture(case)
+    book = ledger(tmp_path)
+    attempt = book.begin("a" * 64, now=0)
+    book.may_connect(attempt)
+    backend.o.recovery, backend.o.attempt = book, attempt
+    state.failure = KeyboardInterrupt(CANARY)
+    observe = backend._observe_init_query
+    outcomes = []
+
+    def forwarding(ctx, query, pack, unpack, kwargs):
+        seen = []
+
+        class Query:
+            __globals__ = query.__globals__
+
+            def __call__(self, *args, **kwargs):
+                try:
+                    result = query(*args, **kwargs)
+                except BaseException as error:
+                    seen.append(error)
+                    raise
+                seen.append(result)
+                return result
+
+        try:
+            result = observe(ctx, Query(), lambda **kw: pack(**kw), unpack, kwargs)
+        except BaseException as error:
+            assert seen[0] is error
+            outcomes.append("RAISED")
+            raise
+        else:
+            assert result is seen[0]
+            outcomes.append(result[0])
+            return result
+        finally:
+            seen.clear()
+
+    backend._observe_init_query = forwarding
+    with pytest.raises(BaseException) as caught:
+        backend.open()
+    assert state.sends == 1 and backend.o.controls == {1001: 1}
+    assert book.usage()["init_connect"] == 1
+    records = book.journal(attempt)["records"]
+    assert [row["state"] for row in records].count("MAY_HAVE_SENT") == 1
+    if case == "send_interrupt":
+        assert caught.value is state.failure and outcomes == ["RAISED"]
+    else:
+        assert type(caught.value) is m.CaptureRejected
+        assert caught.value.args == ("init_observation_binding",)
+        assert outcomes == [0 if case == "normal" else -1]
+    assert state.callbacks == (1 if case == "normal" else 0)
+    backend.close()
+    assert CANARY not in json.dumps(trace.value)
+
+
+def test_wrong_request_invalid_cannot_hide_missing_actual_wait():
+    import gc
+
+    m, backend, trace, state = open_fixture("wrong_req_invalid")
+    with pytest.raises(m.CaptureRejected, match="^init_observation_binding$"):
+        backend.open()
+    assert state.sends == 1 and backend.o.controls == {1001: 1}
+    facts = trace.value["init_observation"]
+    assert facts["send"] == "OK" and facts["packet_err"] == "UNOBSERVED"
+    assert facts["unpack"] == "UNOBSERVED" and facts["constructor_status"] == "CONNECTED"
+    assert backend._bind_init is None and backend._init_thread is None
+    backend.close()
+    gc.collect()
+    assert state.request_ref() is None and state.bound_request_ref() is None
+    assert CANARY not in json.dumps(trace.value)
+
+
+def test_observation_mismatch_does_not_defer_real_send_guard(tmp_path):
+    from test_ivv_recovery_capture import ledger
+
+    m, backend, _, state = open_fixture("normal")
+    book = ledger(tmp_path)
+    attempt = book.begin("a" * 64, now=0)
+    book.may_connect(attempt)
+    backend.o.recovery, backend.o.attempt = book, attempt
+    observe = backend._observe_init_query
+    seen_poison = []
+
+    def forwarding(ctx, query, pack, unpack, kw):
+        backend.o.poison = "control_wire_budget"
+        return observe(ctx, query, lambda **args: pack(**args), unpack, kw)
+
+    before_send = backend.o.before_send
+
+    def guarded(*args):
+        seen_poison.append(backend.o.poison)
+        return before_send(*args)
+
+    backend._observe_init_query = forwarding
+    backend.o.before_send = guarded
+    with pytest.raises(m.CaptureRejected):
+        backend.open()
+    assert seen_poison == ["control_wire_budget"]
+    assert state.sends == 0 and backend.o.controls == {}
+    assert book.usage()["init_connect"] == 0 and book.journal(attempt)["records"] == []
+    backend.close()

@@ -1282,6 +1282,9 @@ class _OfficialBackend:
         self._old_send = self._old_connect = None
         self._connects = 0
         self._init_facts = None
+        # Attribution errors must not cancel the SDK's existing Init send.
+        # Refuse at the constructor boundary, separately from real send guards.
+        self._init_invalid = False
         self._bind_init = None
         self._init_thread = None
         self._closed = {
@@ -1343,7 +1346,7 @@ class _OfficialBackend:
         outcome = {0: "OK", -1: "NON_OK"}.get(code) if type(code) is int else None
         self._init_facts[field] = outcome or "UNKNOWN"
         if outcome is None:
-            self.o.poison = "init_observation_binding"
+            self._init_invalid = True
         return result
 
     def _observe_init_query(self, ctx, query, pack, unpack, kwargs):
@@ -1359,7 +1362,7 @@ class _OfficialBackend:
             or unpack != init.unpack_rsp
             or self._bind_init is not None
         ):
-            self.o.poison = "init_observation_binding"
+            self._init_invalid = True
             return query(pack, unpack, **kwargs)
         packet_err = namespace["PacketErr"]
         request = None
@@ -1372,7 +1375,7 @@ class _OfficialBackend:
                 or pb is not request.rsp
                 or facts["unpack"] != "UNOBSERVED"
             ):
-                self.o.poison = "init_observation_binding"
+                self._init_invalid = True
                 return unpack(pb)
             return self._observe_init_return("unpack", unpack, pb)
 
@@ -1391,7 +1394,7 @@ class _OfficialBackend:
                 or req.unpack_func is not observed_unpack
                 or not req.is_sync
             ):
-                self.o.poison = "init_observation_binding"
+                self._init_invalid = True
                 return False
             request = req
             wait = req.wait
@@ -1408,7 +1411,7 @@ class _OfficialBackend:
                     "UNKNOWN",
                 )
                 if facts["packet_err"] == "UNKNOWN":
-                    self.o.poison = "init_observation_binding"
+                    self._init_invalid = True
                 return result
 
             req.wait = observed_wait
@@ -1416,7 +1419,12 @@ class _OfficialBackend:
 
         self._bind_init = bind
         try:
-            return query(pack, observed_unpack, **kwargs)
+            result = query(pack, observed_unpack, **kwargs)
+            # A completed accepted send must traverse this exact request's wait.
+            # A foreign lookalike can bypass both wait and unpack on an SDK error.
+            if facts["send"] in ("OK", "UNKNOWN") and facts["packet_err"] == "UNOBSERVED":
+                self._init_invalid = True
+            return result
         finally:
             self._bind_init = None
             if request is not None:
@@ -1524,7 +1532,7 @@ class _OfficialBackend:
                     or backend._init_thread != threading.get_ident()
                     or facts["unpack"] not in ("OK", "UNKNOWN")
                 ):
-                    backend.o.poison = "init_observation_binding"
+                    backend._init_invalid = True
                     return handle(data)
                 # Same SDK RLock as the handler. Observe its assignment before
                 # a disconnect can overwrite READY, including a later handler error.
@@ -1569,7 +1577,7 @@ class _OfficialBackend:
         self._init_end_status(status)
         if self._init_facts is not None:
             _require(
-                self.o.poison != "init_observation_binding"
+                not self._init_invalid
                 and self._init_facts["constructor_status"] != "UNKNOWN"
                 and (
                     status != self.constants.ContextStatus.READY or self._init_facts["ever_ready"]

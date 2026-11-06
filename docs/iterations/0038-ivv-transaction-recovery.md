@@ -19,6 +19,32 @@ Independent narrow two-axis review, matching-head requiredCI and ordinary merged
 catalog publication remain gates before the sole conditional batch02/context7.
 Oldbatch01 and all6UNKNOWN/history remain; no automatic same-method loop.
 
+## Init observation consolidated R1 correction — 2026-11-06
+
+The Spec R1 reader blocked publication on two attribution defects. Standards R1
+returned READY. Planner kept one correction and the same readers' R2 within
+the frozen scope. Implementer reproduced both failures using the pinned SDK
+methods. A forwarding pack had suppressed the original Init send, and a copied
+ReqInfo bypassed observation when the actual request returned Invalid.
+
+The correction keeps observation invalidity private until the constructor
+boundary. Existing observer guards still decide send admission immediately.
+A normally completed accepted query must have traversed its bound request wait.
+Wrong attribution keeps the request error UNOBSERVED and refuses capture before
+business calls. Return and exception identities pass through the SDK unchanged.
+The finite output shape and existing runner selector are unchanged.
+
+Verifier recorded both causal REDs, then 35 Init tests and all 285 affected tests
+passed in 19.70s with the existing NumPy warning. Tests verify actual ledger MAY
+and Init counts, zero business calls on refusal, wrong-request cleanup, real
+guard precedence and failed-manifest/IPC/STOP propagation. One added test's
+incorrect omission of the existing zero-keepalive field was corrected. Its
+failed fixture and both REDs remain retained. Evidence and the final Source
+census are under server/init-observation-01. The correction reserves 524288B
+inside the current Source15MiB, with old complete work and futures retained.
+Self-review is complete. Same-reader R2 and normal publication precede any
+conditional actual context7 or input acceptance.
+
 ## Recovery Init observation checkpoint — 2026-11-06
 
 [Issue 281](https://github.com/ZP151/quantmesh/issues/281). PR289 merged at
