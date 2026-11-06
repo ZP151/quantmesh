@@ -1,5 +1,41 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Final offline Init full-decoder endpoint — 2026-11-06
+
+Planner assigned the original Parent alone the last bounded offline replay,
+accepted03:28:12Z/deadline03:58:12Z. Actual one replay exited0 at03:32:47Z:
+FULL_INIT_DECODER_BARE_WRAPPED_PASS_WITH_WRONG_SERIAL_CONTROL. Bare and wrapped
+matching responses traverse the actual pinned parser/protobuf/association/query/
+unpack chain and finishOk; both wrong-serial controls decode once but leave
+the target unnotified/Timeout. All four model threads closed. Socket/control/
+connect/deadline remain modeled; localPython3.13.9/protobuf7.36.1 is not native
+hostPython3.12/ABI/provider proof. No confirmed client decoder defect is found.
+
+Implementer/Verifier: isolated DescriptorPool reads only hash-checked public
+Common/InitConnect descriptors, never SDK package imports. Synthetic initialized
+response bytes stay in RAM; no PB body/account/key/error text is retained. SDK
+contexts/imports/real sockets/remote actions are0, installed/released source is
+unchanged. Exact original probe14594B/SHA6f9a3f0379fa9752bdcb88c23b18598b3325ae22faacf24bc3212a4d14ea4472
+and replay3072B/SHA10fcc350da421f70bfbdd61b9d036c66bf8c5739cc6baf9f22794b25f9024355
+are under integration/sdk-init-full-decoder-20261106-01 in recovery output.
+Result1717B/SHA57a60b3d9554a5b88909835da2a57330aed584ce2dd112261cae1241496f2d2f records completion2026-11-06T03:47:48Z.
+
+Planner handoff: stop all layer-by-layer static exclusions. One complete
+END-TO-END-DIAGNOSTIC-PROPOSAL.md (16195B/SHA8173d43940f3351af59f14e851f2dbf12e7da18680039435ed5dae84389ee091)
+covers same-context queue, actual local TCP write, read/frame/target association,
+wait/unpack/thread state, bounded private-safe scalar output, semantic identity/
+restoration, TDD/two-axis review, one necessary publication, coupled Ops and
+one conditional actual attempt/owned close. It is only a proposal; no new PR/CI,
+policy/batch/context8/retry is created. Native attempt7 cause remains unresolved;
+sendOK remains queue/control-notify return, not TCP write/vendor delivery.
+
+Accounting: complete new allowance registered before replay Source196608 plus
+common65536=262144 within unchanged P28 Source16/common99MiB, net0/all492MiB.
+Old futures/originals/history stay. Proposed later46MiB/whole538MiB is explicitly
+not registered or imported. Quant still has no accepted input/numerical result;
+financial INSUFFICIENT/livefalse. This local documentation checkpoint stays
+unpublished and preserves c5eb; runtime src/tools/tests remain exactly0b61.
+
 ## Offline Init receive-chain causal endpoint — 2026-11-06
 
 Planner consumed the completed Init-observation/attempt7/owned-close slice and
