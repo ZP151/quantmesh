@@ -41,10 +41,11 @@ ReqInfo/context, sequential backends, original SDK returns/exceptions unchanged,
 and absence of private canary values in retained trace/manifest. No real socket or
 provider access. Legacy routes retain their current meaning.
 
-P26 capacity: Source15MiB complete14925824, common82MiB complete84852736,
-software114MiB, capture112MiB each, closeout3MiB each; all474MiB497025024 held.
-Net40MiB retains all old434MiB, Source524288 future and32MiB DB scratch.
-Policy22b518276a65fb88d50e56a3897ac9a47822cdbb43d0e1e1fbf3252af34f300f
+P27 capacity: Source15MiB complete14925824, common98MiB complete101629952,
+software130MiB, capture112MiB each, closeout3MiB each; all490MiB513802240 held.
+P26 net40MiB retains old434MiB; P27 adds only16MiB serial test scratch/failed
+history. Source524288 future and old32MiB DB scratch are never borrowed.
+Policy3a8dc15dd790146a08d4ad7aa882dade914752dcfc8f4c120b9fbedd91cf6c5e
 records fresh batch02 one context/Init, seven business requests,96keepalive,
 rate1/s and28800s wall from first durable begin. Old batch01 is not revived,
 global next connection7 preserves prior history. Numerical1 is a structural field,

@@ -1,5 +1,24 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Parent Init-observation checkpoint — 2026-11-06
+
+Source779b937424138b8d65b07527f8f63daa13199ba0 adds only recovery Init finite
+facts and their strict optional lifecycle projection. Parent independently ran
+the five affected modules:277PASS/17.74s, one existing calendar deprecation.
+Full src/tests/tools Ruff, changed3file format and whitespace pass. PrivateOps08
+partial-codec/STOP-frame16PASS proves the same extracted Source selectors can
+carry the facts; one contradictory Parent fixture was corrected, not Source.
+Source self-test277PASS/17.83s and six causal RED/GREEN originals are retained.
+No native SDK import/context/host action or real-input acceptance is established.
+
+The tracked spec/plan now records necessary runner selector propagation and P27
+serial scratch. Sourcecomplete14843904 before this small docs checkpoint retains
+old13615104, its524288 future and full conservative index/object/receipt charges.
+P27/all490MiB513802240 remains unchanged; no old DB32MiB hold is borrowed.
+Independent narrow two-axis review, matching-head requiredCI and ordinary merged
+catalog publication remain gates before the sole conditional batch02/context7.
+Oldbatch01 and all6UNKNOWN/history remain; no automatic same-method loop.
+
 ## Recovery Init observation checkpoint — 2026-11-06
 
 [Issue 281](https://github.com/ZP151/quantmesh/issues/281). PR289 merged at

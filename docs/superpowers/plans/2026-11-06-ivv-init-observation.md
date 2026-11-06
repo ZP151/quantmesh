@@ -17,7 +17,7 @@ seams for offline regression. Preserve source and actual runtime admission separ
 
 Issue281; data/math/window/costs fixed, livefalse; zero new SDK requests in tests;
 no credentials/log/XML/pane/payload inspection; no retry/timeout/close/admission
-change; all old holds/failures/UNKNOWN preserved. Source15/common82MiB and P26 are
+change; all old holds/failures/UNKNOWN preserved. Source15/common98MiB and P27 are
 capacity, not execution GO. Independent agent review follows actual standing proxy
 authority, never a fabricated human review. At most one consolidated correction.
 
@@ -31,7 +31,8 @@ authority, never a fabricated human review. At most one consolidated correction.
 
 ## Task 1 — one bounded Source slice
 
-Files: modify tools/research/capture_opend_ivv_daily.py; create
+Files: modify tools/research/capture_opend_ivv_daily.py and only the finite lifecycle
+contract/selector in tools/research/ivv_trusted_runner.py; create
 tests/test_ivv_init_observation.py; update only directly impacted lifecycle tests
 if their exact contract now includes the finite observation. Update active
 docs/iterations/0038-ivv-transaction-recovery.md with visible role/test evidence.
@@ -41,12 +42,14 @@ optional recovery-only finite Init observation attached to that existing lifecyc
 Choose explicit closed field/enumeration names in the implementation and document
 them in the test/spec checkpoint. Do not create a generic observation platform.
 
-- [ ] Write one causal test at the agreed backend/lifecycle seam; preserve RED.
-- [ ] Add minimal instance-bound observation, preserve GREEN, then expand the other
+- [x] Write one causal test at the agreed backend/lifecycle seam; preserve RED.
+- [x] Add minimal instance-bound observation, preserve GREEN, then expand the other
   source-accurate failure and concurrency/privacy cases one red/green step at a time.
-- [ ] Run focused Init/lifecycle/capture/contract regressions; no real SDK import/
-  network context, no DuckDB suite or new environment. Ruff and whitespace gate.
-- [ ] Record role outputs, exact commands, source hashes, all-retained Source census;
+- [x] Run focused Init/lifecycle/capture/contract regressions; no real SDK import/
+  network context, no DuckDB suite or new environment. Use one serial12MiB Common
+  scratch and4MiB failed-history reserve, maxfail1/per-test passing cleanup; retain
+  every failed fixture and census before another connected run. Ruff/whitespace gate.
+- [x] Record role outputs, exact commands, source hashes, all-retained Source census;
   create one green checkpoint commit and self-review. Stop for Parent review.
 
 ## Task 2 — Parent review and ordinary release
