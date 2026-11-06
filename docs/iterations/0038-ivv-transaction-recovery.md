@@ -1,5 +1,24 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Init end-to-end Source R2 READY —2026-11-06
+
+Both original independent readers close the known R1 findings at38022c8a:
+Spec2025B/SHA25215ae3d2911c44e255e2d140c0a3a33439bfe5db2783125446966fc05ef73d
+and Standards2004B/SHAb452c7a2f26801a66fd3e3db7685030021d48eb6639197c51fe550cd1aa0d2b1.
+No known residual Source blocker; original probes now produce valid UNKNOWN
+fallback/pending-write evidence. Reports independently match the actual helper/
+issuer/runner blobs and the supplied causal regressions. This is agent review
+under the standing scope, not a fabricated new human inspection.
+
+Parent read/pinned both complete reports. This final combined checkpoint adds
+only their outcome and the plan checkbox; runtime/tests are exactly the559-pass
+reviewed38022c8a bytes, including actual helper41378389 and issuer839d6971.
+Next is one normal final-head required CI/exact-lock/guarded merge/catalog.
+Private coupled transport320KiB/status/header/frame proof and fresh native
+admission remain pending. No extra summary PR/CI is opened. P29/all538MiB and
+all earlier originals/futures/SPENT/UNKNOWN remain. No real capture/input or
+numerical/financial success follows from this software checkpoint.
+
 ## Consolidated known-fix Source checkpoint —2026-11-06
 
 Independent narrow R1 found one P2 per axis at535f1792: Spec2217B/
