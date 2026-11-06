@@ -1596,6 +1596,129 @@ own normal matching-head CI/exact-lock qualification and ordinary guarded merge;
 only then may the same ordinary recovery task attempt actual conditional proof.
 
 
+### Issue293 guarded reference — native integration opened 2026-11-06
+
+Planner: [issue293](https://github.com/ZP151/quantmesh/issues/293) is an independent
+slice on `codex/0038-guarded-reference-control`, based on actual origin/main
+`77ea54471abe08fd9496fd3cac6c4dd9fda9c8c0`. One user action is a guarded
+Init-only reference, followed only after normal reference SDK/parent/unit close
+and new matching Fresh by one original fixed IVV capture. Success means finite,
+owned and auditable comparison outcomes, not real-input or financial acceptance.
+The operator's current login confirmation is preserved. No new SDK/runtime GO,
+relogin, restart, key/config read, trading, math or data-promotion authority follows.
+
+Quant: the earlier R-only48-pass prototype and independent core reviews establish
+modeled mechanics only. Typed parent/Fresh data are not authenticated native
+proof. Actual holder/permit/lease/stop/kernel/IPC/close, single reservation owners,
+source/issuer/ABI and maximum two-operation geometry must be integrated and tested.
+Original capture default and seven fixed business calls remain unchanged. Old
+SPENT/UNKNOWN and all retained failure/capacity evidence stay occupied.
+
+Implementer owns only this isolated worktree and dedicated diagnostic source/tests
+and new spec/plan. B's CI successor remains in its own branch/worktree. Parent
+owns shared roadmap/ACTIVE/iteration checkpoints and final integration. Independent
+Reviewer/Verifier and normal matching-head CI/publication remain pending. Full
+source/CI/history forecast P38 is capacity-only; no runtime action is authorized.
+
+Implementer checkpoint `c1addc33219dd6fec492639ed333ce5f2162d648`
+(tree `785d4df5911719f6e6d9e65efe00e9623efe71c8`) connects the immutable
+reference control through existing seed/held permit/live checks and the actual
+child/supervisor/parent non-data STOP path. The authenticated child cannot claim
+parent closure; normal child exit/EOF/empty, final resources, descriptors and
+ledger closure precede `parent_closed=true`. Original capture seal and seven-call
+requirements remain intact; no new successful reference seal or duplicate begin/MAY.
+
+Verifier: first affected union81 PASS and bootstrap positive/drift2 PASS preceded
+the final reference-only constructor fact-order correction, which has its own
+RED and final25 PASS. These are joined actual-owner subchains over modeled
+external boundaries, not a full child-to-parent native run. Parent read the actual
+diff/handoff and matched SOURCE-PINS/EVIDENCE-PINS without repeating those runs.
+Retained scratch upper8,077,312B uses per-file rounding plus directory accounting;
+old raw/ZIP/failure evidence remains. No cleanup or capacity refund was claimed.
+
+This checkpoint is PARTIAL, not issue293 READY. The installed private Ops09 codec
+still rejects the new field. New candidate STOP selector/propagation, independent
+manager/unit closure, current matching Fresh and original capture second intent,
+all-entry bootstrap/ABI/maximum geometry, independent review and normal final-head
+CI/publication remain. Ops09 and consumed controls must remain immutable.
+
+The separate `reference-private-stop-20261106-01` candidate changes only its new
+native_packet.py: closed AST selector dependency, both status propagation tuples,
+carrier-error reason preservation and maximum finite observation reservation.
+Actual codec/remote status/return frame/local STOP chain has retained causal RED
+and9 PASS, including16 negative status/close subcases. Parent read the handoff and
+matched30 source/evidence/original rows; Ops09 and the other three private modules
+remain unchanged. Candidate retained upper237,568B; scratch0. It is not deployable
+and creates no second intent. Normal manager/unit/Fresh and condition gating are
+now being connected separately, preserving structural rejection by default.
+
+
+### Issue293 final offline source and consolidated R2
+
+Implementer extends the same native slice through the independently owned
+normal-close, manager/unit originals, fresh same-provider observation and
+immutable one-use condition. Controller ownership includes actual live FLOCK,
+descriptor identity and open-file epoch; authenticated parent IPC supplies the
+child's unavailable foreign-proc facts without widening its sandbox. One
+conditional second intent is available only after a positive adjacent reference
+transition; defaults and negative/unknown paths retain structural refusal.
+Original thirteen guard/capture/seal function bodies equal the77ea base.
+
+Full R1 source c89bf1e70c1eace729a7328890b8f96f3630bcae and its immutable private
+candidate establish offline integration only. Retained actual-code Linux union,
+bootstrap/codec/STOP and modeled seven-call-to-complete-return evidence are in
+reference-qualification-20261106-01. Parent matched23 source/private rows and704
+evidence entries, using lstat without following the retained pytest-current link.
+Linux modeled complete-return test passed, while its subsequent Windows harness
+census failed; these remain separate results. Earlier fixture subforecast and
+capacity failures are retained, not reclassified by the later passing census.
+
+Reviewer R1: Standards READY offline; Spec NOT_READY with two P2 findings. Normal
+systemd-run --pipe forwards the reference manager's deliberate exit1 to client1,
+but the first model required client0. Also, a hash-consistent pair/control identity
+mismatch could reach the held permit/MAY before the late condition rejected it.
+Both are addressed together in the sole consolidated R2, source
+0b93e83648927e91cac2d749c3a3ea83507c145d, tree
+8a90cf685543f504fb10ba701d73f21e61bb55f9. Exact integer manager1/client1 requires
+validated reference STOP and normal closure; NOT_READY consumes a negative
+condition, ordinary capture remains0/0. The actual sole begin now compares all
+canonical identities/control/catalog, with an independent helper held/first-entry
+cross-check before effects. No systemd authentication or runtime authority changed.
+
+Verifier: causal RED/GREEN includes actual dispatch/condition1/1, eight prebegin
+semantic mismatches, and three held-helper identity negatives that formerly
+wrote MAY. Final affected Linux union29PASS+66subtests/12.62s; held negatives and
+matching positive also pass. Source/private static checks pass. These are
+software tests with explicitly modeled SDK/kernel/systemd boundaries, not real
+provider admission. Original source and private candidate remain immutable.
+
+Both original readers return READY for offline integration only at that fixed
+R2 head, with no remaining blocking finding. Spec report2754B/SHA
+1693a583c95390c3b1c6d72ee0a26f6654bed77a6a2742265c882500a78968dd;
+Standards2534B/SHA
+ab4eb8f5b1cd6eb2331f165e9c0ed761df4ef51e4a3d6117c4798c077c8955fc.
+Reports are reference-native Spec/Standards R2 under the review directory.
+Parent read both and independently matched25 source/private rows, frozen Git
+blobs/tree,442 evidence entries and the23 retained R1 rows; no tests repeated.
+Parent readback477B/SHA
+dbae6623fe07209520d53bd018265ac95a2af6f67d69d80b49d42c1600acb834.
+Any later structural failure returns to Planner without a third patch loop.
+
+Final-head prospective RAM-only geometry: carrier320376/327680 (margin7304),
+header887301, frame8227337, IPC1238; full local future per-operation16697861B
+fits24MiB. No carrier was submitted. Retained closed scratch16003072/16777216B
+leaves774144B; future active8MiB stays independently reserved. Parent readback
+and reports use the existing review/common hold. No history deletion or refund,
+new net capacity, SDK operation, relogin, restart or host inspection occurred.
+
+Remaining: actualmain integration with independently reviewed issue292, normal
+matching-head Linux CI/full release and actual named-file FLOCK; then new immutable
+private source publication/control binding and merged-source geometry. Old
+consumed PREPARE/EXECUTE controls remain fail-closed. Actual normal-close/Fresh
+admission and runtime GO are still absent. No capture/input/report or financial
+qualification follows from offline READY.
+
+
 ### Issue292 final review gate — 2026-11-06
 
 Planner/Reviewer: the same independent Spec and Standards readers returned final
@@ -1724,3 +1847,97 @@ futureCI8MiB without recharging it; all prior holds/failed originals stay occupi
 CI572 remains FAIL and later release stages were not executed. Normal matching
 final-head CI must execute the complete release before ordinary guarded merge;
 no SDK/provider/host or research authority follows.
+
+
+### Issue292 release and issue293 actual-main integration — 2026-11-06
+
+Issue292 normal CI573/run42211987487 is SUCCESS at head
+c30d37328f8ff57f0a8bcddd0c1853ea165296ab. The actual tested GitHub merge
+8bf6053fd1431f4c785db7a8cf416c0338fa1468 has parents77ea+c30 and tree
+6dfbbdb6b6450af88f1cc1b7fc5480c62b1fc772. All18 release steps passed:
+8061 Python tests passed/149 skipped, external terminal8210 PASSED with no
+missing evidence in2963.979597s, golden path60 checks and clean-checkout proof.
+Fast661-contract/472-following tests, service and final python aggregate pass;
+domain/browser jobs are classified skips. Both retained CI_PROFILE exports
+report missing; this is not zero or a new timing qualification. Release summary
+reports absent browser cache/E2E skips; no browser acceptance is claimed.
+
+Success cleanup removed the original release temp root, so the uploader found
+no full XML files. Parent retains the actual decoded API job log199894B/SHA
+0effc65747049da9c68f040082e0ca7bd202c190dce32f2170a24168a1cc629f.
+Readback02 2021B/SHA
+0c874f175541d98d9e69ae7939739b5ae077918bed8d547b696d7d6f7d58f850
+corrects01's unverified inherited subtest count; both records remain. No XML,
+subtest count or actual E2E result was fabricated and no success rerun occurred.
+
+After fresh actual-main/head/green checks, the ordinary expected-head guarded
+squash merged PR294 to7bc0f3d02f32257cea026205d4b4837e3041988a. GitHub readback
+confirms MERGED and the identical6df tree. No admin/force or human inspection
+claim. R now normally integrates that actualmain in its own worktree. The only
+content conflict was the appended iteration record; both histories are retained.
+The shared recovery test module is an exact AST union: R changed only
+connected_recovery_capture, B changed five other named functions, with no
+intersection or other top-level changes. Runtime7 remains the reviewed R2 bytes.
+
+One final merged-byte preflight and immutable evidence use the separately
+registered common/local2MiB retained increment, source/remote/paid0. It preserves
+all old closed history, active8MiB and normalCI16MiB; no deletion or refund.
+Normal matching-head R CI/publication and actual runtime admission remain pending.
+
+
+Final merged-byte local preflight preserves preparation failures: ordinary merge
+reapplied sparse selection, omitting six newly tracked R paths; exactHEAD restore
+materialized them. Linux collection then found the sparse source package lacked
+baselines; an unnecessary Windows attempt hit the same missing file. No tests ran
+in those three collection attempts. Full unchanged src293 files were restored
+from exactHEAD, with no src staged delta; complete W2 forecast7884800B fits the
+existing source8MiB hold. No package install, namespace substitute or new source
+implementation was introduced.
+
+The ensuing actual Linux run completed85PASS/7FAIL in35.81s. Every failure is
+the unmaterialized tracked test_ivv_additional_task fixture: four original
+connected cases and three held-reference negatives. Git confirms that fixture
+exists in HEAD; the full CI checkout must validate all seven before merge. The
+85 passes, including B's original/mock-restoration cases, are retained, not
+presented as a green whole slice. No additional local whole-file retries are
+planned for this sparse-fixture limitation. Existing R2 semantic RED/GREEN and
+offline reviews remain separately labeled.
+
+Retained scratch1884160B exceeds the1835008B subforecast by49152B; this forecast
+failure remains. The complete new2MiB hold covers retained scratch/logs/pins;
+old closed16003072B and all future holds remain occupied. Central unique-once
+mirror1608B/SHA9629b1746d23316863347ef5244efa8525a3da191cd55a511792874699a54c22
+is verified, with storage-only P41 policy1428B/SHA
+0010a9948e9d95f8a8212fb7154c02748aa724ff1499abdbcbbea149aa53d6c8.
+Whole complete hold765MiB; G12GiB/P6GiB/free50GiB and actor limits remain.
+No SDK/runtime GO follows. Actual final merge source pins, RAM-only geometry,
+static checks and normal matching-head full CI remain the final release gates.
+
+
+The final fixture preparation is now resolved without changing product code.
+Static direct-import closure covers six modules; the only missing exactHEAD
+files were test_ivv_additional_task.py and test_ivv_native_producer.py,53248B
+allocated. Native restore preserves reviewed bytes, with W2 complete forecast
+7938048B inside source8MiB. Existing Linux interpreter imports the entire closure
+from this worktree, SDK modules absent; no new environment or dependency install.
+Closure2683B/SHA64b1452d3df1eed7f9e0b87a92ee5f07a241fa6a7ec790166304b5bdb5bdf9c0.
+
+Only the seven previously failed targets were then executed once:7PASS/15.14s,
+log798B/SHA2d10b0ac3f8220584f2decfcece92c8e8c77716ca1ab2c7c2eadf61966f70492.
+The earlier85 passes were not rerun. This is disjoint targeted evidence across
+two runs, not a fabricated92-pass single run; all prior failures remain. New
+scratch1527808B, aggregate local integration scratch3411968B; with original
+closed16003072B, retained total19415040B stays under the21MiB hold.
+
+Final remaining-phase common/local3MiB was centrally imported once under standing
+disk authority: full forecast seven-case scratch2MiB plus pins/geometry/log0.5MiB
+and coordination/census0.5MiB; source/remote/paid0. Existing normalCI16MiB,
+active8MiB and BfutureCI8MiB remain. P42 storage policy1428B/SHA
+51bc17302a2c5ae642d8b902530eded6ff49bfc1b25f733e1da697d4fc417b29
+and central mirror1725B/SHA
+c3997101c1962be4ef46447a4dbd68b20adfc3d86dbfed3b7c070cf47636641d
+are verified. Whole complete hold768MiB; no history deletion, refund or runtimeGO.
+Parent merge source proof1998B/SHA
+7b5a4186f7ef454afee658027a277e4634bc54623b8202b9d6f65c8bdbd375b2
+pins all seven actual runtime files to the reviewed R2 canonical Git bytes and
+the shared test AST to both branches' exact union. No third source patch/review.

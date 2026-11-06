@@ -1079,6 +1079,74 @@ def _capture_lifecycle_from_error(error):
     return None
 
 
+def select_reference_observation(value):
+    """Closed non-data STOP observation; parent closure never comes from child IPC."""
+    need(
+        type(value) is dict
+        and set(value)
+        == {
+            "schema_id",
+            "reference_control_sha256",
+            "constructor_status",
+            "operation_failed",
+            "close_failed",
+            "normal_close",
+            "parent_closed",
+        },
+        "REFERENCE_OBSERVATION_SHAPE",
+    )
+    need(
+        value["schema_id"] == "qm.ivv.reference-init-observation.v1"
+        and type(value["reference_control_sha256"]) is str
+        and re.fullmatch("[0-9a-f]{64}", value["reference_control_sha256"])
+        and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
+        and all(
+            type(value[k]) is bool for k in ("operation_failed", "close_failed", "parent_closed")
+        ),
+        "REFERENCE_OBSERVATION_VALUE",
+    )
+    normal = value["normal_close"]
+    need(
+        type(normal) is dict
+        and set(normal) == {"context_closed", "callbacks_stopped", "data_socket_closed"}
+        and all(type(v) is bool for v in normal.values()),
+        "REFERENCE_OBSERVATION_CLOSE",
+    )
+    need(
+        not value["parent_closed"]
+        or (
+            not value["operation_failed"]
+            and not value["close_failed"]
+            and all(normal.values())
+            and value["constructor_status"] != "NOT_RETURNED"
+        ),
+        "REFERENCE_OBSERVATION_PARENT",
+    )
+    return {**value, "normal_close": dict(normal)}
+
+
+_REFERENCE_OBSERVATION_MARK = object()
+
+
+def _carry_reference_observation(error, value):
+    store = _exception_storage(error)
+    if store is not None:
+        store.pop("_qm_reference_observation", None)
+    if value is not None:
+        selected = select_reference_observation(value)
+        if store is not None:
+            store["_qm_reference_observation"] = (_REFERENCE_OBSERVATION_MARK, selected)
+    return error
+
+
+def _reference_from_error(error):
+    store = _exception_storage(error)
+    item = store.get("_qm_reference_observation") if store is not None else None
+    if type(item) is tuple and len(item) == 2 and item[0] is _REFERENCE_OBSERVATION_MARK:
+        return select_reference_observation(item[1])
+    return None
+
+
 def _failure_record(error):
     value = {"state": "STOP", "reason": _failure_code(error)}
     origin = _origin_from_error(error)
@@ -1090,6 +1158,9 @@ def _failure_record(error):
     capture = _capture_lifecycle_from_error(error)
     if capture is not None:
         value["capture_lifecycle"] = capture
+    reference = _reference_from_error(error)
+    if reference is not None:
+        value["reference_init_observation"] = reference
     return value
 
 
@@ -1100,7 +1171,12 @@ def _failed_packet(error):
         "code": value["reason"],
         **{
             key: value[key]
-            for key in ("origin_failure", "executable_origin", "capture_lifecycle")
+            for key in (
+                "origin_failure",
+                "executable_origin",
+                "capture_lifecycle",
+                "reference_init_observation",
+            )
             if key in value
         },
     }
@@ -1112,7 +1188,14 @@ def _child_failure(packet):
         or packet.get("op") != "failed"
         or not {"op", "code"}
         <= set(packet)
-        <= {"op", "code", "origin_failure", "executable_origin", "capture_lifecycle"}
+        <= {
+            "op",
+            "code",
+            "origin_failure",
+            "executable_origin",
+            "capture_lifecycle",
+            "reference_init_observation",
+        }
         or type(packet.get("code")) is not str
         or re.fullmatch("[A-Za-z0-9_+]{1,256}", packet["code"]) is None
     ):
@@ -1125,6 +1208,10 @@ def _child_failure(packet):
         _carry_executable_origin(error, select_executable_origin(packet["executable_origin"]))
     if "capture_lifecycle" in packet:
         _carry_capture_lifecycle(error, select_capture_lifecycle(packet["capture_lifecycle"]))
+    if "reference_init_observation" in packet:
+        reference = select_reference_observation(packet["reference_init_observation"])
+        need(reference["parent_closed"] is False, "REFERENCE_CHILD_OWNER")
+        _carry_reference_observation(error, reference)
     return error
 
 
@@ -1148,7 +1235,14 @@ def read_runner_failure(control, read_owned):
         type(value) is dict
         and {"state", "reason"}
         <= set(value)
-        <= {"state", "reason", "origin_failure", "executable_origin", "capture_lifecycle"}
+        <= {
+            "state",
+            "reason",
+            "origin_failure",
+            "executable_origin",
+            "capture_lifecycle",
+            "reference_init_observation",
+        }
         and value["state"] == "STOP"
         and type(value["reason"]) is str
         and re.fullmatch("[A-Za-z0-9_+]{1,256}", value["reason"]),
@@ -1162,6 +1256,15 @@ def read_runner_failure(control, read_owned):
         result["executable_origin"] = select_executable_origin(value["executable_origin"])
     if "capture_lifecycle" in value:
         result["capture_lifecycle"] = select_capture_lifecycle(value["capture_lifecycle"])
+    if "reference_init_observation" in value:
+        result["reference_init_observation"] = select_reference_observation(
+            value["reference_init_observation"]
+        )
+        need(
+            not result["reference_init_observation"]["parent_closed"]
+            or value["reason"] == "REFERENCE_INIT_OBSERVATION",
+            "REFERENCE_STOP_BINDING",
+        )
     return result
 
 
@@ -1209,6 +1312,19 @@ def select_failure_status(status, publication_sha256):
         result["executable_origin"] = select_executable_origin(status["executable_origin"])
     if "capture_lifecycle" in status:
         result["capture_lifecycle"] = select_capture_lifecycle(status["capture_lifecycle"])
+    if "reference_init_observation" in status:
+        result["reference_init_observation"] = select_reference_observation(
+            status["reference_init_observation"]
+        )
+        need(
+            not result["reference_init_observation"]["parent_closed"]
+            or (
+                code == "REFERENCE_INIT_OBSERVATION"
+                and rc == 1
+                and stage == "RELEASED_RECOVERY_ATTEMPT"
+            ),
+            "REFERENCE_STOP_BINDING",
+        )
     if "recovery_connection" in status:
         item = status["recovery_connection"]
         need(
@@ -2044,6 +2160,14 @@ class _RecoveryLease:
     def __init__(self, fd):
         self.fd = fd
 
+    def bind_reference_epoch(self, offset):
+        need(
+            self.fd is not None and type(offset) is int and 0 < offset <= 2**60,
+            "REFERENCE_CLAIM_EPOCH",
+        )
+        need(os.lseek(self.fd, offset, os.SEEK_SET) == offset, "REFERENCE_CLAIM_EPOCH")
+        self.reference_epoch = offset
+
     def close(self):
         if self.fd is not None:
             fd, self.fd = self.fd, None
@@ -2461,6 +2585,337 @@ def recover_previous_attempt(book, read_owned):
         )
         book.close(attempt, {}, failure=failure, method_sha256=rows[-1]["method_sha256"])
     book._write(done, receipt)
+
+
+def _reference_condition_lease(book):
+    lease = getattr(book, "_claim_lease", None)
+    need(
+        type(lease) is _RecoveryLease
+        and lease.fd is not None
+        and lease.controller == _controller_actor(os.getpid())[0]
+        and lease.origin
+        == list(identity(os.fstat(lease.fd)))
+        == list(identity((book.root / "connection-000000.claim-lock.json").lstat())),
+        "REFERENCE_CONDITION_LEASE",
+    )
+
+
+def _reference_claim_lock(claim):
+    """Read bounded kernel facts for the original controller's exact held flock FD."""
+    pid, fd = claim["controller"]["pid"], claim["claim_fd"]
+    need(type(fd) is int and 0 <= fd < 1048576, "REFERENCE_CLAIM_FD")
+    descriptor = Path(f"/proc/{pid}/fd/{fd}")
+    before = descriptor.stat()
+    need(list(identity(before)) == claim["claim_inode"], "REFERENCE_CLAIM_FD")
+    with Path(f"/proc/{pid}/fdinfo/{fd}").open("rb") as stream:
+        raw = stream.read(4097)
+    need(len(raw) <= 4096, "REFERENCE_CLAIM_LOCK_BOUND")
+    positions = [line for line in raw.splitlines() if line.startswith(b"pos:")]
+    need(
+        type(claim["claim_offset"]) is int
+        and 0 < claim["claim_offset"] <= 2**60
+        and len(positions) == 1
+        and re.fullmatch(rb"pos:\s+" + str(claim["claim_offset"]).encode(), positions[0]),
+        "REFERENCE_CLAIM_EPOCH",
+    )
+    locks = [line for line in raw.splitlines() if line.startswith(b"lock:")]
+    need(len(locks) == 1, "REFERENCE_CLAIM_LOCK")
+    match = re.fullmatch(
+        rb"lock:\s+\d+:\s+FLOCK\s+ADVISORY\s+WRITE\s+(\d+)\s+([0-9a-fA-F]+):([0-9a-fA-F]+):(\d+)\s+0\s+EOF",
+        locks[0],
+    )
+    need(match is not None, "REFERENCE_CLAIM_LOCK")
+    need(
+        int(match[1]) == pid
+        and int(match[2], 16) == os.major(before.st_dev)
+        and int(match[3], 16) == os.minor(before.st_dev)
+        and int(match[4]) == before.st_ino
+        and identity(descriptor.stat()) == identity(before),
+        "REFERENCE_CLAIM_LOCK",
+    )
+
+
+def _reference_transition_owner(book, attempt, claim, require_owner):
+    try:
+        actual, _ = _controller_actor(claim["controller"]["pid"])
+    except FileNotFoundError:
+        raise Refused("REFERENCE_CONTROLLER_GONE") from None
+    need(
+        actual == claim["controller"]
+        and list(identity((book.root / "connection-000000.claim-lock.json").lstat()))
+        == claim["claim_inode"],
+        "REFERENCE_CONTROLLER_CHANGED",
+    )
+    _reference_claim_lock(claim)
+    need(
+        _controller_actor(claim["controller"]["pid"])[0] == actual
+        and list(identity((book.root / "connection-000000.claim-lock.json").lstat()))
+        == claim["claim_inode"],
+        "REFERENCE_CONTROLLER_CHANGED",
+    )
+    if require_owner:
+        _reference_condition_lease(book)
+    else:
+        intent = book._read(attempt + ".intent.json")
+        need(
+            intent.get("pre_dispatch")
+            == {
+                "controller": claim["controller"],
+                "claim_inode": claim["claim_inode"],
+                "unit": "qm-ivv-recovery-" + attempt + ".service",
+            },
+            "REFERENCE_CONTROLLER_BINDING",
+        )
+
+
+def reference_capture_condition(book, pair_sha256, read_owned, native, producer):
+    """Owning carrier's single consumed condition; never a diagnostic success seal."""
+    _reference_condition_lease(book)
+    book._reference_live_owner = lambda attempt, claim, owner: _reference_transition_owner(
+        book, attempt, claim, owner
+    )
+    claim = book.claim_reference_condition(pair_sha256)  # uncertainty remains spent
+    first = claim["reference_attempt"]
+    try:
+        pair = book._read(first + ".reference-pair.json")
+        loc = _locations(first)
+        need(book.root == loc.ledger, "REFERENCE_LEDGER_SCOPE")
+        observed = {}
+
+        def original(path, maximum=32768):
+            data = read_owned(path, maximum)
+            need(type(data) is bytes and 0 < len(data) <= maximum, "REFERENCE_ORIGINAL_BOUND")
+            observed[str(path)] = (maximum, digest(data))
+            return data
+
+        names = (
+            "intent",
+            "entry",
+            "context-binding",
+            "close",
+            "preowner",
+            "terminal",
+            "manager-exit",
+            "unit-result",
+            "unit-cleanup",
+        )
+        rows = {name: book._read(first + "." + name + ".json") for name in names}
+        closed, preowner = rows["close"], rows["preowner"]
+        need(
+            closed["owner_state"] == "CLOSED"
+            and closed["failure"] == "REFERENCE_INIT_OBSERVATION"
+            and closed["connection_attempt_id"] == first
+            and closed["method_sha256"] == pair["method_sha256"],
+            "REFERENCE_NORMAL_PARENT",
+        )
+        failure = read_runner_failure(loc.control, original)
+        need(
+            failure is not None and failure["reason"] == "REFERENCE_INIT_OBSERVATION",
+            "REFERENCE_NORMAL_STOP",
+        )
+        observation = failure.get("reference_init_observation")
+        need(
+            observation is not None
+            and observation["parent_closed"]
+            and observation["constructor_status"] == "READY"
+            and observation["reference_control_sha256"] == pair["reference_control_sha256"],
+            "REFERENCE_READY_REQUIRED",
+        )
+        startup = digest(original(loc.control / "startup.json"))
+        invocation = preowner["unit"]["InvocationID"]
+        need(
+            preowner["connection_attempt_id"] == first and preowner["startup_sha256"] == startup,
+            "REFERENCE_MANAGER_BINDING",
+        )
+        expected_exit = dict(manager_returncode=1, invocation_id=invocation, startup_sha256=startup)
+        need(
+            type(rows["manager-exit"].get("manager_returncode")) is int
+            and type(rows["unit-result"].get("manager_returncode")) is int
+            and type(rows["unit-result"].get("client_returncode")) is int
+            and rows["manager-exit"] == expected_exit
+            and rows["unit-result"] == dict(expected_exit, client_returncode=1),
+            "REFERENCE_NORMAL_MANAGER",
+        )
+        terminal = rows["terminal"]
+        preowner_sha = digest(raw_json(preowner))
+        need(
+            terminal["preowner_sha256"] == preowner_sha
+            and terminal["terminal"]["InvocationID"] == invocation
+            and terminal["terminal"]["ExecMainCode"] == "1"
+            and terminal["terminal"]["ExecMainStatus"] == "1",
+            "REFERENCE_NORMAL_MANAGER",
+        )
+        need(
+            rows["unit-cleanup"]
+            == dict(
+                preowner_sha256=preowner_sha,
+                owned_cleanup_proven=True,
+                external_effects="UNKNOWN",
+                input_publishable=False,
+            ),
+            "REFERENCE_UNIT_CLEANUP",
+        )
+        # The persisted receipt alone is insufficient: independently check the current
+        # manager absence, retained invocation and recursive empty original group.
+        _recover_preowner(preowner, book)
+        catalog_raw = original(loc.release / "release-catalog.json")
+        catalog = json.loads(catalog_raw)
+        sources = {key: catalog[key] for key in _sources(first)}
+        need(digest(raw_json(sources)) == pair["method_sha256"], "REFERENCE_SOURCE_BINDING")
+        for key, name in _sources(first).items():
+            need(
+                digest(original(loc.release / name, 262144)) == sources[key],
+                "REFERENCE_SOURCE_DRIFT",
+            )
+        need(
+            digest(original(loc.control / "policy.json"))
+            == pair["policy_sha256"]
+            == book.policy_sha,
+            "REFERENCE_POLICY_BINDING",
+        )
+        control = original(loc.control / "reference-control.json", 4096)
+        need(digest(control) == pair["reference_control_sha256"], "REFERENCE_CONTROL_BINDING")
+        expected_control = {
+            "schema_id": "qm.ivv.reference-control.v1",
+            **{
+                key: pair[key]
+                for key in (
+                    "nonce",
+                    "reference_attempt",
+                    "capture_attempt",
+                    "reference_context",
+                    "capture_context",
+                )
+            },
+            "catalog_sha256": digest(catalog_raw),
+            "sdk_pins_sha256": pair["sdk_pins_sha256"],
+            "policy_sha256": pair["policy_sha256"],
+        }
+        need(json.loads(control) == expected_control, "REFERENCE_CONTROL_BINDING")
+        plan = json.loads(original(loc.control / "plan.json"))
+        need(
+            digest(original(loc.control / "reference-pair.json", 4096)) == pair_sha256,
+            "REFERENCE_PAIR_ORIGINAL",
+        )
+        book.require_reference_plan(first, plan, pair)
+        need(
+            rows["entry"]["startup_sha256"] == startup
+            and rows["context-binding"]["startup_sha256"] == startup,
+            "REFERENCE_CONTEXT_STARTUP",
+        )
+        need(
+            plan["reference_init_ref"]
+            == {
+                "path": str(loc.control / "reference-control.json"),
+                "sha256": pair["reference_control_sha256"],
+            },
+            "REFERENCE_PLAN_BINDING",
+        )
+        binding = producer.validate_provider_binding(
+            raw_json(catalog["provider_binding"]), pair["provider_binding_sha256"]
+        )
+        configuration = dict(
+            control=binding.control_sha,
+            launcher=binding.launcher_sha,
+            profile=producer.RESTORE_PROFILE,
+            template=producer.RESTORE_TEMPLATE,
+        )
+        cohort = dict(
+            unit=binding.unit,
+            invocation=binding.invocation,
+            cgroup=binding.cgroup,
+            cohort=binding.cohort,
+            mnt=binding.mnt,
+            net=binding.net,
+        )
+        need(
+            digest(raw_json(configuration)) == pair["provider_config_sha256"]
+            and digest(raw_json(cohort)) == pair["provider_cohort_sha256"],
+            "REFERENCE_PROVIDER_BINDING",
+        )
+        boot, closes_observed = book.reference_clock()
+        sample_boot, sample_started = book.reference_clock()
+        need(sample_boot == boot and closes_observed <= sample_started, "REFERENCE_FRESH_CLOCK")
+        native.verified_provider_snapshot(producer, binding)
+        sdk_raw = original(loc.control / "sdk-pins.json")
+        need(
+            digest(sdk_raw) == pair["sdk_pins_sha256"]
+            and plan["sdk_pins_ref"]
+            == {"path": str(loc.control / "sdk-pins.json"), "sha256": pair["sdk_pins_sha256"]},
+            "REFERENCE_SDK_BINDING",
+        )
+        sdk_rows = json.loads(sdk_raw)["pins"]
+        need(type(sdk_rows) is list and 12 <= len(sdk_rows) <= 128, "SDK_PINS_COUNT")
+        paths = set()
+        for row in sdk_rows:
+            rel = row["relative_path"]
+            need(
+                type(rel) is str
+                and re.fullmatch(
+                    r"(?:moomoo|google/protobuf|google/_upb)/[A-Za-z0-9_./-]+\.(?:py|so)", rel
+                )
+                and ".." not in Path(rel).parts
+                and rel not in paths,
+                "SDK_PIN_ROLE",
+            )
+            paths.add(rel)
+            body = native._protected_bytes(str(SDK / rel), 1048576)
+            need(digest(body.replace(b"\r\n", b"\n")) == row["LF_sha256"], "SDK_PIN_DRIFT")
+        end_boot, sample_finished = book.reference_clock()
+        need(
+            end_boot == boot and sample_started <= sample_finished <= sample_started + 2,
+            "REFERENCE_FRESH_CLOCK",
+        )
+        for path, (maximum, pin) in observed.items():
+            need(digest(read_owned(Path(path), maximum)) == pin, "REFERENCE_ORIGINAL_DRIFT")
+        need(
+            all(book._read(first + "." + name + ".json") == body for name, body in rows.items()),
+            "REFERENCE_LEDGER_DRIFT",
+        )
+        _reference_condition_lease(book)
+        evidence = {
+            "closed_originals": {name: digest(raw_json(body)) for name, body in rows.items()},
+            "files": {path: pin for path, (_, pin) in observed.items()},
+            "pair_sha256": pair_sha256,
+        }
+        evidence_sha = digest(raw_json(evidence))
+        fresh = dict(
+            schema_id="qm.ivv.reference-fresh.v1",
+            pair_sha256=pair_sha256,
+            evidence_sha256=evidence_sha,
+            boot_id=boot,
+            closes_observed=closes_observed,
+            sample_started=sample_started,
+            sample_finished=sample_finished,
+        )
+        book._write(first + ".reference-evidence.json", evidence)
+        book._write(first + ".reference-fresh.json", fresh)
+        outcome = dict(
+            schema_id="qm.ivv.reference-condition.v1",
+            state="POSITIVE",
+            pair_sha256=pair_sha256,
+            claim_sha256=digest(raw_json(claim)),
+            reference_attempt=first,
+            capture_attempt=pair["capture_attempt"],
+            close_sha256=digest(raw_json(closed)),
+            evidence_sha256=evidence_sha,
+            fresh_sha256=digest(raw_json(fresh)),
+        )
+        book._write(first + ".reference-condition.json", outcome)
+        return {"pair_sha256": pair_sha256, "outcome_sha256": digest(raw_json(outcome))}
+    except BaseException as error:
+        # Even failed result persistence leaves the exclusive claim permanently occupied.
+        book._write(
+            first + ".reference-condition.json",
+            {
+                "schema_id": "qm.ivv.reference-condition.v1",
+                "state": "NEGATIVE",
+                "pair_sha256": pair_sha256,
+                "claim_sha256": digest(raw_json(claim)),
+                "reason": reason(error),
+            },
+        )
+        raise
 
 
 class _Channel:
@@ -3211,6 +3666,12 @@ def _seed(values, startup, helper, issuer, *, started=None):
     helper._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + family)
     plan["started_monotonic"] = time.monotonic() if started is None else started
     helper._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + family)
+    if "reference_init_ref" in plan:
+        need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
+        helper._read_reference_control(plan)
+    if "reference_pair_ref" in plan:
+        need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
+        helper._read_reference_pair(plan)
     need(
         plan["sdk_root"] == str(SDK)
         and plan["receipt_root"] == str(loc.receipt)
@@ -3278,7 +3739,7 @@ class _ChildSession:
         self.check = check
         self.lock = threading.Lock()
 
-    def snapshot(self):
+    def snapshot(self, reference_transition=None):
         need(os.getpid() == self.owner, "SESSION_OWNER")
         with self.lock:
             checked = self.check()
@@ -3288,12 +3749,52 @@ class _ChildSession:
                 else None
             )
             self.channel.send(
-                {"op": "observe", **({"executable_origin": witness} if witness is not None else {})}
+                {
+                    "op": "observe",
+                    **({"executable_origin": witness} if witness is not None else {}),
+                    **(
+                        {"reference_transition": reference_transition}
+                        if reference_transition is not None
+                        else {}
+                    ),
+                }
             )
-            return self.channel.recv(self.parent)["snapshot"]
+            answer = self.channel.recv(self.parent)
+            if reference_transition is not None:
+                need(set(answer) == {"snapshot", "reference_transition"}, "REFERENCE_PARENT_REPLY")
+                observed = answer["reference_transition"]
+                need(
+                    type(observed) is dict
+                    and set(observed)
+                    == {"pair_sha256", "outcome_sha256", "boot_id", "observed_monotonic"}
+                    and {k: observed[k] for k in reference_transition} == reference_transition,
+                    "REFERENCE_PARENT_REPLY",
+                )
+                return observed["boot_id"], observed["observed_monotonic"]
+            return answer["snapshot"]
+
+    def reference_owner(self, book, attempt, claim, require_owner):
+        need(not require_owner, "REFERENCE_CHILD_OWNER")
+        ref = book._read(attempt + ".intent.json")["reference_transition"]
+        need(ref["pair_sha256"] == claim["pair_sha256"], "REFERENCE_CHILD_PAIR")
+        return self.snapshot(ref)
 
     def before_effect(self):
         self.snapshot()
+
+
+def _reference_observation(values, attempt, requested):
+    """Owned parent rechecks physical lease and immutable transition for child MAY."""
+    need(_recovery_mode(attempt), "REFERENCE_PARENT_MODE")
+    book = values["_recovery_ledger"]
+    intent = book._read(attempt + ".intent.json")
+    need(
+        requested == intent.get("reference_transition") and type(requested) is dict,
+        "REFERENCE_PARENT_BINDING",
+    )
+    book._reference_transition(attempt, values["_recovery_method"], requested)
+    boot, now = book.reference_clock()
+    return {**requested, "boot_id": boot, "observed_monotonic": now}
 
 
 def _check_capture_result(result, *, recovery):
@@ -3309,6 +3810,39 @@ def _check_capture_result(result, *, recovery):
     if recovery:
         _carry_capture_lifecycle(error, result.get("capture_lifecycle"))
     raise error
+
+
+def _reference_result(result):
+    primary = result["primary_failure"]
+    not_ready = (
+        result["constructor_returned"] is True
+        and result["constructor_status"] == "NOT_READY"
+        and primary
+        == {
+            "stage": "initialize",
+            "class": "CaptureRejected",
+            "code": "sdk_initial_connection_failed",
+        }
+    )
+    value = select_reference_observation(
+        {
+            "schema_id": "qm.ivv.reference-init-observation.v1",
+            "reference_control_sha256": result["reference_control_sha256"],
+            "constructor_status": result["constructor_status"],
+            "operation_failed": primary is not None and not not_ready,
+            "close_failed": result["close_failure"] is not None,
+            "normal_close": result["normal_close"],
+            "parent_closed": False,
+        }
+    )
+    code = (
+        "SDK_CLOSE_UNKNOWN"
+        if value["close_failed"] or not all(value["normal_close"].values())
+        else "REFERENCE_INIT_FAILED"
+        if value["operation_failed"]
+        else "REFERENCE_INIT_OBSERVATION"
+    )
+    return _carry_reference_observation(Refused(code), value)
 
 
 def _child(channel, parent, context, plan):
@@ -3384,6 +3918,9 @@ def _child(channel, parent, context, plan):
         )
         state.recovery_profile = extra
         state.recovery_ledger = values["_recovery_ledger"]
+        state.recovery_ledger._reference_live_owner = lambda attempt, claim, owner: (
+            state.session.reference_owner(state.recovery_ledger, attempt, claim, owner)
+        )
         state.recovery_attempt = additional
     state.plan = m._canonical({k: v for k, v in final.items() if k != "provider_evidence_ref"})
     state.evidence = m._canonical(evidence)
@@ -3418,7 +3955,11 @@ def _child(channel, parent, context, plan):
         )
         try:
             capture = (
-                m.capture_recovery_attempt
+                (
+                    m.reference_recovery_attempt
+                    if "reference_init_ref" in final
+                    else m.capture_recovery_attempt
+                )
                 if _recovery_mode(additional)
                 else m.capture_additional_once
                 if additional
@@ -3429,6 +3970,12 @@ def _child(channel, parent, context, plan):
             )
         finally:
             _close_fd(fd)
+        if "reference_init_ref" in final:
+            observation = _reference_result(m._select_reference_terminal(result))
+            if reason(observation) != "REFERENCE_INIT_OBSERVATION":
+                raise observation
+            channel.send(_failed_packet(observation))
+            return  # Normal child exit; the parent still must observe wait/EOF/closure.
         _check_capture_result(result, recovery=_recovery_mode(additional))
         channel.send(
             {
@@ -3675,10 +4222,35 @@ def _accept_executable_origin(value, values, *, phase=None, namespace=None):
     return selected
 
 
+def _reference_packet(packet, plan):
+    need(
+        "reference_init_ref" in plan
+        and type(packet) is dict
+        and set(packet) == {"op", "code", "reference_init_observation"}
+        and packet["op"] == "failed"
+        and packet["code"] == "REFERENCE_INIT_OBSERVATION",
+        "REFERENCE_TERMINAL_PROTOCOL",
+    )
+    error = _child_failure(packet)
+    observation = _reference_from_error(error)
+    need(
+        observation is not None
+        and observation["reference_control_sha256"] == plan["reference_init_ref"]["sha256"]
+        and observation["constructor_status"] in {"READY", "NOT_READY"}
+        and observation["operation_failed"] is False
+        and observation["close_failed"] is False
+        and all(observation["normal_close"].values()),
+        "REFERENCE_TERMINAL_FAILED",
+    )
+    return packet
+
+
 def _supervise(scope, channel, endpoint, context, plan):
     startup, values, issuer, m, native, producer = context
     additional = _task_mode(values)
     binding = values["catalog_ref"].get("provider_binding") if _recovery_mode(additional) else None
+    reference = "reference_init_ref" in plan
+    need(not reference or _recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
     monitor = _for_task(_Provider, additional)(
         native,
         producer,
@@ -3739,9 +4311,21 @@ def _supervise(scope, channel, endpoint, context, plan):
                 scope.check_pid()
                 channel.send({"op": "go", "plan_ref": grant[0], "go_ref": grant[1]})
             elif packet and packet.get("op") == "observe" and grant and not terminal:
+                requested = packet.get("reference_transition")
                 need(
                     set(packet)
-                    == ({"op", "executable_origin"} if _recovery_mode(additional) else {"op"}),
+                    == (
+                        ({"op", "executable_origin"} if _recovery_mode(additional) else {"op"})
+                        | ({"reference_transition"} if requested is not None else set())
+                    )
+                    and (
+                        requested is None
+                        or (
+                            _recovery_mode(additional)
+                            and not reference
+                            and "reference_pair_ref" in plan
+                        )
+                    ),
                     "CHILD_PROTOCOL",
                 )
                 if _recovery_mode(additional):
@@ -3762,10 +4346,31 @@ def _supervise(scope, channel, endpoint, context, plan):
                 if pair:
                     need(peer is None or pair == peer, "CAPTURE_PEER_CHANGED")
                     peer = pair
-                channel.send({"snapshot": monitor.last})
+                observation = None
+                if requested is not None:
+                    need(binding is not None, "REFERENCE_PROVIDER_BINDING")
+                    monitor.verify_network(scope)
+                    observation = _reference_observation(values, additional, requested)
+                channel.send(
+                    {
+                        "snapshot": monitor.last,
+                        **(
+                            {"reference_transition": observation} if observation is not None else {}
+                        ),
+                    }
+                )
+            elif (
+                reference
+                and packet
+                and packet.get("code") == "REFERENCE_INIT_OBSERVATION"
+                and grant
+                and not terminal
+            ):
+                terminal = _reference_packet(packet, plan)
             elif packet and packet.get("op") == "terminal" and grant and not terminal:
                 need(
-                    set(packet) == {"op", "permit_sha256", "manifest_sha256"}
+                    not reference
+                    and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
                     and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
                     "TERMINAL_PACKET",
                 )
@@ -3812,14 +4417,17 @@ def _supervise(scope, channel, endpoint, context, plan):
                     if reason(error) != "CONTROL_EOF":
                         raise
                     break
-                need(
-                    terminal is None
-                    and type(packet) is dict
-                    and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
-                    and packet["op"] == "terminal"
-                    and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
-                    "CHILD_TERMINAL_PROTOCOL",
-                )
+                need(terminal is None, "CHILD_TERMINAL_PROTOCOL")
+                if reference:
+                    _reference_packet(packet, plan)
+                else:
+                    need(
+                        type(packet) is dict
+                        and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
+                        and packet["op"] == "terminal"
+                        and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
+                        "CHILD_TERMINAL_PROTOCOL",
+                    )
                 terminal = packet
             else:
                 raise Refused("CONTROL_NOT_CLOSED")
@@ -3832,6 +4440,8 @@ def _supervise(scope, channel, endpoint, context, plan):
             break
     elapsed = time.monotonic() - start
     need(elapsed <= 480, "FINAL_SEAL_DEADLINE")
+    if reference:
+        return {"reference_init_observation": terminal["reference_init_observation"]}
     return _seal(
         context,
         grant,
@@ -3925,6 +4535,15 @@ def _run(startup_ref, *, additional, lifecycle=None):
         values["_recovery_method"] = method
         book.enter(additional, method, startup_ref["sha256"])
         values["_recovery_ledger"] = book
+        book._reference_live_owner = lambda attempt, claim, owner: _reference_transition_owner(
+            book, attempt, claim, owner
+        )
+        book.bind_reference_plan(
+            additional,
+            plan,
+            helper._read_reference_pair(plan) if "reference_pair_ref" in plan else None,
+            startup_ref["sha256"],
+        )
     _stdio()
     need(
         _fds() == ({0, 1, 2} | ({lifecycle.fd} if lifecycle is not None else set()))
@@ -3936,6 +4555,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
     primary_origin = None
     primary_executable = None
     primary_capture = None
+    reference = None
     cleanup_failures = None
     pending = None
     committed = False
@@ -3973,23 +4593,31 @@ def _run(startup_ref, *, additional, lifecycle=None):
             if _recovery_mode(additional):
                 _persist_recovery_owner(book, additional, scope)
             result = _supervise(scope, parent_side, endpoint, context, plan)
+            if "reference_init_ref" in plan:
+                need(set(result) == {"reference_init_observation"}, "REFERENCE_PARENT_RESULT")
+                reference = select_reference_observation(result["reference_init_observation"])
+                need(reference["parent_closed"] is False, "REFERENCE_CHILD_OWNER")
             scope.check_resources()
             scope.remove()
             scope.leaf = None
             elapsed = time.monotonic() - plan["started_monotonic"]
             need(elapsed <= 480, "FINAL_SEAL_DEADLINE")
-            result["elapsed_seconds"] = elapsed
+            if reference is None:
+                result["elapsed_seconds"] = elapsed
             # Keep all resource/event handles through JSON/file+directory
             # fsync and normal publication. No partial file is normal authority.
-            pending = put(loc.control / "parent-close.pending.json", result)
+            if reference is None:
+                pending = put(loc.control / "parent-close.pending.json", result)
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
-            committed = True
-            _for_task(_commit_close, additional)(pending)
+            if reference is None:
+                committed = True
+                _for_task(_commit_close, additional)(pending)
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
             primary_capture = _capture_lifecycle_from_error(error)
+            reference = _reference_from_error(error) or reference
             primary_origin = _origin_from_error(error)
             primary_executable = _executable_from_error(error) or values.get("_executable_origin")
             failures = scope.abort()
@@ -4017,7 +4645,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
             resource_limit_event=False,
             active_owned_processes=0 if closed else 1,
         )
-        failure = primary[0] if primary else None
+        failure = primary[0] if primary else "REFERENCE_INIT_OBSERVATION" if reference else None
         if failure is not None and re.fullmatch(r"[A-Z0-9_+]{1,512}", failure) is None:
             failure = "CAPTURE_FAILED"
         try:
@@ -4036,9 +4664,14 @@ def _run(startup_ref, *, additional, lifecycle=None):
         code = "+".join(failures)
         failure = _carry_origin(Refused(code), primary_origin, code)
         _carry_capture_lifecycle(failure, primary_capture)
+        _carry_reference_observation(failure, reference)
         raise _carry_executable_origin(
             failure, primary_executable or values.get("_executable_origin")
         ) from None
+    if reference is not None:
+        raise _carry_reference_observation(
+            Refused("REFERENCE_INIT_OBSERVATION"), {**reference, "parent_closed": True}
+        )
     return result
 
 

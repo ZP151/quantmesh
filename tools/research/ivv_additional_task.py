@@ -419,6 +419,63 @@ class RecoveryProfile:
         }
 
 
+def reference_clock():
+    """Current kernel boot and monotonic time, never a caller-supplied timestamp."""
+    boot = Path("/proc/sys/kernel/random/boot_id").read_text(encoding="ascii").strip()
+    now = time.monotonic()
+    _need(
+        re.fullmatch(r"[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}", boot)
+        and math.isfinite(now)
+        and now >= 0,
+        "reference_clock",
+    )
+    return boot, now
+
+
+def validate_reference_pair(value):
+    """Closed immutable pair data; provenance is established by the owning carrier."""
+    pins = {
+        "reference_control_sha256",
+        "method_sha256",
+        "policy_sha256",
+        "provider_binding_sha256",
+        "sdk_pins_sha256",
+        "provider_config_sha256",
+        "provider_cohort_sha256",
+    }
+    _need(
+        type(value) is dict
+        and set(value)
+        == pins
+        | {
+            "schema_id",
+            "nonce",
+            "reference_attempt",
+            "capture_attempt",
+            "reference_context",
+            "capture_context",
+        }
+        and value["schema_id"] == "qm.ivv.reference-pair.v1",
+        "reference_pair_shape",
+    )
+    _need(
+        all(type(value[k]) is str and re.fullmatch("[0-9a-f]{64}", value[k]) for k in pins)
+        and all(
+            type(value[k]) is str and re.fullmatch("[0-9a-f]{32}", value[k])
+            for k in ("nonce", "reference_context", "capture_context")
+        )
+        and value["reference_context"] != value["capture_context"]
+        and all(
+            type(value[k]) is str and re.fullmatch("connection-[0-9]{6}", value[k])
+            for k in ("reference_attempt", "capture_attempt")
+        )
+        and 0 < int(value["reference_attempt"][-6:]) < 999999
+        and int(value["capture_attempt"][-6:]) == int(value["reference_attempt"][-6:]) + 1,
+        "reference_pair_value",
+    )
+    return dict(value)
+
+
 class RecoveryLedger:
     """Append-only attempts in the admitted private recovery directory.
 
@@ -491,7 +548,16 @@ class RecoveryLedger:
         return rows
 
     @_serialized
-    def begin(self, method_sha256, *, now, expected_connection=None, pre_dispatch=None):
+    def begin(
+        self,
+        method_sha256,
+        *,
+        now,
+        expected_connection=None,
+        pre_dispatch=None,
+        reference_pair=None,
+        reference_transition=None,
+    ):
         if pre_dispatch is not None:
             _need(
                 type(pre_dispatch) is dict
@@ -505,6 +571,22 @@ class RecoveryLedger:
         _need(type(now) in (int, float) and math.isfinite(now) and now >= 0, "recovery_clock")
         rows = self._intents()
         attempt = f"connection-{len(rows) + 1:06d}"
+        _need(reference_pair is None or reference_transition is None, "reference_pair_mode")
+        transition = None
+        if reference_transition is not None:
+            transition = self._reference_transition(
+                attempt, method_sha256, reference_transition, require_owner=True
+            )
+            claim = self._read(f"connection-{int(attempt[-6:]) - 1:06d}.reference-claim.json")
+            _need(
+                pre_dispatch
+                == {
+                    "controller": claim["controller"],
+                    "claim_inode": claim["claim_inode"],
+                    "unit": "qm-ivv-recovery-" + attempt + ".service",
+                },
+                "reference_transition_dispatch",
+            )
         _need(
             expected_connection is None or expected_connection == attempt,
             "recovery_attempt_sequence",
@@ -562,7 +644,8 @@ class RecoveryLedger:
             _need(
                 closed["failure"]
                 in (None, "SDK_CLOSE_UNKNOWN", "CAPTURE_TIMEOUT", "CAPTURE_INTERRUPTED")
-                or closed["method_sha256"] != method_sha256,
+                or closed["method_sha256"] != method_sha256
+                or transition is not None,
                 "unrepaired_structural_failure",
             )
         batch_rows = [r for r in rows if r["batch_id"] == self.policy["batch"]["batch_id"]]
@@ -573,11 +656,24 @@ class RecoveryLedger:
             )
         _need(len(batch_rows) < self.policy["batch"]["contexts"], "context_budget")
         attempt = f"connection-{len(rows) + 1:06d}"
+        pair_sha = None
+        if reference_pair is not None:
+            value = validate_reference_pair(reference_pair)
+            _need(
+                value["reference_attempt"] == attempt
+                and value["method_sha256"] == method_sha256
+                and value["policy_sha256"] == self.policy_sha,
+                "reference_pair_binding",
+            )
+            self._write(attempt + ".reference-pair.json", value)
+            pair_sha = self.contract.digest(self.contract.canonical(value))
         self._write(
             attempt + ".intent.json",
             {
                 "schema_id": "qm.ivv.connection-attempt.v1",
                 "state": "INTENT",
+                **({"reference_pair_sha256": pair_sha} if pair_sha else {}),
+                **({"reference_transition": dict(reference_transition)} if transition else {}),
                 **({"pre_dispatch": pre_dispatch} if pre_dispatch is not None else {}),
                 "logical_task_id": self.contract.LOGICAL_TASK_ID,
                 "batch_id": self.policy["batch"]["batch_id"],
@@ -589,6 +685,254 @@ class RecoveryLedger:
             },
         )
         return attempt
+
+    @_serialized
+    def claim_reference_condition(self, pair_sha256):
+        rows = self._intents()
+        _need(bool(rows), "reference_previous_intent")
+        prior = rows[-1]
+        _need("reference_pair_sha256" in prior, "reference_pair_binding")
+        stem = prior["connection_attempt_id"]
+        lease = getattr(self, "_claim_lease", None)
+        _need(
+            lease is not None
+            and type(getattr(lease, "controller", None)) is dict
+            and type(getattr(lease, "origin", None)) is list
+            and type(getattr(lease, "fd", None)) is int
+            and 0 <= lease.fd < 1048576
+            and callable(getattr(lease, "bind_reference_epoch", None)),
+            "reference_transition_owner",
+        )
+        _need(
+            self.contract._sha(pair_sha256) and prior["reference_pair_sha256"] == pair_sha256,
+            "reference_pair_binding",
+        )
+        claim = self._write(
+            stem + ".reference-claim.json",
+            {
+                "schema_id": "qm.ivv.reference-condition-claim.v1",
+                "pair_sha256": pair_sha256,
+                "reference_attempt": stem,
+                "capture_attempt": f"connection-{int(stem[-6:]) + 1:06d}",
+                "controller": dict(lease.controller),
+                "claim_inode": list(lease.origin),
+                "claim_fd": lease.fd,
+                "claim_offset": int(pair_sha256[:15], 16) + 1,
+            },
+        )
+        # Only the successful exclusive claimant may mark its existing open
+        # file description. Re-opened/replayed leases keep their initial pos0.
+        lease.bind_reference_epoch(claim["claim_offset"])
+        self._reference_claim_owner = lease
+        return claim
+
+    def reference_clock(self):
+        return reference_clock()
+
+    def _reference_context(self, attempt):
+        intent = self._read(attempt + ".intent.json")
+        if "reference_pair_sha256" in intent:
+            stem, role = attempt, "reference"
+            pair_sha = intent["reference_pair_sha256"]
+        elif "reference_transition" in intent:
+            stem, role = f"connection-{int(attempt[-6:]) - 1:06d}", "capture"
+            pair_sha = intent["reference_transition"]["pair_sha256"]
+            self._reference_transition(
+                attempt, intent["method_sha256"], intent["reference_transition"]
+            )
+        else:
+            number = int(attempt[-6:])
+            if number > 1:
+                previous = self._read(f"connection-{number - 1:06d}.intent.json")
+                _need(
+                    not (
+                        "reference_pair_sha256" in previous
+                        and previous["method_sha256"] == intent["method_sha256"]
+                    ),
+                    "reference_transition_missing",
+                )
+            return None
+        pair = validate_reference_pair(self._read(stem + ".reference-pair.json"))
+        _need(
+            self.contract.digest(self.contract.canonical(pair)) == pair_sha
+            and pair[role + "_attempt"] == attempt,
+            "reference_context_pair",
+        )
+        entry = self._read(attempt + ".entry.json")
+        return {
+            "schema_id": "qm.ivv.reference-context-binding.v1",
+            "connection_attempt_id": attempt,
+            "operation": role,
+            "operation_context": pair[role + "_context"],
+            "pair_sha256": pair_sha,
+            "startup_sha256": entry["startup_sha256"],
+        }
+
+    def require_reference_plan(self, attempt, plan, pair):
+        context = self._reference_context(attempt)
+        if context is None:
+            _need(
+                pair is None
+                and "reference_pair_ref" not in plan
+                and "operation_context" not in plan,
+                "reference_context_unbound",
+            )
+            return None
+        _need(
+            type(plan.get("reference_pair_ref")) is dict
+            and plan["reference_pair_ref"]["sha256"] == context["pair_sha256"]
+            and self.contract.digest(self.contract.canonical(validate_reference_pair(pair)))
+            == context["pair_sha256"]
+            and plan["recovery"]["connection_attempt_id"] == attempt
+            and plan.get("operation_context") == context["operation_context"]
+            and ("reference_init_ref" in plan) == (context["operation"] == "reference"),
+            "reference_context_binding",
+        )
+        _need(self._read(attempt + ".context-binding.json") == context, "reference_context_binding")
+        return context
+
+    @_serialized
+    def bind_reference_plan(self, attempt, plan, pair, startup_sha256):
+        context = self._reference_context(attempt)
+        if context is None:
+            return self.require_reference_plan(attempt, plan, pair)
+        _need(context["startup_sha256"] == startup_sha256, "reference_context_startup")
+        # Validate the plan before this exclusive context reservation becomes durable.
+        _need(
+            type(plan.get("reference_pair_ref")) is dict
+            and plan["reference_pair_ref"]["sha256"] == context["pair_sha256"]
+            and self.contract.digest(self.contract.canonical(validate_reference_pair(pair)))
+            == context["pair_sha256"]
+            and plan["recovery"]["connection_attempt_id"] == attempt
+            and plan.get("operation_context") == context["operation_context"]
+            and ("reference_init_ref" in plan) == (context["operation"] == "reference"),
+            "reference_context_binding",
+        )
+        self._write(attempt + ".context-binding.json", context)
+        return context
+
+    def _reference_transition(self, attempt, method_sha256, ref, *, require_owner=False):
+        _need(
+            type(ref) is dict
+            and set(ref) == {"pair_sha256", "outcome_sha256"}
+            and all(self.contract._sha(v) for v in ref.values()),
+            "reference_transition_ref",
+        )
+        number = int(attempt[-6:]) - 1
+        _need(number > 0, "reference_transition_attempt")
+        stem = f"connection-{number:06d}"
+        prior = self._read(stem + ".intent.json")
+        value = validate_reference_pair(self._read(stem + ".reference-pair.json"))
+        claim = self._read(stem + ".reference-claim.json")
+        outcome = self._read(stem + ".reference-condition.json")
+        closed = self._read(stem + ".close.json")
+        if require_owner:
+            lease = getattr(self, "_claim_lease", None)
+            _need(
+                lease is not None
+                and getattr(self, "_reference_claim_owner", None) is lease
+                and getattr(lease, "controller", None) == claim.get("controller")
+                and getattr(lease, "fd", None) == claim.get("claim_fd")
+                and getattr(lease, "reference_epoch", None) == claim.get("claim_offset")
+                and getattr(lease, "origin", None) == claim.get("claim_inode"),
+                "reference_transition_owner",
+            )
+
+        def digest(obj):
+            return self.contract.digest(self.contract.canonical(obj))
+
+        _need(
+            value["capture_attempt"] == attempt
+            and value["reference_attempt"] == stem
+            and prior.get("reference_pair_sha256") == ref["pair_sha256"] == digest(value)
+            and prior["method_sha256"] == value["method_sha256"] == method_sha256
+            and prior["policy_sha256"] == value["policy_sha256"] == self.policy_sha
+            and closed["owner_state"] == "CLOSED"
+            and closed["failure"] == "REFERENCE_INIT_OBSERVATION"
+            and closed["method_sha256"] == method_sha256
+            and claim
+            == {
+                "schema_id": "qm.ivv.reference-condition-claim.v1",
+                "pair_sha256": ref["pair_sha256"],
+                "reference_attempt": stem,
+                "capture_attempt": attempt,
+                "controller": claim.get("controller"),
+                "claim_inode": claim.get("claim_inode"),
+                "claim_fd": claim.get("claim_fd"),
+                "claim_offset": claim.get("claim_offset"),
+            }
+            and type(claim["controller"]) is dict
+            and type(claim["claim_inode"]) is list
+            and type(claim["claim_fd"]) is int
+            and 0 <= claim["claim_fd"] < 1048576
+            and claim["claim_offset"] == int(ref["pair_sha256"][:15], 16) + 1,
+            "reference_transition_binding",
+        )
+        live_owner = getattr(self, "_reference_live_owner", None)
+        _need(callable(live_owner), "reference_transition_owner")
+        observed_clock = live_owner(attempt, claim, require_owner)
+        _need(
+            type(outcome) is dict
+            and set(outcome)
+            == {
+                "schema_id",
+                "state",
+                "pair_sha256",
+                "claim_sha256",
+                "reference_attempt",
+                "capture_attempt",
+                "close_sha256",
+                "evidence_sha256",
+                "fresh_sha256",
+            }
+            and outcome["schema_id"] == "qm.ivv.reference-condition.v1"
+            and outcome["state"] == "POSITIVE"
+            and outcome["pair_sha256"] == ref["pair_sha256"]
+            and outcome["claim_sha256"] == digest(claim)
+            and outcome["reference_attempt"] == stem
+            and outcome["capture_attempt"] == attempt
+            and outcome["close_sha256"] == digest(closed)
+            and all(self.contract._sha(outcome[k]) for k in ("evidence_sha256", "fresh_sha256"))
+            and digest(outcome) == ref["outcome_sha256"],
+            "reference_transition_outcome",
+        )
+        evidence = self._read(stem + ".reference-evidence.json")
+        fresh = self._read(stem + ".reference-fresh.json")
+        # The sandboxed child receives this observation only from its existing
+        # authenticated parent session; the carrier/parent reads procfs locally.
+        boot, now = reference_clock() if observed_clock is None else observed_clock
+        _need(
+            digest(evidence) == outcome["evidence_sha256"]
+            and digest(fresh) == outcome["fresh_sha256"]
+            and type(fresh) is dict
+            and set(fresh)
+            == {
+                "schema_id",
+                "pair_sha256",
+                "evidence_sha256",
+                "boot_id",
+                "closes_observed",
+                "sample_started",
+                "sample_finished",
+            }
+            and fresh["schema_id"] == "qm.ivv.reference-fresh.v1"
+            and fresh["pair_sha256"] == ref["pair_sha256"]
+            and fresh["evidence_sha256"] == outcome["evidence_sha256"]
+            and fresh["boot_id"] == boot
+            and all(
+                type(fresh[k]) in (int, float) and math.isfinite(fresh[k])
+                for k in ("closes_observed", "sample_started", "sample_finished")
+            )
+            and 0
+            <= fresh["closes_observed"]
+            <= fresh["sample_started"]
+            <= fresh["sample_finished"]
+            <= now
+            <= fresh["sample_finished"] + 180
+            and fresh["sample_finished"] - fresh["sample_started"] <= 2,
+            "reference_fresh_binding",
+        )
+        return outcome
 
     @_serialized
     def enter(self, attempt, method_sha256, startup_sha256):
@@ -613,7 +957,18 @@ class RecoveryLedger:
 
     @_serialized
     def may_connect(self, attempt):
-        self._read(attempt + ".intent.json")
+        intent = self._read(attempt + ".intent.json")
+        context = self._reference_context(attempt)
+        if context is not None:
+            try:
+                bound = self._read(attempt + ".context-binding.json")
+            except FileNotFoundError:
+                raise ValueError("reference_context_missing") from None
+            _need(bound == context, "reference_context_binding")
+        if "reference_transition" in intent:
+            self._reference_transition(
+                attempt, intent["method_sha256"], intent["reference_transition"]
+            )
         self._write(
             attempt + ".may.json", {"state": "MAY_HAVE_SENT", "connection_attempt_id": attempt}
         )
