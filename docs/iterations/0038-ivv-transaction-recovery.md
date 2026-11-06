@@ -1690,3 +1690,37 @@ runtime7 remain. This is not a third structural review. Retained family scope
 P37, with parent CI archives separately retained and no refunds. Windows original
 portfolio path-format failure remains recorded rather than being skipped or
 repaired here. Matching-head normal Linux661 contract and full release are pending.
+
+### Issue292 full JUnit compatibility — bounded R2 2026-11-06
+
+CI572 early661, frontend793 and service gates passed. Its formal child actually
+reported8027PASS/149SKIP/5 passed subtests, exit0/2405.249785s under pytest9.1.1.
+The release still failed: the controller rejected valid JUnit at its count guard.
+The immutable XML has8176 testcase elements and suite.tests8181, the difference
+being explicitly reported subpasses. A zero-pytest actual-function replay names
+that exact rejection; neither missing files nor the unchanged8MiB bound caused it.
+The next actual rejection was a legitimate8293-character successful identity.
+Its parameters remain private; only identity length/hash were recorded.
+
+The two-file correction reconciles this positive count difference only against
+one complete bounded terminal summary whose primary categories independently
+match XML. Unknown/mixed subfailure aggregation stays infrastructure failure.
+Successful identities use internal hashes; failed identities retain4096 and all
+XML/metadata/output bounds remain. Empty/corrupt/duplicate identities refuse.
+Spec R1 found one phase-consistency P2. Causal5FAIL/2PASS precedes the sole fix:
+setup and passed/failed call share one primary slot, duplicate collection is
+checked, and legitimate teardown keeps its distinct slot/shared completed node.
+
+Verifier: source `a4be4bac17e3899865763dfc42cedb6e1584850c` has79 affected
+PASS/28.16s; actual original log/XML replay is PASSED8176 with unchanged hashes.
+This is parser evidence, not release qualification. Same-reader bounded R2 is
+Spec2499B/SHA256 `5a6a4741573204a83553e320a1f5d4f5e50087a919fe711b025f946f1f98ac19`
+and Standards2239B/SHA256
+`4d75ca8fda9c0f04cc95cda42195129c0caec0945c7d5332c127a15eab52e78c`, both READY.
+Parent read both and matched694 indexed originals, source Git/disk and runtime7;
+only the new count helper and finish differ in the controller AST. No tests were
+repeated for review. P40 adds source1/common7MiB once while preserving existing
+futureCI8MiB without recharging it; all prior holds/failed originals stay occupied.
+CI572 remains FAIL and later release stages were not executed. Normal matching
+final-head CI must execute the complete release before ordinary guarded merge;
+no SDK/provider/host or research authority follows.
