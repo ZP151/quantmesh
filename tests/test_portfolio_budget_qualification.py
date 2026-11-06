@@ -338,6 +338,124 @@ def test_stdout_stderr_and_nonzero_exit_are_retained(verifier, tmp_path):
     assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="owned native exit readiness boundary")
+@pytest.mark.parametrize("read_outcome", ["empty", "permission"])
+def test_owned_empty_environment_before_terminal_readiness_keeps_nonzero_output(
+    verifier, tmp_path, monkeypatch, read_outcome
+):
+    """A zero-time terminal observation may precede the owned child's real exit."""
+    tmp_path.chmod(0o700)
+    release = tmp_path / "release-pending-exit"
+    code = (
+        "import sys,time;from pathlib import Path;"
+        "\nwhile not Path(sys.argv[1]).exists():"
+        "\n time.sleep(0.005)"
+        "\nprint('raw-out');print('raw-err',file=sys.stderr);sys.exit(7)"
+    )
+    runner = verifier.Commands(tmp_path, tmp_path)
+    handle = runner.spawn(
+        [sys.executable, "-B", "-c", code, str(release)],
+        verifier.environment(tmp_path),
+        tmp_path,
+    )
+    member = handle.members[(handle.pid, handle.ticks)]
+    environment_path = Path("/proc") / str(handle.pid) / "environ"
+    original_read, original_close, original_ready = Path.read_bytes, handle.close, member.ready
+    observed = triggered = False
+
+    def retiring(timeout=0):
+        nonlocal triggered
+        before = bool(select.select([member.pidfd], [], [], 0)[0])
+        if not triggered:
+            assert not before
+            triggered = True
+            release.touch()
+            if timeout == 0:
+                return before
+        return bool(select.select([member.pidfd], [], [], timeout)[0])
+
+    def exiting_environment(path):
+        nonlocal observed
+        if path == environment_path and not observed:
+            raw = original_read(path)
+            assert b"QM_BACKUP_COMMAND_OWNER=" + handle.nonce.encode() in raw.split(b"\0")
+            assert verifier.owned.process_ticks(handle.pid) == handle.ticks
+            observed = True
+            monkeypatch.setattr(member, "ready", retiring)
+            if read_outcome == "permission":
+                raise PermissionError("controlled owned /proc exit window")
+            # Controlled empty /proc read at the original owned leader's exit seam.
+            return b""
+        return original_read(path)
+
+    def close_after_natural_exit():
+        # Preserve the primary failure on RED; test cleanup never kills this child.
+        if not triggered:
+            monkeypatch.setattr(member, "ready", original_ready)
+        release.touch()
+        assert select.select([member.pidfd], [], [], 3)[0]
+        return original_close()
+
+    try:
+        with monkeypatch.context() as guard:
+            guard.setattr(Path, "read_bytes", exiting_environment)
+            guard.setattr(handle, "close", close_after_natural_exit)
+            with pytest.raises(ValueError, match="command failed"):
+                runner.collect(handle, "pending-owned-exit", timeout=5)
+        assert observed and triggered
+        receipt = runner.receipts[-1]
+        assert receipt["exit"] == 7
+        assert (tmp_path / receipt["stdout"]).read_bytes() == b"raw-out\n"
+        assert (tmp_path / receipt["stderr"]).read_bytes() == b"raw-err\n"
+        assert member.terminal and member.reaped == "owned_Popen" and not member.signals
+    finally:
+        release.touch()
+        handle.process.wait(timeout=3)
+        original_close()
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="retained native live leader")
+def test_live_owned_leader_with_unreadable_environment_keeps_signal_refusal(
+    verifier, tmp_path, monkeypatch
+):
+    tmp_path.chmod(0o700)
+    release = tmp_path / "release-live-permission"
+    code = (
+        "import sys,time;from pathlib import Path;"
+        "\nwhile not Path(sys.argv[1]).exists():"
+        "\n time.sleep(0.005)"
+    )
+    runner = verifier.Commands(tmp_path, tmp_path)
+    handle = runner.spawn(
+        [sys.executable, "-B", "-c", code, str(release)],
+        verifier.environment(tmp_path),
+        tmp_path,
+    )
+    member = handle.members[(handle.pid, handle.ticks)]
+    original_read = Path.read_bytes
+
+    def unreadable(path):
+        if path == Path("/proc") / str(handle.pid) / "environ":
+            raise PermissionError("controlled live identity refusal")
+        return original_read(path)
+
+    try:
+        with monkeypatch.context() as guard:
+            guard.setattr(Path, "read_bytes", unreadable)
+            guard.setattr(
+                signal, "pidfd_send_signal", lambda *args: pytest.fail("unknown identity signal")
+            )
+            with pytest.raises(PermissionError):
+                runner.collect(handle, "live-permission", timeout=1)
+        assert handle.process.poll() is None and not member.ready()
+        assert not member.signals
+        assert runner.receipts[-1]["exit"] is None
+    finally:
+        release.touch()
+        handle.process.wait(timeout=3)
+        handle.close()
+
+
 @pytest.mark.skipif(sys.platform != "linux", reason="native registration pidfd")
 @pytest.mark.parametrize(
     "transition",

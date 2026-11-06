@@ -1,5 +1,309 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Ownership-blocker independent R1 READY —2026-11-06
+
+Both fresh narrow axes return READY at25c49f84c6fe543e887eacf8dbc54a4696b2af9b,
+with zero substantive findings. Spec2247B/SHA695b0cad3c3589f0b0af67e1c0b00cc755fbedf7b22d304ff4aa2d062604c86b;
+Standards2252B/SHA50cc5240737823822eb4464257d3ca772faed24b8a1207d63a645332b6c68099.
+Parent read and verified both exact reports and the five-path freeze. The bounded
+terminal observation is retirement only; live identity refusal/default-zero
+signal checks remain. Original CI's internal branch is still unobserved, while
+the controlled local mechanism and45PASS/3SKIP direct suite are actual evidence.
+
+This final checkpoint changes only this iteration and the ownership plan
+checkbox. New reviewed ownership runtime/tests and all seven frozen Init roles
+remain byte-identical. Next is normal matching-head CI/exact-lock/guarded merge,
+with updated actual head/policy32/publication parameters. Old CI566 failure and
+all earlier originals/futures remain; CURRENT31 is capacity-only/all545MiB.
+No actual merge/publication/batch03/connection8/SDK/input/study has occurred.
+
+## Independent CI ownership blocker —2026-11-06
+
+Planner authorizes a separate direct CI-blocker slice after PR291/CI566 at861d
+fails one existing Linux output-retention case:7993PASS/1FAIL/149SKIP. Original
+logs and143103B diagnostics ZIP/SHA8e0c8d58776fab2605c4d6a6a7fc6351d9b573c24c963e988c43f7bab0bf8b13
+remain. Both affected tool/test base bytes were unchanged. Existing Init E2E
+runtime/R1/R2 are frozen; no new Init structural round or automatic CI retry.
+
+User action/outcome: normal release certification retains exact stdout/stderr
+and actual exit7 for its original owned leader during teardown, while live or
+unknown members still cannot be signalled. Quant review: no data, costs,
+leakage, research/math or financial qualification changes; livefalse remains.
+The tracked specification/plan is2026-11-06-portfolio-owner-exit.md.
+
+Implementer uses the existing local WSL Ubuntu fixed portfolio Python3.12.3
+venv (binary SHAe50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f),
+with existing pytest only. No dependencies/environment/host trials are added.
+The baseline case passes alone; a bounded real synthetic sample observes the
+same ownership refusal with admitted exe/argv/generation and a pidfd not yet
+ready. CI's unavailable internal branch trace is not invented. The controlled
+native child/pidfd empty-read/exit regression first fails with the exact same
+message, then passes after allowing one100ms pidfd wait only in the existing
+empty-environ/exact leader/same startticks/registered-member branch. Other
+readiness calls retain zero-time behavior; no ownership error is caught or
+relabelled and no new admission/signal authority is granted.
+
+Verifier: causal GREEN1PASS; complete direct Linux tool tests43PASS/3SKIP/2.31s,
+including actual live unknown-member preservation and prior terminal/nonce
+negatives. The three opt-in PG scenarios remain SKIP, not business acceptance.
+All failures/exploratory matrix patches are retained under
+output/ivv-transaction-recovery-20261104-01/integration/ci-owner-exit-20261106-01.
+Passing owned scratch is retired, failed synthetic originals remain. New P31
+is capacity-only: old538+local7MiB=545MiB, Source21/common113/software151; old
+holds/futures stay intact. FutureP32/batch03 and connection8 remain inactive.
+The separately observed PermissionError path has its own causal RED: before
+terminal readiness the original scanner propagates the unavailable /proc read.
+The same bounded wait is added only after its existing stat re-read matches
+the original leader's startticks and retained member. No generic ownership
+exception is caught. A real live-leader unreadable-environment negative keeps
+PermissionError, a live pidfd, no exit and zero signals. Final direct Linux
+union45PASS/3SKIP/2.51s; causal empty/permission2PASS. Earlier43/44-pass evidence
+and one test-fixture cleanup assertion failure remain, not rewritten as source
+failures. Native tests use deterministic exit boundaries, not long sleeps or
+retries to obtain green. Sparse-worktree local Ruff explicitly classifies tools
+as first-party to match the full-tree namespace; no production import edit is
+made for that local classification difference. Normal CI keeps its full-tree
+unmodified Ruff command. Independent narrow ownership reviews and new actual-head requiredCI remain.
+
+## Init end-to-end Source R2 READY —2026-11-06
+
+Both original independent readers close the known R1 findings at38022c8a:
+Spec2025B/SHA25215ae3d2911c44e255e2d140c0a3a33439bfe5db2783125446966fc05ef73d
+and Standards2004B/SHAb452c7a2f26801a66fd3e3db7685030021d48eb6639197c51fe550cd1aa0d2b1.
+No known residual Source blocker; original probes now produce valid UNKNOWN
+fallback/pending-write evidence. Reports independently match the actual helper/
+issuer/runner blobs and the supplied causal regressions. This is agent review
+under the standing scope, not a fabricated new human inspection.
+
+Parent read/pinned both complete reports. This final combined checkpoint adds
+only their outcome and the plan checkbox; runtime/tests are exactly the559-pass
+reviewed38022c8a bytes, including actual helper41378389 and issuer839d6971.
+Next is one normal final-head required CI/exact-lock/guarded merge/catalog.
+Private coupled transport320KiB/status/header/frame proof and fresh native
+admission remain pending. No extra summary PR/CI is opened. P29/all538MiB and
+all earlier originals/futures/SPENT/UNKNOWN remain. No real capture/input or
+numerical/financial success follows from this software checkpoint.
+
+## Consolidated known-fix Source checkpoint —2026-11-06
+
+Independent narrow R1 found one P2 per axis at535f1792: Spec2217B/
+SHAebb1ad7bf2c0938be1cd823826ed5025251b57f609b83d9b3fcf27e44c096484 showed
+an interrupted TCP scalar update could fail strict selection and drop the whole
+lifecycle. Standards2154B/SHA32a6839cab22689225ab2a5989d654ffcc524175ca2d4ffd4f344259aae56598
+showed freeze could publish0/stale partial progress between the actual write and
+its accounting. Both original reports are retained; neither requested a new
+structure, observation layer or change to SDK semantics.
+
+Implementer reproduced each cause before patching: the original whole lifecycle
+vanishes under an injected post-write clock error; deterministic do_send and
+_on_write interleavings incorrectly freeze NONE and PARTIAL. One consolidated
+fix marks interrupted updates under the existing scalar lock and uses a pre-
+allocated valid UNKNOWN fallback for only this auxiliary trace. An in-progress
+write freezes as UNKNOWN until completion has been observed. Partial SDK state,
+return/exception identity, locks, lifecycle/normal close and all request/timeout
+limits remain owned by their existing paths; no new output field or grant.
+
+Verifier: new three-case causal REDs become GREEN; final focused50PASS. The
+necessary same nine-file affected union now559PASS/76.95s, including the actual
+issuer/native/bootstrap entrances with the new literal binding. Immutable raw
+log1333B/SHA14d1466864a832fcc8d831df240f49c8d7d417471f0317cdf6969ec7ee4e3124.
+Source full Ruff/changed format/whitespace and canonical Git-byte comparison
+close before checkpoint. All earlier556/47 runs and failures are retained.
+
+Current helper104305B/SHA41378389494f144bc98b79660dddd827788d8b8dbd9494028f345f168fe60e7c
+and issuer24709B/SHA839d69713bfef944b59d3087ea3525bd1e501b689c03c21b51449e50c26b373f
+are bound together. Runner af934f75 remains byte-identical to R1. Original two
+readers next verify only both known fixes/R2; no third structural patch round.
+No push/PR/CI/native effect follows yet. P29/all538MiB and every old future stay;
+old batch02 SPENT and actual cumulative UNKNOWN remain. No accepted inputs or
+financial result exists. Private successor/maximum geometry and actual release
+gates continue independently under the same frozen method.
+
+## Frozen Init end-to-end Source checkpoint —2026-11-06
+
+Planner consumed the last offline decoder exclusion and froze proposal8173d439
+through direction75303602 under standing human6db1254. One user action either
+finishes the fixed IVV capture or returns one complete finite diagnosis from
+the same context with independent owned closure. The original owner implements
+inline on codex/0038-init-e2e-diagnostic from origin/main0b61; c5eb/7ea2 old local
+checkpoints and all histories remain. New tracked spec/plan are2026-11-06-ivv-init-e2e.
+
+Implementer: one private Init recorder now covers queue acceptance, wrapped poll/
+exact queued work, local TCP buffer accounting, read callback, bounded44-byte
+header candidates, actual exact ReqInfo notification inside SDK receive scope,
+wait/unpack/relative times and pre-close network-thread liveness. It preserves
+SDK arguments/return/exception identity, Event/timeout/reconnect behavior and
+normal close. No socket facade/global SDK patch/new tracer thread or extra query.
+Copied headers are discarded before the original receive; no body is copied by
+this recorder. Finite counters saturate, timestamps are relative to binding,
+snapshot<=2048B; unknowns/overflow/recording failure remain explicit. Private
+instance/request methods restore and release references. The original wire
+restore convention is preserved, not refactored. A causal freeze/restore race
+RED is closed by capturing the callback owner for its original lock/delegate.
+
+Additional actual root-owned readonly public network_manager/utils pins are
+checked before SDK load; original functions/module globals/code paths and quote/
+request method identity are checked before context construction. These protect
+our seams; source identity is not vendor readiness. All original15 SDK pins stay.
+The existing lifecycle/strict IPC/parent/STOP carries only the closed scalar trace.
+
+Verifier: causal RED/GREEN originals include queue/TCP, full decoder reception,
+scanner failure, loop exception identity, recorder construction/wait/snapshot,
+closed transport, protected-source/module substitution, binding-relative clock
+and freeze/restore race. Final focused47PASS; one affected union556PASS/93.40s,
+including existing native/issuer/bootstrap entrances, no SDK/provider context.
+Raw union1333B/SHAac1771a21fb70312e8aeabf6b29bcb241d0ebe5099a8d137382d181dfcfee8d9.
+All materialized src/tests/tools Ruff, four changed-file format and whitespace
+pass. Original public parser/protobuf/association/unpack is used with modeled
+external sockets/deadlines, including one bounded model receiver thread and
+import/socket-bomb proof; this is not native/hostPython3.12/provider validation.
+One failed race-test traceback includes a fixed public-schema synthetic frame
+representation; it remains retained, contains no real provider/account/key input,
+and is not runtime diagnostic output. Future failure summaries use short traceback.
+
+Final canonical helper103203B/SHA1946b9b9e8910d094b826eb406e22063ad61d16f70273a6801e34b3790586312
+is bound by the issuer's fixed literal; issuer24709B/SHA0b0199ceefbb8671f831e07175032eeeb1778d6c4778af83c40cf74bfd34ea14.
+Runner151962B/SHAaf934f7518d5b62e4fc7a0c3c619f7085d38e0d4069812629aaedb118ecc360a.
+Exact source/test pin receipt and immutable RED/GREEN outputs are in recovery
+integration/sdk-init-e2e-20261106-01. Original two-axis R1 is next; at most one
+consolidated known-fixR2, then normal final-head CI/merge/catalog and coupled Ops.
+
+Accounting: actual CAPACITY-INIT-E2E-01.json1808B/SHA270a33b9109411419384f344d31c950f04e87b78d4d08a4168c75d102cf4b4b3
+registers local29/remote17/net46MiB once, old492MiB retained/all538MiB. P29
+canonical1427B/SHAb76eb4bd22860bdaabe775b57559846a5a19981393c71e47c87e640b1dc5a730
+passes actual RecoveryProfile raw/canonical validation; only storage/guards change,
+Source20/common107/software144/capture128each/closeout4each. Source previous
+16695296+3145728=19841024, common103596032+7340032=110936064, all old futures stay.
+Actor/data/math/trading limits and old batch02/SPENT/UNKNOWN stay. No batch03/
+connection8/actual SDK execution or numerical grant is created by this checkpoint.
+
+Quant: no research definitions/window/costs/input gates change and no accepted
+real input or numerical result exists; financial INSUFFICIENT/livefalse.
+
+## Final offline Init full-decoder endpoint — 2026-11-06
+
+Planner assigned the original Parent alone the last bounded offline replay,
+accepted03:28:12Z/deadline03:58:12Z. Actual one replay exited0 at03:32:47Z:
+FULL_INIT_DECODER_BARE_WRAPPED_PASS_WITH_WRONG_SERIAL_CONTROL. Bare and wrapped
+matching responses traverse the actual pinned parser/protobuf/association/query/
+unpack chain and finishOk; both wrong-serial controls decode once but leave
+the target unnotified/Timeout. All four model threads closed. Socket/control/
+connect/deadline remain modeled; localPython3.13.9/protobuf7.36.1 is not native
+hostPython3.12/ABI/provider proof. No confirmed client decoder defect is found.
+
+Implementer/Verifier: isolated DescriptorPool reads only hash-checked public
+Common/InitConnect descriptors, never SDK package imports. Synthetic initialized
+response bytes stay in RAM; no PB body/account/key/error text is retained. SDK
+contexts/imports/real sockets/remote actions are0, installed/released source is
+unchanged. Exact original probe14594B/SHA6f9a3f0379fa9752bdcb88c23b18598b3325ae22faacf24bc3212a4d14ea4472
+and replay3072B/SHA10fcc350da421f70bfbdd61b9d036c66bf8c5739cc6baf9f22794b25f9024355
+are under integration/sdk-init-full-decoder-20261106-01 in recovery output.
+Result1717B/SHA57a60b3d9554a5b88909835da2a57330aed584ce2dd112261cae1241496f2d2f records completion2026-11-06T03:47:48Z.
+
+Planner handoff: stop all layer-by-layer static exclusions. One complete
+END-TO-END-DIAGNOSTIC-PROPOSAL.md (16195B/SHA8173d43940f3351af59f14e851f2dbf12e7da18680039435ed5dae84389ee091)
+covers same-context queue, actual local TCP write, read/frame/target association,
+wait/unpack/thread state, bounded private-safe scalar output, semantic identity/
+restoration, TDD/two-axis review, one necessary publication, coupled Ops and
+one conditional actual attempt/owned close. It is only a proposal; no new PR/CI,
+policy/batch/context8/retry is created. Native attempt7 cause remains unresolved;
+sendOK remains queue/control-notify return, not TCP write/vendor delivery.
+
+Accounting: complete new allowance registered before replay Source196608 plus
+common65536=262144 within unchanged P28 Source16/common99MiB, net0/all492MiB.
+Old futures/originals/history stay. Proposed later46MiB/whole538MiB is explicitly
+not registered or imported. Quant still has no accepted input/numerical result;
+financial INSUFFICIENT/livefalse. This local documentation checkpoint stays
+unpublished and preserves c5eb; runtime src/tools/tests remain exactly0b61.
+
+## Offline Init receive-chain causal endpoint — 2026-11-06
+
+Planner consumed the completed Init-observation/attempt7/owned-close slice and
+assigned Parent alone one bounded0SDK receive-chain analysis, accepted03:01:45Z
+with first-conclusion deadline03:46:45Z. It reuses actual0b61/helper21a455 and
+the installed10.10.7008 public source; all15 frozen LF pins match, and the extra
+public network/utils/callback/logger files match their recorded source identity.
+No installed SDK or released runtime byte was modified or imported as a package.
+
+Concrete finding: NetManager.send331–337 enqueues work and writes the control
+socket, then returnsOK. Actual TCP.send happens later in do_send/on_write.
+CONNECTED proves the loop completed connection setup, not later queue drainage
+or reception. The request map is populated before enqueue; the context lock is
+released before the20s Event wait. Matching synchronous responses notify directly
+from on_recv/_handle_recv, without the asynchronous push CallbackExecutor.
+Partial/nonmatching input or an ordinary callback/parser exception can leave
+the initial context CONNECTED until Timeout. Current originals cannot choose
+among post-connect progression, external delivery and pre-notification parsing.
+
+Parent tested exactly one falsifiable client hypothesis using hash-checked AST
+methods in an isolated fixture: our wire/Init wrappers lose a correctly matched
+early notification. Four controlled bare/wrapped trials exclude that condition
+at the modeled seam: matching early responses finishOk in both, with restored
+wait/unpack and closed model threads. An intentional Event-clear sensitivity
+mutant fails at LOST_EARLY_NOTIFICATION; it is not a published-code defect.
+No generic observation layer or repair was added. Socket/control/binary parser,
+connect and deadline are modeled; localPython3.13 is not hostPython3.12 proof.
+
+Durable originals are integration/sdk-init-receive-causal-20261106-01 under the
+recovery output: source facts61bbcd4f...d13f6d, executed probebb93a70a...f2fa,
+negative-control REDd6c679df...665ba4 and exclusion outputda5d51aa...3377d0.
+CONCLUSION.md records NO_CONFIRMED_CLIENT_DEFECT/ONE_HYPOTHESIS_EXCLUDED_AT_MODELED_SEAM.
+One separate proposal would fill the deliberately mocked binary decoder with
+a public-schema synthetic Init response, still offline and without SDK/context/
+network/private data. It is handed to Planner, not executed or native authority.
+
+Budget was registered first: local+2MiB/remote0, Source16MiB complete16498688,
+common99MiB complete103530496, software132MiB/all492MiB515899392. Storage-only
+P28 raw1427B/SHAc5025b611facb1bda714607f7d33b5a4a1a16a8fd4427d4cdeb5d677f38062e7
+preserves batch02/SPENT, actor limits, prior policies/objects/futures/failures and
+UNKNOWN counts. No new remote/SDK/context8/PR/CI/numerical authority follows.
+This local documentation checkpoint also mirrors the actual attempt7 closeout
+below; Product/Quant remain without accepted inputs or a financial result.
+
+## Post-publication attempt7 STOP — 2026-11-06
+
+PR290 normally merged0b61ced67e81530668945d311b9a8e7cc889edc9 after CI564
+qualified final43dcf6da:7944PASS/149skipped and frontend793PASS. The merged full
+treefcff150dc1ccdd57d7d31c958265166630c146e1 equals the qualified tree. Actual
+Ops08 publication1088B/SHA7c9a6ffbf920d2c0802a5a3f3399686da4cdb1c8bcbb1bc26ffb2b723731b82f
+and full catalog567852B/SHA63a6e03fbae24e85857b6778a26cb9d41a9325d1b36c1fb24f2981649e18897f
+bind the reviewed runtime and corrected issuer. Actual carrier274368/278528,
+packed173646/262144 and decoded620748/1048576 passed before issuance.
+
+Fresh SDK0 admission verified the fixed machine/provider/config/cohort/listener,
+free144590786560B and MemAvailable7287283712B with normal owned transport close.
+Sole Parent then submitted connection-000007 once in batch02. It stopped at
+READY_CHECK/sdk_initial_connection_failed with constructor_returned/ctx_assigned
+true. New finite Init facts are send=OK, packet_err=Timeout, unpack=UNOBSERVED,
+ever_ready=false and constructor_status=CONNECTED. SDK normal_close proves
+context/callback/data-socket closure. STOP1129B/SHA
+31715ca61f45a9a0b006123af66cf6343441ce7f82619400613fbf551ff23f89 remains original.
+
+Verifier separately checked SDK0 own-ledger readback1057B/SHA
+339b597595195d6409c3574a0cf32b4dc77bf8bdfd53d0b6157baa90615848d8:
+owner_state=CLOSED, owned_cleanup_proven=true, matching manager/clientrc1,
+invocation44258bf0c48141e096d026941b81b43e and startup38017708...eb68b6.
+Only request1/protocol1001 has MAY=true; no business-intent rows were observed.
+Init1001 has no response-observation hook. Its false ledger field and absent
+unpack do not establish vendor nonresponse or invalid account login. Historical
+and external actual counts stay UNKNOWN. The independent post-effect report is
+4009B/SHA78026b736da4da3c0b34042b86b14958b94c03eb844652956aab776f2c76cfdf,
+VERIFIED_STOP_AND_OWNED_CLOSE, not capture/input readiness.
+
+Quant Researcher receives no complete capture originals or accepted inputs;
+no numerical result exists and financial status remains INSUFFICIENT/livefalse.
+This batch02 opportunity is SPENT. Remaining gap: why no same Init response was
+processed before the bound ReqInfo wait timed out. Return that gap to Planner;
+no same-method automatic retry, new login or provider-log/pane inspection follows.
+Immutable closeout integration/ATTEMPT7-CLOSEOUT.json2891B/SHA
+88eb452754636a68da625ef7943619de6599d5173629cde0a0a31822d1465fb6 binds these facts.
+
+Measured retained Git objects required an internal Source census correction:
+forecast08 uses65536 of Source15's remaining margin, complete15712256<=15728640;
+Common102744064<=102760448 and P27/all490MiB513802240 stay unchanged. Old
+objects, failures,524288 future and all earlier holds remain. This post-effect
+documentation checkpoint changes no published runtime or authorization.
+
 ## Final release-binding review checkpoint — 2026-11-06
 
 Original Spec and Standards readers both return READY at

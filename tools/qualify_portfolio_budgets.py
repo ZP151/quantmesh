@@ -249,8 +249,8 @@ class FamilyMember:
     signals: list = field(default_factory=list)
     images: list = field(default_factory=list)
 
-    def ready(self):
-        return bool(select.select([self.pidfd], [], [], 0)[0])
+    def ready(self, timeout=0):
+        return bool(select.select([self.pidfd], [], [], timeout)[0])
 
     def receipt(self):
         return {
@@ -293,7 +293,8 @@ class Child(owned.CommandProcess):
         if b"QM_BACKUP_COMMAND_OWNER=" + self.nonce.encode() not in environment.split(b"\0"):
             member = self.members.get((pid, fields[19]))
             if not environment and pid == self.pid and fields[19] == self.ticks:
-                if member is not None and member.ready():
+                # The empty /proc read can precede the retained leader's terminal pidfd.
+                if member is not None and member.ready(timeout=0.1):
                     # A retained leader may lose /proc/environ while exiting.
                     raise ProcessLookupError("terminal owned leader")
                 if member is None and self.process.poll() is not None:
@@ -383,6 +384,10 @@ class Child(owned.CommandProcess):
                     after = (proc / "stat").read_text().rsplit(")", 1)[1].split()
                     if after[0] == "Z":
                         continue
+                    if int(proc.name) == self.pid and after[19] == self.ticks:
+                        member = self.members.get((self.pid, self.ticks))
+                        if member is not None and member.ready(timeout=0.1):
+                            continue
                 except (FileNotFoundError, ProcessLookupError):
                     continue
                 raise
