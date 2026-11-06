@@ -7,6 +7,8 @@ They are fast diagnostic evidence, never a clean-checkout release certification.
 from __future__ import annotations
 
 import argparse
+import ast
+import hashlib
 import json
 import os
 import shutil
@@ -53,6 +55,106 @@ SLOW_TARGETS = (
     "tests/test_trusted_data_soak.py",
 )
 PYTEST_BASETEMP_PREFIX = "quantmesh-pytest-"
+CONTRACT_TARGETS = (
+    "tests/test_ci_release_contract.py",
+    "tests/test_ivv_init_e2e.py",
+    "tests/test_ivv_init_observation.py",
+    "tests/test_ivv_sdk_lifecycle_evidence.py",
+    "tests/test_ivv_capture_contract.py",
+    "tests/test_ivv_dev_diagnostic.py",
+    "tests/test_ivv_dev_native.py",
+    "tests/test_ivv_trusted_runner.py",
+    "tests/test_ivv_runtime_failure_evidence.py",
+    "tests/test_ivv_executable_failure_evidence.py",
+    "tests/test_ivv_recovery_capture.py",
+    "tests/test_portfolio_budget_qualification.py",
+)
+CONTRACT_REQUIRED_NODES = frozenset(
+    {
+        "tests/test_ci_release_contract.py::test_actual_git_release_sources_and_abi",
+        "tests/test_ivv_trusted_runner.py::test_actual_released_helper_bytes_match_issuer_bootstrap",
+        "tests/test_ivv_dev_native.py::test_root_bootstrap_rejects_substituted_helper_before_compiling",
+        "tests/test_ivv_dev_native.py::test_real_frozen_helper_bootstraps_without_sdk",
+        "tests/test_ivv_trusted_runner.py::test_bootstrap_authenticates_same_held_release_bytes_before_helpers",
+    }
+)
+
+
+def check_contract_collection(nodeids: Iterable[str]) -> None:
+    collected = {node.split("[", 1)[0] for node in nodeids}
+    missing = CONTRACT_REQUIRED_NODES - collected
+    if missing:
+        raise ValueError("missing release contract targets: " + ", ".join(sorted(missing)))
+
+
+def validate_release_sources(repository: Path = REPO) -> dict[str, str]:
+    """Compare actual reviewed Git blobs, owning manifest and public entry ABI."""
+    from tools.research import ivv_trusted_runner as runner
+
+    pins = {}
+    trees = {}
+    sources = runner._sources("connection-000001")
+    if len(sources) != 7 or set(sources) != set(runner.SOURCES) | {
+        "additional_task_sha256",
+        "recovery_contract_sha256",
+    }:
+        raise ValueError("release manifest roles differ")
+    for role, name in sources.items():
+        relative = (
+            "src/quantmesh/research/ivv_recovery.py"
+            if role == "recovery_contract_sha256"
+            else "tools/research/" + name
+        )
+        raw = subprocess.check_output(["git", "show", "HEAD:" + relative], cwd=repository)
+        actual = (repository / relative).read_bytes().replace(b"\r\n", b"\n")
+        if actual != raw:
+            raise ValueError("release source differs from Git: " + relative)
+        pins[role] = hashlib.sha256(raw).hexdigest()
+        trees[name] = ast.parse(raw)
+
+    def literal(filename, name):
+        return next(
+            ast.literal_eval(node.value)
+            for node in trees[filename].body
+            if isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == name for t in node.targets)
+        )
+
+    if literal("ivv_dev_diagnostic.py", "_CAPTURE_HELPER_SHA256") != pins["capture_helper_sha256"]:
+        raise ValueError("release issuer helper pin differs from Git")
+    for helper_name, runner_name in (
+        ("TRUSTED_SUFFIX", "FAMILY"),
+        ("TRUSTED_AUTH", "AUTH"),
+        ("CHANNEL_ASSURANCE", "ASSURANCE"),
+    ):
+        if literal("capture_opend_ivv_daily.py", helper_name) != getattr(runner, runner_name):
+            raise ValueError("release policy identity differs: " + helper_name)
+    for filename, function, arguments in (
+        ("ivv_trusted_runner.py", "run_once", ("startup_ref",)),
+        ("ivv_trusted_runner.py", "select_capture_lifecycle", ("value",)),
+        (
+            "capture_opend_ivv_daily.py",
+            "capture_trusted_once",
+            (
+                "plan_path",
+                "receipt_root",
+                "permit_fd",
+                "expected_sha256",
+                "expected_policy_sha256",
+                "expected_authorization_sha256",
+                "expected_go_sha256",
+            ),
+        ),
+    ):
+        node = next(
+            n for n in trees[filename].body if isinstance(n, ast.FunctionDef) and n.name == function
+        )
+        actual_args = tuple(
+            a.arg for a in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+        )
+        if actual_args != arguments or node.args.vararg or node.args.kwarg:
+            raise ValueError("release ABI differs: " + function)
+    return pins
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,6 +293,28 @@ def build_commands(
 ) -> tuple[GateCommand, ...]:
     """Build explicit local validation commands without executing them."""
 
+    if mode == "contract":
+        command = _pytest_command(
+            "pytest release contract",
+            CONTRACT_TARGETS,
+            durations=25,
+            timeout_seconds=FAST_TIMEOUT_SECONDS,
+        )
+        return (
+            GateCommand(
+                command.name,
+                (
+                    *command.argv,
+                    "-p",
+                    "tools.ci_profile_plugin",
+                    "--ci-contract",
+                    "-o",
+                    "tmp_path_retention_policy=failed",
+                ),
+                command.cwd,
+                command.timeout_seconds,
+            ),
+        )
     if mode == "fast":
         commands = [_ruff_command()]
         mapped_python_targets = tuple(
@@ -287,6 +411,7 @@ def execute_commands(
     logs.mkdir(parents=True, exist_ok=True)
     release_gate.STEPS.clear()
     for command in commands:
+        ok = False
         try:
             ok, _ = release_gate.run_step(
                 command.name,
@@ -301,7 +426,9 @@ def execute_commands(
                 finished = json.loads(events[-1])
                 return 1 if finished["timed_out"] else int(finished["exit_code"] or 1)
         finally:
-            _cleanup_pytest_basetemp(command)
+            # Contract failures keep their owned fixture evidence beside the log reference.
+            if command.name != "pytest release contract" or ok:
+                _cleanup_pytest_basetemp(command)
     return 0
 
 
@@ -422,6 +549,7 @@ def main(argv: list[str] | None = None) -> int:
     domain_parser = subparsers.add_parser("domain", help="run one reviewed domain suite")
     domain_parser.add_argument("--domain", required=True, choices=tuple(DOMAIN_TARGETS))
     browser = subparsers.add_parser("browser", help="run every discovered browser E2E module")
+    contract = subparsers.add_parser("contract", help="run the actual release contract early")
     full = subparsers.add_parser("release", help="run diagnostic full pytest; not certification")
     full.add_argument(
         "--diagnostic",
@@ -433,7 +561,7 @@ def main(argv: list[str] | None = None) -> int:
     input_group.add_argument("--paths", nargs="+", help="explicit repository-relative paths")
     input_group.add_argument("--base", help="git diff base reference")
     decide.add_argument("--head", default="HEAD", help="git diff head reference")
-    for subparser in (fast, domain_parser, full, browser):
+    for subparser in (fast, domain_parser, full, browser, contract):
         subparser.add_argument(
             "--plan-only", action="store_true", help="print commands without running"
         )
@@ -442,6 +570,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "decide":
         print(_decision_from_args(args.base, args.head, args.paths).to_json())
         return 0
+    if args.command == "contract":
+        return _run_or_plan("contract", GateDecision(GateTier.FAST), plan_only=args.plan_only)
     if args.command == "fast":
         decision = _decision_from_args(args.base, args.head, None)
         if decision.tier in {GateTier.RELEASE, GateTier.DOMAIN, GateTier.BROWSER}:

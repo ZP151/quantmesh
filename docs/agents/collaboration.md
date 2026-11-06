@@ -52,3 +52,18 @@ Add domain-specific checks for connectors, replay data, migrations and frontend 
   [`review-policy.md`](review-policy.md); documentation/evidence-only PRs may
   use the direct squash path after green CI, while runtime changes keep a human
   review gate.
+
+## Early release contract feedback
+
+Run `python tools/quality_gate.py contract` before pushing release-bound changes.
+The existing fast CI job runs this same complete serial selection before frontend
+setup. It covers public source/issuer/bootstrap/IPC contracts and the whole Linux
+portfolio ownership module. Report platform/dependency limitations explicitly.
+The target is 2–5 minutes excluding installation and requires actual measurement.
+
+Release pytest uses normal `--maxfail=1` with complete collection and fixture
+teardown. The existing plugin retains sparse `.pytest.jsonl` events, an atomic
+`.pytest.current.json` snapshot and the ordinary assertion log. Contract failures
+keep their unique fixture directory. Successful release still requires every
+original release step. Private Ops wiring23 and final carrier/status/header/frame
+geometry remain explicit local publication checks against the actual release.

@@ -1,5 +1,65 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Issue292 CI feedback slice —2026-11-06
+
+Planner/Product freezes the named early contract and exact failure-evidence
+slice in docs/superpowers/{specs,plans}/2026-11-06-ci-feedback.md. One action
+runs the contract before push, one outcome gives bounded actionable failure
+identity before a long release. Existing seven required CI roles are retained.
+Quant Researcher preserves inputs, math, costs, paper default/livefalse and
+financial INSUFFICIENT. Implementer owns only gate/plugin/workflow/direct tests
+and this checkpoint on codex/0038-ci-feedback from77ea5447. Parent owns separate
+SDK0 compatibility audit notes and later independent review/publication.
+
+The prior issue281 attempt8 engineering subtask is COMPLETE with actual STOP
+at15:12:35SGT and owned readback15:14:34SGT. ATTEMPT8-CLOSEOUT.json4163B/SHA
+8466db3992a6d38307bb5eafa7dd3c9f940692c8db574b71fe6fcaf9e156758e and the
+independently verified5473B report
+58fb2e552c6aa6fb5be95f6dff505cdf83a5bb4601559212474ebe8d4b151ed3 are
+retained in recovery integration. No capture originals, input acceptance or
+study were created. Batch03/connection8 stays spent and cumulative UNKNOWN.
+P33 is capacity-only, old545+local9MiB=554MiB, Source22/common121/software160.
+Implementer delivered the existing fast-job `quality_gate.py contract` command:
+12 whole modules/650 nodes, actual Git helper/issuer/manifest/policy/ABI checks,
+three helper bootstrap entrances plus held-release authentication, closed
+selectors/IPC and complete portfolio ownership tests. Release uses normal
+`--maxfail=1`; its existing plugin records bounded source/environment/artifact
+identity, collection and phase timing, exact first failure/log reference and an
+atomic current-node snapshot. The two original profile/export schemas remain.
+
+Verifier preserved causal selection/events/manifest/current-node REDs and
+TARGETED-04:17PASS/7.54s. Actual contract collected650; software602 passed before
+a sparse prerequisite failure. After materialization, the Windows portfolio
+file exposed its unchanged POSIX-path assertion (24PASS/16SKIP/1FAIL). The final
+Windows affected union reached614PASS before the unchanged existing Vitest
+node's60s timeout (1FAIL/178.01s). No test source, selection or timeout was weakened.
+The known WSL environment lacks moomoo-api/exchange-calendars; its frontend
+native esbuild dependency is also absent. No dependencies were installed.
+
+Final segmented evidence in recovery integration/ci-feedback-20261106-01:
+DIRECT-WINDOWS-01:86PASS/1 existing platform SKIP/31.42s across all87 direct
+Python nodes; the old Vitest node remains a separately disclosed local limit.
+PORTFOLIO-LINUX-FINAL-01:45PASS/3 existing opt-in SKIP/7.07s, all48 original
+portfolio nodes, clean Git environment and no identity plugin. Full650 Linux
+contract/plugin qualification and the net2–5min target remain normal-CI work.
+Full materialized src/tests/tools Ruff, seven changed Python formats and
+whitespace pass. All seven reviewed runtime files match both Git and disk bytes.
+
+An authorized same-store WSL coordinate translation was stopped when that
+permission was withdrawn:74/135 completed, no completed validation verdict.
+Retained JSONL/current evidence is original; buffered terminal output never
+reached a log, and the WSL temporary directories were subsequently unavailable.
+No result or missing original is reconstructed. Parent's subsequent native
+read-only check confirmed4336 stage0 entries equal HEAD, no unmerged entries,
+and released the temporary commit hold. No before-hash exists for all metadata;
+this does not prove historical absence of writes. No repository repair occurred.
+Unknown temporary peak is not refunded; the full registered9MiB remains held.
+
+Planner and Quant boundaries stay fixed. Parent's separate SDK0 audit leaves
+deployed-peer compatibility INSUFFICIENT. Fresh independent Spec/Standards R1,
+normal final-head CI and publication remain pending; no human review, native
+admission, capture, input acceptance or research qualification is asserted.
+
 ## Ownership-blocker independent R1 READY —2026-11-06
 
 Both fresh narrow axes return READY at25c49f84c6fe543e887eacf8dbc54a4696b2af9b,

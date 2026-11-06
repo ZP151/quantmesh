@@ -1,5 +1,16 @@
 # QuantMesh Product Roadmap
 
+## CI feedback successor —2026-11-06
+
+Issue292 is the active software slice on merged77ea5447. The named release
+contract runs early in the existing fast job and normal release failures retain
+precise node/phase evidence. See docs/superpowers/plans/2026-11-06-ci-feedback.md
+and the iteration0038 ledger for review and verification state.
+The issue281 InitE2E/attempt8/owned-close engineering subtask is complete with
+STOP and spent batch03. Capture originals, input acceptance and study remain
+uncreated. The separate SDK0 compatibility audit is INSUFFICIENT for the deployed
+peer. No further SDK opportunity or provider action follows from this checkpoint.
+
 ## Current collector-only successor — 2026-11-05
 
 PR288 merged f5998dd7/tree179e5643 with normal CI7903PASS/149SKIP/frontend793.

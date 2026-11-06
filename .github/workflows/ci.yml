@@ -66,6 +66,8 @@ jobs:
           cache: pip
       - name: Install Python validation environment
         run: python -m pip install -e ".[dev,research,e2e,moomoo]"
+      - name: Check actual release contract early
+        run: python tools/quality_gate.py contract
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
@@ -261,6 +263,7 @@ jobs:
           path: |
             ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.log
             ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.jsonl
+            ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.current.json
           if-no-files-found: ignore
 
   # The independent service has a different Python/lock closure from core.

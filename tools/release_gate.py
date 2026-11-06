@@ -373,6 +373,12 @@ def run_step(
     started = time.monotonic()
     log_path = logs / f"{len(STEPS) + 1:02d}-{name.replace(' ', '-').replace('/', '-')}.log"
     events_path = logs / "events.jsonl"
+    if "tools.ci_profile_plugin" in cmd:
+        cmd = [
+            *cmd,
+            "--ci-events=" + str(log_path.with_suffix(".pytest.jsonl").resolve()),
+            "--ci-log=" + log_path.name,
+        ]
     timed_out = False
     # Direct unbuffered file output remains observable even without newlines;
     # no reader pipe/thread can hold up timeout cleanup or buffer pytest dots.
@@ -670,6 +676,7 @@ def main() -> int:
                 # Keep exact failing/running node IDs if a native signal stops
                 # pytest before its terminal assertion summary is printed.
                 "-vv",
+                "--maxfail=1",
                 "--durations=50",
                 # Do not let pytest touch the shared Windows TEMP root:
                 # a locked pytest-current symlink can make an otherwise
