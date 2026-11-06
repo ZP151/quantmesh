@@ -17,7 +17,7 @@ worktree. Original Init source-role hashes must remain unchanged.
   file, including real nonzero/output, terminal, live and unknown-member cases.
   Use no cache/bytecode and owned private scratch; preserve every failure.
 - [x] Ruff/format/whitespace and exact unchanged seven Init runtime blobs.
-- [ ] Independent Spec/Standards review of only the ownership delta/callers;
+- [x] Independent Spec/Standards review of only the ownership delta/callers;
   at most one consolidated correction plus same-reader recheck.
 - [ ] One coherent commit on PR291, final matching-head required CI and actual
   exact-lock artifact provenance. Failed old CI is never new-head qualification.
