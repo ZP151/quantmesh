@@ -428,13 +428,15 @@ class PytestStepFeedback:
                         or (phase is not None and len(node) > 4096)
                     ):
                         raise ValueError("missing node identity")
+                    # Success parameters stay private to the bounded XML parser.
+                    # A setup failure and a passed/failed call are mutually exclusive
+                    # primary outcomes; teardown may accompany either one.
+                    identity = hashlib.sha256(node.encode("utf-8")).digest()
+                    identity_phase = "primary" if phase in (None, "call", "setup") else phase
+                    if (identity, identity_phase) in outcomes:
+                        raise ValueError("duplicate or conflicting JUnit node outcome")
+                    outcomes.add((identity, identity_phase))
                     if phase != "collection":
-                        # Success parameters stay private to the bounded XML parser.
-                        # Use the same identity for call/teardown reports of one node.
-                        identity = hashlib.sha256(node.encode("utf-8")).digest()
-                        if (identity, phase) in outcomes:
-                            raise ValueError("duplicate JUnit node outcome")
-                        outcomes.add((identity, phase))
                         nodes.add(identity)
                     if phase is not None and failure is None:
                         failure = {"nodeid": node, "phase": phase, "node_evidence": "JUNIT_RESULT"}

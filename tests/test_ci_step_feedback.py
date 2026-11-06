@@ -381,3 +381,73 @@ def test_subtest_identity_validation_is_not_relaxed(tmp_path, damage):
     )
     assert json.loads(feedback.current.read_text())["status"] == "INFRASTRUCTURE_ERROR"
     assert "x" * 100 not in feedback.current.read_text()
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    [
+        ("passed", "call", "INFRASTRUCTURE_ERROR"),
+        ("call", "passed", "INFRASTRUCTURE_ERROR"),
+        ("setup", "call", "INFRASTRUCTURE_ERROR"),
+        ("call", "setup", "INFRASTRUCTURE_ERROR"),
+        ("collection", "collection", "INFRASTRUCTURE_ERROR"),
+        ("call", "teardown", "TEST_FAILED"),
+        ("setup", "teardown", "TEST_FAILED"),
+    ],
+)
+def test_junit_identity_has_only_consistent_primary_phases(tmp_path, first, second, expected):
+    import xml.etree.ElementTree as ET
+
+    feedback = release_gate.PytestStepFeedback(tmp_path / "result.log", time.monotonic())
+    root = ET.Element("testsuites")
+    phases = (first, second)
+    passed, failed = phases.count("passed"), phases.count("call")
+    errors = 2 - passed - failed
+    suite = ET.SubElement(
+        root,
+        "testsuite",
+        name="pytest",
+        tests="3",
+        failures=str(failed),
+        errors=str(errors),
+        skipped="0",
+    )
+    for phase in phases:
+        case = ET.SubElement(
+            suite, "testcase", file="test_parts.py", classname="test_parts", name="test_same"
+        )
+        if phase == "call":
+            ET.SubElement(case, "failure", message="synthetic call failure")
+        elif phase != "passed":
+            message = (
+                "collection failure"
+                if phase == "collection"
+                else f"failed on {phase} with synthetic error"
+            )
+            ET.SubElement(case, "error", message=message)
+    ET.ElementTree(root).write(feedback.junit, encoding="utf-8", xml_declaration=True)
+    counts = [(passed, "passed"), (failed, "failed"), (errors, "errors"), (1, "subtests passed")]
+    summary = ", ".join(f"{count} {kind}" for count, kind in counts if count)
+    feedback.log.write_text(f"= {summary} in 0.10s =\n", encoding="utf-8")
+    assert not feedback.finish(1, False, release_gate.StepLogObserver())
+    terminal = json.loads(feedback.current.read_text())
+    assert terminal["status"] == expected
+    if expected == "TEST_FAILED":
+        assert terminal["completed"] == 1
+        assert terminal["first_failure"]["phase"] == first
+    else:
+        assert terminal["missing_evidence"] == ["complete_consistent_junit_result"]
+        assert terminal["first_failure"] is None
+
+
+def test_actual_call_failure_and_teardown_error_share_one_completed_node(tmp_path, monkeypatch):
+    body = (
+        "import pytest\n"
+        "@pytest.fixture\ndef owner():\n    yield\n    raise RuntimeError('teardown error')\n"
+        "def test_first(owner):\n    assert False, 'call failure'\n"
+    )
+    ok, rows, current, ordinary = child(tmp_path, monkeypatch, body)
+    assert not ok and current["status"] == "TEST_FAILED"
+    assert current["completed"] == 1
+    assert rows[-1]["first_failure"]["phase"] == "call"
+    assert "call failure" in ordinary and "teardown error" in ordinary
