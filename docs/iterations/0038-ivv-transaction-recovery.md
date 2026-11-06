@@ -1613,3 +1613,18 @@ required. Earlier segmented local evidence and missing-original/unknown-peak
 limitations are retained. User-standing proxy-review authority is recorded as
 such, not fabricated independent-human inspection. Separate diagnostic issue293
 is R-only/offline at this point and is not part of this CI change.
+
+
+### Issue292 external-controller final source review — 2026-11-06
+
+The explicit Planner scope superseding the in-process observer is independently
+Spec/Standards READY at source `47f4ab99190516e31518c5be137a711856ce684c`.
+Spec2921B/SHA256 `46a9674e7d2faf217b7ab995e94c596a7565dc599e072a81e7115e915739d4a2`;
+Standards2317B/SHA256 `8e730598860ec089eccf31806bf977467785fc2d6ae11e9992a6c1ae32b664ee`.
+Parent checked11 changed blobs, five preserved boundaries, all389 indexed
+originals and unchanged runtime7. Actual affected100 nodes retained99PASS/1
+existing platformSKIP; parent time40.3386s. No tests were repeated for review.
+Only this checkpoint follows the reviewed code. Matching-final-head normal CI
+is still required; CI569's primary remains UNKNOWN, its original failure and
+cancelled outcome preserved. Legacy local TEMP transient peak remains unmeasured,
+with complete holds retained. No SDK/runtime/host or research authority follows.
