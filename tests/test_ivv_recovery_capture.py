@@ -839,112 +839,146 @@ def test_candidate_manifest_uses_immutable_same_epoch_originals_only(tmp_path, f
     ],
 )
 def test_exact_owner_recovery_kernel_body_never_kills_unknown(monkeypatch, fault):
+    # Restore these global doubles before pytest builds a call-failure report.
+    with monkeypatch.context() as monkeypatch:
+        import os
+        from types import SimpleNamespace
+
+        runner = module("ivv_trusted_runner")
+        attempt = "connection-000001"
+        unit = "/system.slice/qm-ivv-recovery-" + attempt + ".service"
+        manager = dict(pid=300, start_ticks=500, uid=0, cgroup=unit + "/manager")
+        child = dict(pid=301, start_ticks=501, uid=0, cgroup=unit + "/ivv-owned-300-500")
+        binding = dict(
+            connection_attempt_id=attempt,
+            manager=manager,
+            child=child,
+            mount={
+                "id": 33 if fault == "cross_namespace" else 44,
+                "namespace": [2, 99, 0o100444, 0],
+            },
+            group=[1, 10, 0o40700, 0],
+            manager_dir=[1, 11, 0o40700, 0],
+            leaf=[1, 12, 0o40700, 0],
+        )
+        live, kills, closed = [True], [], []
+
+        def process(pid):
+            if pid == 300 and fault == "manager_active":
+                return manager, 1
+            if pid == 301 and live[0]:
+                return ({**child, "start_ticks": 999} if fault == "pid_drift" else child), 1
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(runner, "_process", process)
+        original_exists = Path.exists
+        monkeypatch.setattr(
+            Path,
+            "exists",
+            lambda path: (
+                False
+                if str(path).replace("\\", "/").startswith("/proc/")
+                else original_exists(path)
+            ),
+        )
+        monkeypatch.setattr(runner, "_cgroup_mount", lambda: 45 if fault == "mount" else 44)
+        monkeypatch.setattr(runner, "_mount_id", lambda fd: 44)
+        monkeypatch.setattr(runner, "protected", lambda path: None)
+
+        def opened(path, *a, **kw):
+            name = str(path)
+            return (
+                12 if name.endswith("ivv-owned-300-500") else 11 if name.endswith("manager") else 10
+            )
+
+        monkeypatch.setattr(os, "open", opened)
+        monkeypatch.setattr(
+            os, "fstat", lambda fd: SimpleNamespace(st_dev=1, st_ino=fd, st_mode=0o40700, st_uid=0)
+        )
+        monkeypatch.setattr(
+            os,
+            "stat",
+            lambda path, *a, **kw: SimpleNamespace(
+                st_dev=1,
+                st_ino=999 if fault == "named_inode" else opened(path),
+                st_mode=0o40700,
+                st_uid=0,
+            ),
+        )
+
+        def close_fd(fd):
+            closed.append(fd)
+            if fault == "close":
+                raise OSError("modeled close uncertainty")
+
+        monkeypatch.setattr(runner, "_close_fd", close_fd)
+        monkeypatch.setattr(os, "pidfd_open", lambda pid: 90, raising=False)
+        monkeypatch.setattr(
+            runner._Scope,
+            "dirs",
+            staticmethod(lambda fd: {"manager", "ivv-owned-300-500"} if fd == 10 else set()),
+        )
+
+        def kread(fd, name, *a):
+            if name == "cgroup.procs":
+                return (
+                    "301 999"
+                    if fault == "foreign" and fd == 12
+                    else "301"
+                    if fd == 12 and live[0]
+                    else ""
+                )
+            if name == "cgroup.events":
+                return "populated " + str(int(live[0] if fd in (10, 12) else False))
+            raise AssertionError(name)
+
+        monkeypatch.setattr(runner, "_kread", kread)
+
+        def signal_fd(fd, sig):
+            kills.append(fd)
+            live[0] = False
+
+        monkeypatch.setattr(runner.signal, "SIGKILL", 9, raising=False)
+        monkeypatch.setattr(runner.signal, "pidfd_send_signal", signal_fd, raising=False)
+        monkeypatch.setattr(runner.select, "select", lambda *args: ([90], [], []))
+        if fault not in (None, "cross_namespace"):
+            with pytest.raises((ValueError, OSError)):
+                runner._recover_bound_owner(binding)
+            if fault != "close":
+                assert kills == []
+        else:
+            proof = runner._recover_bound_owner(binding)
+            assert kills == [90] and set(closed) == {10, 11, 12, 90}
+            assert proof == {
+                "owned_cleanup_proven": True,
+                "external_effects": "UNKNOWN",
+                "input_publishable": False,
+            }
+
+
+def test_exact_owner_mock_scope_restores_before_subject_exception_escapes(monkeypatch):
     import os
-    from types import SimpleNamespace
 
     runner = module("ivv_trusted_runner")
-    attempt = "connection-000001"
-    unit = "/system.slice/qm-ivv-recovery-" + attempt + ".service"
-    manager = dict(pid=300, start_ticks=500, uid=0, cgroup=unit + "/manager")
-    child = dict(pid=301, start_ticks=501, uid=0, cgroup=unit + "/ivv-owned-300-500")
-    binding = dict(
-        connection_attempt_id=attempt,
-        manager=manager,
-        child=child,
-        mount={"id": 33 if fault == "cross_namespace" else 44, "namespace": [2, 99, 0o100444, 0]},
-        group=[1, 10, 0o40700, 0],
-        manager_dir=[1, 11, 0o40700, 0],
-        leaf=[1, 12, 0o40700, 0],
-    )
-    live, kills, closed = [True], [], []
+    failure = RuntimeError("controlled subject failure")
+    originals = (os.stat, os.fstat, os.open, Path.exists)
 
-    def process(pid):
-        if pid == 300 and fault == "manager_active":
-            return manager, 1
-        if pid == 301 and live[0]:
-            return ({**child, "start_ticks": 999} if fault == "pid_drift" else child), 1
-        raise FileNotFoundError()
+    def fail_subject(binding):
+        raise failure
 
-    monkeypatch.setattr(runner, "_process", process)
-    original_exists = Path.exists
-    monkeypatch.setattr(
-        Path,
-        "exists",
-        lambda path: (
-            False if str(path).replace("\\", "/").startswith("/proc/") else original_exists(path)
-        ),
-    )
-    monkeypatch.setattr(runner, "_cgroup_mount", lambda: 45 if fault == "mount" else 44)
-    monkeypatch.setattr(runner, "_mount_id", lambda fd: 44)
-    monkeypatch.setattr(runner, "protected", lambda path: None)
-
-    def opened(path, *a, **kw):
-        name = str(path)
-        return 12 if name.endswith("ivv-owned-300-500") else 11 if name.endswith("manager") else 10
-
-    monkeypatch.setattr(os, "open", opened)
-    monkeypatch.setattr(
-        os, "fstat", lambda fd: SimpleNamespace(st_dev=1, st_ino=fd, st_mode=0o40700, st_uid=0)
-    )
-    monkeypatch.setattr(
-        os,
-        "stat",
-        lambda path, *a, **kw: SimpleNamespace(
-            st_dev=1,
-            st_ino=999 if fault == "named_inode" else opened(path),
-            st_mode=0o40700,
-            st_uid=0,
-        ),
-    )
-
-    def close_fd(fd):
-        closed.append(fd)
-        if fault == "close":
-            raise OSError("modeled close uncertainty")
-
-    monkeypatch.setattr(runner, "_close_fd", close_fd)
-    monkeypatch.setattr(os, "pidfd_open", lambda pid: 90, raising=False)
-    monkeypatch.setattr(
-        runner._Scope,
-        "dirs",
-        staticmethod(lambda fd: {"manager", "ivv-owned-300-500"} if fd == 10 else set()),
-    )
-
-    def kread(fd, name, *a):
-        if name == "cgroup.procs":
-            return (
-                "301 999"
-                if fault == "foreign" and fd == 12
-                else "301"
-                if fd == 12 and live[0]
-                else ""
-            )
-        if name == "cgroup.events":
-            return "populated " + str(int(live[0] if fd in (10, 12) else False))
-        raise AssertionError(name)
-
-    monkeypatch.setattr(runner, "_kread", kread)
-
-    def signal_fd(fd, sig):
-        kills.append(fd)
-        live[0] = False
-
-    monkeypatch.setattr(runner.signal, "SIGKILL", 9, raising=False)
-    monkeypatch.setattr(runner.signal, "pidfd_send_signal", signal_fd, raising=False)
-    monkeypatch.setattr(runner.select, "select", lambda *args: ([90], [], []))
-    if fault not in (None, "cross_namespace"):
-        with pytest.raises((ValueError, OSError)):
-            runner._recover_bound_owner(binding)
-        if fault != "close":
-            assert kills == []
-    else:
-        proof = runner._recover_bound_owner(binding)
-        assert kills == [90] and set(closed) == {10, 11, 12, 90}
-        assert proof == {
-            "owned_cleanup_proven": True,
-            "external_effects": "UNKNOWN",
-            "input_publishable": False,
-        }
+    monkeypatch.setattr(runner, "_recover_bound_owner", fail_subject)
+    monkeypatch.setitem(globals(), "module", lambda name: runner)
+    owned_patch = pytest.MonkeyPatch()
+    try:
+        with pytest.raises(RuntimeError) as caught:
+            test_exact_owner_recovery_kernel_body_never_kills_unknown(owned_patch, None)
+        restored_before_report = (os.stat, os.fstat, os.open, Path.exists) == originals
+    finally:
+        # This only protects the regression's RED report. The restoration fact
+        # above is sampled before this cleanup, after the actual test escaped.
+        owned_patch.undo()
+    assert caught.value is failure
+    assert restored_before_report
 
 
 def test_recovery_ledger_never_reads_outside_owned_directory(tmp_path):
