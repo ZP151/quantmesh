@@ -1081,22 +1081,30 @@ def _capture_lifecycle_from_error(error):
 
 def select_reference_observation(value):
     """Closed non-data STOP observation; parent closure never comes from child IPC."""
+    keys = {
+        "schema_id",
+        "reference_control_sha256",
+        "constructor_status",
+        "operation_failed",
+        "close_failed",
+        "normal_close",
+        "parent_closed",
+    }
+    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-observation.v2":
+        keys.add("init_delegate_return")
     need(
-        type(value) is dict
-        and set(value)
-        == {
-            "schema_id",
-            "reference_control_sha256",
-            "constructor_status",
-            "operation_failed",
-            "close_failed",
-            "normal_close",
-            "parent_closed",
-        },
+        type(value) is dict and set(value) == keys,
         "REFERENCE_OBSERVATION_SHAPE",
     )
+    if "init_delegate_return" in keys:
+        need(
+            type(value["init_delegate_return"]) is str
+            and value["init_delegate_return"] in {"OK", "NON_OK", "UNKNOWN"},
+            "REFERENCE_OBSERVATION_DELEGATE_RETURN",
+        )
     need(
-        value["schema_id"] == "qm.ivv.reference-init-observation.v1"
+        value["schema_id"]
+        in ("qm.ivv.reference-init-observation.v1", "qm.ivv.reference-init-observation.v2")
         and type(value["reference_control_sha256"]) is str
         and re.fullmatch("[0-9a-f]{64}", value["reference_control_sha256"])
         and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
@@ -3813,6 +3821,7 @@ def _check_capture_result(result, *, recovery):
 
 
 def _reference_result(result):
+    v2 = result["schema_id"] == "qm.ivv.reference-init-terminal.v2"
     primary = result["primary_failure"]
     not_ready = (
         result["constructor_returned"] is True
@@ -3826,7 +3835,10 @@ def _reference_result(result):
     )
     value = select_reference_observation(
         {
-            "schema_id": "qm.ivv.reference-init-observation.v1",
+            "schema_id": "qm.ivv.reference-init-observation.v2"
+            if v2
+            else "qm.ivv.reference-init-observation.v1",
+            **({"init_delegate_return": result["init_delegate_return"]} if v2 else {}),
             "reference_control_sha256": result["reference_control_sha256"],
             "constructor_status": result["constructor_status"],
             "operation_failed": primary is not None and not not_ready,

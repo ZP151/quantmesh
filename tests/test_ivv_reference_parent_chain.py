@@ -459,7 +459,7 @@ def test_reference_child_has_one_existing_may_and_no_capture_manifest(tmp_path):
         clock=clock,
         sync_dir=lambda _: None,
     )
-    assert result["schema_id"] == "qm.ivv.reference-init-terminal.v1"
+    assert result["schema_id"] == "qm.ivv.reference-init-terminal.v2"
     assert result["state"] == "REFERENCE_READY_CLOSED"
     assert result["counts"] == dict(
         contexts=1, initializations=1, init_sends=1, keepalive_sends=0, business_sends=0

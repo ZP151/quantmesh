@@ -65,3 +65,15 @@ Local WSL Windows mounts translate flock into POSIX locks. Production refuses
 those. The local kernel tests use Linux anonymous files and explicitly model
 named lookup in that case; ordinary Linux CI also exercises a named temporary
 file. No POSIX-lock acceptance or sandbox permission is added for tests.
+
+## Versioned Init-return diagnostic successor (2026-11-07)
+
+The reference override retains its already-returned exact integer classification:
+0 is OK, -1 is NON_OK, all other objects/types are UNKNOWN. It returns the same
+object and propagates the same exception. No new SDK method/hook or observation
+of messages/responses is introduced. New terminal/observation v2 adds only
+init_delegate_return; strict v1 acceptance remains for historical originals.
+The scalar never changes READY, conditional admission or closure. Its offline
+contract tests distinguish official Init failure from OK followed by loss of
+READY before first sample, without claiming a root-cause repair. Ordinary
+release/publication and physical admission still govern any new diagnostic.
