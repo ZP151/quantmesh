@@ -1,5 +1,29 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Final Init-observation review checkpoint — 2026-11-06
+
+Both original readers return READY at80ccace68166eba718cdd33293e4b2aa12e01b27
+after the sole consolidated correction. Spec1967B/SHA7341e758da798992f666f3a05abcb4af8444d5e620195f4f269c1355b5724800;
+Standards2043B/SHA45c9531542adabbbe05df33431639430293bc13ff18e4f07d5ae4b736e7bb81c.
+Parent read both originals and independently reran285PASS/21.09s plus fullRuff,
+changed3file format and whitespace. R1 source/REDs/reports and two failed fixture
+histories remain; the correction was not a new permission or a third review wave.
+
+PrivateOps08 RAM geometry on actual reviewed Source roles: carrier274272/278528,
+packed173572/262144, body620748/1048576; new optional lifecycle worst3057/8192.
+Modeled full8192B status plus maximum capture/controls returns header843485/870400,
+frame8183521/9437184 and exact codec roundtrip. These are offline size proofs,
+not actual CI, publication, provider login or admitted capture. Pending publication
+flags still refuse assembly. The final merged packet must be rebuilt and frozen.
+
+Source correction complete15335424<15728640 includes old14925824 plus409600;
+the registered correction forecast15450112 retains its remaining margin. All
+old524288 future/DB32MiB/failures and P27/all490MiB holds remain. This final
+checkpoint changes only the iteration; reviewed Python bytes are unchanged.
+Normal finalhead requiredCI/exact-lock qualification and expected-head merge/
+catalog remain mandatory, then fresh actual admission and one batch02/context7.
+No SDK effect, retry, login/restart, data/math or financial promotion is produced.
+
 ## Parent Init-observation checkpoint — 2026-11-06
 
 Source779b937424138b8d65b07527f8f63daa13199ba0 adds only recovery Init finite
