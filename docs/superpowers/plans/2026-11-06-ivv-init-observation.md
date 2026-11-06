@@ -77,3 +77,24 @@ Task3 consumes; no second source writer or alternate schema. Task1 tests use pin
 source through existing installed package files, not live SDK imports. Task2 changes
 release provenance only; it cannot waive Task3 admission. Task3 makes exactly one
 new context in fresh batch02; old six history/holds remain. No file/interface conflict.
+
+## CI release-binding correction
+
+PR290 final head97907ca failed actual CI563 with three DEV_NATIVE_SOURCE_PIN
+bootstrap failures; 7941 other tests passed. The issuer's fixed helper hash still
+named the pre-observation helper. Planner explicitly classified its correction
+as release closure, not another runtime structural patch or a new authority.
+
+Only tools/research/ivv_dev_diagnostic.py::_CAPTURE_HELPER_SHA256 may change to
+the actual independently reviewed helper Git-blob SHA21a45576166e4edc0affee01401bc015f06def22b298ec8f1675a82927b3e960.
+Keep the literal pin and every origin, held-byte, close and admission check.
+Do not change tests to accept different bytes or alter the reviewed runtime.
+The three actual bootstrap entrances have retained causal RED originals.
+
+Run their GREENs and one union of the affected issuer/native/runner and prior
+285 checks, with the serial scratch and failed-history bounds. Original two
+readers verify only this constant-only delta, unchanged reviewed runtime and
+actual final pins. Retain all prior R1/R2 and failed CI evidence. A new final
+head requires normal full CI and exact-lock qualification; successor manifests,
+catalog and actual wire must use its new issuer hash, never old qualification.
+Any new runtime structure change returns to Planner before patching.

@@ -1,5 +1,40 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Init release-binding correction — 2026-11-06
+
+PR290 head97907ca actual CI563 failed three bootstrap tests with
+DEV_NATIVE_SOURCE_PIN; 7941 passed,149 skipped and5 subtests passed. The failed
+job log104269B and original diagnostics ZIP142795B/SHA
+febdb6a6ee7aeb0ea997b56b12d8307627c9259c810d2264563427d84febe4a0
+remain retained. This head is not qualified, merged or used for context7.
+
+Planner explicitly reduced the repair to the issuer's fixed release binding,
+not another runtime structural patch or a new human approval. Quant Researcher
+kept the original IVV window, data gates, math, costs, paper default and livefalse.
+Implementer independently read the canonical reviewed helper Git blob85914B,
+SHA21a45576166e4edc0affee01401bc015f06def22b298ec8f1675a82927b3e960,
+and changed only ivv_dev_diagnostic.py::_CAPTURE_HELPER_SHA256 to that literal.
+The origin, held-byte, close and admission checks and all reviewed runtime and
+test bytes are unchanged. The plan records this exact release-closure exception.
+
+Verifier retained all three causal local REDs at the actual loading entrances,
+then3GREEN/0.52s. One affected-test union covers the previously omitted issuer,
+native and full runner bootstrap chain plus the prior285:512PASS/63.54s with one
+existing calendar deprecation. Full src/tests/tools Ruff, changed issuer format,
+whitespace and literal-only AST-with-locations comparison pass. No test
+expectation was relaxed. Logs are
+integration/CI-PIN-{RED-01,RED-02,RED-03,GREEN-01,AFFECTED-UNION-01}.log under
+the recovery output. The new failed bootstrap fixture358800B remains retained
+inside the separate4MiB failed-history hold; no old fixture or future was deleted.
+
+Standing netzero forecast06 retains old Source15450112 plus196608=15646720
+within Source15MiB; old524288 future stays. Common101826560 plus786432 for the
+new ordinary CI=102612992 within98MiB; failed CI12 and all prior futures remain.
+P27/all490MiB513802240 is unchanged. Independent original readers next verify
+only the literal binding delta, unchanged80ccace runtime and actual final pins.
+New finalhead full CI/exact-lock qualification and fresh manifests/catalog/wire
+remain required. No SDK, OpenD action, context7 or numerical grant occurred.
+
 ## Final Init-observation review checkpoint — 2026-11-06
 
 Both original readers return READY at80ccace68166eba718cdd33293e4b2aa12e01b27
