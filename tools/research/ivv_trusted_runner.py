@@ -867,7 +867,7 @@ def select_capture_lifecycle(value):
     contract = _capture_lifecycle_contract()
     need(
         type(value) is dict
-        and set(value) - {"init_observation"}
+        and set(value) - {"init_observation", "receive_trace"}
         == {
             "schema",
             "primary",
@@ -951,6 +951,102 @@ def select_capture_lifecycle(value):
             "CAPTURE_LIFECYCLE_SHAPE",
         )
         result["init_observation"] = dict(init)
+    if "receive_trace" in value:
+        trace = value["receive_trace"]
+        enums = {
+            "tcp_progress": {"UNOBSERVED", "NONE", "PARTIAL", "FULL", "UNKNOWN"},
+            "target_notify_err": contract["init"]["packet_err"],
+            "notify_when": {"UNOBSERVED", "BEFORE_WAIT_END", "AFTER_WAIT_END", "UNKNOWN"},
+            "network_thread": {"ALIVE", "DEAD", "UNKNOWN"},
+        }
+        errors = {
+            "NONE",
+            "OS_ERROR",
+            "VALUE_ERROR",
+            "TYPE_ERROR",
+            "RUNTIME_ERROR",
+            "MEMORY_ERROR",
+            "OTHER",
+            "UNKNOWN",
+        }
+        for field in ("callback_error", "loop_error", "read_error"):
+            enums[field] = errors
+        booleans = {
+            "complete_candidate_seen",
+            "target_candidate_seen",
+            "scan_unknown",
+            "wait_ended",
+            "overflow",
+            "recorder_error",
+        }
+        counts = {"polls", "dequeues", "read_events", "read_callbacks"}
+        byte_fields = {"tcp_accepted", "tcp_pending", "read_bytes"}
+        need(
+            "init_observation" in result
+            and type(trace) is dict
+            and set(trace)
+            == {"schema", "first_ms", "last_ms", *enums, *booleans, *counts, *byte_fields}
+            and type(trace["schema"]) is str
+            and trace["schema"] == "qm.ivv.init-receive-trace.v1"
+            and all(type(trace[k]) is bool for k in booleans)
+            and all(type(trace[k]) is int and 0 <= trace[k] <= 4096 for k in counts)
+            and all(type(trace[k]) is str and trace[k] in allowed for k, allowed in enums.items())
+            and type(trace["read_bytes"]) is int
+            and 0 <= trace["read_bytes"] <= 2147483647
+            and all(
+                trace[k] is None or type(trace[k]) is int and 0 <= trace[k] <= 2147483647
+                for k in ("tcp_accepted", "tcp_pending")
+            ),
+            "CAPTURE_LIFECYCLE_SHAPE",
+        )
+        phases = {"poll", "dequeue", "write", "read", "frame", "notify", "wait", "unpack"}
+        for field in ("first_ms", "last_ms"):
+            times = trace[field]
+            need(
+                type(times) is dict
+                and set(times) == phases
+                and all(t is None or type(t) is int and 0 <= t <= 480000 for t in times.values()),
+                "CAPTURE_LIFECYCLE_SHAPE",
+            )
+        need(
+            all(
+                (trace["first_ms"][k] is None and trace["last_ms"][k] is None)
+                or (
+                    type(trace["first_ms"][k]) is int
+                    and type(trace["last_ms"][k]) is int
+                    and trace["first_ms"][k] <= trace["last_ms"][k]
+                )
+                for k in phases
+            ),
+            "CAPTURE_LIFECYCLE_SHAPE",
+        )
+        accepted, pending = trace["tcp_accepted"], trace["tcp_pending"]
+        progress = trace["tcp_progress"]
+        need(
+            (
+                (progress in ("UNKNOWN", "UNOBSERVED") and accepted is None and pending is None)
+                or (progress == "NONE" and accepted == 0 and type(pending) is int and pending > 0)
+                or (
+                    progress == "PARTIAL"
+                    and type(accepted) is int
+                    and accepted > 0
+                    and type(pending) is int
+                    and pending > 0
+                )
+                or (progress == "FULL" and type(accepted) is int and accepted > 0 and pending == 0)
+            )
+            and (not trace["target_candidate_seen"] or trace["complete_candidate_seen"])
+            and (trace["target_notify_err"] != "UNOBSERVED" or trace["notify_when"] == "UNOBSERVED")
+            and (trace["target_notify_err"] == "UNOBSERVED" or trace["notify_when"] != "UNOBSERVED")
+            and (trace["notify_when"] != "AFTER_WAIT_END" or trace["wait_ended"])
+            and len(json.dumps(trace, sort_keys=True, separators=(",", ":")).encode()) <= 2048,
+            "CAPTURE_LIFECYCLE_SHAPE",
+        )
+        result["receive_trace"] = {
+            **trace,
+            "first_ms": dict(trace["first_ms"]),
+            "last_ms": dict(trace["last_ms"]),
+        }
     return result
 
 

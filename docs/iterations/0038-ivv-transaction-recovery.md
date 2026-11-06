@@ -1,5 +1,66 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Frozen Init end-to-end Source checkpoint —2026-11-06
+
+Planner consumed the last offline decoder exclusion and froze proposal8173d439
+through direction75303602 under standing human6db1254. One user action either
+finishes the fixed IVV capture or returns one complete finite diagnosis from
+the same context with independent owned closure. The original owner implements
+inline on codex/0038-init-e2e-diagnostic from origin/main0b61; c5eb/7ea2 old local
+checkpoints and all histories remain. New tracked spec/plan are2026-11-06-ivv-init-e2e.
+
+Implementer: one private Init recorder now covers queue acceptance, wrapped poll/
+exact queued work, local TCP buffer accounting, read callback, bounded44-byte
+header candidates, actual exact ReqInfo notification inside SDK receive scope,
+wait/unpack/relative times and pre-close network-thread liveness. It preserves
+SDK arguments/return/exception identity, Event/timeout/reconnect behavior and
+normal close. No socket facade/global SDK patch/new tracer thread or extra query.
+Copied headers are discarded before the original receive; no body is copied by
+this recorder. Finite counters saturate, timestamps are relative to binding,
+snapshot<=2048B; unknowns/overflow/recording failure remain explicit. Private
+instance/request methods restore and release references. The original wire
+restore convention is preserved, not refactored. A causal freeze/restore race
+RED is closed by capturing the callback owner for its original lock/delegate.
+
+Additional actual root-owned readonly public network_manager/utils pins are
+checked before SDK load; original functions/module globals/code paths and quote/
+request method identity are checked before context construction. These protect
+our seams; source identity is not vendor readiness. All original15 SDK pins stay.
+The existing lifecycle/strict IPC/parent/STOP carries only the closed scalar trace.
+
+Verifier: causal RED/GREEN originals include queue/TCP, full decoder reception,
+scanner failure, loop exception identity, recorder construction/wait/snapshot,
+closed transport, protected-source/module substitution, binding-relative clock
+and freeze/restore race. Final focused47PASS; one affected union556PASS/93.40s,
+including existing native/issuer/bootstrap entrances, no SDK/provider context.
+Raw union1333B/SHAac1771a21fb70312e8aeabf6b29bcb241d0ebe5099a8d137382d181dfcfee8d9.
+All materialized src/tests/tools Ruff, four changed-file format and whitespace
+pass. Original public parser/protobuf/association/unpack is used with modeled
+external sockets/deadlines, including one bounded model receiver thread and
+import/socket-bomb proof; this is not native/hostPython3.12/provider validation.
+One failed race-test traceback includes a fixed public-schema synthetic frame
+representation; it remains retained, contains no real provider/account/key input,
+and is not runtime diagnostic output. Future failure summaries use short traceback.
+
+Final canonical helper103203B/SHA1946b9b9e8910d094b826eb406e22063ad61d16f70273a6801e34b3790586312
+is bound by the issuer's fixed literal; issuer24709B/SHA0b0199ceefbb8671f831e07175032eeeb1778d6c4778af83c40cf74bfd34ea14.
+Runner151962B/SHAaf934f7518d5b62e4fc7a0c3c619f7085d38e0d4069812629aaedb118ecc360a.
+Exact source/test pin receipt and immutable RED/GREEN outputs are in recovery
+integration/sdk-init-e2e-20261106-01. Original two-axis R1 is next; at most one
+consolidated known-fixR2, then normal final-head CI/merge/catalog and coupled Ops.
+
+Accounting: actual CAPACITY-INIT-E2E-01.json1808B/SHA270a33b9109411419384f344d31c950f04e87b78d4d08a4168c75d102cf4b4b3
+registers local29/remote17/net46MiB once, old492MiB retained/all538MiB. P29
+canonical1427B/SHAb76eb4bd22860bdaabe775b57559846a5a19981393c71e47c87e640b1dc5a730
+passes actual RecoveryProfile raw/canonical validation; only storage/guards change,
+Source20/common107/software144/capture128each/closeout4each. Source previous
+16695296+3145728=19841024, common103596032+7340032=110936064, all old futures stay.
+Actor/data/math/trading limits and old batch02/SPENT/UNKNOWN stay. No batch03/
+connection8/actual SDK execution or numerical grant is created by this checkpoint.
+
+Quant: no research definitions/window/costs/input gates change and no accepted
+real input or numerical result exists; financial INSUFFICIENT/livefalse.
+
 ## Final offline Init full-decoder endpoint — 2026-11-06
 
 Planner assigned the original Parent alone the last bounded offline replay,

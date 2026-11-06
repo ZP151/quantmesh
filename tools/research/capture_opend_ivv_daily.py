@@ -1259,6 +1259,8 @@ def _load_official_sdk(writer, plan):
         sdk = importlib.import_module("moomoo")
         util = importlib.import_module("moomoo.common.utils")
         constants = importlib.import_module("moomoo.common.constant")
+        if type(plan.get("_capture_lifecycle")) is _CaptureLifecycle:
+            _verify_receive_modules(sdk, util, plan)
         return (sdk, util, constants), sink
     except BaseException:
         sink.close()
@@ -1266,6 +1268,411 @@ def _load_official_sdk(writer, plan):
     finally:
         logging.handlers.TimedRotatingFileHandler = old_file
         logging.StreamHandler = old_stream
+
+
+_RECEIVE_SOURCE_PINS = {
+    "common/network_manager.py": "d3d48a0eac9736f579ec09b05c60a2d82fd5a1ef77ae09543509ef0ffa9436e4",
+    "common/utils.py": "51d47fa5e239a7ddf6768a7ffb011927bb8c14aa393b5d15a07a77d4dde8013d",
+}
+
+
+def _verify_receive_sources(plan):
+    # The existing native admission has already protected the SDK root/view.
+    # These two additional public files use the same root-owned held-byte reader.
+    root = Path(plan["sdk_root"])
+    _require(root.is_absolute() and root.resolve(strict=True) == root, "sdk_root_binding")
+    for relative, expected in _RECEIVE_SOURCE_PINS.items():
+        path = root / "moomoo" / relative
+        _require(os.statvfs(path).f_flag & os.ST_RDONLY, "sdk_source_not_readonly")
+        _read_root_ref({"path": str(path), "sha256": expected}, maximum=131072)
+
+
+def _verify_receive_modules(sdk, util, plan):
+    """Before context construction, bind original functions to admitted modules."""
+    root = Path(plan["sdk_root"]) / "moomoo"
+    base = None
+    for relative, class_name, names in (
+        ("common/network_manager.py", "NetManager", ("poll", "do_send", "_on_write", "_on_read")),
+        (
+            "common/open_context_base.py",
+            "OpenContextBase",
+            ("on_recv", "_handle_recv", "_query_sync"),
+        ),
+        ("common/open_context_base.py", "ReqInfo", ("notify_finish",)),
+        ("common/utils.py", None, ("parse_head",)),
+    ):
+        module_name = "moomoo." + relative[:-3].replace("/", ".")
+        module = sys.modules.get(module_name)
+        _require(module is not None, "sdk_import_origin")
+        owner = getattr(module, class_name, None) if class_name else module
+        _require(owner is not None, "sdk_import_origin")
+        if class_name == "OpenContextBase":
+            base = owner
+            _require(owner in sdk.OpenQuoteContext.__mro__, "sdk_import_origin")
+        if class_name is None:
+            _require(util is module, "sdk_import_origin")
+        for name in names:
+            function = vars(owner).get(name)
+            _require(
+                type(function) is type(_verify_receive_modules)
+                and function.__globals__ is vars(module)
+                and function.__module__ == module_name
+                and function.__name__ == name
+                and Path(function.__code__.co_filename) == root / relative,
+                "sdk_import_origin",
+            )
+            if class_name == "OpenContextBase":
+                _require(getattr(sdk.OpenQuoteContext, name) is function, "sdk_import_origin")
+        if class_name == "ReqInfo":
+            _require(base._query_sync.__globals__.get("ReqInfo") is owner, "sdk_import_origin")
+
+
+def _empty_receive_trace():
+    return dict(
+        schema="qm.ivv.init-receive-trace.v1",
+        dequeues=0,
+        polls=0,
+        read_callbacks=0,
+        read_events=0,
+        read_bytes=0,
+        complete_candidate_seen=False,
+        target_candidate_seen=False,
+        scan_unknown=False,
+        callback_error="NONE",
+        loop_error="NONE",
+        read_error="NONE",
+        tcp_progress="UNOBSERVED",
+        tcp_accepted=None,
+        tcp_pending=None,
+        target_notify_err="UNOBSERVED",
+        notify_when="UNOBSERVED",
+        wait_ended=False,
+        network_thread="UNKNOWN",
+        overflow=False,
+        recorder_error=False,
+        first_ms=dict.fromkeys(
+            ("poll", "dequeue", "write", "read", "frame", "notify", "wait", "unpack")
+        ),
+        last_ms=dict.fromkeys(
+            ("poll", "dequeue", "write", "read", "frame", "notify", "wait", "unpack")
+        ),
+    )
+
+
+class _InitReceiveTrace:
+    """One Init's finite scalar evidence; never an SDK decision or payload sink."""
+
+    def __init__(self, clock):
+        self.clock = clock
+        self.started = None
+        self.lock = threading.Lock()
+        self.frozen = False
+        self.bound = False
+        self.net = self.conn = self.wire = None
+        self.ctx = self.util = self.packet_err = self.request = None
+        self.serial = self.receive_thread = None
+        self.conn_id = None
+        self.saved = []
+        self.write_valid = False
+        self.value = _empty_receive_trace()
+
+    def mark(self, phase):
+        if self.started is None:
+            self.value["recorder_error"] = True
+            return
+        elapsed = self.clock.mono() - self.started
+        if type(elapsed) not in (int, float) or not math.isfinite(elapsed):
+            self.value["recorder_error"] = True
+            return
+        now = int(min(480000, max(0, elapsed * 1000)))
+        previous = self.value["last_ms"][phase]
+        if previous is not None and now < previous:
+            self.value["recorder_error"] = True
+            return
+        if self.value["first_ms"][phase] is None:
+            self.value["first_ms"][phase] = now
+        self.value["last_ms"][phase] = now
+
+    def record(self, action, *args):
+        # No SDK lock/delegate/I/O is entered while holding this short scalar lock.
+        try:
+            with self.lock:
+                if not self.frozen:
+                    return action(*args)
+        except BaseException:
+            self.value["recorder_error"] = True
+        return None
+
+    def count(self, field):
+        previous = self.value[field]
+        self.value[field] = min(previous + 1, 4096)
+        self.value["overflow"] |= previous >= 4096
+
+    def install(self, net, ctx, util):
+        self.net, self.ctx, self.util = net, ctx, util
+        for owner, name in (
+            *((net, name) for name in ("poll", "do_send", "_on_write", "_on_read")),
+            (ctx, "on_recv"),
+            (ctx, "_handle_recv"),
+        ):
+            self.wrap(owner, name)
+
+    def wrap(self, owner, name):
+        try:
+            delegate = getattr(owner, name)
+            previous = (name in vars(owner), vars(owner).get(name))
+
+            def observed(*args, **kwargs):
+                if not self.bound or self.frozen:
+                    return delegate(*args, **kwargs)
+                if name == "on_recv":
+                    # Use the SDK's own RLock order; no recorder lock is held
+                    # while acquiring it or calling the original callback.
+                    with owner._lock:
+                        try:
+                            self.scan(args)
+                        except BaseException:
+                            self.value["recorder_error"] = True
+                        try:
+                            return delegate(*args, **kwargs)
+                        except BaseException as error:
+                            self.record(self.failure, "callback_error", error)
+                            raise
+                self.record(self.before, name, args)
+                try:
+                    result = delegate(*args, **kwargs)
+                except BaseException as error:
+                    if name in ("do_send", "_on_write"):
+                        self.record(self.unknown_write)
+                    if name == "_handle_recv":
+                        self.record(self.failure, "callback_error", error)
+                    if name == "poll":
+                        self.record(self.failure, "loop_error", error)
+                    if name == "_on_read":
+                        self.record(self.failure, "read_error", error)
+                    raise
+                finally:
+                    if name == "_handle_recv":
+                        self.record(self.clear_receive_scope)
+                self.record(self.after, name, args, result)
+                return result
+
+            self.saved.append((owner, name, *previous))
+            setattr(owner, name, observed)
+        except BaseException:
+            self.value["recorder_error"] = True
+
+    def bind_request(self, request, packet_err):
+        try:
+            self.request = request
+            self.packet_err, self.serial = packet_err, request.serial_no
+            self.wrap(request, "notify_finish")
+        except BaseException:
+            self.value["recorder_error"] = True
+
+    def clear_receive_scope(self):
+        self.receive_thread = None
+
+    def scan(self, args):
+        try:
+            if (
+                len(args) != 2
+                or args[0] != self.conn_id
+                or vars(self.ctx).get("_conn_id") != self.conn_id
+                or vars(self.ctx).get("_status") not in ("CONNECTED", "READY")
+                or type(args[1]) not in (bytes, bytearray)
+                or type(vars(self.ctx).get("_recv_buf")) is not bytearray
+            ):
+                self.record(self.bad_scan)
+                return
+            data, buf = args[1], self.ctx._recv_buf
+            self.record(self.received, len(data))
+            head_size = struct.calcsize(self.util.MESSAGE_HEAD_FMT)
+            if head_size != 44:
+                self.record(self.bad_scan)
+                return
+            available, offset = len(buf) + len(data), 0
+            complete = target = False
+            for _ in range(16):
+                if available - offset <= head_size:
+                    break
+                # At most44 copied header bytes; no body concatenation/view.
+                left = bytes(buf[offset : offset + head_size]) if offset < len(buf) else b""
+                start = max(0, offset - len(buf))
+                header = left + bytes(data[start : start + head_size - len(left)])
+                head = self.util.parse_head(header)
+                total = head_size + head["body_len"]
+                if total > available - offset:
+                    break
+                complete = True
+                target |= head["proto_id"] == 1001 and head["serial_no"] == self.serial
+                offset += total
+            else:
+                self.record(self.bad_scan)
+            self.record(self.candidates, complete, target)
+        except BaseException:
+            self.record(self.bad_scan)
+
+    def bad_scan(self):
+        self.value["scan_unknown"] = True
+
+    def failure(self, field, error):
+        cls = type(error)
+        self.value[field] = {
+            OSError: "OS_ERROR",
+            ValueError: "VALUE_ERROR",
+            TypeError: "TYPE_ERROR",
+            RuntimeError: "RUNTIME_ERROR",
+            MemoryError: "MEMORY_ERROR",
+        }.get(cls, "OTHER")
+
+    def received(self, size):
+        self.mark("read")
+        self.count("read_callbacks")
+        total = self.value["read_bytes"] + size
+        self.value["read_bytes"] = min(total, 2147483647)
+        self.value["overflow"] |= total > 2147483647
+
+    def candidates(self, complete, target):
+        if complete:
+            self.mark("frame")
+        self.value["complete_candidate_seen"] |= complete
+        self.value["target_candidate_seen"] |= target
+
+    def notified(self, request):
+        if self.receive_thread != threading.get_ident():
+            return
+        error = vars(request).get("err")
+        self.mark("notify")
+        self.value["target_notify_err"] = next(
+            (
+                name
+                for name in ("Ok", "Timeout", "Invalid", "Disconnect", "SendFail")
+                if error is getattr(self.packet_err, name)
+            ),
+            "UNKNOWN",
+        )
+        self.value["notify_when"] = (
+            "AFTER_WAIT_END" if self.value["wait_ended"] else "BEFORE_WAIT_END"
+        )
+
+    def bind_wire(self, conn_id, wire):
+        def bind():
+            self.started = self.clock.mono()
+            self.bound = True
+            self.conn_id, self.wire = conn_id, wire
+            self.conn = vars(self.net).get("_conn_map", {}).get(conn_id)
+
+        self.record(bind)
+
+    def unknown_write(self):
+        self.write_valid = False
+        self.value.update(tcp_progress="UNKNOWN", tcp_accepted=None, tcp_pending=None)
+
+    def same_connection(self):
+        return (
+            self.conn is not None
+            and vars(self.net).get("_conn_map", {}).get(self.conn_id) is self.conn
+            and vars(self.conn).get("status") == 2
+            and type(vars(self.conn).get("writebuf")) is bytearray
+        )
+
+    def before(self, name, args):
+        if name == "poll":
+            self.mark("poll")
+            self.count("polls")
+        elif name == "_on_read":
+            if len(args) == 1 and args[0] is self.conn:
+                self.mark("read")
+                self.count("read_events")
+        elif name == "_handle_recv":
+            self.receive_thread = threading.get_ident()
+        elif name == "notify_finish":
+            # This wrapper belongs to the one exact bound ReqInfo instance.
+            self.notified(self.request)
+        elif name == "do_send":
+            if len(args) != 2 or args[0] != self.conn_id or args[1] is not self.wire:
+                self.unknown_write()
+                return
+            self.count("dequeues")
+            self.mark("dequeue")
+            self.write_valid = self.same_connection() and len(self.conn.writebuf) == 0
+            if self.write_valid:
+                self.value.update(tcp_accepted=0, tcp_pending=len(self.wire), tcp_progress="NONE")
+            else:
+                self.unknown_write()
+            self.wire = None
+        elif name == "_on_write":
+            if (
+                len(args) != 1
+                or args[0] is not self.conn
+                or not self.same_connection()
+                or self.write_valid
+                and len(self.conn.writebuf) != self.value["tcp_pending"]
+            ):
+                self.unknown_write()
+
+    def after(self, name, args, result):
+        if name not in ("do_send", "_on_write") or not self.write_valid:
+            return
+        if (
+            not self.same_connection()
+            or name == "do_send"
+            and not (type(result) is tuple and result and type(result[0]) is int and result[0] == 0)
+        ):
+            self.unknown_write()
+            return
+        pending = len(self.conn.writebuf)
+        previous = self.value["tcp_pending"]
+        if pending > previous:
+            self.unknown_write()
+            return
+        self.value["tcp_accepted"] += previous - pending
+        self.mark("write")
+        self.value["tcp_pending"] = pending
+        self.value["tcp_progress"] = (
+            "FULL" if pending == 0 else "PARTIAL" if self.value["tcp_accepted"] else "NONE"
+        )
+
+    def restore(self):
+        try:
+            for owner, name, present, previous in reversed(self.saved):
+                if present:
+                    setattr(owner, name, previous)
+                else:
+                    vars(owner).pop(name, None)
+        finally:
+            self.saved.clear()
+            self.net = self.conn = self.wire = None
+            self.ctx = self.util = self.packet_err = self.request = None
+            self.serial = self.receive_thread = None
+            self.conn_id = None
+
+    def wait_end(self):
+        with self.lock:
+            if not self.frozen:
+                self.mark("wait")
+                self.value["wait_ended"] = True
+
+    def unpack_phase(self):
+        self.record(self.mark, "unpack")
+
+    def freeze(self, net):
+        try:
+            thread = vars(net).get("_thread") if net is not None else None
+            alive = thread.is_alive() if thread is not None else None
+        except BaseException:
+            alive = None
+        with self.lock:
+            self.value["network_thread"] = (
+                "ALIVE" if alive is True else "DEAD" if alive is False else "UNKNOWN"
+            )
+            self.frozen = True
+            return {
+                **self.value,
+                "first_ms": dict(self.value["first_ms"]),
+                "last_ms": dict(self.value["last_ms"]),
+            }
 
 
 class _OfficialBackend:
@@ -1287,12 +1694,16 @@ class _OfficialBackend:
         self._init_invalid = False
         self._bind_init = None
         self._init_thread = None
+        self._receive_trace = None
+        self._receive_error = False
         self._closed = {
             "context_closed": False,
             "callbacks_stopped": False,
             "data_socket_closed": False,
         }
         if modules is None:
+            if type(plan.get("_capture_lifecycle")) is _CaptureLifecycle:
+                _verify_receive_sources(plan)
             modules, self.sink = _load_official_sdk(writer, plan)
         self.sdk, self.util, self.constants = modules
 
@@ -1324,6 +1735,7 @@ class _OfficialBackend:
                     and self._bind_init is not None
                     and self._bind_init(ctx, head["serial_no"])
                 ):
+                    self._receive("bind_wire", conn, raw)
                     return self._observe_init_return(
                         "send", self._old_send, conn, raw, *args, **kwargs
                     )
@@ -1334,9 +1746,12 @@ class _OfficialBackend:
 
         net.connect = connect
         net.send = send
+        self._receive("install", net, ctx, self.util)
 
     def _observe_init_return(self, field, delegate, *args, **kwargs):
         # Inspect only the pinned return code. Never retain message/data or an exception.
+        if field == "unpack":
+            self._receive("unpack_phase")
         try:
             result = delegate(*args, **kwargs)
         except BaseException:
@@ -1397,10 +1812,14 @@ class _OfficialBackend:
                 self._init_invalid = True
                 return False
             request = req
+            self._receive("bind_request", req, packet_err)
             wait = req.wait
 
             def observed_wait():
-                result = wait()
+                try:
+                    result = wait()
+                finally:
+                    self._receive("wait_end")
                 error = req.err
                 facts["packet_err"] = next(
                     (
@@ -1445,6 +1864,23 @@ class _OfficialBackend:
             self._init_facts["constructor_status"] = (
                 status if type(status) is str and status in known else "UNKNOWN"
             )
+
+    def _receive(self, method, *args):
+        if self._receive_trace is not None:
+            try:
+                return getattr(self._receive_trace, method)(*args)
+            except BaseException:
+                self._receive_error = True
+        return None
+
+    def _freeze_receive_trace(self):
+        if self._init_facts is not None:
+            value = self._receive("freeze", self._net)
+            if type(value) is not dict:
+                value = _empty_receive_trace()
+                self._receive_error = True
+            value["recorder_error"] |= self._receive_error
+            _lifecycle_mark(self.plan, receive_trace=value)
 
     def _processor(self, ctx, parent, pack, unpack):
         owner = getattr(pack, "__self__", None)
@@ -1509,6 +1945,10 @@ class _OfficialBackend:
                         constructor_status="UNOBSERVED",
                     )
                     _lifecycle_mark(backend.plan, init_observation=backend._init_facts)
+                    try:
+                        backend._receive_trace = _InitReceiveTrace(backend.clock)
+                    except BaseException:
+                        backend._receive_error = True
                 backend._install_wire(ctx)
                 backend._init_thread = threading.get_ident()
                 try:
@@ -1571,10 +2011,12 @@ class _OfficialBackend:
             if self._init_facts is not None:
                 # The SDK assigned this plain field before entering synchronous Init.
                 self._init_end_status(vars(ctx).get("_status"))
+                self._freeze_receive_trace()
             raise
         _lifecycle_mark(self.plan, "READY_CHECK", constructor_returned=True)
         status = self.ctx.status
         self._init_end_status(status)
+        self._freeze_receive_trace()
         if self._init_facts is not None:
             _require(
                 not self._init_invalid
@@ -1679,6 +2121,7 @@ class _OfficialBackend:
             raise
         finally:
             _lifecycle_mark(self.plan, "WIRE_RESTORE")
+            self._receive("restore")
             if self._net is not None:
                 self._net.send = self._old_send
                 self._net.connect = self._old_connect
