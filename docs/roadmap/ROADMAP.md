@@ -15,6 +15,13 @@ the tracked complete-vector spec/plan, targeted TDD, independent two-axis review
 and one normal matching-head CI/publication before any separately qualified
 new immutable method. No per-bit CI releases, new platform or permission change.
 
+Reviewed issue297 source checkpoint a62fb215 is committed: final159 targeted
+tests, independent SpecR2/StandardsR2 READY and full finite geometry pass. The
+complete local contract has637PASS/16SKIP plus one unchanged Windows/POSIX
+assertion; the same node passes on existing Linux. Normal matching-head full CI,
+merge and actual publication remain pending. No new SDK action is authorized by
+this software checkpoint.
+
 ## Current bounded diagnostic successor — 2026-11-07
 
 Issue293: preserve the existing synchronous Init delegate return as a finite v2

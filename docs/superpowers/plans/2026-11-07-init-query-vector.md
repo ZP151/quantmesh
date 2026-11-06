@@ -123,7 +123,7 @@ under the current recovery output; frozen prior directories are never edited.
   changed Python files with `& $qvRuff format --no-cache --check` and those paths;
   run `git diff --check` and submodule metadata checks. Do not initialize the
   nine local Gitlinks or repeat unrelated formatting work.
-- [ ] At the coherent slice boundary run the documented complete local command
+- [x] At the coherent slice boundary run the documented complete local command
   `& $qvPy -B -X utf8 tools/quality_gate.py contract`, with its existing
   QUANTMESH_GATE_LOGS directed to a new owned contract directory. Preserve every
   failure/fixture. The known unchanged Windows/POSIX portfolio assertion is a
@@ -170,3 +170,9 @@ whitespace pass. Final hypothetical48-build geometry passes unchanged caps;
 actual matching publication/carrier and new runtime gates remain future work.
 Core commits next; broad local contract must see its actual Git source blobs
 before the final documentation checkpoint/push and normal CI.
+
+Complete local contract on committed a62fb215:637PASS/16SKIP/1 known unchanged
+Windows POSIX-path assertion,37.63s pytest/39.8066788s wall. Identical failed
+node on existing Linux1PASS2.51s. Final Source7/Code4 manifests are canonical
+and hash-bound to reviewed a62fb215; final documentation checkpoint changes no
+runtime bytes. Both R2 axes READY; normal full Linux CI/publication pending.

@@ -84,8 +84,18 @@ omitted its required runner-path argument and failed before tests; the corrected
 command alone passes4 methods, with the failed original retained. The checker
 pre-freeze12598B/1e6198 audit and final12197B/f5cd freeze are reconciled additively;
 production native_packet5b24bab1 is unchanged throughout that test-only edit.
-One normal matching-head CI/publication still follows the final reviewed commit;
-no partial software result creates runtime authority. No SDK/provider/host activity is
+Reviewed source checkpoint a62fb215e9b1ff02758aca680e10790172f3d1e1 is committed.
+The complete documented local contract ran against its actual Git source:
+637PASS/16SKIP/1 unchanged Windows POSIX-path assertion failure,37.63s pytest
+(39.8066788s wall). The identical failed node alone passes on the existing Linux
+runtime1PASS/2.51s, without installing or changing an environment. All local
+contract originals, unique failed fixture and JUnit/controller evidence remain.
+Normal Linux CI must still pass the entire contract and full release. Reviewed
+Source7 manifest1255B/SHAe13c6d51854983feacf247e77b406bf89e5996b83626957762f4b34a86f6328b
+and canonical Ops manifest673B/SHAb6839a55801a974a591376c59c4abeec1cb79330edd3f80622a28c23122db507
+bind the actual reviewed source/Code4. One normal matching-head CI/publication
+still follows the final documentation commit; no partial software result creates
+runtime authority. No SDK/provider/host activity is
 allowed during software work and no per-bit release sequence is planned.
 
 Reuse the isolated managed worktree on new codex/0038-init-query-vector from
