@@ -70,3 +70,25 @@ private Ops binding, final broad gates and independent two-axis review remain
 explicit acceptance work. Shared ACTIVE/ROADMAP/iteration belong to Parent.
 All evidence, failed rounds and allocated scratch are retained with cumulative
 round4KiB plus directory accounting; no cleanup is attempted.
+# Approved conditional continuation increment (2026-11-06)
+
+Parent approved the read-only REFERENCE-CONDITION-SEAMS-01 map. Extend the existing
+ledger with one versioned, immutable reference/capture pair transition. Preserve
+default begin, source method identity and all other structural-failure refusals.
+The existing claim lease owns the condition and sole second begin; the original
+child owns MAY. A claim consumes this pair even if evaluation crashes. A negative
+or absent exact positive outcome never admits its capture entry or MAY.
+
+Normal SDK/parent closure must join independently owned manager-exit, terminal,
+unit-result and unit-cleanup originals. Cleanup/recovered records cannot upgrade
+normal closure. Reuse verified_provider_snapshot after those closes, with actual
+same-boot monotonic timing and exact source/provider/config/cohort/SDK bindings.
+All identifiers come from authenticated pair data. No generic coordinator,
+successful diagnostic seal, new grant or global historic-failure relaxation.
+Private successor only; preserve consumed Ops09 and both frozen partial packages.
+
+The conditional core checkpoint is PARTIAL. The same live controller, named
+claim inode and intent binding alone are insufficient at child MAY: kernel
+evidence must also establish continued ownership of the original claim lock.
+Private closed-control propagation, strict provider-original return validation,
+bootstrap/ABI/maximum geometry and independent release qualification remain.

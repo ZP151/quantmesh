@@ -66,3 +66,43 @@ negative decision consumes the condition without retry. Do not call begin/MAY
 from a draft coordinator or accept child/typed fake ownership. Existing original
 capture entry and limits are reused. This requires a separate causal RED/GREEN,
 private Ops/ABI/geometry and independent release review; no completion claim here.
+# Approved next bounded execution
+
+- [ ] Causal real-ledger RED: same-source reference closure cannot yet authorize
+  an exact conditional successor. Add only the versioned pair transition route.
+- [ ] Bind immutable claim/outcome to real runner-owned close originals and a
+  post-close same-boot monotonic provider snapshot under the existing lease.
+- [ ] Bind remote second begin and original child MAY to that exact outcome;
+  reject negative/missing/crashed/replayed conditions without another intent.
+- [ ] Wire new private candidate staging/entry through original capture, preserving
+  seven business calls and KeepAlive96. Keep historical wrappers unchanged.
+- [ ] Target24–32 offline seam cases; source/tests512KiB, logs128KiB, cumulative
+  new retained scratch192KiB forecast. Record actual use before every run.
+- [ ] Freeze with explicit remaining ABI/geometry/review/release qualification.
+
+Parent owns iteration changes. No real SDK, network, host, publication or CI.
+
+## Conditional core checkpoint (PARTIAL, 2026-11-06)
+
+Implemented the explicit ledger pair/claim/outcome, actual runner-owned close
+checks and post-close provider snapshot, context-to-intent binding, sole remote
+begin and child MAY recheck. The private candidate stages held pair controls and
+selects the original capture path. Existing publication is not updated.
+
+Retained CORE-FINAL-01: nine test methods pass; PRIVATE-FINAL-01: three pass.
+COMPATIBILITY-01: two original tests pass with pytest rc0, but the outer harness
+fails its capacity assertion (rc1): 49,152B actual versus 40,960B run forecast;
+200,704B cumulative versus 196,608B phase forecast. Those forecasts remain FAIL.
+All raw evidence stays immutable. This is not full issue293 completion.
+
+Known remaining guard: child MAY proves the original controller identity and
+claim inode, but does not yet prove that controller still holds the original
+claim FD/flock. Add a causal released-lock negative and kernel-backed proof.
+Then close private staged-control/catalog contracts, strict provider v2 original
+return validation, all bootstrap/ABI/maximum geometry and independent review.
+
+Parent confirmed P38 accounting: 8,278,016B closed scratch remains in the
+16MiB retained-history hold; the separate 8MiB active hold remains reserved.
+Next complete qualification phase forecasts at most 2MiB simultaneous scratch
+and 8MiB additional retained history, including negative/fix runs; no deletion,
+refund, extra net capacity or runtime authority. Census includes directory blocks.

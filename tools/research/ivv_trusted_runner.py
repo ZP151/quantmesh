@@ -2579,6 +2579,292 @@ def recover_previous_attempt(book, read_owned):
     book._write(done, receipt)
 
 
+def _reference_condition_lease(book):
+    lease = getattr(book, "_claim_lease", None)
+    need(
+        type(lease) is _RecoveryLease
+        and lease.fd is not None
+        and lease.controller == _controller_actor(os.getpid())[0]
+        and lease.origin
+        == list(identity(os.fstat(lease.fd)))
+        == list(identity((book.root / "connection-000000.claim-lock.json").lstat())),
+        "REFERENCE_CONDITION_LEASE",
+    )
+
+
+def _reference_transition_owner(book, attempt, claim, require_owner):
+    try:
+        actual, _ = _controller_actor(claim["controller"]["pid"])
+    except FileNotFoundError:
+        raise Refused("REFERENCE_CONTROLLER_GONE") from None
+    need(
+        actual == claim["controller"]
+        and list(identity((book.root / "connection-000000.claim-lock.json").lstat()))
+        == claim["claim_inode"],
+        "REFERENCE_CONTROLLER_CHANGED",
+    )
+    if require_owner:
+        _reference_condition_lease(book)
+    else:
+        intent = book._read(attempt + ".intent.json")
+        need(
+            intent.get("pre_dispatch")
+            == {
+                "controller": claim["controller"],
+                "claim_inode": claim["claim_inode"],
+                "unit": "qm-ivv-recovery-" + attempt + ".service",
+            },
+            "REFERENCE_CONTROLLER_BINDING",
+        )
+
+
+def reference_capture_condition(book, pair_sha256, read_owned, native, producer):
+    """Owning carrier's single consumed condition; never a diagnostic success seal."""
+    _reference_condition_lease(book)
+    book._reference_live_owner = lambda attempt, claim, owner: _reference_transition_owner(
+        book, attempt, claim, owner
+    )
+    claim = book.claim_reference_condition(pair_sha256)  # uncertainty remains spent
+    first = claim["reference_attempt"]
+    try:
+        pair = book._read(first + ".reference-pair.json")
+        loc = _locations(first)
+        need(book.root == loc.ledger, "REFERENCE_LEDGER_SCOPE")
+        observed = {}
+
+        def original(path, maximum=32768):
+            data = read_owned(path, maximum)
+            need(type(data) is bytes and 0 < len(data) <= maximum, "REFERENCE_ORIGINAL_BOUND")
+            observed[str(path)] = (maximum, digest(data))
+            return data
+
+        names = (
+            "intent",
+            "entry",
+            "context-binding",
+            "close",
+            "preowner",
+            "terminal",
+            "manager-exit",
+            "unit-result",
+            "unit-cleanup",
+        )
+        rows = {name: book._read(first + "." + name + ".json") for name in names}
+        closed, preowner = rows["close"], rows["preowner"]
+        need(
+            closed["owner_state"] == "CLOSED"
+            and closed["failure"] == "REFERENCE_INIT_OBSERVATION"
+            and closed["connection_attempt_id"] == first
+            and closed["method_sha256"] == pair["method_sha256"],
+            "REFERENCE_NORMAL_PARENT",
+        )
+        failure = read_runner_failure(loc.control, original)
+        need(
+            failure is not None and failure["reason"] == "REFERENCE_INIT_OBSERVATION",
+            "REFERENCE_NORMAL_STOP",
+        )
+        observation = failure.get("reference_init_observation")
+        need(
+            observation is not None
+            and observation["parent_closed"]
+            and observation["constructor_status"] == "READY"
+            and observation["reference_control_sha256"] == pair["reference_control_sha256"],
+            "REFERENCE_READY_REQUIRED",
+        )
+        startup = digest(original(loc.control / "startup.json"))
+        invocation = preowner["unit"]["InvocationID"]
+        need(
+            preowner["connection_attempt_id"] == first and preowner["startup_sha256"] == startup,
+            "REFERENCE_MANAGER_BINDING",
+        )
+        expected_exit = dict(manager_returncode=1, invocation_id=invocation, startup_sha256=startup)
+        need(
+            rows["manager-exit"] == expected_exit
+            and rows["unit-result"] == dict(expected_exit, client_returncode=0),
+            "REFERENCE_NORMAL_MANAGER",
+        )
+        terminal = rows["terminal"]
+        preowner_sha = digest(raw_json(preowner))
+        need(
+            terminal["preowner_sha256"] == preowner_sha
+            and terminal["terminal"]["InvocationID"] == invocation
+            and terminal["terminal"]["ExecMainCode"] == "1"
+            and terminal["terminal"]["ExecMainStatus"] == "1",
+            "REFERENCE_NORMAL_MANAGER",
+        )
+        need(
+            rows["unit-cleanup"]
+            == dict(
+                preowner_sha256=preowner_sha,
+                owned_cleanup_proven=True,
+                external_effects="UNKNOWN",
+                input_publishable=False,
+            ),
+            "REFERENCE_UNIT_CLEANUP",
+        )
+        # The persisted receipt alone is insufficient: independently check the current
+        # manager absence, retained invocation and recursive empty original group.
+        _recover_preowner(preowner, book)
+        catalog_raw = original(loc.release / "release-catalog.json")
+        catalog = json.loads(catalog_raw)
+        sources = {key: catalog[key] for key in _sources(first)}
+        need(digest(raw_json(sources)) == pair["method_sha256"], "REFERENCE_SOURCE_BINDING")
+        for key, name in _sources(first).items():
+            need(
+                digest(original(loc.release / name, 262144)) == sources[key],
+                "REFERENCE_SOURCE_DRIFT",
+            )
+        need(
+            digest(original(loc.control / "policy.json"))
+            == pair["policy_sha256"]
+            == book.policy_sha,
+            "REFERENCE_POLICY_BINDING",
+        )
+        control = original(loc.control / "reference-control.json", 4096)
+        need(digest(control) == pair["reference_control_sha256"], "REFERENCE_CONTROL_BINDING")
+        expected_control = {
+            "schema_id": "qm.ivv.reference-control.v1",
+            **{
+                key: pair[key]
+                for key in (
+                    "nonce",
+                    "reference_attempt",
+                    "capture_attempt",
+                    "reference_context",
+                    "capture_context",
+                )
+            },
+            "catalog_sha256": digest(catalog_raw),
+            "sdk_pins_sha256": pair["sdk_pins_sha256"],
+            "policy_sha256": pair["policy_sha256"],
+        }
+        need(json.loads(control) == expected_control, "REFERENCE_CONTROL_BINDING")
+        plan = json.loads(original(loc.control / "plan.json"))
+        need(
+            digest(original(loc.control / "reference-pair.json", 4096)) == pair_sha256,
+            "REFERENCE_PAIR_ORIGINAL",
+        )
+        book.require_reference_plan(first, plan, pair)
+        need(
+            rows["entry"]["startup_sha256"] == startup
+            and rows["context-binding"]["startup_sha256"] == startup,
+            "REFERENCE_CONTEXT_STARTUP",
+        )
+        need(
+            plan["reference_init_ref"]
+            == {
+                "path": str(loc.control / "reference-control.json"),
+                "sha256": pair["reference_control_sha256"],
+            },
+            "REFERENCE_PLAN_BINDING",
+        )
+        binding = producer.validate_provider_binding(
+            raw_json(catalog["provider_binding"]), pair["provider_binding_sha256"]
+        )
+        configuration = dict(
+            control=binding.control_sha,
+            launcher=binding.launcher_sha,
+            profile=producer.RESTORE_PROFILE,
+            template=producer.RESTORE_TEMPLATE,
+        )
+        cohort = dict(
+            unit=binding.unit,
+            invocation=binding.invocation,
+            cgroup=binding.cgroup,
+            cohort=binding.cohort,
+            mnt=binding.mnt,
+            net=binding.net,
+        )
+        need(
+            digest(raw_json(configuration)) == pair["provider_config_sha256"]
+            and digest(raw_json(cohort)) == pair["provider_cohort_sha256"],
+            "REFERENCE_PROVIDER_BINDING",
+        )
+        boot, closes_observed = book.reference_clock()
+        sample_boot, sample_started = book.reference_clock()
+        need(sample_boot == boot and closes_observed <= sample_started, "REFERENCE_FRESH_CLOCK")
+        native.verified_provider_snapshot(producer, binding)
+        sdk_raw = original(loc.control / "sdk-pins.json")
+        need(
+            digest(sdk_raw) == pair["sdk_pins_sha256"]
+            and plan["sdk_pins_ref"]
+            == {"path": str(loc.control / "sdk-pins.json"), "sha256": pair["sdk_pins_sha256"]},
+            "REFERENCE_SDK_BINDING",
+        )
+        sdk_rows = json.loads(sdk_raw)["pins"]
+        need(type(sdk_rows) is list and 12 <= len(sdk_rows) <= 128, "SDK_PINS_COUNT")
+        paths = set()
+        for row in sdk_rows:
+            rel = row["relative_path"]
+            need(
+                type(rel) is str
+                and re.fullmatch(
+                    r"(?:moomoo|google/protobuf|google/_upb)/[A-Za-z0-9_./-]+\.(?:py|so)", rel
+                )
+                and ".." not in Path(rel).parts
+                and rel not in paths,
+                "SDK_PIN_ROLE",
+            )
+            paths.add(rel)
+            body = native._protected_bytes(str(SDK / rel), 1048576)
+            need(digest(body.replace(b"\r\n", b"\n")) == row["LF_sha256"], "SDK_PIN_DRIFT")
+        end_boot, sample_finished = book.reference_clock()
+        need(
+            end_boot == boot and sample_started <= sample_finished <= sample_started + 2,
+            "REFERENCE_FRESH_CLOCK",
+        )
+        for path, (maximum, pin) in observed.items():
+            need(digest(read_owned(Path(path), maximum)) == pin, "REFERENCE_ORIGINAL_DRIFT")
+        need(
+            all(book._read(first + "." + name + ".json") == body for name, body in rows.items()),
+            "REFERENCE_LEDGER_DRIFT",
+        )
+        _reference_condition_lease(book)
+        evidence = {
+            "closed_originals": {name: digest(raw_json(body)) for name, body in rows.items()},
+            "files": {path: pin for path, (_, pin) in observed.items()},
+            "pair_sha256": pair_sha256,
+        }
+        evidence_sha = digest(raw_json(evidence))
+        fresh = dict(
+            schema_id="qm.ivv.reference-fresh.v1",
+            pair_sha256=pair_sha256,
+            evidence_sha256=evidence_sha,
+            boot_id=boot,
+            closes_observed=closes_observed,
+            sample_started=sample_started,
+            sample_finished=sample_finished,
+        )
+        book._write(first + ".reference-evidence.json", evidence)
+        book._write(first + ".reference-fresh.json", fresh)
+        outcome = dict(
+            schema_id="qm.ivv.reference-condition.v1",
+            state="POSITIVE",
+            pair_sha256=pair_sha256,
+            claim_sha256=digest(raw_json(claim)),
+            reference_attempt=first,
+            capture_attempt=pair["capture_attempt"],
+            close_sha256=digest(raw_json(closed)),
+            evidence_sha256=evidence_sha,
+            fresh_sha256=digest(raw_json(fresh)),
+        )
+        book._write(first + ".reference-condition.json", outcome)
+        return {"pair_sha256": pair_sha256, "outcome_sha256": digest(raw_json(outcome))}
+    except BaseException as error:
+        # Even failed result persistence leaves the exclusive claim permanently occupied.
+        book._write(
+            first + ".reference-condition.json",
+            {
+                "schema_id": "qm.ivv.reference-condition.v1",
+                "state": "NEGATIVE",
+                "pair_sha256": pair_sha256,
+                "claim_sha256": digest(raw_json(claim)),
+                "reason": reason(error),
+            },
+        )
+        raise
+
+
 class _Channel:
     def __init__(self, s):
         self.s = s
@@ -3330,6 +3616,9 @@ def _seed(values, startup, helper, issuer, *, started=None):
     if "reference_init_ref" in plan:
         need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
         helper._read_reference_control(plan)
+    if "reference_pair_ref" in plan:
+        need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
+        helper._read_reference_pair(plan)
     need(
         plan["sdk_root"] == str(SDK)
         and plan["receipt_root"] == str(loc.receipt)
@@ -4126,6 +4415,15 @@ def _run(startup_ref, *, additional, lifecycle=None):
         values["_recovery_method"] = method
         book.enter(additional, method, startup_ref["sha256"])
         values["_recovery_ledger"] = book
+        book._reference_live_owner = lambda attempt, claim, owner: _reference_transition_owner(
+            book, attempt, claim, owner
+        )
+        book.bind_reference_plan(
+            additional,
+            plan,
+            helper._read_reference_pair(plan) if "reference_pair_ref" in plan else None,
+            startup_ref["sha256"],
+        )
     _stdio()
     need(
         _fds() == ({0, 1, 2} | ({lifecycle.fd} if lifecycle is not None else set()))

@@ -374,6 +374,8 @@ def _validate_production_plan_keys(plan, *, schema="qm.ivv.capture-plan.v1"):
         allowed |= {"recovery"}
         if "reference_init_ref" in plan:
             allowed.add("reference_init_ref")
+        if "reference_pair_ref" in plan or "operation_context" in plan:
+            allowed |= {"reference_pair_ref", "operation_context"}
     _require(type(plan) is dict and set(plan) <= allowed, "unknown_plan_fields")
     _require(set(plan) == allowed, "missing_plan_fields")
 
@@ -2160,6 +2162,34 @@ class _OfficialBackend:
         return dict(self._closed)
 
 
+def _read_reference_pair(plan):
+    ref = plan["reference_pair_ref"]
+    _require(
+        type(ref) is dict
+        and set(ref) == {"path", "sha256"}
+        and ref["path"]
+        == str(Path(plan["provider_evidence_ref"]["path"]).parent / "reference-pair.json")
+        and _digest(ref["sha256"]),
+        "reference_pair_ref",
+    )
+    pair = _strict_json(_read_root_ref(ref, maximum=4096, exact_mode=True))
+    _require(
+        type(pair) is dict and pair.get("schema_id") == "qm.ivv.reference-pair.v1",
+        "reference_pair_shape",
+    )
+    role = "reference" if "reference_init_ref" in plan else "capture"
+    _require(
+        plan["recovery"]["connection_attempt_id"] == pair.get(role + "_attempt")
+        and type(plan["operation_context"]) is str
+        and re.fullmatch("[0-9a-f]{32}", plan["operation_context"])
+        and plan["operation_context"] == pair.get(role + "_context")
+        and pair.get("policy_sha256") == plan["policy_ref"]["sha256"]
+        and pair.get("sdk_pins_sha256") == plan["sdk_pins_sha256"],
+        "reference_pair_binding",
+    )
+    return pair
+
+
 def _read_reference_control(plan):
     """The seed/GO/permit bind these immutable IDs; this is not a runtime grant."""
     _require(plan["schema_id"] == "qm.ivv.capture-plan" + RECOVERY_SUFFIX, "reference_family")
@@ -3039,6 +3069,11 @@ def _capture_owned(
     state.session.before_effect()
     if suffix == RECOVERY_SUFFIX:
         _require(getattr(state, "recovery_ledger", None) is not None, "recovery_owned_ledger")
+        state.recovery_ledger.require_reference_plan(
+            state.recovery_attempt,
+            plan,
+            _read_reference_pair(plan) if "reference_pair_ref" in plan else None,
+        )
         plan["_capture_classifier"] = getattr(state, "capture_classifier", None)
         plan["_recovery_ledger"] = state.recovery_ledger
         plan["_recovery_attempt"] = state.recovery_attempt
