@@ -1465,3 +1465,126 @@ This records the new guard/witness delta, not another whole-branch structural
 review or a human commit inspection. The next docs-only checkpoint needs its
 own normal matching-head CI/exact-lock qualification and ordinary guarded merge;
 only then may the same ordinary recovery task attempt actual conditional proof.
+
+
+### Issue293 guarded reference — native integration opened 2026-11-06
+
+Planner: [issue293](https://github.com/ZP151/quantmesh/issues/293) is an independent
+slice on `codex/0038-guarded-reference-control`, based on actual origin/main
+`77ea54471abe08fd9496fd3cac6c4dd9fda9c8c0`. One user action is a guarded
+Init-only reference, followed only after normal reference SDK/parent/unit close
+and new matching Fresh by one original fixed IVV capture. Success means finite,
+owned and auditable comparison outcomes, not real-input or financial acceptance.
+The operator's current login confirmation is preserved. No new SDK/runtime GO,
+relogin, restart, key/config read, trading, math or data-promotion authority follows.
+
+Quant: the earlier R-only48-pass prototype and independent core reviews establish
+modeled mechanics only. Typed parent/Fresh data are not authenticated native
+proof. Actual holder/permit/lease/stop/kernel/IPC/close, single reservation owners,
+source/issuer/ABI and maximum two-operation geometry must be integrated and tested.
+Original capture default and seven fixed business calls remain unchanged. Old
+SPENT/UNKNOWN and all retained failure/capacity evidence stay occupied.
+
+Implementer owns only this isolated worktree and dedicated diagnostic source/tests
+and new spec/plan. B's CI successor remains in its own branch/worktree. Parent
+owns shared roadmap/ACTIVE/iteration checkpoints and final integration. Independent
+Reviewer/Verifier and normal matching-head CI/publication remain pending. Full
+source/CI/history forecast P38 is capacity-only; no runtime action is authorized.
+
+Implementer checkpoint `c1addc33219dd6fec492639ed333ce5f2162d648`
+(tree `785d4df5911719f6e6d9e65efe00e9623efe71c8`) connects the immutable
+reference control through existing seed/held permit/live checks and the actual
+child/supervisor/parent non-data STOP path. The authenticated child cannot claim
+parent closure; normal child exit/EOF/empty, final resources, descriptors and
+ledger closure precede `parent_closed=true`. Original capture seal and seven-call
+requirements remain intact; no new successful reference seal or duplicate begin/MAY.
+
+Verifier: first affected union81 PASS and bootstrap positive/drift2 PASS preceded
+the final reference-only constructor fact-order correction, which has its own
+RED and final25 PASS. These are joined actual-owner subchains over modeled
+external boundaries, not a full child-to-parent native run. Parent read the actual
+diff/handoff and matched SOURCE-PINS/EVIDENCE-PINS without repeating those runs.
+Retained scratch upper8,077,312B uses per-file rounding plus directory accounting;
+old raw/ZIP/failure evidence remains. No cleanup or capacity refund was claimed.
+
+This checkpoint is PARTIAL, not issue293 READY. The installed private Ops09 codec
+still rejects the new field. New candidate STOP selector/propagation, independent
+manager/unit closure, current matching Fresh and original capture second intent,
+all-entry bootstrap/ABI/maximum geometry, independent review and normal final-head
+CI/publication remain. Ops09 and consumed controls must remain immutable.
+
+The separate `reference-private-stop-20261106-01` candidate changes only its new
+native_packet.py: closed AST selector dependency, both status propagation tuples,
+carrier-error reason preservation and maximum finite observation reservation.
+Actual codec/remote status/return frame/local STOP chain has retained causal RED
+and9 PASS, including16 negative status/close subcases. Parent read the handoff and
+matched30 source/evidence/original rows; Ops09 and the other three private modules
+remain unchanged. Candidate retained upper237,568B; scratch0. It is not deployable
+and creates no second intent. Normal manager/unit/Fresh and condition gating are
+now being connected separately, preserving structural rejection by default.
+
+
+### Issue293 final offline source and consolidated R2
+
+Implementer extends the same native slice through the independently owned
+normal-close, manager/unit originals, fresh same-provider observation and
+immutable one-use condition. Controller ownership includes actual live FLOCK,
+descriptor identity and open-file epoch; authenticated parent IPC supplies the
+child's unavailable foreign-proc facts without widening its sandbox. One
+conditional second intent is available only after a positive adjacent reference
+transition; defaults and negative/unknown paths retain structural refusal.
+Original thirteen guard/capture/seal function bodies equal the77ea base.
+
+Full R1 source c89bf1e70c1eace729a7328890b8f96f3630bcae and its immutable private
+candidate establish offline integration only. Retained actual-code Linux union,
+bootstrap/codec/STOP and modeled seven-call-to-complete-return evidence are in
+reference-qualification-20261106-01. Parent matched23 source/private rows and704
+evidence entries, using lstat without following the retained pytest-current link.
+Linux modeled complete-return test passed, while its subsequent Windows harness
+census failed; these remain separate results. Earlier fixture subforecast and
+capacity failures are retained, not reclassified by the later passing census.
+
+Reviewer R1: Standards READY offline; Spec NOT_READY with two P2 findings. Normal
+systemd-run --pipe forwards the reference manager's deliberate exit1 to client1,
+but the first model required client0. Also, a hash-consistent pair/control identity
+mismatch could reach the held permit/MAY before the late condition rejected it.
+Both are addressed together in the sole consolidated R2, source
+0b93e83648927e91cac2d749c3a3ea83507c145d, tree
+8a90cf685543f504fb10ba701d73f21e61bb55f9. Exact integer manager1/client1 requires
+validated reference STOP and normal closure; NOT_READY consumes a negative
+condition, ordinary capture remains0/0. The actual sole begin now compares all
+canonical identities/control/catalog, with an independent helper held/first-entry
+cross-check before effects. No systemd authentication or runtime authority changed.
+
+Verifier: causal RED/GREEN includes actual dispatch/condition1/1, eight prebegin
+semantic mismatches, and three held-helper identity negatives that formerly
+wrote MAY. Final affected Linux union29PASS+66subtests/12.62s; held negatives and
+matching positive also pass. Source/private static checks pass. These are
+software tests with explicitly modeled SDK/kernel/systemd boundaries, not real
+provider admission. Original source and private candidate remain immutable.
+
+Both original readers return READY for offline integration only at that fixed
+R2 head, with no remaining blocking finding. Spec report2754B/SHA
+1693a583c95390c3b1c6d72ee0a26f6654bed77a6a2742265c882500a78968dd;
+Standards2534B/SHA
+ab4eb8f5b1cd6eb2331f165e9c0ed761df4ef51e4a3d6117c4798c077c8955fc.
+Reports are reference-native Spec/Standards R2 under the review directory.
+Parent read both and independently matched25 source/private rows, frozen Git
+blobs/tree,442 evidence entries and the23 retained R1 rows; no tests repeated.
+Parent readback477B/SHA
+dbae6623fe07209520d53bd018265ac95a2af6f67d69d80b49d42c1600acb834.
+Any later structural failure returns to Planner without a third patch loop.
+
+Final-head prospective RAM-only geometry: carrier320376/327680 (margin7304),
+header887301, frame8227337, IPC1238; full local future per-operation16697861B
+fits24MiB. No carrier was submitted. Retained closed scratch16003072/16777216B
+leaves774144B; future active8MiB stays independently reserved. Parent readback
+and reports use the existing review/common hold. No history deletion or refund,
+new net capacity, SDK operation, relogin, restart or host inspection occurred.
+
+Remaining: actualmain integration with independently reviewed issue292, normal
+matching-head Linux CI/full release and actual named-file FLOCK; then new immutable
+private source publication/control binding and merged-source geometry. Old
+consumed PREPARE/EXECUTE controls remain fail-closed. Actual normal-close/Fresh
+admission and runtime GO are still absent. No capture/input/report or financial
+qualification follows from offline READY.
