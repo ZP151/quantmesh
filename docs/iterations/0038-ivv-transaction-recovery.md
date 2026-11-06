@@ -1,5 +1,40 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Consolidated known-fix Source checkpoint —2026-11-06
+
+Independent narrow R1 found one P2 per axis at535f1792: Spec2217B/
+SHAebb1ad7bf2c0938be1cd823826ed5025251b57f609b83d9b3fcf27e44c096484 showed
+an interrupted TCP scalar update could fail strict selection and drop the whole
+lifecycle. Standards2154B/SHA32a6839cab22689225ab2a5989d654ffcc524175ca2d4ffd4f344259aae56598
+showed freeze could publish0/stale partial progress between the actual write and
+its accounting. Both original reports are retained; neither requested a new
+structure, observation layer or change to SDK semantics.
+
+Implementer reproduced each cause before patching: the original whole lifecycle
+vanishes under an injected post-write clock error; deterministic do_send and
+_on_write interleavings incorrectly freeze NONE and PARTIAL. One consolidated
+fix marks interrupted updates under the existing scalar lock and uses a pre-
+allocated valid UNKNOWN fallback for only this auxiliary trace. An in-progress
+write freezes as UNKNOWN until completion has been observed. Partial SDK state,
+return/exception identity, locks, lifecycle/normal close and all request/timeout
+limits remain owned by their existing paths; no new output field or grant.
+
+Verifier: new three-case causal REDs become GREEN; final focused50PASS. The
+necessary same nine-file affected union now559PASS/76.95s, including the actual
+issuer/native/bootstrap entrances with the new literal binding. Immutable raw
+log1333B/SHA14d1466864a832fcc8d831df240f49c8d7d417471f0317cdf6969ec7ee4e3124.
+Source full Ruff/changed format/whitespace and canonical Git-byte comparison
+close before checkpoint. All earlier556/47 runs and failures are retained.
+
+Current helper104305B/SHA41378389494f144bc98b79660dddd827788d8b8dbd9494028f345f168fe60e7c
+and issuer24709B/SHA839d69713bfef944b59d3087ea3525bd1e501b689c03c21b51449e50c26b373f
+are bound together. Runner af934f75 remains byte-identical to R1. Original two
+readers next verify only both known fixes/R2; no third structural patch round.
+No push/PR/CI/native effect follows yet. P29/all538MiB and every old future stay;
+old batch02 SPENT and actual cumulative UNKNOWN remain. No accepted inputs or
+financial result exists. Private successor/maximum geometry and actual release
+gates continue independently under the same frozen method.
+
 ## Frozen Init end-to-end Source checkpoint —2026-11-06
 
 Planner consumed the last offline decoder exclusion and froze proposal8173d439

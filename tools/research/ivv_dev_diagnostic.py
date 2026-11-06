@@ -23,7 +23,7 @@ PROVENANCE_KEYS = (
 
 # The independently reviewed helper is fixed for this release. No code from the
 # plan, catalog, or helper runs to establish this initial trust anchor.
-_CAPTURE_HELPER_SHA256 = "1946b9b9e8910d094b826eb406e22063ad61d16f70273a6801e34b3790586312"
+_CAPTURE_HELPER_SHA256 = "41378389494f144bc98b79660dddd827788d8b8dbd9494028f345f168fe60e7c"
 
 
 def _capture():

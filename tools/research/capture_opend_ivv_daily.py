@@ -1367,6 +1367,7 @@ class _InitReceiveTrace:
         self.started = None
         self.lock = threading.Lock()
         self.frozen = False
+        self.failed = False
         self.bound = False
         self.net = self.conn = self.wire = None
         self.ctx = self.util = self.packet_err = self.request = None
@@ -1374,7 +1375,12 @@ class _InitReceiveTrace:
         self.conn_id = None
         self.saved = []
         self.write_valid = False
+        self.write_inflight = False
         self.value = _empty_receive_trace()
+        # Already allocated: an interrupted scalar update cannot require
+        # allocating a fallback while handling the recorder's own failure.
+        self.fallback = _empty_receive_trace()
+        self.fallback.update(recorder_error=True, tcp_progress="UNKNOWN")
 
     def mark(self, phase):
         if self.started is None:
@@ -1397,10 +1403,15 @@ class _InitReceiveTrace:
         # No SDK lock/delegate/I/O is entered while holding this short scalar lock.
         try:
             with self.lock:
-                if not self.frozen:
-                    return action(*args)
+                if not self.frozen and not self.failed:
+                    try:
+                        return action(*args)
+                    except BaseException:
+                        # Set this while still holding the scalar lock. Freeze
+                        # must never see the interrupted intermediate update.
+                        self.failed = True
         except BaseException:
-            self.value["recorder_error"] = True
+            self.failed = True
         return None
 
     def count(self, field):
@@ -1423,7 +1434,7 @@ class _InitReceiveTrace:
             previous = (name in vars(owner), vars(owner).get(name))
 
             def observed(*args, **kwargs):
-                if not self.bound or self.frozen:
+                if not self.bound or self.frozen or self.failed:
                     return delegate(*args, **kwargs)
                 if name == "on_recv":
                     # Use the SDK's own RLock order; no recorder lock is held
@@ -1567,6 +1578,7 @@ class _InitReceiveTrace:
 
     def unknown_write(self):
         self.write_valid = False
+        self.write_inflight = False
         self.value.update(tcp_progress="UNKNOWN", tcp_accepted=None, tcp_pending=None)
 
     def same_connection(self):
@@ -1591,6 +1603,7 @@ class _InitReceiveTrace:
             # This wrapper belongs to the one exact bound ReqInfo instance.
             self.notified(self.request)
         elif name == "do_send":
+            self.write_inflight = True
             if len(args) != 2 or args[0] != self.conn_id or args[1] is not self.wire:
                 self.unknown_write()
                 return
@@ -1603,6 +1616,7 @@ class _InitReceiveTrace:
                 self.unknown_write()
             self.wire = None
         elif name == "_on_write":
+            self.write_inflight = True
             if (
                 len(args) != 1
                 or args[0] is not self.conn
@@ -1613,7 +1627,10 @@ class _InitReceiveTrace:
                 self.unknown_write()
 
     def after(self, name, args, result):
-        if name not in ("do_send", "_on_write") or not self.write_valid:
+        if name not in ("do_send", "_on_write"):
+            return
+        self.write_inflight = False
+        if not self.write_valid:
             return
         if (
             not self.same_connection()
@@ -1627,11 +1644,12 @@ class _InitReceiveTrace:
         if pending > previous:
             self.unknown_write()
             return
-        self.value["tcp_accepted"] += previous - pending
+        accepted = self.value["tcp_accepted"] + previous - pending
         self.mark("write")
-        self.value["tcp_pending"] = pending
-        self.value["tcp_progress"] = (
-            "FULL" if pending == 0 else "PARTIAL" if self.value["tcp_accepted"] else "NONE"
+        self.value.update(
+            tcp_accepted=accepted,
+            tcp_pending=pending,
+            tcp_progress="FULL" if pending == 0 else "PARTIAL" if accepted else "NONE",
         )
 
     def restore(self):
@@ -1649,10 +1667,11 @@ class _InitReceiveTrace:
             self.conn_id = None
 
     def wait_end(self):
-        with self.lock:
-            if not self.frozen:
-                self.mark("wait")
-                self.value["wait_ended"] = True
+        def ended():
+            self.mark("wait")
+            self.value["wait_ended"] = True
+
+        self.record(ended)
 
     def unpack_phase(self):
         self.record(self.mark, "unpack")
@@ -1664,6 +1683,12 @@ class _InitReceiveTrace:
         except BaseException:
             alive = None
         with self.lock:
+            if self.failed:
+                self.value = self.fallback
+            elif self.write_inflight:
+                # The socket operation may have completed even though its
+                # accounting callback has not. Zero/stale progress is unsound.
+                self.unknown_write()
             self.value["network_thread"] = (
                 "ALIVE" if alive is True else "DEAD" if alive is False else "UNKNOWN"
             )

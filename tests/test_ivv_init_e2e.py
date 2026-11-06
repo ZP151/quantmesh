@@ -950,3 +950,60 @@ def test_source_accurate_model_runs_with_sdk_import_and_real_socket_bombs(monkey
     backend.close()
     assert lifecycle.value["receive_trace"]["target_notify_err"] == "Ok"
     assert not any(name == "moomoo" or name.startswith("moomoo.") for name in sys.modules)
+
+
+def test_r1_partial_tcp_update_failure_keeps_complete_lifecycle_through_ipc_stop(monkeypatch):
+    import test_ivv_runtime_failure_evidence as chain
+
+    m, backend, lifecycle, state = open_fixture("timeout", transport=full_transport("write_only"))
+    mark = m._InitReceiveTrace.mark
+
+    def failed_write_clock(trace, phase):
+        if phase == "write":
+            raise RuntimeError(CANARY)
+        return mark(trace, phase)
+
+    monkeypatch.setattr(m._InitReceiveTrace, "mark", failed_write_clock)
+    with pytest.raises(m.CaptureRejected) as failure:
+        backend.open()
+    lifecycle.failed("primary", failure.value)
+    backend.close()
+    assert state.writes == 1 and not state.conn.writebuf
+    runner = module("ivv_trusted_runner")
+    error = runner.Refused("CAPTURE_FAILED")
+    runner._carry_capture_lifecycle(error, lifecycle.value)
+    assert runner._capture_lifecycle_from_error(error) == lifecycle.value
+    trace = lifecycle.value["receive_trace"]
+    assert trace["recorder_error"] and trace["tcp_progress"] == "UNKNOWN"
+    assert trace["tcp_accepted"] is None and trace["tcp_pending"] is None
+    selected = chain.test_real_child_ipc_parent_wrap_main_reader_selector(
+        monkeypatch, "pidfd", (runner, error, None)
+    )
+    assert selected["capture_lifecycle"] == lifecycle.value
+    assert all(selected["capture_lifecycle"]["normal_close"].values())
+
+
+@pytest.mark.parametrize("seam", ["do_send", "_on_write"])
+def test_r1_freeze_between_actual_write_and_accounting_is_unknown(seam):
+    transport = full_transport("write_only")
+    state = transport[1]
+    if seam == "_on_write":
+        state.write_steps = [2, 43]
+    m, backend, lifecycle, _ = open_fixture("timeout", transport=transport)
+    original = getattr(state.net, seam)
+
+    def completed_write(*args, **kwargs):
+        result = original(*args, **kwargs)
+        assert not state.conn.writebuf
+        state.concurrent_snapshot = backend._receive_trace.freeze(state.net)
+        return result
+
+    setattr(state.net, seam, completed_write)
+    with pytest.raises(m.CaptureRejected, match="sdk_initial_connection_failed"):
+        backend.open()
+    trace = lifecycle.value["receive_trace"]
+    assert state.concurrent_snapshot["tcp_progress"] == trace["tcp_progress"] == "UNKNOWN"
+    assert trace["tcp_accepted"] is None and trace["tcp_pending"] is None
+    assert not trace["recorder_error"]
+    module("ivv_trusted_runner").select_capture_lifecycle(lifecycle.value)
+    backend.close()
