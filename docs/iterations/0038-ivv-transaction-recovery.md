@@ -1,5 +1,46 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Recovery Init observation checkpoint — 2026-11-06
+
+[Issue 281](https://github.com/ZP151/quantmesh/issues/281). PR289 merged at
+45d711 after normal CI. Actual context 6 returned from its constructor and
+stopped at READY_CHECK with sdk_initial_connection_failed (d8dc66f0).
+Owned closure readback 9b8ede5b was CLOSED. Static diagnosis 5408f5ce and
+review e4d66464 left multiple possible causes. All six historical SDK/business
+outcomes retain UNKNOWN. No real input was admitted.
+
+Planner froze the [Init observation plan](../superpowers/plans/2026-11-06-ivv-init-observation.md).
+One action remains resume the fixed IVV capture. Quant Researcher retained the
+instrument, dates, data gates, math and costs, with paper default and live false.
+P27 reserves Source15/common98/software130MiB, capture112MiB and close3MiB
+each, total490MiB (513802240B). All older holds and futures remain. Batch02
+allows one conditional context/Init, seven business requests, 96 keepalives,
+1 business request/s and 28800s. Batch01 stays closed.
+
+Implementer extended only the recovery helper's existing per-instance wire,
+sync Init and failure lifecycle, plus the runner's closed selector. On failed
+capture the optional init_observation includes send/unpack (UNOBSERVED, OK,
+NON_OK, RAISED, UNKNOWN), packet_err (UNOBSERVED, Ok, Timeout, Invalid,
+Disconnect, SendFail, UNKNOWN), ever_ready (boolean), and constructor_status
+(UNOBSERVED, START, CONNECTING, CONNECTED, READY, CLOSING, CLOSED,
+WAIT_RECONNECT, UNKNOWN). UNOBSERVED describes a local call site. NON_OK
+unpack includes both a vendor error reply and missing s2c. Success manifests
+keep their existing shape. No new request, extra context or provider data is
+needed to produce the observation.
+
+Verifier matched all 15 public SDK LF pins. The offline tests execute selected
+methods from the hashed 10.10.7008 SDK source with fake transport/event/response
+boundaries. Causal REDs covered missing facts, send exception, closed selector,
+constructor exception end status and unknown values that the SDK compared equal
+to success. Directed GREENs include ReqInfo wait outcomes, handler READY then
+CLOSED, wrong serial/request/context, identity-preserving returns and raises,
+private canaries, sequential shared-manager use and the failed-manifest-to-STOP
+round trip. The final affected five-file suite passed 277 cases in 17.83s,
+with one existing NumPy timedelta deprecation warning. Lint, format, whitespace
+and Source census are recorded in server/init-observation-01. Self-review checked request
+lifetime and initialized/legacy paths. Independent review, release, actual
+context 7, H1/H2/H3 input acceptance and any research result remain pending.
+
 ## Final collector review checkpoint - 2026-11-05
 
 Both original axes return READY at8c33e2dda6a7fe5a50cb452ec563a3631e621c67 after

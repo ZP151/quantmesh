@@ -1281,6 +1281,9 @@ class _OfficialBackend:
         self._net = None
         self._old_send = self._old_connect = None
         self._connects = 0
+        self._init_facts = None
+        self._bind_init = None
+        self._init_thread = None
         self._closed = {
             "context_closed": False,
             "callbacks_stopped": False,
@@ -1313,6 +1316,14 @@ class _OfficialBackend:
                 _require(type(raw) in (bytes, bytearray) and len(raw) >= head_size, "wire_header")
                 head = self.util.parse_head(bytes(raw[:head_size]))
                 self.o.before_send(head["proto_id"], head["serial_no"])
+                if (
+                    head["proto_id"] == 1001
+                    and self._bind_init is not None
+                    and self._bind_init(ctx, head["serial_no"])
+                ):
+                    return self._observe_init_return(
+                        "send", self._old_send, conn, raw, *args, **kwargs
+                    )
                 return self._old_send(conn, raw, *args, **kwargs)
             except CaptureRejected as error:
                 self.o.poison = error.args[0]
@@ -1320,6 +1331,112 @@ class _OfficialBackend:
 
         net.connect = connect
         net.send = send
+
+    def _observe_init_return(self, field, delegate, *args, **kwargs):
+        # Inspect only the pinned return code. Never retain message/data or an exception.
+        try:
+            result = delegate(*args, **kwargs)
+        except BaseException:
+            self._init_facts[field] = "RAISED"
+            raise
+        code = result[0] if type(result) is tuple and result else None
+        outcome = {0: "OK", -1: "NON_OK"}.get(code) if type(code) is int else None
+        self._init_facts[field] = outcome or "UNKNOWN"
+        if outcome is None:
+            self.o.poison = "init_observation_binding"
+        return result
+
+    def _observe_init_query(self, ctx, query, pack, unpack, kwargs):
+        # The pinned sync query creates its own ReqInfo under the context lock,
+        # inserts it in this map, then calls the guarded send before releasing it.
+        facts = self._init_facts
+        namespace = query.__globals__
+        init = namespace["InitConnect"]
+        if (
+            ctx is not self.ctx
+            or self._init_thread != threading.get_ident()
+            or pack != init.pack_req
+            or unpack != init.unpack_rsp
+            or self._bind_init is not None
+        ):
+            self.o.poison = "init_observation_binding"
+            return query(pack, unpack, **kwargs)
+        packet_err = namespace["PacketErr"]
+        request = None
+
+        def observed_unpack(pb):
+            if (
+                request is None
+                or self._init_thread != threading.get_ident()
+                or facts["packet_err"] != "Ok"
+                or pb is not request.rsp
+                or facts["unpack"] != "UNOBSERVED"
+            ):
+                self.o.poison = "init_observation_binding"
+                return unpack(pb)
+            return self._observe_init_return("unpack", unpack, pb)
+
+        def bind(wire_ctx, serial):
+            nonlocal request
+            req = ctx._req_map.get((1001, serial))
+            if (
+                wire_ctx is not ctx
+                or ctx is not self.ctx
+                or self._init_thread != threading.get_ident()
+                or request is not None
+                or type(serial) is not int
+                or type(req) is not namespace["ReqInfo"]
+                or req.proto_id != 1001
+                or req.serial_no != serial
+                or req.unpack_func is not observed_unpack
+                or not req.is_sync
+            ):
+                self.o.poison = "init_observation_binding"
+                return False
+            request = req
+            wait = req.wait
+
+            def observed_wait():
+                result = wait()
+                error = req.err
+                facts["packet_err"] = next(
+                    (
+                        name
+                        for name in ("Ok", "Timeout", "Invalid", "Disconnect", "SendFail")
+                        if error is getattr(packet_err, name)
+                    ),
+                    "UNKNOWN",
+                )
+                if facts["packet_err"] == "UNKNOWN":
+                    self.o.poison = "init_observation_binding"
+                return result
+
+            req.wait = observed_wait
+            return True
+
+        self._bind_init = bind
+        try:
+            return query(pack, observed_unpack, **kwargs)
+        finally:
+            self._bind_init = None
+            if request is not None:
+                del request.wait
+                request.unpack_func = unpack
+
+    def _init_end_status(self, status):
+        if self._init_facts is not None:
+            known = (
+                "START",
+                "CONNECTING",
+                "CONNECTED",
+                "READY",
+                "CLOSING",
+                "CLOSED",
+                "WAIT_RECONNECT",
+            )
+            self._init_facts["constructor_status"] = (
+                status if type(status) is str and status in known else "UNKNOWN"
+            )
 
     def _processor(self, ctx, parent, pack, unpack):
         owner = getattr(pack, "__self__", None)
@@ -1373,8 +1490,50 @@ class _OfficialBackend:
                 _lifecycle_mark(backend.plan, "INIT_CONNECT")
                 backend.o.initializing()
                 ctx._auto_reconnect = False
+                if type(backend.plan.get("_capture_lifecycle")) is _CaptureLifecycle and hasattr(
+                    base, "_query_sync"
+                ):
+                    backend._init_facts = dict(
+                        send="UNOBSERVED",
+                        packet_err="UNOBSERVED",
+                        unpack="UNOBSERVED",
+                        ever_ready=False,
+                        constructor_status="UNOBSERVED",
+                    )
+                    _lifecycle_mark(backend.plan, init_observation=backend._init_facts)
                 backend._install_wire(ctx)
-                return super()._init_connect_sync()
+                backend._init_thread = threading.get_ident()
+                try:
+                    return super()._init_connect_sync()
+                finally:
+                    backend._init_thread = None
+
+            def _query_sync(ctx, pack_func, unpack_func, **kwargs):
+                query = super()._query_sync
+                if backend._init_facts is None:
+                    return query(pack_func, unpack_func, **kwargs)
+                return backend._observe_init_query(ctx, query, pack_func, unpack_func, kwargs)
+
+            def _handle_init_connect_rsp(ctx, data):
+                handle = super()._handle_init_connect_rsp
+                facts = backend._init_facts
+                if facts is None:
+                    return handle(data)
+                if (
+                    ctx is not backend.ctx
+                    or backend._init_thread != threading.get_ident()
+                    or facts["unpack"] not in ("OK", "UNKNOWN")
+                ):
+                    backend.o.poison = "init_observation_binding"
+                    return handle(data)
+                # Same SDK RLock as the handler. Observe its assignment before
+                # a disconnect can overwrite READY, including a later handler error.
+                with ctx._lock:
+                    try:
+                        return handle(data)
+                    finally:
+                        if ctx._status == backend.constants.ContextStatus.READY:
+                            facts["ever_ready"] = True
 
             def _get_sync_query_processor(ctx, pack, unpack):
                 return backend._processor(ctx, super()._get_sync_query_processor, pack, unpack)
@@ -1391,18 +1550,33 @@ class _OfficialBackend:
         initialize, ctx = OneShot.__init__, self.ctx
         security_firm = getattr(self.sdk.SecurityFirm, self.plan["endpoint"]["security_firm"])
         _lifecycle_mark(self.plan, "CONSTRUCTOR")
-        initialize(
-            ctx,
-            host="127.0.0.1",
-            port=11112,
-            is_encrypt=False,
-            is_async_connect=False,
-            security_firm=security_firm,
-        )
+        try:
+            initialize(
+                ctx,
+                host="127.0.0.1",
+                port=11112,
+                is_encrypt=False,
+                is_async_connect=False,
+                security_firm=security_firm,
+            )
+        except BaseException:
+            if self._init_facts is not None:
+                # The SDK assigned this plain field before entering synchronous Init.
+                self._init_end_status(vars(ctx).get("_status"))
+            raise
         _lifecycle_mark(self.plan, "READY_CHECK", constructor_returned=True)
-        _require(
-            self.ctx.status == self.constants.ContextStatus.READY, "sdk_initial_connection_failed"
-        )
+        status = self.ctx.status
+        self._init_end_status(status)
+        if self._init_facts is not None:
+            _require(
+                self.o.poison != "init_observation_binding"
+                and self._init_facts["constructor_status"] != "UNKNOWN"
+                and (
+                    status != self.constants.ContextStatus.READY or self._init_facts["ever_ready"]
+                ),
+                "init_observation_binding",
+            )
+        _require(status == self.constants.ContextStatus.READY, "sdk_initial_connection_failed")
         self.ctx.set_sync_query_connect_timeout(5)
 
     def invoke(self, tag, params):
