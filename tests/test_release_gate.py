@@ -229,10 +229,74 @@ def test_full_pytest_command_is_exhaustive_with_duration_reporting(
         "-p",
         "tools.ci_profile_plugin",
         "-vv",
+        "--maxfail=1",
         "--durations=50",
         "--basetemp",
         str(gate_root / "pytest-tmp"),
     ]
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_real_release_pytest_completion_controls_later_steps(tmp_path, monkeypatch, fails):
+    """Only environment setup is modeled; the release's pytest and next command execute."""
+    gate_root = tmp_path / "gate"
+    gate_root.mkdir()
+    fixture = tmp_path / "synthetic"
+    fixture.mkdir()
+    (fixture / "pytest.ini").write_text("[pytest]\n")
+    (fixture / "test_probe.py").write_text(
+        "import pytest\nfrom pathlib import Path\n"
+        "@pytest.fixture\ndef owner():\n    yield\n    Path('closed').write_text('yes')\n"
+        f"def test_first(owner):\n    assert {not fails}\n"
+        "def test_second():\n    Path('second').write_text('yes')\n"
+    )
+    original_step = release_gate.run_step
+
+    def run(name, cmd, cwd, logs, timeout):
+        if name == "full pytest suite":
+            return original_step(
+                name,
+                [
+                    sys.executable,
+                    *cmd[1:],
+                    "--rootdir=" + str(fixture),
+                    "-c",
+                    str(fixture / "pytest.ini"),
+                    str(fixture),
+                ],
+                fixture,
+                logs,
+                timeout=30,
+                progress_interval_seconds=0.05,
+            )
+        if name.startswith("golden path"):
+            return original_step(
+                name,
+                [sys.executable, "-c", "from pathlib import Path;Path('later').write_text('yes')"],
+                fixture,
+                logs,
+                timeout=10,
+                progress_interval_seconds=0.05,
+            )
+        return True, 0.0
+
+    def git(args, cwd):
+        value = "" if args == ["status", "--porcelain"] else "a" * 40 + "\n"
+        return subprocess.CompletedProcess(["git", *args], 0, stdout=value)
+
+    monkeypatch.setattr(release_gate, "run_step", run)
+    monkeypatch.setattr(release_gate, "_git", git)
+    monkeypatch.setattr(release_gate.tempfile, "mkdtemp", lambda prefix: str(gate_root))
+    monkeypatch.setattr(sys, "argv", ["release_gate.py", "--keep"])
+    monkeypatch.setenv("PYTHONPATH", str(Path(__file__).resolve().parents[1]))
+    monkeypatch.setenv("PYTEST_DISABLE_PLUGIN_AUTOLOAD", "1")
+    assert release_gate.main() == int(fails)
+    assert (fixture / "closed").exists()
+    assert (fixture / "second").exists() is not fails
+    assert (fixture / "later").exists() is not fails
+    (event_file,) = (gate_root / "logs").glob("*.pytest.jsonl")
+    rows = [json.loads(line) for line in event_file.read_text().splitlines()]
+    assert rows[-1]["completed"] == (1 if fails else 2)
 
 
 def test_run_step_streams_log_before_process_exit(tmp_path: Path, monkeypatch) -> None:

@@ -100,6 +100,23 @@ def test_non_pytest_gate_commands_do_not_receive_basetemp() -> None:
     )
 
 
+def test_contract_selects_whole_native_ownership_and_required_bootstraps():
+    (command,) = build_commands("contract", GateDecision(GateTier.FAST))
+    assert command.name == "pytest release contract"
+    assert "--ci-contract" in command.argv
+    assert "tools.ci_profile_plugin" in command.argv
+    targets = [a for a in command.argv if a.startswith("tests/")]
+    assert len(targets) == len(set(targets)) == 12
+    assert "tests/test_portfolio_budget_qualification.py" in targets
+    assert "tests/test_ci_release_contract.py" in targets
+    assert not any(a in command.argv[3:] for a in ("-k", "--ignore", "-m"))
+    required = quality_gate.CONTRACT_REQUIRED_NODES
+    assert len(required) == 5
+    quality_gate.check_contract_collection([*required, "tests/extra.py::test_ok"])
+    with pytest.raises(ValueError, match="missing release contract targets"):
+        quality_gate.check_contract_collection(list(required)[1:])
+
+
 @pytest.mark.parametrize(("assertion", "expected_returncode"), [("True", 0), ("False", 1)])
 def test_executor_removes_the_owned_pytest_basetemp_after_exit(
     tmp_path: Path, assertion: str, expected_returncode: int

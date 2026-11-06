@@ -1,4 +1,4 @@
-"""Bounded diagnostics for two slow nodes in the existing release pytest run.
+"""Profiles for two existing slow nodes and a pure contract collection guard.
 
 The cProfile table covers the pytest call thread only. Calendar wall time is
 captured across worker threads, so its totals and profiler cumulative times
@@ -28,6 +28,24 @@ TARGETS = frozenset(
 )
 MAX_ROWS = 12
 MAX_DIGESTS = 256
+
+
+def pytest_addoption(parser):
+    group = parser.getgroup("ci-contract")
+    group.addoption(
+        "--ci-contract", action="store_true", help="require release bootstrap collection"
+    )
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("ci_contract"):
+        from tools.quality_gate import check_contract_collection
+
+        try:
+            check_contract_collection(item.nodeid for item in items)
+        except ValueError as error:
+            raise pytest.UsageError(str(error)) from error
 
 
 def _digest(calendar_id, start, end, policy, versions):
