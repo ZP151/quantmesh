@@ -1658,3 +1658,35 @@ runtime7 and450 indexed originals without rerunning tests. New retained scope
 refund or new net charge. Normal final-head CI must reveal any remaining primary;
 required green release and ordinary guarded merge remain outstanding. This is
 source review under standing proxy authority, not a human inspection claim.
+
+### Issue292 capture-wrapper mock family — 2026-11-06
+
+CI571 passes all eight original kernel-body cases and the added exception
+regression, then reports an actual call-phase failure at preowner cleanup None:
+582PASS/1FAIL,25.035935s, complete583-result JUnit with no missing evidence.
+The normal-return context exit matches official pytest9.2 CaptureManager's
+call-wrapper finally reading FDCapture metadata through `os.fstat(...).st_size`
+before fixture teardown. The test's broad incomplete fstat double remains active
+there. Official source37552B/SHA256
+`e4b494b696e60b83f311c06250f2810d83db7548539f28bf9f3d5ffc0f292920`
+and its URL/tag/excerpts are retained. CI569/570 hidden primaries are not rewritten.
+CI571 originals remain; obsolete release completed cancelled10:14:49Z.
+
+One bounded whole-file family inventory identified only the preowner11-parameter
+and predispatch6-parameter tests. `2ce0280b805036f1c8240edc7384166603ca71cd`
+adds local contexts to those bodies and six regression cases calling the actual
+tests. Exact RED02 has six real-descriptor fstat metadata failures; the original
+preparation-error RED01 remains separately identified. The related complete file
+then passes89 tests/8.49s. Normal/refusal/exception cases verify real fd/path
+metadata and original function identities before their cleanup, preserving the
+original exception object. No blind stat fields, skips, runtime or selection edits.
+
+Parent Reviewer reads the actual diff, official source receipt, whole-file
+inventory and causal evidence; no blocker in this narrow correction. Parent
+Verifier matches475 indexed originals and the complete base-module AST after
+removing only the two wrappers/new regression. All17 original parameters and
+runtime7 remain. This is not a third structural review. Retained family scope
+2,998,272B; with prior controller/CI570 scopes total8,187,904B stays under existing
+P37, with parent CI archives separately retained and no refunds. Windows original
+portfolio path-format failure remains recorded rather than being skipped or
+repaired here. Matching-head normal Linux661 contract and full release are pending.
