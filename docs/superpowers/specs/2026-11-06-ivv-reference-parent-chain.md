@@ -41,7 +41,11 @@ returned constructor with READY/NOT_READY plus three observed SDK close facts.
 It then exits normally. The existing supervisor waits/reaps, drains EOF and
 checks recursive empty/resources/provider; the parent removes the leaf and
 closes retained descriptors and lifecycle lease. Only then may its STOP carry
-parent_closed=true. The manager deliberately returns1 through existing main's
+parent_closed=true. The manager and unchanged --pipe client both return1;
+the earlier client0 model was incorrect. Only exact integer1/1 with the normal
+reference STOP/SDK/parent/manager/unit evidence is condition-eligible. Ordinary
+capture success remains0/0; NOT_READY still consumes a negative condition.
+The manager deliberately returns1 through existing main's
 runner-failure.json path. A thrown operation error, bad close, nonzero child
 exit, late resource/FD/lease error retains failure and parent_closed=false.
 There is no new successful reference seal; the original capture _seal retains

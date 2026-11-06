@@ -2243,6 +2243,24 @@ def _read_reference_control(plan):
         ("policy_sha256", plan["policy_ref"]["sha256"]),
     ):
         _require(_digest(value[key]) and value[key] == expected, "reference_control_pin")
+    if "reference_pair_ref" in plan:
+        pair = _read_reference_pair(plan)
+        _require(
+            pair.get("reference_control_sha256") == ref["sha256"]
+            and all(
+                value[key] == pair.get(key)
+                for key in (
+                    "nonce",
+                    "reference_attempt",
+                    "capture_attempt",
+                    "reference_context",
+                    "capture_context",
+                    "sdk_pins_sha256",
+                    "policy_sha256",
+                )
+            ),
+            "reference_control_pair",
+        )
     return value
 
 

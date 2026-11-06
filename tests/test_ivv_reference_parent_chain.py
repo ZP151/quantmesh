@@ -10,6 +10,23 @@ from test_ivv_init_e2e import full_transport
 from test_ivv_recovery_capture import ledger, module
 
 
+@pytest.mark.parametrize("identity", ["nonce", "reference_context", "capture_context"])
+def test_hash_consistent_reference_pair_control_mismatch_precedes_held_permit_and_may(
+    tmp_path, monkeypatch, identity
+):
+    from test_ivv_recovery_capture import connected_recovery_capture
+
+    with pytest.raises(Exception) as refused:
+        connected_recovery_capture(
+            tmp_path, monkeypatch, reference=True, reference_identity_fault=identity
+        )
+    assert not list((tmp_path / "ledger").glob("*.may.json"))
+    assert isinstance(refused.value, ValueError)
+    assert str(refused.value) == "reference_control_pair"
+    assert not (tmp_path / "permit.json").exists()
+    assert not (tmp_path / "capture").exists()
+
+
 @pytest.mark.parametrize("fault", ["control", "permit", "plan"])
 def test_reference_actual_held_admission_drift_refuses_before_may(tmp_path, monkeypatch, fault):
     from pathlib import Path

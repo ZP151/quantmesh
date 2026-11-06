@@ -356,7 +356,7 @@ class ConditionOwner(unittest.TestCase):
             ),
             "unit-result": dict(
                 manager_returncode=1,
-                client_returncode=0,
+                client_returncode=1,
                 invocation_id=fields["InvocationID"],
                 startup_sha256=r.digest(startup),
             ),
@@ -417,7 +417,7 @@ class ConditionOwner(unittest.TestCase):
         if fault == "manager":
             book.rows[first + ".manager-exit.json"]["manager_returncode"] = -1
         if fault == "client":
-            book.rows[first + ".unit-result.json"]["client_returncode"] = 1
+            book.rows[first + ".unit-result.json"]["client_returncode"] = 0
         if fault == "terminal":
             book.rows[first + ".terminal.json"]["terminal"]["ExecMainCode"] = "2"
         if fault == "cleanup":

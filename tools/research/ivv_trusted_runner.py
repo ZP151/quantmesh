@@ -2729,8 +2729,11 @@ def reference_capture_condition(book, pair_sha256, read_owned, native, producer)
         )
         expected_exit = dict(manager_returncode=1, invocation_id=invocation, startup_sha256=startup)
         need(
-            rows["manager-exit"] == expected_exit
-            and rows["unit-result"] == dict(expected_exit, client_returncode=0),
+            type(rows["manager-exit"].get("manager_returncode")) is int
+            and type(rows["unit-result"].get("manager_returncode")) is int
+            and type(rows["unit-result"].get("client_returncode")) is int
+            and rows["manager-exit"] == expected_exit
+            and rows["unit-result"] == dict(expected_exit, client_returncode=1),
             "REFERENCE_NORMAL_MANAGER",
         )
         terminal = rows["terminal"]

@@ -2,6 +2,14 @@
 
 Status: Proposed implementation; offline qualification only (issue293).
 
+R2 clarification: the unchanged systemd-run --pipe client propagates the normal
+diagnostic manager exit, so this exact reference STOP requires integer manager1
+and client1 (not client0). Signal, boolean, other status or uncertain closure
+cannot satisfy the condition. Ordinary successful capture still requires0/0.
+The first paired operation also cross-checks control nonce, both attempt/context
+IDs and SDK/policy/catalog pins before the sole begin and at held admission;
+a matching control hash alone does not establish those semantic relationships.
+
 ## Context
 
 A guarded Init-only diagnostic must not become capture success. Its normal

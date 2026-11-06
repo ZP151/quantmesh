@@ -69,6 +69,17 @@ capture entry and limits are reused. This requires a separate causal RED/GREEN,
 private Ops/ABI/geometry and independent release review; no completion claim here.
 # Approved next bounded execution
 
+## Consolidated formal R2 correction
+
+- [x] Preserve actual dispatch/condition RED for propagated manager/client1/1;
+  distinguish exact expected reference STOP from arbitrary nonzero/signal/bool
+  and keep original successful capture0/0. No systemd property change.
+- [x] Preserve hash-consistent nonce/reference-context/capture-context MAY REDs;
+  bind all pair/control IDs and SDK/policy/catalog before the sole begin and
+  held permit, with no MAY/SDK on mismatch. Do not defer this to later condition.
+- [x] Run only affected guards/private STOP and final source/static/geometry;
+  freeze a successor with old evidence retained for same-reader R2. No third loop.
+
 - [x] Preserve the initial API RED and causal entry/crash/FD-lifetime negatives;
   add only the versioned pair transition route to the actual ledger.
 - [x] Bind immutable claim/outcome to real runner-owned close originals and a

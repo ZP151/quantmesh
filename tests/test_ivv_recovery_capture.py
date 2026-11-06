@@ -254,6 +254,7 @@ def connected_recovery_capture(
     capture_failure=False,
     reference=False,
     provider_binding=None,
+    reference_identity_fault=None,
 ):
     import contextlib
     import os
@@ -332,6 +333,33 @@ def connected_recovery_capture(
                 policy_sha256=profile.policy_sha,
             ),
         )
+    reference_pair = None
+    if reference_identity_fault is not None:
+        control = json.loads(Path(plan["reference_init_ref"]["path"]).read_bytes())
+        reference_pair = dict(
+            schema_id="qm.ivv.reference-pair.v1",
+            **{
+                key: control[key]
+                for key in (
+                    "nonce",
+                    "reference_attempt",
+                    "capture_attempt",
+                    "reference_context",
+                    "capture_context",
+                    "sdk_pins_sha256",
+                    "policy_sha256",
+                )
+            },
+            method_sha256=catalog_ref["sha256"],
+            provider_binding_sha256="a" * 64,
+            provider_config_sha256="b" * 64,
+            provider_cohort_sha256="c" * 64,
+        )
+        control[reference_identity_fault] = "4" * 32
+        plan["reference_init_ref"] = put("reference-control.json", control)
+        reference_pair["reference_control_sha256"] = plan["reference_init_ref"]["sha256"]
+        plan["reference_pair_ref"] = put("reference-pair.json", reference_pair)
+        plan["operation_context"] = reference_pair["reference_context"]
     old_read = m._read_root_ref
     auth_ref = {"path": str(tmp_path / "private-authority"), "sha256": contract.AUTHORITY}
 
@@ -385,7 +413,10 @@ def connected_recovery_capture(
     book = task.RecoveryLedger(
         tmp_path / "ledger", profile.policy, contract, sync_dir=lambda _: None
     )
-    attempt = book.begin(catalog_ref["sha256"], now=0)
+    attempt = book.begin(catalog_ref["sha256"], now=0, reference_pair=reference_pair)
+    if reference_pair is not None:
+        book.enter(attempt, catalog_ref["sha256"], "5" * 64)
+        book.bind_reference_plan(attempt, final, reference_pair, "5" * 64)
     state = SimpleNamespace(
         helper=m,
         recovery_profile=profile,
