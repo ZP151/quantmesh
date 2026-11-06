@@ -372,6 +372,8 @@ def _validate_production_plan_keys(plan, *, schema="qm.ivv.capture-plan.v1"):
         allowed = (allowed - {"provider_bounds_ref"}) | {"provider_evidence_ref", "policy_ref"}
     if schema == "qm.ivv.capture-plan" + RECOVERY_SUFFIX:
         allowed |= {"recovery"}
+        if "reference_init_ref" in plan:
+            allowed.add("reference_init_ref")
     _require(type(plan) is dict and set(plan) <= allowed, "unknown_plan_fields")
     _require(set(plan) == allowed, "missing_plan_fields")
 
@@ -2158,6 +2160,307 @@ class _OfficialBackend:
         return dict(self._closed)
 
 
+def _read_reference_control(plan):
+    """The seed/GO/permit bind these immutable IDs; this is not a runtime grant."""
+    _require(plan["schema_id"] == "qm.ivv.capture-plan" + RECOVERY_SUFFIX, "reference_family")
+    ref = plan["reference_init_ref"]
+    _require(
+        type(ref) is dict
+        and set(ref) == {"path", "sha256"}
+        and ref["path"]
+        == str(Path(plan["provider_evidence_ref"]["path"]).parent / "reference-control.json")
+        and _digest(ref["sha256"]),
+        "reference_control_ref",
+    )
+    value = _strict_json(_read_root_ref(ref, maximum=4096, exact_mode=True))
+    _require(
+        type(value) is dict
+        and set(value)
+        == {
+            "schema_id",
+            "nonce",
+            "reference_attempt",
+            "capture_attempt",
+            "reference_context",
+            "capture_context",
+            "catalog_sha256",
+            "sdk_pins_sha256",
+            "policy_sha256",
+        }
+        and value["schema_id"] == "qm.ivv.reference-control.v1",
+        "reference_control_shape",
+    )
+    for key in ("nonce", "reference_context", "capture_context"):
+        _require(
+            type(value[key]) is str and re.fullmatch("[0-9a-f]{32}", value[key]),
+            "reference_control_identity",
+        )
+    _require(value["reference_context"] != value["capture_context"], "reference_context_alias")
+    for key in ("reference_attempt", "capture_attempt"):
+        _require(
+            type(value[key]) is str and re.fullmatch("connection-[0-9]{6}", value[key]),
+            "reference_control_attempt",
+        )
+    _require(
+        int(value["reference_attempt"][-6:]) > 0
+        and int(value["capture_attempt"][-6:]) == int(value["reference_attempt"][-6:]) + 1
+        and value["reference_attempt"] == plan["recovery"]["connection_attempt_id"],
+        "reference_control_attempt",
+    )
+    for key, expected in (
+        ("catalog_sha256", plan["catalog_sha256"]),
+        ("sdk_pins_sha256", plan["sdk_pins_sha256"]),
+        ("policy_sha256", plan["policy_ref"]["sha256"]),
+    ):
+        _require(_digest(value[key]) and value[key] == expected, "reference_control_pin")
+    return value
+
+
+class _ReferenceBackend(_OfficialBackend):
+    """Official Init with the same safety wire and an explicit no-send KeepAlive shim."""
+
+    def __init__(self, observer, writer, plan, clock, *, modules=None):
+        _require(type(observer) is _ReferenceObserver, "reference_observer_required")
+        super().__init__(observer, writer, plan, clock, modules=modules)
+        observer.backend = self
+        self.constructor_returned = False
+        self.constructor_status = "NOT_RETURNED"
+
+    def open(self):
+        self.o.context_created()
+        backend = self
+        base = self.sdk.OpenQuoteContext
+
+        class ReferenceContext(base):
+            def _init_connect_sync(ctx):
+                backend.o.initializing()
+                ctx._auto_reconnect = False
+                backend._install_wire(ctx)
+                return super()._init_connect_sync()
+
+            def keep_alive(ctx):
+                backend.o.check()
+                return 0, ""
+
+        _require(
+            self.plan["endpoint"]["is_encrypt"] is False,
+            "encrypted_transport_not_prepared_no_downgrade",
+        )
+        self.ctx = ReferenceContext.__new__(ReferenceContext)
+        ReferenceContext.__init__(
+            self.ctx,
+            host="127.0.0.1",
+            port=11112,
+            is_encrypt=False,
+            is_async_connect=False,
+            security_firm=getattr(self.sdk.SecurityFirm, self.plan["endpoint"]["security_firm"]),
+        )
+        self.constructor_returned = True
+        self.constructor_status = (
+            "READY" if self.ctx.status == self.constants.ContextStatus.READY else "NOT_READY"
+        )
+        self.o.check(180)
+        _require(
+            self.ctx.status == self.constants.ContextStatus.READY,
+            "sdk_initial_connection_failed",
+        )
+
+
+class _ReferenceObserver(_CaptureObserver):
+    """Narrow protocols before the existing live check and durable request MAY."""
+
+    def __init__(self, plan, writer, clock):
+        _require(
+            callable(plan.get("_live_verifier"))
+            and plan.get("_recovery_ledger") is not None
+            and type(plan.get("_recovery_attempt")) is str,
+            "reference_live_ledger_required",
+        )
+        super().__init__(plan, writer, clock)
+        self.backend = None
+
+    def check(self, limit=480):
+        try:
+            if self.backend is not None:
+                _require(
+                    self.backend._bind_init is None
+                    and self.backend._receive_trace is None
+                    and self.backend._init_facts is None,
+                    "reference_observer_installed",
+                )
+            return super().check(limit)
+        except BaseException:
+            self.poison = self.poison or "reference_live_refused"
+            raise
+
+    def before_send(self, proto, serial):
+        with self._lock:
+            if type(proto) is not int or proto != 1001 or self.controls.get(1001):
+                self.reject("reference_init_only")
+            try:
+                return super().before_send(proto, serial)
+            except BaseException:
+                self.poison = self.poison or "reference_send_refused"
+                raise
+
+
+def _select_reference_terminal(value):
+    keys = {
+        "schema_id",
+        "state",
+        "reference_control_sha256",
+        "source_binding",
+        "constructor_returned",
+        "constructor_status",
+        "counts",
+        "normal_close",
+        "primary_failure",
+        "close_failure",
+    }
+    _require(type(value) is dict and set(value) == keys, "reference_terminal_shape")
+    _require(
+        value["schema_id"] == "qm.ivv.reference-init-terminal.v1"
+        and value["state"] in {"REFERENCE_READY_CLOSED", "REFERENCE_FAILED"}
+        and type(value["constructor_returned"]) is bool
+        and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
+        and _digest(value["reference_control_sha256"])
+        and type(value["source_binding"]) is dict,
+        "reference_terminal_binding",
+    )
+    counts = value["counts"]
+    _require(
+        type(counts) is dict
+        and set(counts)
+        == {"contexts", "initializations", "init_sends", "keepalive_sends", "business_sends"}
+        and all(type(v) is int and 0 <= v <= 1 for v in counts.values())
+        and counts["keepalive_sends"] == counts["business_sends"] == 0,
+        "reference_terminal_counts",
+    )
+    normal = value["normal_close"]
+    _require(
+        type(normal) is dict
+        and set(normal) == {"context_closed", "callbacks_stopped", "data_socket_closed"}
+        and all(type(v) is bool for v in normal.values()),
+        "reference_terminal_close",
+    )
+    for name in ("primary_failure", "close_failure"):
+        failure = value[name]
+        _require(
+            failure is None
+            or (
+                type(failure) is dict
+                and set(failure) == {"stage", "class", "code"}
+                and failure["stage"] in {"initialize", "close", "late_guard"}
+                and failure["class"]
+                in {
+                    "CaptureRejected",
+                    "RuntimeError",
+                    "OSError",
+                    "TimeoutError",
+                    "ValueError",
+                    "KeyboardInterrupt",
+                    "Exception",
+                }
+                and type(failure["code"]) is str
+                and re.fullmatch(r"[a-z0-9_]{1,64}", failure["code"])
+            ),
+            "reference_terminal_failure",
+        )
+    ready = (
+        value["constructor_returned"]
+        and value["constructor_status"] == "READY"
+        and all(normal.values())
+        and counts
+        == dict(contexts=1, initializations=1, init_sends=1, keepalive_sends=0, business_sends=0)
+        and value["primary_failure"] is None
+        and value["close_failure"] is None
+    )
+    _require((value["state"] == "REFERENCE_READY_CLOSED") == ready, "reference_terminal_state")
+    return json.loads(_canonical(value))
+
+
+def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
+    """One child MAY and guarded Init; parent ownership is never asserted here."""
+    _validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + RECOVERY_SUFFIX)
+    writer = _Writer(root, sync_dir)
+    writer.json(
+        "reference-intent.json",
+        {
+            "schema_id": "qm.ivv.reference-init-intent.v1",
+            "reference_control_sha256": plan["reference_init_ref"]["sha256"],
+            "connection_attempt_id": plan["_recovery_attempt"],
+            "source_binding": plan["_verified_binding"],
+        },
+    )
+    observer = _ReferenceObserver(plan, writer, clock)
+    backend = None
+    primary = close_failure = None
+    returned = False
+    status = "NOT_RETURNED"
+    normal = dict(context_closed=False, callbacks_stopped=False, data_socket_closed=False)
+    try:
+        observer.check(180)
+        with _phase(clock, plan["started_monotonic"] + 180):
+            observer.recovery.may_connect(observer.attempt)
+            backend = backend_factory(observer, writer, plan, clock)
+            backend.open()
+            observer.check(180)
+            returned = backend.constructor_returned
+            status = backend.constructor_status
+            _require(
+                returned is True
+                and observer.contexts == observer.initializations == 1
+                and observer.controls == {1001: 1},
+                "reference_init_incomplete",
+            )
+    except BaseException as error:
+        primary = _failure("initialize", error)
+        if backend is not None:
+            returned = backend.constructor_returned
+            status = backend.constructor_status
+    finally:
+        if backend is not None:
+            try:
+                with _phase(clock, min(plan["started_monotonic"] + 390, clock.mono() + 30)):
+                    backend.close()
+                normal = backend.close_evidence()
+                _require(
+                    type(normal) is dict
+                    and set(normal) == {"context_closed", "callbacks_stopped", "data_socket_closed"}
+                    and all(v is True for v in normal.values()),
+                    "normal_close_not_proven",
+                )
+                _require(clock.mono() - plan["started_monotonic"] < 390, "normal_close_deadline")
+            except BaseException as error:
+                close_failure = _failure("close", error)
+    if observer.poison is not None and primary is None:
+        primary = dict(stage="late_guard", **{"class": "CaptureRejected"}, code=observer.poison)
+    result = _select_reference_terminal(
+        {
+            "schema_id": "qm.ivv.reference-init-terminal.v1",
+            "state": "REFERENCE_READY_CLOSED"
+            if primary is None and close_failure is None
+            else "REFERENCE_FAILED",
+            "reference_control_sha256": plan["reference_init_ref"]["sha256"],
+            "source_binding": plan["_verified_binding"],
+            "constructor_returned": returned,
+            "constructor_status": status,
+            "counts": dict(
+                contexts=observer.contexts,
+                initializations=observer.initializations,
+                init_sends=observer.controls.get(1001, 0),
+                keepalive_sends=0,
+                business_sends=0,
+            ),
+            "normal_close": normal,
+            "primary_failure": primary,
+            "close_failure": close_failure,
+        }
+    )
+    writer.json("reference-terminal.json", result)
+    return result
+
+
 def _strict_json(raw):
     def pairs(items):
         r = {}
@@ -2679,6 +2982,20 @@ def capture_recovery_attempt(plan_path, receipt_root, **pins):
     )
 
 
+def reference_recovery_attempt(plan_path, receipt_root, **pins):
+    return _capture_owned(
+        plan_path,
+        receipt_root,
+        pins["permit_fd"],
+        pins["expected_sha256"],
+        pins["expected_policy_sha256"],
+        pins["expected_authorization_sha256"],
+        pins["expected_go_sha256"],
+        RECOVERY_SUFFIX,
+        reference=True,
+    )
+
+
 def _capture_owned(
     plan_path,
     receipt_root,
@@ -2688,6 +3005,8 @@ def _capture_owned(
     expected_authorization_sha256,
     expected_go_sha256,
     suffix,
+    *,
+    reference=False,
 ):
     """Only the newly forked actor holds the authenticated parent channel and admitted bytes."""
     state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
@@ -2716,6 +3035,7 @@ def _capture_owned(
         expected_authorization_sha256=expected_authorization_sha256,
         expected_go_sha256=expected_go_sha256,
     )
+    _require(("reference_init_ref" in plan) is reference, "reference_entry_required")
     state.session.before_effect()
     if suffix == RECOVERY_SUFFIX:
         _require(getattr(state, "recovery_ledger", None) is not None, "recovery_owned_ledger")
@@ -2728,6 +3048,15 @@ def _capture_owned(
         _reserve_once(plan)
     clock = _NativeClock()
     with clock.phase(plan["started_monotonic"] + 480):
+        if reference:
+            _read_reference_control(plan)
+            return _run_reference_init(
+                plan,
+                receipt_root,
+                backend_factory=_ReferenceBackend,
+                clock=clock,
+                sync_dir=_sync_dir,
+            )
         return _run_capture(
             plan,
             receipt_root,

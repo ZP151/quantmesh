@@ -23,7 +23,7 @@ PROVENANCE_KEYS = (
 
 # The independently reviewed helper is fixed for this release. No code from the
 # plan, catalog, or helper runs to establish this initial trust anchor.
-_CAPTURE_HELPER_SHA256 = "41378389494f144bc98b79660dddd827788d8b8dbd9494028f345f168fe60e7c"
+_CAPTURE_HELPER_SHA256 = "9b1928ac0cc72339930a1663dd2b0795c51e2e3aa7e66fab21368145c5712e66"
 
 
 def _capture():
@@ -315,6 +315,8 @@ def _context(
     policy = m._strict_json(m._read_root_ref(plan["policy_ref"], maximum=32768, exact_mode=True))
     recovery = suffix == m.RECOVERY_SUFFIX
     if recovery:
+        if "reference_init_ref" in plan:
+            m._read_reference_control(plan)
         state = sys.modules.get("_qm_live_ivv_native_" + str(os.getpid()))
         profile = getattr(state, "recovery_profile", None)
         m._require(
@@ -485,6 +487,11 @@ def _permit_value(plan, plan_ref, go, go_ref, authorization_ref, catalog_ref, pr
         "provider_evidence_ref": plan["provider_evidence_ref"],
         "actor": go["capture_actor"],
         "budget": go["budget"],
+        **(
+            {"reference_init_ref": plan["reference_init_ref"]}
+            if "reference_init_ref" in plan
+            else {}
+        ),
     }
 
 
@@ -559,6 +566,8 @@ def _admit_family(
 
     def live():
         inherited()
+        if "reference_init_ref" in plan:
+            m._read_reference_control(plan)
         m._lifecycle_mark(plan, guard="CONTROL_REFS")
         for ref in (
             plan["policy_ref"],

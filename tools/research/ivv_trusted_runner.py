@@ -1079,6 +1079,74 @@ def _capture_lifecycle_from_error(error):
     return None
 
 
+def select_reference_observation(value):
+    """Closed non-data STOP observation; parent closure never comes from child IPC."""
+    need(
+        type(value) is dict
+        and set(value)
+        == {
+            "schema_id",
+            "reference_control_sha256",
+            "constructor_status",
+            "operation_failed",
+            "close_failed",
+            "normal_close",
+            "parent_closed",
+        },
+        "REFERENCE_OBSERVATION_SHAPE",
+    )
+    need(
+        value["schema_id"] == "qm.ivv.reference-init-observation.v1"
+        and type(value["reference_control_sha256"]) is str
+        and re.fullmatch("[0-9a-f]{64}", value["reference_control_sha256"])
+        and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
+        and all(
+            type(value[k]) is bool for k in ("operation_failed", "close_failed", "parent_closed")
+        ),
+        "REFERENCE_OBSERVATION_VALUE",
+    )
+    normal = value["normal_close"]
+    need(
+        type(normal) is dict
+        and set(normal) == {"context_closed", "callbacks_stopped", "data_socket_closed"}
+        and all(type(v) is bool for v in normal.values()),
+        "REFERENCE_OBSERVATION_CLOSE",
+    )
+    need(
+        not value["parent_closed"]
+        or (
+            not value["operation_failed"]
+            and not value["close_failed"]
+            and all(normal.values())
+            and value["constructor_status"] != "NOT_RETURNED"
+        ),
+        "REFERENCE_OBSERVATION_PARENT",
+    )
+    return {**value, "normal_close": dict(normal)}
+
+
+_REFERENCE_OBSERVATION_MARK = object()
+
+
+def _carry_reference_observation(error, value):
+    store = _exception_storage(error)
+    if store is not None:
+        store.pop("_qm_reference_observation", None)
+    if value is not None:
+        selected = select_reference_observation(value)
+        if store is not None:
+            store["_qm_reference_observation"] = (_REFERENCE_OBSERVATION_MARK, selected)
+    return error
+
+
+def _reference_from_error(error):
+    store = _exception_storage(error)
+    item = store.get("_qm_reference_observation") if store is not None else None
+    if type(item) is tuple and len(item) == 2 and item[0] is _REFERENCE_OBSERVATION_MARK:
+        return select_reference_observation(item[1])
+    return None
+
+
 def _failure_record(error):
     value = {"state": "STOP", "reason": _failure_code(error)}
     origin = _origin_from_error(error)
@@ -1090,6 +1158,9 @@ def _failure_record(error):
     capture = _capture_lifecycle_from_error(error)
     if capture is not None:
         value["capture_lifecycle"] = capture
+    reference = _reference_from_error(error)
+    if reference is not None:
+        value["reference_init_observation"] = reference
     return value
 
 
@@ -1100,7 +1171,12 @@ def _failed_packet(error):
         "code": value["reason"],
         **{
             key: value[key]
-            for key in ("origin_failure", "executable_origin", "capture_lifecycle")
+            for key in (
+                "origin_failure",
+                "executable_origin",
+                "capture_lifecycle",
+                "reference_init_observation",
+            )
             if key in value
         },
     }
@@ -1112,7 +1188,14 @@ def _child_failure(packet):
         or packet.get("op") != "failed"
         or not {"op", "code"}
         <= set(packet)
-        <= {"op", "code", "origin_failure", "executable_origin", "capture_lifecycle"}
+        <= {
+            "op",
+            "code",
+            "origin_failure",
+            "executable_origin",
+            "capture_lifecycle",
+            "reference_init_observation",
+        }
         or type(packet.get("code")) is not str
         or re.fullmatch("[A-Za-z0-9_+]{1,256}", packet["code"]) is None
     ):
@@ -1125,6 +1208,10 @@ def _child_failure(packet):
         _carry_executable_origin(error, select_executable_origin(packet["executable_origin"]))
     if "capture_lifecycle" in packet:
         _carry_capture_lifecycle(error, select_capture_lifecycle(packet["capture_lifecycle"]))
+    if "reference_init_observation" in packet:
+        reference = select_reference_observation(packet["reference_init_observation"])
+        need(reference["parent_closed"] is False, "REFERENCE_CHILD_OWNER")
+        _carry_reference_observation(error, reference)
     return error
 
 
@@ -1148,7 +1235,14 @@ def read_runner_failure(control, read_owned):
         type(value) is dict
         and {"state", "reason"}
         <= set(value)
-        <= {"state", "reason", "origin_failure", "executable_origin", "capture_lifecycle"}
+        <= {
+            "state",
+            "reason",
+            "origin_failure",
+            "executable_origin",
+            "capture_lifecycle",
+            "reference_init_observation",
+        }
         and value["state"] == "STOP"
         and type(value["reason"]) is str
         and re.fullmatch("[A-Za-z0-9_+]{1,256}", value["reason"]),
@@ -1162,6 +1256,15 @@ def read_runner_failure(control, read_owned):
         result["executable_origin"] = select_executable_origin(value["executable_origin"])
     if "capture_lifecycle" in value:
         result["capture_lifecycle"] = select_capture_lifecycle(value["capture_lifecycle"])
+    if "reference_init_observation" in value:
+        result["reference_init_observation"] = select_reference_observation(
+            value["reference_init_observation"]
+        )
+        need(
+            not result["reference_init_observation"]["parent_closed"]
+            or value["reason"] == "REFERENCE_INIT_OBSERVATION",
+            "REFERENCE_STOP_BINDING",
+        )
     return result
 
 
@@ -1209,6 +1312,19 @@ def select_failure_status(status, publication_sha256):
         result["executable_origin"] = select_executable_origin(status["executable_origin"])
     if "capture_lifecycle" in status:
         result["capture_lifecycle"] = select_capture_lifecycle(status["capture_lifecycle"])
+    if "reference_init_observation" in status:
+        result["reference_init_observation"] = select_reference_observation(
+            status["reference_init_observation"]
+        )
+        need(
+            not result["reference_init_observation"]["parent_closed"]
+            or (
+                code == "REFERENCE_INIT_OBSERVATION"
+                and rc == 1
+                and stage == "RELEASED_RECOVERY_ATTEMPT"
+            ),
+            "REFERENCE_STOP_BINDING",
+        )
     if "recovery_connection" in status:
         item = status["recovery_connection"]
         need(
@@ -3211,6 +3327,9 @@ def _seed(values, startup, helper, issuer, *, started=None):
     helper._validate_production_plan_keys(plan, schema="qm.ivv.capture-plan" + family)
     plan["started_monotonic"] = time.monotonic() if started is None else started
     helper._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + family)
+    if "reference_init_ref" in plan:
+        need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
+        helper._read_reference_control(plan)
     need(
         plan["sdk_root"] == str(SDK)
         and plan["receipt_root"] == str(loc.receipt)
@@ -3309,6 +3428,39 @@ def _check_capture_result(result, *, recovery):
     if recovery:
         _carry_capture_lifecycle(error, result.get("capture_lifecycle"))
     raise error
+
+
+def _reference_result(result):
+    primary = result["primary_failure"]
+    not_ready = (
+        result["constructor_returned"] is True
+        and result["constructor_status"] == "NOT_READY"
+        and primary
+        == {
+            "stage": "initialize",
+            "class": "CaptureRejected",
+            "code": "sdk_initial_connection_failed",
+        }
+    )
+    value = select_reference_observation(
+        {
+            "schema_id": "qm.ivv.reference-init-observation.v1",
+            "reference_control_sha256": result["reference_control_sha256"],
+            "constructor_status": result["constructor_status"],
+            "operation_failed": primary is not None and not not_ready,
+            "close_failed": result["close_failure"] is not None,
+            "normal_close": result["normal_close"],
+            "parent_closed": False,
+        }
+    )
+    code = (
+        "SDK_CLOSE_UNKNOWN"
+        if value["close_failed"] or not all(value["normal_close"].values())
+        else "REFERENCE_INIT_FAILED"
+        if value["operation_failed"]
+        else "REFERENCE_INIT_OBSERVATION"
+    )
+    return _carry_reference_observation(Refused(code), value)
 
 
 def _child(channel, parent, context, plan):
@@ -3418,7 +3570,11 @@ def _child(channel, parent, context, plan):
         )
         try:
             capture = (
-                m.capture_recovery_attempt
+                (
+                    m.reference_recovery_attempt
+                    if "reference_init_ref" in final
+                    else m.capture_recovery_attempt
+                )
                 if _recovery_mode(additional)
                 else m.capture_additional_once
                 if additional
@@ -3429,6 +3585,12 @@ def _child(channel, parent, context, plan):
             )
         finally:
             _close_fd(fd)
+        if "reference_init_ref" in final:
+            observation = _reference_result(m._select_reference_terminal(result))
+            if reason(observation) != "REFERENCE_INIT_OBSERVATION":
+                raise observation
+            channel.send(_failed_packet(observation))
+            return  # Normal child exit; the parent still must observe wait/EOF/closure.
         _check_capture_result(result, recovery=_recovery_mode(additional))
         channel.send(
             {
@@ -3675,10 +3837,35 @@ def _accept_executable_origin(value, values, *, phase=None, namespace=None):
     return selected
 
 
+def _reference_packet(packet, plan):
+    need(
+        "reference_init_ref" in plan
+        and type(packet) is dict
+        and set(packet) == {"op", "code", "reference_init_observation"}
+        and packet["op"] == "failed"
+        and packet["code"] == "REFERENCE_INIT_OBSERVATION",
+        "REFERENCE_TERMINAL_PROTOCOL",
+    )
+    error = _child_failure(packet)
+    observation = _reference_from_error(error)
+    need(
+        observation is not None
+        and observation["reference_control_sha256"] == plan["reference_init_ref"]["sha256"]
+        and observation["constructor_status"] in {"READY", "NOT_READY"}
+        and observation["operation_failed"] is False
+        and observation["close_failed"] is False
+        and all(observation["normal_close"].values()),
+        "REFERENCE_TERMINAL_FAILED",
+    )
+    return packet
+
+
 def _supervise(scope, channel, endpoint, context, plan):
     startup, values, issuer, m, native, producer = context
     additional = _task_mode(values)
     binding = values["catalog_ref"].get("provider_binding") if _recovery_mode(additional) else None
+    reference = "reference_init_ref" in plan
+    need(not reference or _recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
     monitor = _for_task(_Provider, additional)(
         native,
         producer,
@@ -3763,9 +3950,18 @@ def _supervise(scope, channel, endpoint, context, plan):
                     need(peer is None or pair == peer, "CAPTURE_PEER_CHANGED")
                     peer = pair
                 channel.send({"snapshot": monitor.last})
+            elif (
+                reference
+                and packet
+                and packet.get("code") == "REFERENCE_INIT_OBSERVATION"
+                and grant
+                and not terminal
+            ):
+                terminal = _reference_packet(packet, plan)
             elif packet and packet.get("op") == "terminal" and grant and not terminal:
                 need(
-                    set(packet) == {"op", "permit_sha256", "manifest_sha256"}
+                    not reference
+                    and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
                     and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
                     "TERMINAL_PACKET",
                 )
@@ -3812,14 +4008,17 @@ def _supervise(scope, channel, endpoint, context, plan):
                     if reason(error) != "CONTROL_EOF":
                         raise
                     break
-                need(
-                    terminal is None
-                    and type(packet) is dict
-                    and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
-                    and packet["op"] == "terminal"
-                    and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
-                    "CHILD_TERMINAL_PROTOCOL",
-                )
+                need(terminal is None, "CHILD_TERMINAL_PROTOCOL")
+                if reference:
+                    _reference_packet(packet, plan)
+                else:
+                    need(
+                        type(packet) is dict
+                        and set(packet) == {"op", "permit_sha256", "manifest_sha256"}
+                        and packet["op"] == "terminal"
+                        and all(m._digest(packet[k]) for k in ("permit_sha256", "manifest_sha256")),
+                        "CHILD_TERMINAL_PROTOCOL",
+                    )
                 terminal = packet
             else:
                 raise Refused("CONTROL_NOT_CLOSED")
@@ -3832,6 +4031,8 @@ def _supervise(scope, channel, endpoint, context, plan):
             break
     elapsed = time.monotonic() - start
     need(elapsed <= 480, "FINAL_SEAL_DEADLINE")
+    if reference:
+        return {"reference_init_observation": terminal["reference_init_observation"]}
     return _seal(
         context,
         grant,
@@ -3936,6 +4137,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
     primary_origin = None
     primary_executable = None
     primary_capture = None
+    reference = None
     cleanup_failures = None
     pending = None
     committed = False
@@ -3973,23 +4175,31 @@ def _run(startup_ref, *, additional, lifecycle=None):
             if _recovery_mode(additional):
                 _persist_recovery_owner(book, additional, scope)
             result = _supervise(scope, parent_side, endpoint, context, plan)
+            if "reference_init_ref" in plan:
+                need(set(result) == {"reference_init_observation"}, "REFERENCE_PARENT_RESULT")
+                reference = select_reference_observation(result["reference_init_observation"])
+                need(reference["parent_closed"] is False, "REFERENCE_CHILD_OWNER")
             scope.check_resources()
             scope.remove()
             scope.leaf = None
             elapsed = time.monotonic() - plan["started_monotonic"]
             need(elapsed <= 480, "FINAL_SEAL_DEADLINE")
-            result["elapsed_seconds"] = elapsed
+            if reference is None:
+                result["elapsed_seconds"] = elapsed
             # Keep all resource/event handles through JSON/file+directory
             # fsync and normal publication. No partial file is normal authority.
-            pending = put(loc.control / "parent-close.pending.json", result)
+            if reference is None:
+                pending = put(loc.control / "parent-close.pending.json", result)
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
-            committed = True
-            _for_task(_commit_close, additional)(pending)
+            if reference is None:
+                committed = True
+                _for_task(_commit_close, additional)(pending)
             scope.check_final_resources()
             need(time.monotonic() - plan["started_monotonic"] <= 480, "FINAL_SEAL_DEADLINE")
         except BaseException as error:
             primary_capture = _capture_lifecycle_from_error(error)
+            reference = _reference_from_error(error) or reference
             primary_origin = _origin_from_error(error)
             primary_executable = _executable_from_error(error) or values.get("_executable_origin")
             failures = scope.abort()
@@ -4017,7 +4227,7 @@ def _run(startup_ref, *, additional, lifecycle=None):
             resource_limit_event=False,
             active_owned_processes=0 if closed else 1,
         )
-        failure = primary[0] if primary else None
+        failure = primary[0] if primary else "REFERENCE_INIT_OBSERVATION" if reference else None
         if failure is not None and re.fullmatch(r"[A-Z0-9_+]{1,512}", failure) is None:
             failure = "CAPTURE_FAILED"
         try:
@@ -4036,9 +4246,14 @@ def _run(startup_ref, *, additional, lifecycle=None):
         code = "+".join(failures)
         failure = _carry_origin(Refused(code), primary_origin, code)
         _carry_capture_lifecycle(failure, primary_capture)
+        _carry_reference_observation(failure, reference)
         raise _carry_executable_origin(
             failure, primary_executable or values.get("_executable_origin")
         ) from None
+    if reference is not None:
+        raise _carry_reference_observation(
+            Refused("REFERENCE_INIT_OBSERVATION"), {**reference, "parent_closed": True}
+        )
     return result
 
 

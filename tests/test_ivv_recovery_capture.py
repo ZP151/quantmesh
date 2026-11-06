@@ -246,7 +246,13 @@ def test_recovery_root_go_is_preinput_and_exact_actual_actor(tmp_path, monkeypat
 
 
 def connected_recovery_capture(
-    tmp_path, monkeypatch, fault=None, kernel_extra=None, entry_hook=None, capture_failure=False
+    tmp_path,
+    monkeypatch,
+    fault=None,
+    kernel_extra=None,
+    entry_hook=None,
+    capture_failure=False,
+    reference=False,
 ):
     import contextlib
     import os
@@ -300,6 +306,21 @@ def connected_recovery_capture(
     )
     catalog_ref = put("recovery-catalog.json", catalog)
     plan["catalog_sha256"] = catalog_ref["sha256"]
+    if reference:
+        plan["reference_init_ref"] = put(
+            "reference-control.json",
+            dict(
+                schema_id="qm.ivv.reference-control.v1",
+                nonce="1" * 32,
+                reference_attempt=profile.attempt,
+                capture_attempt="connection-000002",
+                reference_context="2" * 32,
+                capture_context="3" * 32,
+                catalog_sha256=catalog_ref["sha256"],
+                sdk_pins_sha256=plan["sdk_pins_sha256"],
+                policy_sha256=profile.policy_sha,
+            ),
+        )
     old_read = m._read_root_ref
     auth_ref = {"path": str(tmp_path / "private-authority"), "sha256": contract.AUTHORITY}
 
@@ -405,6 +426,8 @@ def connected_recovery_capture(
         else lambda o, w, p, c: Backend(m, o, w, c, root)
     )
     monkeypatch.setattr(m, "_OfficialBackend", factory)
+    if reference:
+        monkeypatch.setattr(m, "_ReferenceBackend", factory)
     try:
         args = {k: v for k, v in pins.items() if k.startswith("expected_")}
         if fault == "held_pin":
@@ -414,22 +437,33 @@ def connected_recovery_capture(
                 )
             assert not root.exists()
             return
-        result = m.capture_recovery_attempt(
-            final_plan["path"], root, permit_fd=fd, expected_sha256=sha, **args
+        entry = (
+            m.reference_recovery_attempt
+            if reference and fault != "reference_via_capture"
+            else m.capture_recovery_attempt
         )
+        result = entry(final_plan["path"], root, permit_fd=fd, expected_sha256=sha, **args)
     finally:
         os.close(fd)
-    if capture_failure:
+    if reference:
+        assert result["state"] == "REFERENCE_READY_CLOSED"
+        assert book.usage()["contexts"] == book.usage()["init_connect"] == 1
+        assert book.usage()["business_requests"] == book.usage()["keepalive"] == 0
+    elif capture_failure:
         assert result["state"] == "FAILED_CAPTURE_REQUIRES_PARENT_SEAL"
         return dict(result=result, helper=m, runner=runner, root=root, profile=profile)
-    assert result["state"] == "CAPTURED_UNREVIEWED"
-    for key, value in contract.policy_provenance(contract.DEFAULT_POLICY).items():
-        assert result[key] == value
+    if not reference:
+        assert result["state"] == "CAPTURED_UNREVIEWED"
+        for key, value in contract.policy_provenance(contract.DEFAULT_POLICY).items():
+            assert result[key] == value
     assert result["source_binding"]["root_go_sha256"] == go_ref["sha256"]
-    assert result["recovery"]["connection_attempt_id"] == attempt
-    assert result["counts"]["control_sends"]["1001"] == 1
-    assert book.usage()["business_requests"] == 7
+    if not reference:
+        assert result["recovery"]["connection_attempt_id"] == attempt
+        assert result["counts"]["control_sends"]["1001"] == 1
+        assert book.usage()["business_requests"] == 7
     assert not (tmp_path / "ledger" / (attempt + ".close.json")).exists()
+    if reference:
+        return dict(helper=m, runner=runner, root=root, result=result, book=book, plan=final)
 
     # Model only Linux metadata; execute real held-byte seal readers and serializer.
     tracked = {}
