@@ -49,6 +49,7 @@ into the ambient environment.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -60,6 +61,7 @@ import sys
 import tempfile
 import time
 import traceback
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -180,6 +182,9 @@ class StepLogObserver:
     anchor_start: int = 0
     anchor: bytes = b""
     carry_starts_line: bool = True
+    node_carry: str = ""
+    last_node: str | None = None
+    environment: dict[str, str] | None = None
 
     def reset(self) -> None:
         self.offset = 0
@@ -188,6 +193,9 @@ class StepLogObserver:
         self.anchor_start = 0
         self.anchor = b""
         self.carry_starts_line = True
+        self.node_carry = ""
+        self.last_node = None
+        self.environment = None
 
     def _is_new_generation(self, log_path: Path, identity: tuple[int, int], size: int) -> bool:
         if self.file_identity is not None and identity != self.file_identity:
@@ -212,6 +220,21 @@ class StepLogObserver:
             log.seek(self.anchor_start)
             self.anchor = log.read(self.offset - self.anchor_start)
         size = log_path.stat().st_size
+        node_text = self.node_carry + text
+        for line in node_text.splitlines():
+            node = re.match(
+                r"^(\S+?\.py(?:::[^\r\n]*?)+?)(?:\s+(?:PASSED|FAILED|SKIPPED|XFAIL|XPASS|ERROR)(?:\s.*)?|\s*)$",
+                line,
+            )
+            if node and len(node[1]) <= 4096:
+                self.last_node = node[1]
+            environment = re.match(
+                r"platform (\w{1,32}) -- Python ([0-9][\w.+-]{0,31}), pytest-([0-9][\w.+-]{0,31})",
+                line,
+            )
+            if environment:
+                self.environment = dict(zip(("platform", "python", "pytest"), environment.groups()))
+        self.node_carry = node_text.rsplit("\n", 1)[-1][-8192:]
         observed = self.carry + text
         status_text = observed if self.carry_starts_line else f"\0{observed}"
         percentages = _PYTEST_PERCENTAGE.findall(observed)
@@ -228,6 +251,154 @@ class StepLogObserver:
         else:
             self.carry = observed
         return size, self.percentage, saw_failure
+
+
+class PytestStepFeedback:
+    """Parent-only metadata from verbose stdout and pytest's built-in terminal XML."""
+
+    def __init__(self, log_path: Path, started: float):
+        self.log = log_path
+        self.events = log_path.with_suffix(".pytest.jsonl")
+        self.current = log_path.with_suffix(".pytest.current.json")
+        self.junit = log_path.with_suffix(".pytest.xml")
+        self.started = started
+        self.node = None
+        self.count = 0
+
+    def emit(self, event: str, status: str, **fields: object) -> None:
+        row = {
+            "schema": "qm.ci.external-pytest-feedback.v1",
+            "event": event,
+            "status": status,
+            "elapsed_seconds": round(time.monotonic() - self.started, 6),
+            "nodeid": self.node,
+            "phase": "UNOBSERVED",
+            "node_evidence": "LAST_VERBOSE_NODE",
+            "log": self.log.name,
+            "junit": self.junit.name,
+            **fields,
+        }
+        encoded = json.dumps(row, sort_keys=True, ensure_ascii=True) + "\n"
+        if len(encoded.encode()) > 16384:
+            raise ValueError("pytest feedback metadata bound exceeded")
+        temporary = self.current.with_suffix(".tmp")
+        temporary.write_text(encoded, encoding="utf-8")
+        temporary.replace(self.current)
+        # Reserve final first-failure/terminal events while keeping a single
+        # current snapshot accurate even after sparse history reaches its cap.
+        if event != "current_node" or self.count < 252:
+            with self.events.open("a", encoding="utf-8") as stream:
+                stream.write(encoded)
+                stream.flush()
+            self.count += 1
+            print_console(encoded.rstrip(), flush=True)
+
+    def prepare(self, command: list[str]) -> list[str]:
+        self.events.open("x", encoding="utf-8").close()
+        self.junit.open("xb").close()
+        command = [value for value in command if value != "-q"]
+        if "-vv" not in command:
+            command.append("-vv")
+        command += [
+            "--junitxml=" + str(self.junit.resolve()),
+            "-o",
+            "junit_family=xunit1",
+            "-o",
+            "junit_logging=no",
+        ]
+        self.emit(
+            "stage",
+            "STARTING",
+            controller_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+            command_sha256=hashlib.sha256(
+                json.dumps([str(v) for v in command]).encode()
+            ).hexdigest(),
+        )
+        return command
+
+    def observe(self, observer: StepLogObserver) -> None:
+        if observer.last_node != self.node:
+            self.node = observer.last_node
+            self.emit("current_node", "RUNNING")
+
+    def finish(self, code: int, timed_out: bool, observer: StepLogObserver) -> bool:
+        status, missing, failure, completed = "INFRASTRUCTURE_ERROR", [], None, None
+        if timed_out:
+            status, missing = "TIMEOUT", ["completed_pytest_result"]
+        elif code not in (0, 1, 2):
+            missing = ["trustworthy_test_failure_result"]
+        else:
+            try:
+                if not 0 < self.junit.stat().st_size <= 8 * 1024 * 1024:
+                    raise ValueError("missing or oversized JUnit")
+                tree = ET.parse(self.junit)
+                cases = tree.findall(".//testcase")
+                suites = tree.findall("testsuite")
+                if tree.getroot().tag != "testsuites" or not suites:
+                    raise ValueError("missing JUnit suite")
+                counts = {"tests": len(cases)}
+                counts.update(
+                    (field, sum(case.find(tag) is not None for case in cases))
+                    for field, tag in (
+                        ("failures", "failure"),
+                        ("errors", "error"),
+                        ("skipped", "skipped"),
+                    )
+                )
+                if any(
+                    sum(int(suite.get(key, "-1")) for suite in suites) != value
+                    for key, value in counts.items()
+                ):
+                    raise ValueError("incomplete JUnit counts")
+                nodes = set()
+                for case in cases:
+                    filename, name = case.get("file", ""), case.get("name", "")
+                    classname = case.get("classname", "")
+                    module = filename.removesuffix(".py").replace("/", ".").replace("\\", ".")
+                    classes = classname.removeprefix(module).strip(".") if module else ""
+                    node = (
+                        filename
+                        + "::"
+                        + (classes.replace(".", "::") + "::" if classes else "")
+                        + name
+                    )
+                    failed, error = case.find("failure"), case.find("error")
+                    phase = "call" if failed is not None else None
+                    if error is not None:
+                        message = error.get("message", "")
+                        if message == "collection failure":
+                            phase, node = "collection", filename
+                        elif message.startswith("failed on setup with"):
+                            phase = "setup"
+                        elif message.startswith("failed on teardown with"):
+                            phase = "teardown"
+                        else:
+                            raise ValueError("unobserved failure phase")
+                    if not node or len(node) > 4096 or (phase != "collection" and not filename):
+                        raise ValueError("missing node identity")
+                    if phase != "collection":
+                        nodes.add(node)
+                    if phase is not None and failure is None:
+                        failure = {"nodeid": node, "phase": phase, "node_evidence": "JUNIT_RESULT"}
+                completed = len(nodes)
+                if not cases or (code == 0) != (failure is None):
+                    raise ValueError("inconsistent terminal result")
+                status = "PASSED" if code == 0 else "TEST_FAILED"
+            except (OSError, ET.ParseError, ValueError):
+                failure = None
+                missing = ["complete_consistent_junit_result"]
+        if status == "TEST_FAILED":
+            self.emit("first_failure", status, **failure)
+        self.emit(
+            "terminal",
+            status,
+            exit_code=code,
+            completed=completed,
+            missing_evidence=missing,
+            environment=observer.environment,
+            first_failure=failure,
+        )
+        return status == "PASSED"
 
 
 def _slow_tests(log_path: Path) -> list[str]:
@@ -373,16 +544,13 @@ def run_step(
     started = time.monotonic()
     log_path = logs / f"{len(STEPS) + 1:02d}-{name.replace(' ', '-').replace('/', '-')}.log"
     events_path = logs / "events.jsonl"
-    if "tools.ci_profile_plugin" in cmd:
-        cmd = [
-            *cmd,
-            "--ci-events=" + str(log_path.with_suffix(".pytest.jsonl").resolve()),
-            "--ci-log=" + log_path.name,
-        ]
+    feedback = PytestStepFeedback(log_path, started) if "tools.ci_profile_plugin" in cmd else None
     timed_out = False
     # Direct unbuffered file output remains observable even without newlines;
     # no reader pipe/thread can hold up timeout cleanup or buffer pytest dots.
     with log_path.open("wb", buffering=0) as log:
+        if feedback is not None:
+            cmd = feedback.prepare(cmd)
         with subprocess.Popen(
             cmd,
             cwd=cwd,
@@ -402,6 +570,8 @@ def run_step(
                 nonlocal last_progress_percentage, last_progress_size
                 now = time.monotonic()
                 log_size, percentage, saw_failure = observer.sample(log_path)
+                if feedback is not None:
+                    feedback.observe(observer)
                 elapsed = now - started
                 if saw_failure and not failure_seen:
                     _emit_event(
@@ -430,6 +600,8 @@ def run_step(
                     last_progress_percentage = percentage
 
             try:
+                if feedback is not None:
+                    feedback.emit("stage", "RUNNING", pid=proc.pid)
                 _emit_event(
                     events_path,
                     "step_started",
@@ -467,6 +639,8 @@ def run_step(
                         observe()
                         ok = returncode == 0
                         break
+                if feedback is not None:
+                    ok = feedback.finish(proc.returncode, timed_out, observer) and ok
             except BaseException:
                 _kill_step_process(proc)
                 raise

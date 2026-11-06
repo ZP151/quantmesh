@@ -1,5 +1,52 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Issue292 external-controller Planner reset —2026-11-06
+
+Planner explicitly supersedes the new in-process observer with the bounded
+external-controller spec/plan dated2026-11-06. CI569 primary remains UNKNOWN;
+local original-lifecycle OFF/ON passed, while shared-clock contamination was
+proven. Preserve all previous specs/reviews/failures. Implementer owns only this
+new bounded slice; Parent owns fresh two-axis review and normal CI. Quant keeps
+all research/admission boundaries unchanged. P37 reserves a complete new16MiB
+(source1/common15), with no old refund or SDK authority.
+
+Implementer removed only the new _Feedback runtime observer and its production
+options. The old two-profile implementation is AST-identical to the original
+base; the pure required-collection guard remains. The existing owned run_step
+controller now persists artifacts before spawn, reads -vv and built-in JUnit,
+and emits parent-clock stages, last verbose node and terminal first-failure.
+Active phase is UNOBSERVED. Normal failure, infrastructure error and timeout are
+separate; zero-exit missing/malformed results cannot turn green. Original complete
+selection, --maxfail=1, normal teardown and later release steps stay covered.
+
+Verifier source-accurate RED-01:9FAIL/7.60s. GREEN-01 retained4FAIL/5PASS/7.39s,
+which exposed a verbose-summary parsing boundary and the JUnit collection file
+identity. GREEN-02:9PASS/7.56s; additional terminal corruption controls2PASS/1.33s.
+One deduplicated affected run through the actual external controller completed
+100 nodes:99PASS/1 existing platform SKIP/39.51s, parent wall40.3386s. It includes
+the untouched CI569 None node with no early undo, all4 ABI mutants, old profile/
+export cases, all-pass later steps and normal first-failure teardown. No602,
+full contract, frontend or WSL experiment was repeated. The old optional Vitest
+node remains a separately disclosed local validation limit; its source is intact.
+
+BASELINE-TESTS-01.json proves all50 original direct-test functions remain and
+are unchanged from this scope's base; original profile functions/classes are
+AST-identical to77ea5447. Retired only3 new _Feedback functions/7 parameter cases;
+new external tests add11 cases, net+4 full-suite cases. The12 contract modules
+and654 cases are unchanged. This is not a new full Linux/CI qualification.
+
+Evidence remains under integration/ci-feedback-20261106-01/controller-scope-01.
+After affected validation, cumulative retained file allocation rounded4KiB plus
+4KiB per directory was2318336B (logical563591B); final freeze census follows.
+Existing baseline executor tests create and clean their own external system-TEMP
+fixtures. Their transient peak was not separately measured; no fullhold refund
+or peak claim is made from the retained-directory census. All failed originals
+in the new scope remain. Existing CI567 initial fast/release-job environments
+already installed pytest9.2.0/pytest-asyncio1.4.1.post1; its separate formal
+release-child exact version is UNKNOWN from retained material. CI569 used
+Python3.13.18/pytest9.2.0. Local validation is3.13.9/9.1.1. No version installation
+or investigation occurred. Fresh independent review and normal CI remain pending.
+
 ## Issue292 single known ABI correction —2026-11-06
 
 Independent Spec R1 accepted candidate6d5a4eaa; Standards R1 found one P2:

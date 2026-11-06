@@ -4,7 +4,8 @@
 
 Issue292 is the active software slice on merged77ea5447. The named release
 contract runs early in the existing fast job and normal release failures retain
-precise node/phase evidence. See docs/superpowers/plans/2026-11-06-ci-feedback.md
+precise node/phase evidence. The Planner superseding external-controller scope replaces only the new
+in-process observer. See docs/superpowers/plans/2026-11-06-ci-external-controller.md
 and the iteration0038 ledger for review and verification state.
 The issue281 InitE2E/attempt8/owned-close engineering subtask is complete with
 STOP and spent batch03. Capture originals, input acceptance and study remain

@@ -264,6 +264,7 @@ jobs:
             ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.log
             ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.jsonl
             ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.current.json
+            ${{ runner.temp }}/quantmesh-release-temp/qmesh-release-gate-*/logs/*.xml
           if-no-files-found: ignore
 
   # The independent service has a different Python/lock closure from core.

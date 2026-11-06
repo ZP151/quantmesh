@@ -62,8 +62,17 @@ portfolio ownership module. Report platform/dependency limitations explicitly.
 The target is 2–5 minutes excluding installation and requires actual measurement.
 
 Release pytest uses normal `--maxfail=1` with complete collection and fixture
-teardown. The existing plugin retains sparse `.pytest.jsonl` events, an atomic
-`.pytest.current.json` snapshot and the ordinary assertion log. Contract failures
-keep their unique fixture directory. Successful release still requires every
-original release step. Private Ops wiring23 and final carrier/status/header/frame
-geometry remain explicit local publication checks against the actual release.
+teardown. The existing owned command controller reads verbose output and pytest's
+built-in JUnit terminal result outside the test process. It retains `.pytest.jsonl`,
+`.pytest.current.json`, `.pytest.xml` and the ordinary assertion log. Active
+subphase is `UNOBSERVED`; only terminal results identify setup/call/teardown.
+Missing or inconsistent evidence is `INFRASTRUCTURE_ERROR`, distinct from a
+normal test failure or timeout. The pytest plugin retains only its original two
+profiles and the pure contract collection guard. See the superseding
+`docs/superpowers/specs/2026-11-06-ci-external-controller.md` scope.
+
+Contract failures keep their unique fixture directory. Successful release still
+requires every original release step. Private Ops wiring23 and final
+carrier/status/header/frame geometry remain explicit local publication checks
+against the actual release. CI569's original exception remains unknown; this
+controller change does not establish its resolution or native qualification.
