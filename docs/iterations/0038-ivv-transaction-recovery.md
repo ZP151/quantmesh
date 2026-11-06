@@ -1,5 +1,134 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Issue292 external-controller Planner reset —2026-11-06
+
+Planner explicitly supersedes the new in-process observer with the bounded
+external-controller spec/plan dated2026-11-06. CI569 primary remains UNKNOWN;
+local original-lifecycle OFF/ON passed, while shared-clock contamination was
+proven. Preserve all previous specs/reviews/failures. Implementer owns only this
+new bounded slice; Parent owns fresh two-axis review and normal CI. Quant keeps
+all research/admission boundaries unchanged. P37 reserves a complete new16MiB
+(source1/common15), with no old refund or SDK authority.
+
+Implementer removed only the new _Feedback runtime observer and its production
+options. The old two-profile implementation is AST-identical to the original
+base; the pure required-collection guard remains. The existing owned run_step
+controller now persists artifacts before spawn, reads -vv and built-in JUnit,
+and emits parent-clock stages, last verbose node and terminal first-failure.
+Active phase is UNOBSERVED. Normal failure, infrastructure error and timeout are
+separate; zero-exit missing/malformed results cannot turn green. Original complete
+selection, --maxfail=1, normal teardown and later release steps stay covered.
+
+Verifier source-accurate RED-01:9FAIL/7.60s. GREEN-01 retained4FAIL/5PASS/7.39s,
+which exposed a verbose-summary parsing boundary and the JUnit collection file
+identity. GREEN-02:9PASS/7.56s; additional terminal corruption controls2PASS/1.33s.
+One deduplicated affected run through the actual external controller completed
+100 nodes:99PASS/1 existing platform SKIP/39.51s, parent wall40.3386s. It includes
+the untouched CI569 None node with no early undo, all4 ABI mutants, old profile/
+export cases, all-pass later steps and normal first-failure teardown. No602,
+full contract, frontend or WSL experiment was repeated. The old optional Vitest
+node remains a separately disclosed local validation limit; its source is intact.
+
+BASELINE-TESTS-01.json proves all50 original direct-test functions remain and
+are unchanged from this scope's base; original profile functions/classes are
+AST-identical to77ea5447. Retired only3 new _Feedback functions/7 parameter cases;
+new external tests add11 cases, net+4 full-suite cases. The12 contract modules
+and654 cases are unchanged. This is not a new full Linux/CI qualification.
+
+Evidence remains under integration/ci-feedback-20261106-01/controller-scope-01.
+After affected validation, cumulative retained file allocation rounded4KiB plus
+4KiB per directory was2318336B (logical563591B); final freeze census follows.
+Existing baseline executor tests create and clean their own external system-TEMP
+fixtures. Their transient peak was not separately measured; no fullhold refund
+or peak claim is made from the retained-directory census. All failed originals
+in the new scope remain. Existing CI567 initial fast/release-job environments
+already installed pytest9.2.0/pytest-asyncio1.4.1.post1; its separate formal
+release-child exact version is UNKNOWN from retained material. CI569 used
+Python3.13.18/pytest9.2.0. Local validation is3.13.9/9.1.1. No version installation
+or investigation occurred. Fresh independent review and normal CI remain pending.
+
+## Issue292 single known ABI correction —2026-11-06
+
+Independent Spec R1 accepted candidate6d5a4eaa; Standards R1 found one P2:
+flattening AST argument kinds accepted a keyword-only run_once despite its
+positional callers. Implementer reproduced the defect using actual Git/disk
+RAM mutants, without changing runtime files or importing the SDK. The one
+consolidated correction preserves positional-only, positional-or-keyword and
+keyword-only groups separately and rejects defaults for all three reviewed
+public signatures, whose parameters are all required. No runtime, manifest,
+policy, production selection, dependency or plugin diagnostic behavior changed.
+
+Verifier retained ABI-R2-RED-01.log:4FAIL/1.23s (both kind changes and both
+positional/keyword default changes); ABI-R2-GREEN-01.log:9PASS/2.23s across the
+complete static closure module and existing complete-selection direct test.
+Full materialized Ruff, two changed Python formats and whitespace pass. The
+runtime7 byte pins remain identical. No602/portfolio/frontend repeat occurred.
+The same12 complete modules retain the original650 tests and add4 regressions:
+654 is the expected new count, pending actual normal-CI collection and timing.
+All original segmented-validation and harness limitations below remain. Parent
+owns the same readers' one known-fix R2, then normal CI/publication; no third
+structural round or new execution authority is created.
+
+## Issue292 CI feedback slice —2026-11-06
+
+Planner/Product freezes the named early contract and exact failure-evidence
+slice in docs/superpowers/{specs,plans}/2026-11-06-ci-feedback.md. One action
+runs the contract before push, one outcome gives bounded actionable failure
+identity before a long release. Existing seven required CI roles are retained.
+Quant Researcher preserves inputs, math, costs, paper default/livefalse and
+financial INSUFFICIENT. Implementer owns only gate/plugin/workflow/direct tests
+and this checkpoint on codex/0038-ci-feedback from77ea5447. Parent owns separate
+SDK0 compatibility audit notes and later independent review/publication.
+
+The prior issue281 attempt8 engineering subtask is COMPLETE with actual STOP
+at15:12:35SGT and owned readback15:14:34SGT. ATTEMPT8-CLOSEOUT.json4163B/SHA
+8466db3992a6d38307bb5eafa7dd3c9f940692c8db574b71fe6fcaf9e156758e and the
+independently verified5473B report
+58fb2e552c6aa6fb5be95f6dff505cdf83a5bb4601559212474ebe8d4b151ed3 are
+retained in recovery integration. No capture originals, input acceptance or
+study were created. Batch03/connection8 stays spent and cumulative UNKNOWN.
+P33 is capacity-only, old545+local9MiB=554MiB, Source22/common121/software160.
+Implementer delivered the existing fast-job `quality_gate.py contract` command:
+12 whole modules/650 nodes, actual Git helper/issuer/manifest/policy/ABI checks,
+three helper bootstrap entrances plus held-release authentication, closed
+selectors/IPC and complete portfolio ownership tests. Release uses normal
+`--maxfail=1`; its existing plugin records bounded source/environment/artifact
+identity, collection and phase timing, exact first failure/log reference and an
+atomic current-node snapshot. The two original profile/export schemas remain.
+
+Verifier preserved causal selection/events/manifest/current-node REDs and
+TARGETED-04:17PASS/7.54s. Actual contract collected650; software602 passed before
+a sparse prerequisite failure. After materialization, the Windows portfolio
+file exposed its unchanged POSIX-path assertion (24PASS/16SKIP/1FAIL). The final
+Windows affected union reached614PASS before the unchanged existing Vitest
+node's60s timeout (1FAIL/178.01s). No test source, selection or timeout was weakened.
+The known WSL environment lacks moomoo-api/exchange-calendars; its frontend
+native esbuild dependency is also absent. No dependencies were installed.
+
+Final segmented evidence in recovery integration/ci-feedback-20261106-01:
+DIRECT-WINDOWS-01:86PASS/1 existing platform SKIP/31.42s across all87 direct
+Python nodes; the old Vitest node remains a separately disclosed local limit.
+PORTFOLIO-LINUX-FINAL-01:45PASS/3 existing opt-in SKIP/7.07s, all48 original
+portfolio nodes, clean Git environment and no identity plugin. Full650 Linux
+contract/plugin qualification and the net2–5min target remain normal-CI work.
+Full materialized src/tests/tools Ruff, seven changed Python formats and
+whitespace pass. All seven reviewed runtime files match both Git and disk bytes.
+
+An authorized same-store WSL coordinate translation was stopped when that
+permission was withdrawn:74/135 completed, no completed validation verdict.
+Retained JSONL/current evidence is original; buffered terminal output never
+reached a log, and the WSL temporary directories were subsequently unavailable.
+No result or missing original is reconstructed. Parent's subsequent native
+read-only check confirmed4336 stage0 entries equal HEAD, no unmerged entries,
+and released the temporary commit hold. No before-hash exists for all metadata;
+this does not prove historical absence of writes. No repository repair occurred.
+Unknown temporary peak is not refunded; the full registered9MiB remains held.
+
+Planner and Quant boundaries stay fixed. Parent's separate SDK0 audit leaves
+deployed-peer compatibility INSUFFICIENT. Fresh independent Spec/Standards R1,
+normal final-head CI and publication remain pending; no human review, native
+admission, capture, input acceptance or research qualification is asserted.
+
 ## Ownership-blocker independent R1 READY —2026-11-06
 
 Both fresh narrow axes return READY at25c49f84c6fe543e887eacf8dbc54a4696b2af9b,
@@ -1465,3 +1594,133 @@ This records the new guard/witness delta, not another whole-branch structural
 review or a human commit inspection. The next docs-only checkpoint needs its
 own normal matching-head CI/exact-lock qualification and ordinary guarded merge;
 only then may the same ordinary recovery task attempt actual conditional proof.
+
+
+### Issue292 final review gate — 2026-11-06
+
+Planner/Reviewer: the same independent Spec and Standards readers returned final
+R2 READY for source commit `0a46c4f844d33e779f64ab00555201059fc8886a`.
+The sole R1 ABI-kind/default defect has causal four-case RED and nine-case GREEN
+evidence. Spec report2677B/SHA256
+`294d19ec13348336582d4d0615e1f051ff712a6a3d9094bfa1db494522261e3e`;
+Standards report2020B/SHA256
+`999cdcc337f17086888a0258170fa383f285eebfb1f912746ce4f086f81c27f0`.
+Parent independently matched all14 candidate Git/disk pins, seven unchanged
+runtime roles and retained evidence hashes. This checkpoint changes only this
+iteration record; it is not a third structural review round. Normal final-head
+CI, actual complete Linux654 collection/timing and ordinary guarded merge remain
+required. Earlier segmented local evidence and missing-original/unknown-peak
+limitations are retained. User-standing proxy-review authority is recorded as
+such, not fabricated independent-human inspection. Separate diagnostic issue293
+is R-only/offline at this point and is not part of this CI change.
+
+
+### Issue292 external-controller final source review — 2026-11-06
+
+The explicit Planner scope superseding the in-process observer is independently
+Spec/Standards READY at source `47f4ab99190516e31518c5be137a711856ce684c`.
+Spec2921B/SHA256 `46a9674e7d2faf217b7ab995e94c596a7565dc599e072a81e7115e915739d4a2`;
+Standards2317B/SHA256 `8e730598860ec089eccf31806bf977467785fc2d6ae11e9992a6c1ae32b664ee`.
+Parent checked11 changed blobs, five preserved boundaries, all389 indexed
+originals and unchanged runtime7. Actual affected100 nodes retained99PASS/1
+existing platformSKIP; parent time40.3386s. No tests were repeated for review.
+Only this checkpoint follows the reviewed code. Matching-final-head normal CI
+is still required; CI569's primary remains UNKNOWN, its original failure and
+cancelled outcome preserved. Legacy local TEMP transient peak remains unmeasured,
+with complete holds retained. No SDK/runtime/host or research authority follows.
+
+### Issue292 test mock lifetime — bounded repair and review 2026-11-06
+
+CI570 on `8dc7c824` stopped at the same original None owner-recovery test:
+557 passed, then pytest reporting hit mocked `os.stat` without `st_size`.
+The external controller truthfully recorded26.032457s and refused the incomplete
+557-result XML. Actual primary remains UNKNOWN; removing the old observer did
+not remove this reporting failure. The complete failure artifact is retained;
+the obsolete release was normally cancelled, completed09:57:29Z.
+
+Planner's bounded repair `162c290ce68c979e0cb094f2f6b7e97335e95693` scopes
+only this test's doubles to `monkeypatch.context()`. Its original eight fault
+parameters, safety assertions and expected exceptions remain. Removing only the
+wrapper and new regression yields the complete original module AST. Runtime7
+and external-controller code are unchanged. The regression first failed because
+restoration had not occurred before the subject error escaped, then the complete
+related file passed83 tests/9.12s. A deliberately failing subject remains exit1
+with its original RuntimeError and source line visible. This local9.1.1 probe
+does not establish CI9.2's hidden primary or a product fix.
+
+Independent bounded Spec/Standards R2 both READY. Spec2572B/SHA256
+`79a395de44d98a821cf8c7560131683920ee3634cfd92c64894a64dfa708f18b`;
+Standards2025B/SHA256
+`26e17f3c6590fc70918de3395fc5484077321d6d2bbab50235b602532c1952e6`.
+Parent read both reports, matched frozen Git/disk bytes, original-module AST,
+runtime7 and450 indexed originals without rerunning tests. New retained scope
+2,756,608B plus prior controller2,433,024B stays under existing P37; no deletion,
+refund or new net charge. Normal final-head CI must reveal any remaining primary;
+required green release and ordinary guarded merge remain outstanding. This is
+source review under standing proxy authority, not a human inspection claim.
+
+### Issue292 capture-wrapper mock family — 2026-11-06
+
+CI571 passes all eight original kernel-body cases and the added exception
+regression, then reports an actual call-phase failure at preowner cleanup None:
+582PASS/1FAIL,25.035935s, complete583-result JUnit with no missing evidence.
+The normal-return context exit matches official pytest9.2 CaptureManager's
+call-wrapper finally reading FDCapture metadata through `os.fstat(...).st_size`
+before fixture teardown. The test's broad incomplete fstat double remains active
+there. Official source37552B/SHA256
+`e4b494b696e60b83f311c06250f2810d83db7548539f28bf9f3d5ffc0f292920`
+and its URL/tag/excerpts are retained. CI569/570 hidden primaries are not rewritten.
+CI571 originals remain; obsolete release completed cancelled10:14:49Z.
+
+One bounded whole-file family inventory identified only the preowner11-parameter
+and predispatch6-parameter tests. `2ce0280b805036f1c8240edc7384166603ca71cd`
+adds local contexts to those bodies and six regression cases calling the actual
+tests. Exact RED02 has six real-descriptor fstat metadata failures; the original
+preparation-error RED01 remains separately identified. The related complete file
+then passes89 tests/8.49s. Normal/refusal/exception cases verify real fd/path
+metadata and original function identities before their cleanup, preserving the
+original exception object. No blind stat fields, skips, runtime or selection edits.
+
+Parent Reviewer reads the actual diff, official source receipt, whole-file
+inventory and causal evidence; no blocker in this narrow correction. Parent
+Verifier matches475 indexed originals and the complete base-module AST after
+removing only the two wrappers/new regression. All17 original parameters and
+runtime7 remain. This is not a third structural review. Retained family scope
+2,998,272B; with prior controller/CI570 scopes total8,187,904B stays under existing
+P37, with parent CI archives separately retained and no refunds. Windows original
+portfolio path-format failure remains recorded rather than being skipped or
+repaired here. Matching-head normal Linux661 contract and full release are pending.
+
+### Issue292 full JUnit compatibility — bounded R2 2026-11-06
+
+CI572 early661, frontend793 and service gates passed. Its formal child actually
+reported8027PASS/149SKIP/5 passed subtests, exit0/2405.249785s under pytest9.1.1.
+The release still failed: the controller rejected valid JUnit at its count guard.
+The immutable XML has8176 testcase elements and suite.tests8181, the difference
+being explicitly reported subpasses. A zero-pytest actual-function replay names
+that exact rejection; neither missing files nor the unchanged8MiB bound caused it.
+The next actual rejection was a legitimate8293-character successful identity.
+Its parameters remain private; only identity length/hash were recorded.
+
+The two-file correction reconciles this positive count difference only against
+one complete bounded terminal summary whose primary categories independently
+match XML. Unknown/mixed subfailure aggregation stays infrastructure failure.
+Successful identities use internal hashes; failed identities retain4096 and all
+XML/metadata/output bounds remain. Empty/corrupt/duplicate identities refuse.
+Spec R1 found one phase-consistency P2. Causal5FAIL/2PASS precedes the sole fix:
+setup and passed/failed call share one primary slot, duplicate collection is
+checked, and legitimate teardown keeps its distinct slot/shared completed node.
+
+Verifier: source `a4be4bac17e3899865763dfc42cedb6e1584850c` has79 affected
+PASS/28.16s; actual original log/XML replay is PASSED8176 with unchanged hashes.
+This is parser evidence, not release qualification. Same-reader bounded R2 is
+Spec2499B/SHA256 `5a6a4741573204a83553e320a1f5d4f5e50087a919fe711b025f946f1f98ac19`
+and Standards2239B/SHA256
+`4d75ca8fda9c0f04cc95cda42195129c0caec0945c7d5332c127a15eab52e78c`, both READY.
+Parent read both and matched694 indexed originals, source Git/disk and runtime7;
+only the new count helper and finish differ in the controller AST. No tests were
+repeated for review. P40 adds source1/common7MiB once while preserving existing
+futureCI8MiB without recharging it; all prior holds/failed originals stay occupied.
+CI572 remains FAIL and later release stages were not executed. Normal matching
+final-head CI must execute the complete release before ordinary guarded merge;
+no SDK/provider/host or research authority follows.

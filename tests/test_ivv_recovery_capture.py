@@ -839,112 +839,146 @@ def test_candidate_manifest_uses_immutable_same_epoch_originals_only(tmp_path, f
     ],
 )
 def test_exact_owner_recovery_kernel_body_never_kills_unknown(monkeypatch, fault):
+    # Restore these global doubles before pytest builds a call-failure report.
+    with monkeypatch.context() as monkeypatch:
+        import os
+        from types import SimpleNamespace
+
+        runner = module("ivv_trusted_runner")
+        attempt = "connection-000001"
+        unit = "/system.slice/qm-ivv-recovery-" + attempt + ".service"
+        manager = dict(pid=300, start_ticks=500, uid=0, cgroup=unit + "/manager")
+        child = dict(pid=301, start_ticks=501, uid=0, cgroup=unit + "/ivv-owned-300-500")
+        binding = dict(
+            connection_attempt_id=attempt,
+            manager=manager,
+            child=child,
+            mount={
+                "id": 33 if fault == "cross_namespace" else 44,
+                "namespace": [2, 99, 0o100444, 0],
+            },
+            group=[1, 10, 0o40700, 0],
+            manager_dir=[1, 11, 0o40700, 0],
+            leaf=[1, 12, 0o40700, 0],
+        )
+        live, kills, closed = [True], [], []
+
+        def process(pid):
+            if pid == 300 and fault == "manager_active":
+                return manager, 1
+            if pid == 301 and live[0]:
+                return ({**child, "start_ticks": 999} if fault == "pid_drift" else child), 1
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(runner, "_process", process)
+        original_exists = Path.exists
+        monkeypatch.setattr(
+            Path,
+            "exists",
+            lambda path: (
+                False
+                if str(path).replace("\\", "/").startswith("/proc/")
+                else original_exists(path)
+            ),
+        )
+        monkeypatch.setattr(runner, "_cgroup_mount", lambda: 45 if fault == "mount" else 44)
+        monkeypatch.setattr(runner, "_mount_id", lambda fd: 44)
+        monkeypatch.setattr(runner, "protected", lambda path: None)
+
+        def opened(path, *a, **kw):
+            name = str(path)
+            return (
+                12 if name.endswith("ivv-owned-300-500") else 11 if name.endswith("manager") else 10
+            )
+
+        monkeypatch.setattr(os, "open", opened)
+        monkeypatch.setattr(
+            os, "fstat", lambda fd: SimpleNamespace(st_dev=1, st_ino=fd, st_mode=0o40700, st_uid=0)
+        )
+        monkeypatch.setattr(
+            os,
+            "stat",
+            lambda path, *a, **kw: SimpleNamespace(
+                st_dev=1,
+                st_ino=999 if fault == "named_inode" else opened(path),
+                st_mode=0o40700,
+                st_uid=0,
+            ),
+        )
+
+        def close_fd(fd):
+            closed.append(fd)
+            if fault == "close":
+                raise OSError("modeled close uncertainty")
+
+        monkeypatch.setattr(runner, "_close_fd", close_fd)
+        monkeypatch.setattr(os, "pidfd_open", lambda pid: 90, raising=False)
+        monkeypatch.setattr(
+            runner._Scope,
+            "dirs",
+            staticmethod(lambda fd: {"manager", "ivv-owned-300-500"} if fd == 10 else set()),
+        )
+
+        def kread(fd, name, *a):
+            if name == "cgroup.procs":
+                return (
+                    "301 999"
+                    if fault == "foreign" and fd == 12
+                    else "301"
+                    if fd == 12 and live[0]
+                    else ""
+                )
+            if name == "cgroup.events":
+                return "populated " + str(int(live[0] if fd in (10, 12) else False))
+            raise AssertionError(name)
+
+        monkeypatch.setattr(runner, "_kread", kread)
+
+        def signal_fd(fd, sig):
+            kills.append(fd)
+            live[0] = False
+
+        monkeypatch.setattr(runner.signal, "SIGKILL", 9, raising=False)
+        monkeypatch.setattr(runner.signal, "pidfd_send_signal", signal_fd, raising=False)
+        monkeypatch.setattr(runner.select, "select", lambda *args: ([90], [], []))
+        if fault not in (None, "cross_namespace"):
+            with pytest.raises((ValueError, OSError)):
+                runner._recover_bound_owner(binding)
+            if fault != "close":
+                assert kills == []
+        else:
+            proof = runner._recover_bound_owner(binding)
+            assert kills == [90] and set(closed) == {10, 11, 12, 90}
+            assert proof == {
+                "owned_cleanup_proven": True,
+                "external_effects": "UNKNOWN",
+                "input_publishable": False,
+            }
+
+
+def test_exact_owner_mock_scope_restores_before_subject_exception_escapes(monkeypatch):
     import os
-    from types import SimpleNamespace
 
     runner = module("ivv_trusted_runner")
-    attempt = "connection-000001"
-    unit = "/system.slice/qm-ivv-recovery-" + attempt + ".service"
-    manager = dict(pid=300, start_ticks=500, uid=0, cgroup=unit + "/manager")
-    child = dict(pid=301, start_ticks=501, uid=0, cgroup=unit + "/ivv-owned-300-500")
-    binding = dict(
-        connection_attempt_id=attempt,
-        manager=manager,
-        child=child,
-        mount={"id": 33 if fault == "cross_namespace" else 44, "namespace": [2, 99, 0o100444, 0]},
-        group=[1, 10, 0o40700, 0],
-        manager_dir=[1, 11, 0o40700, 0],
-        leaf=[1, 12, 0o40700, 0],
-    )
-    live, kills, closed = [True], [], []
+    failure = RuntimeError("controlled subject failure")
+    originals = (os.stat, os.fstat, os.open, Path.exists)
 
-    def process(pid):
-        if pid == 300 and fault == "manager_active":
-            return manager, 1
-        if pid == 301 and live[0]:
-            return ({**child, "start_ticks": 999} if fault == "pid_drift" else child), 1
-        raise FileNotFoundError()
+    def fail_subject(binding):
+        raise failure
 
-    monkeypatch.setattr(runner, "_process", process)
-    original_exists = Path.exists
-    monkeypatch.setattr(
-        Path,
-        "exists",
-        lambda path: (
-            False if str(path).replace("\\", "/").startswith("/proc/") else original_exists(path)
-        ),
-    )
-    monkeypatch.setattr(runner, "_cgroup_mount", lambda: 45 if fault == "mount" else 44)
-    monkeypatch.setattr(runner, "_mount_id", lambda fd: 44)
-    monkeypatch.setattr(runner, "protected", lambda path: None)
-
-    def opened(path, *a, **kw):
-        name = str(path)
-        return 12 if name.endswith("ivv-owned-300-500") else 11 if name.endswith("manager") else 10
-
-    monkeypatch.setattr(os, "open", opened)
-    monkeypatch.setattr(
-        os, "fstat", lambda fd: SimpleNamespace(st_dev=1, st_ino=fd, st_mode=0o40700, st_uid=0)
-    )
-    monkeypatch.setattr(
-        os,
-        "stat",
-        lambda path, *a, **kw: SimpleNamespace(
-            st_dev=1,
-            st_ino=999 if fault == "named_inode" else opened(path),
-            st_mode=0o40700,
-            st_uid=0,
-        ),
-    )
-
-    def close_fd(fd):
-        closed.append(fd)
-        if fault == "close":
-            raise OSError("modeled close uncertainty")
-
-    monkeypatch.setattr(runner, "_close_fd", close_fd)
-    monkeypatch.setattr(os, "pidfd_open", lambda pid: 90, raising=False)
-    monkeypatch.setattr(
-        runner._Scope,
-        "dirs",
-        staticmethod(lambda fd: {"manager", "ivv-owned-300-500"} if fd == 10 else set()),
-    )
-
-    def kread(fd, name, *a):
-        if name == "cgroup.procs":
-            return (
-                "301 999"
-                if fault == "foreign" and fd == 12
-                else "301"
-                if fd == 12 and live[0]
-                else ""
-            )
-        if name == "cgroup.events":
-            return "populated " + str(int(live[0] if fd in (10, 12) else False))
-        raise AssertionError(name)
-
-    monkeypatch.setattr(runner, "_kread", kread)
-
-    def signal_fd(fd, sig):
-        kills.append(fd)
-        live[0] = False
-
-    monkeypatch.setattr(runner.signal, "SIGKILL", 9, raising=False)
-    monkeypatch.setattr(runner.signal, "pidfd_send_signal", signal_fd, raising=False)
-    monkeypatch.setattr(runner.select, "select", lambda *args: ([90], [], []))
-    if fault not in (None, "cross_namespace"):
-        with pytest.raises((ValueError, OSError)):
-            runner._recover_bound_owner(binding)
-        if fault != "close":
-            assert kills == []
-    else:
-        proof = runner._recover_bound_owner(binding)
-        assert kills == [90] and set(closed) == {10, 11, 12, 90}
-        assert proof == {
-            "owned_cleanup_proven": True,
-            "external_effects": "UNKNOWN",
-            "input_publishable": False,
-        }
+    monkeypatch.setattr(runner, "_recover_bound_owner", fail_subject)
+    monkeypatch.setitem(globals(), "module", lambda name: runner)
+    owned_patch = pytest.MonkeyPatch()
+    try:
+        with pytest.raises(RuntimeError) as caught:
+            test_exact_owner_recovery_kernel_body_never_kills_unknown(owned_patch, None)
+        restored_before_report = (os.stat, os.fstat, os.open, Path.exists) == originals
+    finally:
+        # This only protects the regression's RED report. The restoration fact
+        # above is sampled before this cleanup, after the actual test escaped.
+        owned_patch.undo()
+    assert caught.value is failure
+    assert restored_before_report
 
 
 def test_recovery_ledger_never_reads_outside_owned_directory(tmp_path):
@@ -1141,88 +1175,92 @@ def test_r1_actual_entry_holds_lifecycle_before_preowner_failures(monkeypatch, f
     ],
 )
 def test_r1_actual_preowner_cleanup_requires_bound_terminal_empty_unit(monkeypatch, fault):
-    import types
+    # Keep process-wide doubles inside the subject call, before pytest capture.
+    with monkeypatch.context() as monkeypatch:
+        import types
 
-    runner = module("ivv_trusted_runner")
-    for flag in ("O_DIRECTORY", "O_NOFOLLOW", "O_CLOEXEC"):
-        monkeypatch.setattr(runner.os, flag, 0, raising=False)
-    book = types.SimpleNamespace(root=Path("/owned"), _write=lambda *a: None)
-    unit = "qm-ivv-recovery-connection-000001.service"
-    actor = dict(pid=111, start_ticks=12, uid=0, cgroup="/system.slice/" + unit + "/manager")
-    fields = dict(Id=unit, MainPID="111", InvocationID="a" * 32)
-    terminal = dict(fields, MainPID="0", ActiveState="inactive", SubState="dead")
-    if fault == "failed_terminal":
-        terminal.update(ActiveState="failed", SubState="failed")
-    if fault == "retained_success":
-        terminal.update(ActiveState="active", SubState="exited")
-    if fault == "failed_gc":
-        terminal["InvocationID"] = ""
-    if fault == "invocation":
-        terminal["InvocationID"] = "b" * 32
-    binding = dict(
-        connection_attempt_id="connection-000001",
-        startup_sha256="a" * 64,
-        manager=actor,
-        unit=fields,
-        group=[1, 2, 16832, 0],
-        mount={"id": 5, "namespace": [1, 3, 16832, 0]},
-    )
-
-    def process(pid):
-        if fault == "active":
-            return actor, 1
-        raise FileNotFoundError()
-
-    monkeypatch.setattr(runner, "_process", process)
-    calls = []
-
-    def query(name, **kwargs):
-        calls.append(name)
-        return (
-            dict(terminal, SubState="exited") if fault == "drift" and len(calls) > 1 else terminal
+        runner = module("ivv_trusted_runner")
+        for flag in ("O_DIRECTORY", "O_NOFOLLOW", "O_CLOEXEC"):
+            monkeypatch.setattr(runner.os, flag, 0, raising=False)
+        book = types.SimpleNamespace(root=Path("/owned"), _write=lambda *a: None)
+        unit = "qm-ivv-recovery-connection-000001.service"
+        actor = dict(pid=111, start_ticks=12, uid=0, cgroup="/system.slice/" + unit + "/manager")
+        fields = dict(Id=unit, MainPID="111", InvocationID="a" * 32)
+        terminal = dict(fields, MainPID="0", ActiveState="inactive", SubState="dead")
+        if fault == "failed_terminal":
+            terminal.update(ActiveState="failed", SubState="failed")
+        if fault == "retained_success":
+            terminal.update(ActiveState="active", SubState="exited")
+        if fault == "failed_gc":
+            terminal["InvocationID"] = ""
+        if fault == "invocation":
+            terminal["InvocationID"] = "b" * 32
+        binding = dict(
+            connection_attempt_id="connection-000001",
+            startup_sha256="a" * 64,
+            manager=actor,
+            unit=fields,
+            group=[1, 2, 16832, 0],
+            mount={"id": 5, "namespace": [1, 3, 16832, 0]},
         )
 
-    monkeypatch.setattr(runner, "_manager_fields", query)
-    monkeypatch.setattr(runner, "_cgroup_mount", lambda: 17)
-    monkeypatch.setattr(runner, "_mount_id", lambda fd: 18 if fault == "mount" else 17)
-    monkeypatch.setattr(
-        runner._Scope, "dirs", lambda fd: {"foreign"} if fault == "foreign_group" else set()
-    )
-    monkeypatch.setattr(runner.os, "open", lambda *a: 80)
-    monkeypatch.setattr(
-        runner.os,
-        "fstat",
-        lambda fd: types.SimpleNamespace(st_dev=1, st_ino=2, st_mode=16832, st_uid=0),
-    )
-    monkeypatch.setattr(runner.Path, "exists", lambda p: False)
-    monkeypatch.setattr(
-        runner.Path,
-        "lstat",
-        lambda p: types.SimpleNamespace(
-            st_dev=1, st_ino=3 if fault == "inode" else 2, st_mode=16832, st_uid=0
-        ),
-    )
-    monkeypatch.setattr(
-        runner,
-        "_kread",
-        lambda fd, name: (
-            ("999" if fault == "foreign" else "") if name == "cgroup.procs" else "populated 0"
-        ),
-    )
-    closed = []
-    monkeypatch.setattr(runner, "_close_fd", closed.append)
-    stopped = []
-    monkeypatch.setattr(runner, "_stop_quiescent_unit", lambda *a: stopped.append(a))
-    if fault not in (None, "failed_terminal", "retained_success"):
-        with pytest.raises(ValueError):
-            runner._recover_preowner(binding, book)
-    else:
-        assert runner._recover_preowner(binding, book) == dict(
-            owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+        def process(pid):
+            if fault == "active":
+                return actor, 1
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(runner, "_process", process)
+        calls = []
+
+        def query(name, **kwargs):
+            calls.append(name)
+            return (
+                dict(terminal, SubState="exited")
+                if fault == "drift" and len(calls) > 1
+                else terminal
+            )
+
+        monkeypatch.setattr(runner, "_manager_fields", query)
+        monkeypatch.setattr(runner, "_cgroup_mount", lambda: 17)
+        monkeypatch.setattr(runner, "_mount_id", lambda fd: 18 if fault == "mount" else 17)
+        monkeypatch.setattr(
+            runner._Scope, "dirs", lambda fd: {"foreign"} if fault == "foreign_group" else set()
         )
-    assert bool(stopped) == (fault == "retained_success")
-    if fault not in ("active", "invocation", "failed_gc"):
-        assert closed == [80]
+        monkeypatch.setattr(runner.os, "open", lambda *a: 80)
+        monkeypatch.setattr(
+            runner.os,
+            "fstat",
+            lambda fd: types.SimpleNamespace(st_dev=1, st_ino=2, st_mode=16832, st_uid=0),
+        )
+        monkeypatch.setattr(runner.Path, "exists", lambda p: False)
+        monkeypatch.setattr(
+            runner.Path,
+            "lstat",
+            lambda p: types.SimpleNamespace(
+                st_dev=1, st_ino=3 if fault == "inode" else 2, st_mode=16832, st_uid=0
+            ),
+        )
+        monkeypatch.setattr(
+            runner,
+            "_kread",
+            lambda fd, name: (
+                ("999" if fault == "foreign" else "") if name == "cgroup.procs" else "populated 0"
+            ),
+        )
+        closed = []
+        monkeypatch.setattr(runner, "_close_fd", closed.append)
+        stopped = []
+        monkeypatch.setattr(runner, "_stop_quiescent_unit", lambda *a: stopped.append(a))
+        if fault not in (None, "failed_terminal", "retained_success"):
+            with pytest.raises(ValueError):
+                runner._recover_preowner(binding, book)
+        else:
+            assert runner._recover_preowner(binding, book) == dict(
+                owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+            )
+        assert bool(stopped) == (fault == "retained_success")
+        if fault not in ("active", "invocation", "failed_gc"):
+            assert closed == [80]
 
 
 @pytest.mark.parametrize("fault", ["BOOTSTRAP", "SEED", "ENTRY", "STDIO", "FD_CHECK"])
@@ -1345,77 +1383,81 @@ def test_r1_real_prebootstrap_failure_persists_binding_and_can_recover_owned_sta
 def test_r1_predispatch_requires_original_controller_exit_and_same_exclusive_claim(
     tmp_path, monkeypatch, fault
 ):
-    from types import SimpleNamespace
+    # Keep process-wide doubles inside the subject call, before pytest capture.
+    with monkeypatch.context() as monkeypatch:
+        from types import SimpleNamespace
 
-    r = module("ivv_trusted_runner")
-    book = ledger(tmp_path)
-    actor = dict(pid=123, start_ticks=456, uid=0, cgroup="/system.slice/ssh.service")
-    binding = dict(
-        controller=actor,
-        claim_inode=[1, 2, 0o100444, 0],
-        unit="qm-ivv-recovery-connection-000001.service",
-    )
-    attempt = book.begin(
-        "a" * 64, now=0, expected_connection="connection-000001", pre_dispatch=binding
-    )
-    intent = book._read(attempt + ".intent.json")
-    lease = r._RecoveryLease(81)
-    lease.controller = dict(actor, pid=222)
-    book._claim_lease = None if fault == "lease" else lease
-    if fault == "dispatch":
-        book._write(attempt + ".dispatch.json", {})
-
-    def proc(pid):
-        if fault == "controller_active":
-            return actor, 1
-        if pid == 222:
-            return lease.controller, 1
-        raise FileNotFoundError()
-
-    monkeypatch.setattr(r, "_controller_actor", proc, raising=False)
-    monkeypatch.setattr(r.os, "getpid", lambda: 222)
-    monkeypatch.setattr(
-        r.os,
-        "fstat",
-        lambda fd: SimpleNamespace(
-            st_dev=1, st_ino=3 if fault == "identity" else 2, st_mode=0o100444, st_uid=0
-        ),
-    )
-    real_lstat = r.Path.lstat
-    monkeypatch.setattr(
-        r.Path,
-        "lstat",
-        lambda p: (
-            SimpleNamespace(st_dev=1, st_ino=2, st_mode=0o100444, st_uid=0)
-            if p.name == "connection-000000.claim-lock.json"
-            else real_lstat(p)
-        ),
-    )
-    real_exists = r.Path.exists
-    monkeypatch.setattr(
-        r.Path,
-        "exists",
-        lambda p: (
-            False if str(p).replace("\\", "/").startswith(("/proc/", "/sys/")) else real_exists(p)
-        ),
-    )
-    monkeypatch.setattr(
-        r,
-        "_manager_fields",
-        lambda unit: dict(
-            Id=unit,
-            MainPID="0",
-            InvocationID="a" * 32 if fault == "unit" else "",
-            ActiveState="inactive",
-        ),
-    )
-    if fault:
-        with pytest.raises(ValueError):
-            r._recover_predispatch(book, intent)
-    else:
-        assert r._recover_predispatch(book, intent) == dict(
-            owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+        r = module("ivv_trusted_runner")
+        book = ledger(tmp_path)
+        actor = dict(pid=123, start_ticks=456, uid=0, cgroup="/system.slice/ssh.service")
+        binding = dict(
+            controller=actor,
+            claim_inode=[1, 2, 0o100444, 0],
+            unit="qm-ivv-recovery-connection-000001.service",
         )
+        attempt = book.begin(
+            "a" * 64, now=0, expected_connection="connection-000001", pre_dispatch=binding
+        )
+        intent = book._read(attempt + ".intent.json")
+        lease = r._RecoveryLease(81)
+        lease.controller = dict(actor, pid=222)
+        book._claim_lease = None if fault == "lease" else lease
+        if fault == "dispatch":
+            book._write(attempt + ".dispatch.json", {})
+
+        def proc(pid):
+            if fault == "controller_active":
+                return actor, 1
+            if pid == 222:
+                return lease.controller, 1
+            raise FileNotFoundError()
+
+        monkeypatch.setattr(r, "_controller_actor", proc, raising=False)
+        monkeypatch.setattr(r.os, "getpid", lambda: 222)
+        monkeypatch.setattr(
+            r.os,
+            "fstat",
+            lambda fd: SimpleNamespace(
+                st_dev=1, st_ino=3 if fault == "identity" else 2, st_mode=0o100444, st_uid=0
+            ),
+        )
+        real_lstat = r.Path.lstat
+        monkeypatch.setattr(
+            r.Path,
+            "lstat",
+            lambda p: (
+                SimpleNamespace(st_dev=1, st_ino=2, st_mode=0o100444, st_uid=0)
+                if p.name == "connection-000000.claim-lock.json"
+                else real_lstat(p)
+            ),
+        )
+        real_exists = r.Path.exists
+        monkeypatch.setattr(
+            r.Path,
+            "exists",
+            lambda p: (
+                False
+                if str(p).replace("\\", "/").startswith(("/proc/", "/sys/"))
+                else real_exists(p)
+            ),
+        )
+        monkeypatch.setattr(
+            r,
+            "_manager_fields",
+            lambda unit: dict(
+                Id=unit,
+                MainPID="0",
+                InvocationID="a" * 32 if fault == "unit" else "",
+                ActiveState="inactive",
+            ),
+        )
+        if fault:
+            with pytest.raises(ValueError):
+                r._recover_predispatch(book, intent)
+        else:
+            assert r._recover_predispatch(book, intent) == dict(
+                owned_cleanup_proven=True, external_effects="UNKNOWN", input_publishable=False
+            )
 
 
 def test_r1_normal_parent_close_does_not_skip_terminal_unit_gate(tmp_path):
@@ -1526,3 +1568,53 @@ def test_r1_quiescent_stop_retains_exact_helper_after_wait_uncertainty(monkeypat
     with pytest.raises(TimeoutError):
         r._stop_quiescent_unit("qm-ivv-recovery-connection-000001.service", fields)
     assert events == ["wait", "kill exact helper", "wait", "wait"]
+
+
+@pytest.mark.parametrize("owner", ["preowner", "predispatch"])
+@pytest.mark.parametrize("outcome", ["normal", "refusal", "exception"])
+def test_recovery_owner_doubles_restore_before_call_wrapper(tmp_path, monkeypatch, owner, outcome):
+    import os
+
+    original_module = module
+    runner = module("ivv_trusted_runner")
+    original_functions = (os.open, os.stat, os.fstat, Path.lstat, Path.exists)
+    original_error = RuntimeError("controlled owner subject failure")
+
+    def fail_subject(*args):
+        raise original_error
+
+    if outcome == "exception":
+        monkeypatch.setattr(runner, "_recover_" + owner, fail_subject)
+    monkeypatch.setitem(
+        globals(),
+        "module",
+        lambda name: runner if name == "ivv_trusted_runner" else original_module(name),
+    )
+    (tmp_path / "ledger").mkdir()
+    sample = tmp_path / "capture-sample"
+    sample.write_bytes(b"capture")
+    with sample.open("rb") as stream:
+        owned = pytest.MonkeyPatch()
+        caught = None
+        try:
+            try:
+                if owner == "preowner":
+                    test_r1_actual_preowner_cleanup_requires_bound_terminal_empty_unit(
+                        owned, "foreign" if outcome == "refusal" else None
+                    )
+                else:
+                    test_r1_predispatch_requires_original_controller_exit_and_same_exclusive_claim(
+                        tmp_path / "ledger",
+                        owned,
+                        "controller_active" if outcome == "refusal" else None,
+                    )
+            except RuntimeError as error:
+                caught = error
+            # Pytest's call wrapper reads capture metadata before fixture teardown.
+            # Sample the real descriptor here; undo only after that boundary.
+            assert os.fstat(stream.fileno()).st_size == 7
+            assert sample.lstat().st_size == 7
+            assert (os.open, os.stat, os.fstat, Path.lstat, Path.exists) == original_functions
+            assert caught is (original_error if outcome == "exception" else None)
+        finally:
+            owned.undo()

@@ -1,13 +1,45 @@
 """Small synthetic controls for the release-only pytest profiler."""
 
 import json
+import os
+import subprocess
 import sys
 from datetime import date
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
 import pytest
 
 from tools import ci_profile_plugin
+
+
+def test_contract_missing_collection_cannot_pass_or_run_body(tmp_path):
+    root = Path(__file__).resolve().parents[1]
+    (tmp_path / "pytest.ini").write_text("[pytest]\n")
+    (tmp_path / "test_ok.py").write_text("def test_ok():\n    raise AssertionError('body ran')\n")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-B",
+            "-m",
+            "pytest",
+            "-q",
+            "-p",
+            "tools.ci_profile_plugin",
+            "-p",
+            "no:cacheprovider",
+            "--ci-contract",
+            "test_ok.py",
+        ],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        env={**os.environ, "PYTHONPATH": str(root), "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1"},
+    )
+    assert result.returncode == 4
+    assert "missing release contract targets" in result.stderr
+    assert "body ran" not in result.stdout
 
 
 def test_profile_call_restores_calendar_and_keeps_distinct_argument_digests() -> None:
