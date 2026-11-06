@@ -321,6 +321,43 @@ class PytestStepFeedback:
             self.node = observer.last_node
             self.emit("current_node", "RUNNING")
 
+    def _passed_subtests(self, counts: dict[str, int]) -> int:
+        """Reconcile only explicit subpasses with independently matching primary counts."""
+        with self.log.open("rb") as stream:
+            stream.seek(max(0, self.log.stat().st_size - 65536))
+            tail = stream.read(65536)
+        if not tail.endswith(b"\n"):
+            raise ValueError("missing complete pytest summary")
+        line = tail.decode("utf-8", errors="replace").splitlines()[-1]
+        if len(line) > 4096:
+            raise ValueError("oversized pytest summary")
+        match = re.fullmatch(r"=+ (.+) in [0-9]+(?:\.[0-9]+)?s(?: \([0-9:]+\))? =+", line)
+        if match is None:
+            raise ValueError("missing terminal pytest summary")
+        summary = {}
+        for part in match[1].split(", "):
+            item = re.fullmatch(
+                r"([1-9][0-9]{0,8}) (passed|failed|skipped|errors?|warnings?|subtests passed)", part
+            )
+            if item is None:
+                raise ValueError("unknown pytest summary count")
+            key = {"error": "errors", "warning": "warnings"}.get(item[2], item[2])
+            if key in summary:
+                raise ValueError("duplicate pytest summary count")
+            summary[key] = int(item[1])
+        expected = {
+            "passed": counts["tests"] - counts["failures"] - counts["errors"] - counts["skipped"],
+            "failed": counts["failures"],
+            "errors": counts["errors"],
+            "skipped": counts["skipped"],
+        }
+        if any(summary.get(key, 0) != value for key, value in expected.items()):
+            raise ValueError("inconsistent pytest primary counts")
+        subpassed = summary.get("subtests passed", 0)
+        if subpassed == 0:
+            raise ValueError("missing explicit passed subtests")
+        return subpassed
+
     def finish(self, code: int, timed_out: bool, observer: StepLogObserver) -> bool:
         status, missing, failure, completed = "INFRASTRUCTURE_ERROR", [], None, None
         if timed_out:
@@ -345,12 +382,22 @@ class PytestStepFeedback:
                         ("skipped", "skipped"),
                     )
                 )
-                if any(
-                    sum(int(suite.get(key, "-1")) for suite in suites) != value
-                    for key, value in counts.items()
-                ):
+                declared = {
+                    key: sum(int(suite.get(key, "-1")) for suite in suites) for key in counts
+                }
+                if any(declared[key] != counts[key] for key in ("failures", "errors", "skipped")):
                     raise ValueError("incomplete JUnit counts")
+                if declared["tests"] != counts["tests"]:
+                    # Pytest records passed subtests in suite.tests without emitting
+                    # testcase elements. Never infer that difference from XML alone.
+                    if (
+                        len(suites) != 1
+                        or declared["tests"] <= counts["tests"]
+                        or declared["tests"] != counts["tests"] + self._passed_subtests(counts)
+                    ):
+                        raise ValueError("incomplete JUnit counts")
                 nodes = set()
+                outcomes = set()
                 for case in cases:
                     filename, name = case.get("file", ""), case.get("name", "")
                     classname = case.get("classname", "")
@@ -374,10 +421,21 @@ class PytestStepFeedback:
                             phase = "teardown"
                         else:
                             raise ValueError("unobserved failure phase")
-                    if not node or len(node) > 4096 or (phase != "collection" and not filename):
+                    if (
+                        not filename.strip()
+                        or (phase != "collection" and not name.strip())
+                        or any(ord(char) < 32 or ord(char) == 127 for char in node)
+                        or (phase is not None and len(node) > 4096)
+                    ):
                         raise ValueError("missing node identity")
                     if phase != "collection":
-                        nodes.add(node)
+                        # Success parameters stay private to the bounded XML parser.
+                        # Use the same identity for call/teardown reports of one node.
+                        identity = hashlib.sha256(node.encode("utf-8")).digest()
+                        if (identity, phase) in outcomes:
+                            raise ValueError("duplicate JUnit node outcome")
+                        outcomes.add((identity, phase))
+                        nodes.add(identity)
                     if phase is not None and failure is None:
                         failure = {"nodeid": node, "phase": phase, "node_evidence": "JUNIT_RESULT"}
                 completed = len(nodes)

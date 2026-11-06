@@ -189,3 +189,195 @@ def test_feedback_artifact_failure_prevents_child_start(tmp_path, monkeypatch):
     with pytest.raises(OSError):
         release_gate.run_step("pytest probe", command, tmp_path, logs)
     assert not marker.exists()
+
+
+@pytest.mark.parametrize("outcome", ["passed", "separate_failure", "merged_subfailure"])
+def test_passed_subtests_use_actual_child_terminal_evidence(tmp_path, monkeypatch, outcome):
+    body = (
+        "import unittest\nclass TestParts(unittest.TestCase):\n"
+        "    def test_parts(self):\n"
+        "        for value in range(2):\n"
+        "            with self.subTest(value=value):\n"
+        + (
+            "                self.assertEqual(value, 0)\n"
+            if outcome == "merged_subfailure"
+            else "                self.assertTrue(True)\n"
+        )
+        + (
+            "    def test_z_failure(self):\n        self.fail('separate failure')\n"
+            if outcome == "separate_failure"
+            else ""
+        )
+    )
+    ok, rows, current, ordinary = child(tmp_path, monkeypatch, body)
+    assert "subtests passed" in ordinary
+    assert ok is (outcome == "passed")
+    assert (
+        current["status"]
+        == {
+            "passed": "PASSED",
+            "separate_failure": "TEST_FAILED",
+            "merged_subfailure": "INFRASTRUCTURE_ERROR",
+        }[outcome]
+    )
+    if outcome == "separate_failure":
+        assert rows[-1]["first_failure"]["nodeid"] == "test_probe.py::TestParts::test_z_failure"
+        assert "separate failure" in ordinary
+    elif outcome == "merged_subfailure":
+        # One XML testcase combines a passed parent with a failed subtest;
+        # the primary classifications cannot be independently reconciled.
+        assert rows[-1]["exit_code"] == 1 and "SUBFAILED" in ordinary
+        assert rows[-1]["missing_evidence"]
+
+
+def subtest_terminal(tmp_path, *, passed=1, skipped=0, subpassed=2, long_success=False):
+    import xml.etree.ElementTree as ET
+
+    feedback = release_gate.PytestStepFeedback(tmp_path / "result.log", time.monotonic())
+    root = ET.Element("testsuites")
+    suite = ET.SubElement(
+        root,
+        "testsuite",
+        name="pytest",
+        tests=str(passed + skipped + subpassed),
+        failures="0",
+        errors="0",
+        skipped=str(skipped),
+    )
+    for index in range(passed + skipped):
+        case = ET.SubElement(
+            suite,
+            "testcase",
+            classname="test_parts",
+            file="test_parts.py",
+            name=f"test_part_{index}",
+        )
+        if index == 0 and long_success:
+            case.set("name", "test_long_" + "x" * (8293 - len("test_parts.py::test_long_")))
+        if index >= passed:
+            ET.SubElement(case, "skipped", message="explicit synthetic skip")
+    ET.ElementTree(root).write(feedback.junit, encoding="utf-8", xml_declaration=True)
+    summary = f"{passed} passed, " + (f"{skipped} skipped, " if skipped else "")
+    summary += f"{subpassed} subtests passed"
+    feedback.log.write_text(f"= {summary} in 2396.54s (0:39:56) =\n", encoding="utf-8")
+    return feedback, suite
+
+
+def test_full_scale_subtest_counts_require_all_primary_cases(tmp_path):
+    feedback, _ = subtest_terminal(
+        tmp_path, passed=8027, skipped=149, subpassed=5, long_success=True
+    )
+    assert feedback.finish(0, False, release_gate.StepLogObserver())
+    result = json.loads(feedback.current.read_text())
+    assert result["status"] == "PASSED" and result["completed"] == 8176
+    assert "x" * 100 not in feedback.current.read_text()
+    assert feedback.current.stat().st_size < 16384
+
+
+@pytest.mark.parametrize(
+    "damage",
+    [
+        "missing_summary",
+        "wrong_subpassed",
+        "wrong_passed",
+        "wrong_total",
+        "wrong_skipped",
+        "truncated_summary",
+        "malformed_xml",
+        "truncated_xml",
+        "failure_count",
+        "error_count",
+        "skipped_count",
+        "zero_with_failure",
+        "nonzero_without_failure",
+        "unknown_summary",
+        "duplicate_count",
+        "no_subpassed",
+        "negative_total",
+    ],
+)
+def test_subtest_count_disagreement_stays_infrastructure_error(tmp_path, damage):
+    import xml.etree.ElementTree as ET
+
+    feedback, suite = subtest_terminal(tmp_path)
+    summary = feedback.log.read_text()
+    code = 0
+    if damage == "missing_summary":
+        summary = ""
+    elif damage == "wrong_subpassed":
+        summary = summary.replace("2 subtests", "1 subtests")
+    elif damage == "wrong_passed":
+        summary = summary.replace("1 passed", "2 passed")
+    elif damage == "wrong_skipped":
+        summary = summary.replace("1 passed", "1 passed, 1 skipped")
+    elif damage == "truncated_summary":
+        summary = summary.rstrip()
+    elif damage == "unknown_summary":
+        summary = summary.replace("1 passed", "1 passed, 1 unobserved")
+    elif damage == "duplicate_count":
+        summary = summary.replace("1 passed", "1 passed, 1 passed")
+    elif damage == "no_subpassed":
+        summary = summary.replace(", 2 subtests passed", "")
+    elif damage in ("wrong_total", "negative_total"):
+        suite.set("tests", "4" if damage == "wrong_total" else "-1")
+    elif damage in ("failure_count", "error_count", "skipped_count"):
+        suite.set(
+            {"failure_count": "failures", "error_count": "errors", "skipped_count": "skipped"}[
+                damage
+            ],
+            "1",
+        )
+    elif damage == "zero_with_failure":
+        ET.SubElement(suite.find("testcase"), "failure", message="synthetic failure")
+        suite.set("failures", "1")
+        summary = summary.replace("1 passed", "1 failed")
+    elif damage == "nonzero_without_failure":
+        code = 1
+    root = ET.Element("testsuites")
+    root.append(suite)
+    ET.ElementTree(root).write(feedback.junit, encoding="utf-8", xml_declaration=True)
+    if damage == "malformed_xml":
+        feedback.junit.write_text("<broken")
+    elif damage == "truncated_xml":
+        feedback.junit.write_bytes(feedback.junit.read_bytes()[:-20])
+    feedback.log.write_text(summary, encoding="utf-8")
+    assert not feedback.finish(code, False, release_gate.StepLogObserver())
+    terminal = json.loads(feedback.current.read_text())
+    assert terminal["status"] == "INFRASTRUCTURE_ERROR"
+    assert terminal["missing_evidence"] == ["complete_consistent_junit_result"]
+
+
+@pytest.mark.parametrize(
+    "damage", ["empty_name", "empty_file", "duplicate", "damaged_name", "long_failure"]
+)
+def test_subtest_identity_validation_is_not_relaxed(tmp_path, damage):
+    import copy
+    import xml.etree.ElementTree as ET
+
+    feedback, suite = subtest_terminal(tmp_path)
+    case = suite.find("testcase")
+    summary = feedback.log.read_text()
+    if damage == "empty_name":
+        case.set("name", "")
+    elif damage == "empty_file":
+        case.set("file", "")
+    elif damage == "duplicate":
+        suite.append(copy.deepcopy(case))
+        suite.set("tests", "4")
+        summary = summary.replace("1 passed", "2 passed")
+    elif damage == "damaged_name":
+        case.set("name", "test_bad\nidentity")
+    else:
+        case.set("name", "test_long_" + "x" * (8293 - len("test_parts.py::test_long_")))
+        ET.SubElement(case, "failure", message="synthetic failure")
+        suite.set("failures", "1")
+        summary = summary.replace("1 passed", "1 failed")
+    root = ET.Element("testsuites")
+    root.append(suite)
+    ET.ElementTree(root).write(feedback.junit, encoding="utf-8", xml_declaration=True)
+    feedback.log.write_text(summary, encoding="utf-8")
+    assert not feedback.finish(
+        1 if damage == "long_failure" else 0, False, release_gate.StepLogObserver()
+    )
+    assert json.loads(feedback.current.read_text())["status"] == "INFRASTRUCTURE_ERROR"
+    assert "x" * 100 not in feedback.current.read_text()
