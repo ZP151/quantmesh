@@ -18,6 +18,8 @@ import logging.handlers
 import math
 import os
 import re
+import select
+import selectors
 import signal
 import stat
 import struct
@@ -1263,7 +1265,10 @@ def _load_official_sdk(writer, plan):
         sdk = importlib.import_module("moomoo")
         util = importlib.import_module("moomoo.common.utils")
         constants = importlib.import_module("moomoo.common.constant")
-        if type(plan.get("_capture_lifecycle")) is _CaptureLifecycle:
+        if (
+            type(plan.get("_capture_lifecycle")) is _CaptureLifecycle
+            or plan.get("_reference_method") == "init-query-vector-v1"
+        ):
             _verify_receive_modules(sdk, util, plan)
         return (sdk, util, constants), sink
     except BaseException:
@@ -1731,7 +1736,10 @@ class _OfficialBackend:
             "data_socket_closed": False,
         }
         if modules is None:
-            if type(plan.get("_capture_lifecycle")) is _CaptureLifecycle:
+            if (
+                type(plan.get("_capture_lifecycle")) is _CaptureLifecycle
+                or plan.get("_reference_method") == "init-query-vector-v1"
+            ):
                 _verify_receive_sources(plan)
             modules, self.sink = _load_official_sdk(writer, plan)
         self.sdk, self.util, self.constants = modules
@@ -1770,6 +1778,9 @@ class _OfficialBackend:
                     )
                 return self._old_send(conn, raw, *args, **kwargs)
             except CaptureRejected as error:
+                refused = getattr(self, "_reference_wire_refused", None)
+                if refused is not None:
+                    refused()
                 self.o.poison = error.args[0]
                 raise
 
@@ -2216,8 +2227,16 @@ def _read_reference_control(plan):
             "catalog_sha256",
             "sdk_pins_sha256",
             "policy_sha256",
+            *({"method"} if value.get("schema_id") == "qm.ivv.reference-control.v2" else set()),
         }
-        and value["schema_id"] == "qm.ivv.reference-control.v1",
+        and (
+            value["schema_id"] == "qm.ivv.reference-control.v1"
+            or (
+                value["schema_id"] == "qm.ivv.reference-control.v2"
+                and type(value["method"]) is str
+                and value["method"] == "init-query-vector-v1"
+            )
+        ),
         "reference_control_shape",
     )
     for key in ("nonce", "reference_context", "capture_context"):
@@ -2361,6 +2380,735 @@ class _ReferenceObserver(_CaptureObserver):
                 raise
 
 
+def _empty_query_vector():
+    return dict(
+        schema="qm.ivv.init-query-vector.v1",
+        attribution="UNBOUND",
+        guard=dict(stage="NONE", code="NONE"),
+        send="UNOBSERVED",
+        primitive_wait="UNOBSERVED",
+        packet_err_snapshot="UNOBSERVED",
+        unpack="UNOBSERVED",
+        ret_type="UNOBSERVED",
+        receive=_empty_receive_trace(),
+        errors={name: dict(type="NONE", errno=None) for name in ("send", "wait", "unpack")},
+        socket=dict(
+            identity="UNBOUND",
+            selector="UNKNOWN",
+            readable="UNKNOWN",
+            unread="UNKNOWN",
+            wait_delta_ms=None,
+            sample_order="SEQUENTIAL",
+        ),
+    )
+
+
+def _query_error_detail(error):
+    # Exact builtin identities only. Unknown classes may hide arbitrary
+    # properties; neither names, args, text nor their errno are inspected.
+    os_types = {
+        OSError: "OS",
+        BlockingIOError: "BLOCKED",
+        BrokenPipeError: "BROKEN_PIPE",
+        ConnectionAbortedError: "CONN_ABORTED",
+        ConnectionRefusedError: "CONN_REFUSED",
+        ConnectionResetError: "CONN_RESET",
+        TimeoutError: "TIMEOUT",
+        PermissionError: "PERMISSION",
+        ConnectionError: "OS",
+        ChildProcessError: "OS",
+        FileExistsError: "OS",
+        FileNotFoundError: "OS",
+        InterruptedError: "OS",
+        IsADirectoryError: "OS",
+        NotADirectoryError: "OS",
+        ProcessLookupError: "OS",
+    }
+    other_types = {
+        CaptureRejected: "GUARD",
+        TypeError: "TYPE",
+        ValueError: "VALUE",
+        AttributeError: "ATTRIBUTE",
+        KeyError: "KEY",
+        IndexError: "INDEX",
+        RuntimeError: "RUNTIME",
+        AssertionError: "ASSERTION",
+        MemoryError: "MEMORY",
+        OverflowError: "OVERFLOW",
+        Exception: "EXCEPTION",
+        KeyboardInterrupt: "INTERRUPT",
+        SystemExit: "SYSTEM_EXIT",
+        GeneratorExit: "GENERATOR_EXIT",
+    }
+    cls = type(error)
+    label = next(
+        (label for expected, label in (*os_types.items(), *other_types.items()) if cls is expected),
+        "UNKNOWN",
+    )
+    number = error.errno if any(cls is expected for expected in os_types) else None
+    return dict(type=label, errno=number if type(number) is int and 0 <= number <= 65535 else None)
+
+
+class _InstrumentedReferenceObserver(_CaptureObserver):
+    """Explicit method only; all mandatory live and one-Init guards remain sticky."""
+
+    def __init__(self, plan, writer, clock):
+        _require(
+            callable(plan.get("_live_verifier"))
+            and plan.get("_recovery_ledger") is not None
+            and type(plan.get("_recovery_attempt")) is str,
+            "reference_live_ledger_required",
+        )
+        super().__init__(plan, writer, clock)
+        self.backend = None
+        self.guard = dict(stage="NONE", code="NONE")
+
+    def record_guard(self, stage, code):
+        if self.guard["stage"] == "NONE":
+            self.guard = dict(stage=stage, code=code)
+
+    def reject(self, code):
+        self.record_guard(
+            "REQUEST", "REFERENCE_INIT_ONLY" if code == "reference_init_only" else "OTHER_GUARD"
+        )
+        return super().reject(code)
+
+    def check(self, limit=480):
+        try:
+            return super().check(limit)
+        except BaseException:
+            self.record_guard(
+                "POST_CONSTRUCTOR"
+                if self.backend is not None and self.backend.constructor_returned
+                else "LIVE",
+                "REFERENCE_LIVE_REFUSED",
+            )
+            self.poison = self.poison or "reference_live_refused"
+            raise
+
+    def before_send(self, proto, serial):
+        with self._lock:
+            if type(proto) is not int or proto != 1001 or self.controls.get(1001):
+                self.reject("reference_init_only")
+            try:
+                return super().before_send(proto, serial)
+            except BaseException:
+                self.record_guard("REQUEST", "REFERENCE_SEND_REFUSED")
+                self.poison = self.poison or "reference_send_refused"
+                raise
+
+
+class _InstrumentedReferenceBackend(_OfficialBackend):
+    """One bound Event primitive observation; never uses business-capture open."""
+
+    def __init__(self, observer, writer, plan, clock, *, modules=None):
+        _require(type(observer) is _InstrumentedReferenceObserver, "reference_observer_required")
+        super().__init__(observer, writer, plan, clock, modules=modules)
+        observer.backend = self
+        self.constructor_returned = False
+        self.constructor_status = "NOT_RETURNED"
+        self.init_delegate_return = "UNKNOWN"
+        self.query_vector = _empty_query_vector()
+        self._init_facts = self.query_vector
+        self._receive_trace = _InitReceiveTrace(clock)
+        self._socket_binding = None
+        self._query_request = None
+        self._wait_end_mono = None
+        self._vector_frozen = False
+        self._receive_restore_failed = False
+
+    def _receive(self, method, *args):
+        if method != "restore" or self._receive_trace is None:
+            return super()._receive(method, *args)
+        try:
+            return self._receive_trace.restore(*args)
+        except BaseException:
+            # Finish the inherited wire/log cleanup before refusing ownership.
+            self._receive_restore_failed = True
+            self.o.record_guard("RESTORE", "OTHER_GUARD")
+            self.o.poison = self.o.poison or "reference_receive_restore_failed"
+        return None
+
+    def close(self):
+        # Any original close exception remains primary; restoration cannot mask it.
+        result = super().close()
+        _require(not self._receive_restore_failed, "reference_receive_restore_failed")
+        return result
+
+    def _reference_wire_refused(self):
+        self.o.record_guard("WIRE", "OTHER_GUARD")
+
+    def _query_metadata_failed(self, error):
+        self._receive_error = True
+        if isinstance(error, CaptureRejected) or not isinstance(error, Exception):
+            # Set sticky refusal before optional guard bookkeeping can fail.
+            self.o.poison = self.o.poison or "reference_observation_refused"
+            self.o.record_guard("REQUEST", "OTHER_GUARD")
+
+    def _record_query_error(self, field, error):
+        try:
+            detail = _query_error_detail(error)
+        except BaseException as metadata_error:
+            self.query_vector["errors"][field] = dict(type="UNKNOWN", errno=None)
+            self._query_metadata_failed(metadata_error)
+        else:
+            self.query_vector["errors"][field] = detail
+
+    def _observe_init_return(self, field, delegate, *args, **kwargs):
+        self.query_vector[field] = "ENTERED"
+        if field == "send":
+            self._bind_socket()
+        elif field == "unpack":
+            self._receive("unpack_phase")
+            try:
+                code = args[0].retType
+                self.query_vector["ret_type"] = (
+                    "OK"
+                    if type(code) is int and code == 0
+                    else "NON_OK"
+                    if type(code) is int
+                    else "UNKNOWN"
+                )
+            except BaseException:
+                self.query_vector["ret_type"] = "UNKNOWN"
+        try:
+            result = delegate(*args, **kwargs)
+        except BaseException as error:
+            try:
+                self.query_vector[field] = "RAISED"
+                self._record_query_error(field, error)
+            finally:
+                # Bookkeeping must never replace the original delegate exception.
+                raise error
+        code = (
+            result[0]
+            if type(result) is tuple and len(result) == (2 if field == "send" else 3)
+            else None
+        )
+        self.query_vector[field] = (
+            {0: "OK", -1: "NON_OK"}.get(code, "UNKNOWN") if type(code) is int else "UNKNOWN"
+        )
+        return result
+
+    def _observe_init_query(self, ctx, query, pack, unpack, kwargs):
+        facts = self.query_vector
+        namespace = query.__globals__
+        init, packet_err = namespace["InitConnect"], namespace["PacketErr"]
+        if (
+            ctx is not self.ctx
+            or self._init_thread != threading.get_ident()
+            or pack != init.pack_req
+            or unpack != init.unpack_rsp
+            or self._bind_init is not None
+        ):
+            self._init_invalid = True
+            return query(pack, unpack, **kwargs)
+        request = None
+        saved = []
+
+        def save(owner, name, replacement):
+            saved.append((owner, name, name in vars(owner), vars(owner).get(name)))
+            setattr(owner, name, replacement)
+
+        def observed_unpack(pb):
+            if (
+                request is None
+                or self._init_thread != threading.get_ident()
+                or pb is not request.rsp
+                or facts["unpack"] != "UNOBSERVED"
+            ):
+                self._init_invalid = True
+                return unpack(pb)
+            # Entry is causal evidence even if a prior PacketErr snapshot differed.
+            return self._observe_init_return("unpack", unpack, pb)
+
+        def bind(wire_ctx, serial):
+            nonlocal request
+            req = ctx._req_map.get((1001, serial))
+            if (
+                wire_ctx is not ctx
+                or ctx is not self.ctx
+                or self._init_thread != threading.get_ident()
+                or request is not None
+                or type(serial) is not int
+                or type(req) is not namespace["ReqInfo"]
+                or req.proto_id != 1001
+                or req.serial_no != serial
+                or req.unpack_func is not observed_unpack
+                or not req.is_sync
+            ):
+                self._init_invalid = True
+                return False
+            request = self._query_request = req
+            self._receive("bind_request", req, packet_err)
+            event_wait, wait = req.event.wait, req.wait
+
+            def primitive_wait(*args, **kwargs):
+                try:
+                    result = event_wait(*args, **kwargs)
+                except BaseException as error:
+                    try:
+                        facts["primitive_wait"] = "RAISED"
+                        self._record_query_error("wait", error)
+                    finally:
+                        raise error
+                facts["primitive_wait"] = (
+                    "TRUE" if result is True else "FALSE" if result is False else "UNKNOWN"
+                )
+                return result
+
+            def observed_wait(*args, **kwargs):
+                try:
+                    return wait(*args, **kwargs)
+                finally:
+                    primary = sys.exc_info()[1]
+                    try:
+                        self._receive("wait_end")
+                        self._wait_end_mono = self.clock.mono()
+                        error = req.err
+                        facts["packet_err_snapshot"] = next(
+                            (
+                                name
+                                for name in ("Ok", "Timeout", "Invalid", "Disconnect", "SendFail")
+                                if error is getattr(packet_err, name)
+                            ),
+                            "UNKNOWN",
+                        )
+                    except BaseException as metadata_error:
+                        try:
+                            self._wait_end_mono = None
+                            facts["packet_err_snapshot"] = "UNKNOWN"
+                            self._query_metadata_failed(metadata_error)
+                        finally:
+                            if primary is not None:
+                                raise primary
+                        if isinstance(metadata_error, CaptureRejected) or not isinstance(
+                            metadata_error, Exception
+                        ):
+                            raise
+
+            try:
+                save(req.event, "wait", primitive_wait)
+                save(req, "wait", observed_wait)
+            except BaseException:
+                self.o.record_guard("REQUEST", "OTHER_GUARD")
+                self.o.poison = self.o.poison or "reference_hook_failed"
+                raise
+            return True
+
+        self._bind_init = bind
+        try:
+            return query(pack, observed_unpack, **kwargs)
+        finally:
+            primary = sys.exc_info()[1]
+            self._bind_init = None
+            failed = False
+            for owner, name, present, previous in reversed(saved):
+                try:
+                    if present:
+                        setattr(owner, name, previous)
+                    else:
+                        delattr(owner, name)
+                except BaseException:
+                    failed = True
+            if request is not None:
+                try:
+                    request.unpack_func = unpack
+                except BaseException:
+                    failed = True
+            if failed:
+                self.o.record_guard("RESTORE", "OTHER_GUARD")
+                self.o.poison = self.o.poison or "reference_restore_failed"
+                if primary is None:
+                    raise CaptureRejected("reference_restore_failed")
+
+    def _bind_socket(self):
+        try:
+            conn_id = self.ctx._conn_id
+            conn = self._net._conn_map[conn_id]
+            sock = conn.sock
+            fd = sock.fileno()
+            if type(fd) is int and fd >= 0:
+                stamp = self._socket_stamp(fd)
+                if stamp is not None:
+                    self._socket_binding = (self._net, conn_id, conn, sock, fd, stamp)
+        except CaptureRejected:
+            raise
+        except Exception:
+            pass
+
+    @staticmethod
+    def _socket_stamp(fd):
+        info = os.fstat(fd)
+        stamp = (info.st_dev, info.st_ino, info.st_mode)
+        if all(type(value) is int and value >= 0 for value in stamp) and stat.S_ISSOCK(
+            info.st_mode
+        ):
+            return stamp
+        return None
+
+    def _socket_snapshot(self):
+        value = dict(_empty_query_vector()["socket"])
+        if self._query_request is None:
+            return value
+        value["identity"] = "UNKNOWN"
+        if self._socket_binding is None:
+            return value
+        net, conn_id, conn, sock, fd, stamp = self._socket_binding
+
+        def same():
+            observed_fd = sock.fileno()
+            if type(observed_fd) is not int:
+                raise ValueError("socket_identity_unknown")
+            if observed_fd != fd:
+                return False
+            observed_stamp = self._socket_stamp(observed_fd)
+            if observed_stamp is None:
+                raise ValueError("socket_identity_unknown")
+            return (
+                self._net is net
+                and vars(self.ctx).get("_conn_id") == conn_id
+                and net._conn_map.get(conn_id) is conn
+                and conn.sock is sock
+                and observed_fd == fd
+                and observed_stamp == stamp
+            )
+
+        try:
+            if not same():
+                value["identity"] = "DRIFT"
+                return value
+            value["identity"] = "VERIFIED"
+            try:
+                key = net._selector.get_key(sock)
+                if key.fileobj is sock and key.data is conn and type(key.events) is int:
+                    value["selector"] = "READ" if key.events & selectors.EVENT_READ else "NO_READ"
+            except KeyError:
+                value["selector"] = "ABSENT"
+            except CaptureRejected:
+                raise
+            except Exception:
+                pass
+            try:
+                ready, _, _ = select.select([sock], [], [], 0)
+                value["readable"] = (
+                    "TRUE" if ready == [sock] else "FALSE" if ready == [] else "UNKNOWN"
+                )
+            except CaptureRejected:
+                raise
+            except Exception:
+                pass
+            try:
+                import fcntl
+                import termios
+
+                raw = fcntl.ioctl(fd, termios.FIONREAD, struct.pack("i", 0))
+                size = struct.unpack("i", raw)[0]
+                value["unread"] = (
+                    "ZERO"
+                    if size == 0
+                    else "LE_1K"
+                    if 0 < size <= 1024
+                    else "LE_64K"
+                    if 1024 < size <= 65536
+                    else "GT_64K"
+                    if size > 65536
+                    else "UNKNOWN"
+                )
+            except CaptureRejected:
+                raise
+            except Exception:
+                pass
+            if self._wait_end_mono is not None:
+                elapsed = self.clock.mono() - self._wait_end_mono
+                if type(elapsed) in (int, float) and math.isfinite(elapsed) and 0 <= elapsed <= 480:
+                    value["wait_delta_ms"] = int(elapsed * 1000)
+            if not same():
+                value.update(
+                    identity="DRIFT",
+                    selector="UNKNOWN",
+                    readable="UNKNOWN",
+                    unread="UNKNOWN",
+                    wait_delta_ms=None,
+                )
+        except CaptureRejected:
+            raise
+        except Exception:
+            value.update(
+                identity="UNKNOWN",
+                selector="UNKNOWN",
+                readable="UNKNOWN",
+                unread="UNKNOWN",
+                wait_delta_ms=None,
+            )
+        return value
+
+    def freeze_query_vector(self):
+        if self._vector_frozen:
+            return self.query_vector
+        facts = self.query_vector
+        facts["guard"] = dict(self.o.guard)
+        facts["socket"] = self._socket_snapshot()
+        trace = self._receive("freeze", self._net)
+        if type(trace) is not dict:
+            trace = _empty_receive_trace()
+            self._receive_error = True
+        trace["recorder_error"] |= self._receive_error
+        facts["receive"] = trace
+        bound = self._query_request is not None and not self._init_invalid
+        facts["attribution"] = "BOUND" if bound else "UNBOUND"
+        if (
+            self._init_invalid
+            or trace["recorder_error"]
+            or trace["scan_unknown"]
+            or trace["overflow"]
+            or facts["socket"]["identity"] in ("DRIFT", "UNKNOWN")
+            or (
+                bound
+                and any(
+                    facts["socket"][field] == "UNKNOWN"
+                    for field in ("selector", "readable", "unread")
+                )
+            )
+            or facts["primitive_wait"] == "UNKNOWN"
+            or facts["packet_err_snapshot"] == "UNKNOWN"
+            or (facts["primitive_wait"] == "TRUE" and trace["notify_when"] != "BEFORE_WAIT_END")
+            or (facts["primitive_wait"] == "FALSE" and trace["target_notify_err"] != "UNOBSERVED")
+            or trace["notify_when"] == "AFTER_WAIT_END"
+            or (facts["primitive_wait"] == "FALSE" and facts["unpack"] != "UNOBSERVED")
+            or (facts["unpack"] != "UNOBSERVED" and facts["packet_err_snapshot"] != "Ok")
+        ):
+            facts["attribution"] = "RACE_OR_UNKNOWN"
+        self._vector_frozen = True
+        return facts
+
+    def open(self):
+        self.o.context_created()
+        backend = self
+        base = self.sdk.OpenQuoteContext
+
+        class InstrumentedReferenceContext(base):
+            def _init_connect_sync(ctx):
+                backend.o.initializing()
+                ctx._auto_reconnect = False
+                backend._install_wire(ctx)
+                backend._init_thread = threading.get_ident()
+                try:
+                    result = super()._init_connect_sync()
+                    backend.init_delegate_return = (
+                        "OK"
+                        if type(result) is int and result == 0
+                        else "NON_OK"
+                        if type(result) is int and result == -1
+                        else "UNKNOWN"
+                    )
+                    return result
+                finally:
+                    backend._init_thread = None
+
+            def _query_sync(ctx, pack_func, unpack_func, **kwargs):
+                return backend._observe_init_query(
+                    ctx, super()._query_sync, pack_func, unpack_func, kwargs
+                )
+
+            def _handle_init_connect_rsp(ctx, data):
+                return super()._handle_init_connect_rsp(data)
+
+            def _get_sync_query_processor(ctx, pack, unpack):
+                return backend._processor(ctx, super()._get_sync_query_processor, pack, unpack)
+
+            def keep_alive(ctx):
+                backend.o.check()
+                return 0, ""
+
+        _require(
+            self.plan["endpoint"]["is_encrypt"] is False,
+            "encrypted_transport_not_prepared_no_downgrade",
+        )
+        self.ctx = InstrumentedReferenceContext.__new__(InstrumentedReferenceContext)
+        InstrumentedReferenceContext.__init__(
+            self.ctx,
+            host="127.0.0.1",
+            port=11112,
+            is_encrypt=False,
+            is_async_connect=False,
+            security_firm=getattr(self.sdk.SecurityFirm, self.plan["endpoint"]["security_firm"]),
+        )
+        self.constructor_returned = True
+        self.constructor_status = (
+            "READY" if self.ctx.status == self.constants.ContextStatus.READY else "NOT_READY"
+        )
+        try:
+            self.o.check(180)
+        except BaseException:
+            self.o.record_guard("POST_CONSTRUCTOR", "OTHER_GUARD")
+            raise
+        if self._init_invalid:
+            self.o.record_guard("POST_CONSTRUCTOR", "OTHER_GUARD")
+        _require(not self._init_invalid, "reference_init_binding")
+        _require(
+            self.ctx.status == self.constants.ContextStatus.READY, "sdk_initial_connection_failed"
+        )
+
+
+def _select_init_query_vector(value, require):
+    """Closed scalar contract, also embedded in the standalone STOP selector."""
+
+    def check(condition):
+        require(condition, "INIT_QUERY_VECTOR_SHAPE")
+
+    def enum(item, allowed):
+        return type(item) is str and item in allowed.split()
+
+    fields = (
+        "schema attribution guard send primitive_wait packet_err_snapshot "
+        "unpack ret_type receive socket errors"
+    ).split()
+    check(type(value) is dict and set(value) == set(fields))
+    check(type(value["schema"]) is str and value["schema"] == "qm.ivv.init-query-vector.v1")
+    for name, allowed in (
+        ("attribution", "BOUND UNBOUND RACE_OR_UNKNOWN"),
+        ("send", "UNOBSERVED ENTERED OK NON_OK RAISED UNKNOWN"),
+        ("primitive_wait", "UNOBSERVED TRUE FALSE RAISED UNKNOWN"),
+        ("packet_err_snapshot", "UNOBSERVED Ok Timeout Invalid Disconnect SendFail UNKNOWN"),
+        ("unpack", "UNOBSERVED ENTERED OK NON_OK RAISED UNKNOWN"),
+        ("ret_type", "UNOBSERVED OK NON_OK UNKNOWN"),
+    ):
+        check(enum(value[name], allowed))
+    errors = value["errors"]
+    check(type(errors) is dict and set(errors) == {"send", "wait", "unpack"})
+    os_labels = (
+        "OS BLOCKED BROKEN_PIPE CONN_ABORTED CONN_REFUSED CONN_RESET TIMEOUT PERMISSION".split()
+    )
+    for name, error in errors.items():
+        check(type(error) is dict and set(error) == {"type", "errno"})
+        check(
+            enum(
+                error["type"],
+                "NONE UNKNOWN GUARD OS BLOCKED BROKEN_PIPE CONN_ABORTED CONN_REFUSED "
+                "CONN_RESET TIMEOUT PERMISSION TYPE VALUE ATTRIBUTE KEY INDEX RUNTIME "
+                "ASSERTION MEMORY OVERFLOW EXCEPTION INTERRUPT SYSTEM_EXIT GENERATOR_EXIT",
+            )
+            and (
+                error["errno"] is None
+                or type(error["errno"]) is int
+                and 0 <= error["errno"] <= 65535
+            )
+            and (error["errno"] is None or error["type"] in os_labels)
+        )
+        outcome = value["primitive_wait" if name == "wait" else name]
+        check((outcome == "RAISED") == (error["type"] != "NONE"))
+    guard = value["guard"]
+    check(type(guard) is dict and set(guard) == {"stage", "code"})
+    check(
+        enum(guard["stage"], "NONE WIRE LIVE REQUEST POST_CONSTRUCTOR RESTORE UNKNOWN")
+        and enum(
+            guard["code"],
+            "NONE REFERENCE_LIVE_REFUSED REFERENCE_SEND_REFUSED "
+            "REFERENCE_INIT_ONLY OTHER_GUARD UNKNOWN",
+        )
+        and ((guard["stage"] == "NONE") == (guard["code"] == "NONE"))
+    )
+    sock = value["socket"]
+    check(
+        type(sock) is dict
+        and set(sock) == set("identity selector readable unread wait_delta_ms sample_order".split())
+    )
+    for name, allowed in (
+        ("identity", "UNBOUND VERIFIED DRIFT UNKNOWN"),
+        ("selector", "ABSENT READ NO_READ UNKNOWN"),
+        ("readable", "TRUE FALSE UNKNOWN"),
+        ("unread", "ZERO LE_1K LE_64K GT_64K UNKNOWN"),
+        ("sample_order", "SEQUENTIAL"),
+    ):
+        check(enum(sock[name], allowed))
+    check(
+        sock["wait_delta_ms"] is None
+        or type(sock["wait_delta_ms"]) is int
+        and 0 <= sock["wait_delta_ms"] <= 480000
+    )
+    trace = value["receive"]
+    enums = dict(
+        callback_error="NONE OS_ERROR VALUE_ERROR TYPE_ERROR RUNTIME_ERROR MEMORY_ERROR OTHER",
+        loop_error="NONE OS_ERROR VALUE_ERROR TYPE_ERROR RUNTIME_ERROR MEMORY_ERROR OTHER",
+        read_error="NONE OS_ERROR VALUE_ERROR TYPE_ERROR RUNTIME_ERROR MEMORY_ERROR OTHER",
+        tcp_progress="UNOBSERVED NONE PARTIAL FULL UNKNOWN",
+        target_notify_err="UNOBSERVED Ok Timeout Invalid Disconnect SendFail UNKNOWN",
+        notify_when="UNOBSERVED BEFORE_WAIT_END AFTER_WAIT_END",
+        network_thread="ALIVE DEAD UNKNOWN",
+    )
+    booleans = (
+        "complete_candidate_seen target_candidate_seen scan_unknown "
+        "wait_ended overflow recorder_error"
+    ).split()
+    counts = "polls dequeues read_events read_callbacks".split()
+    check(
+        type(trace) is dict
+        and set(trace)
+        == {
+            "schema",
+            "first_ms",
+            "last_ms",
+            "read_bytes",
+            "tcp_accepted",
+            "tcp_pending",
+            *enums,
+            *booleans,
+            *counts,
+        }
+    )
+    check(type(trace["schema"]) is str and trace["schema"] == "qm.ivv.init-receive-trace.v1")
+    check(
+        all(type(trace[k]) is bool for k in booleans)
+        and all(type(trace[k]) is int and 0 <= trace[k] <= 4096 for k in counts)
+        and all(enum(trace[k], allowed) for k, allowed in enums.items())
+        and type(trace["read_bytes"]) is int
+        and 0 <= trace["read_bytes"] <= 2147483647
+        and all(
+            trace[k] is None or type(trace[k]) is int and 0 <= trace[k] <= 2147483647
+            for k in ("tcp_accepted", "tcp_pending")
+        )
+    )
+    phases = set("poll dequeue write read frame notify wait unpack".split())
+    for name in ("first_ms", "last_ms"):
+        check(
+            type(trace[name]) is dict
+            and set(trace[name]) == phases
+            and all(t is None or type(t) is int and 0 <= t <= 480000 for t in trace[name].values())
+        )
+    check(
+        all(
+            (trace["first_ms"][k] is None and trace["last_ms"][k] is None)
+            or (
+                type(trace["first_ms"][k]) is int
+                and type(trace["last_ms"][k]) is int
+                and trace["first_ms"][k] <= trace["last_ms"][k]
+            )
+            for k in phases
+        )
+    )
+    accepted, pending, progress = trace["tcp_accepted"], trace["tcp_pending"], trace["tcp_progress"]
+    check(
+        (
+            (progress in ("UNKNOWN", "UNOBSERVED") and accepted is None and pending is None)
+            or (progress == "NONE" and accepted == 0 and type(pending) is int and pending > 0)
+            or (
+                progress == "PARTIAL"
+                and type(accepted) is int
+                and accepted > 0
+                and type(pending) is int
+                and pending > 0
+            )
+            or (progress == "FULL" and type(accepted) is int and accepted > 0 and pending == 0)
+        )
+        and (not trace["target_candidate_seen"] or trace["complete_candidate_seen"])
+        and ((trace["target_notify_err"] == "UNOBSERVED") == (trace["notify_when"] == "UNOBSERVED"))
+        and (trace["notify_when"] != "AFTER_WAIT_END" or trace["wait_ended"])
+        and len(json.dumps(trace, sort_keys=True, separators=(",", ":")).encode()) <= 2048
+    )
+    return json.loads(json.dumps(value, sort_keys=True, separators=(",", ":")))
+
+
 def _select_reference_terminal(value):
     keys = {
         "schema_id",
@@ -2374,8 +3122,13 @@ def _select_reference_terminal(value):
         "primary_failure",
         "close_failure",
     }
-    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-terminal.v2":
+    if type(value) is dict and value.get("schema_id") in (
+        "qm.ivv.reference-init-terminal.v2",
+        "qm.ivv.reference-init-terminal.v3",
+    ):
         keys.add("init_delegate_return")
+    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-terminal.v3":
+        keys.update(("method", "query_vector"))
     _require(type(value) is dict and set(value) == keys, "reference_terminal_shape")
     if "init_delegate_return" in keys:
         _require(
@@ -2385,7 +3138,11 @@ def _select_reference_terminal(value):
         )
     _require(
         value["schema_id"]
-        in ("qm.ivv.reference-init-terminal.v1", "qm.ivv.reference-init-terminal.v2")
+        in (
+            "qm.ivv.reference-init-terminal.v1",
+            "qm.ivv.reference-init-terminal.v2",
+            "qm.ivv.reference-init-terminal.v3",
+        )
         and value["state"] in {"REFERENCE_READY_CLOSED", "REFERENCE_FAILED"}
         and type(value["constructor_returned"]) is bool
         and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
@@ -2442,12 +3199,23 @@ def _select_reference_terminal(value):
         and value["close_failure"] is None
     )
     _require((value["state"] == "REFERENCE_READY_CLOSED") == ready, "reference_terminal_state")
+    if "query_vector" in keys:
+        _require(
+            type(value["method"]) is str and value["method"] == "init-query-vector-v1",
+            "reference_terminal_method",
+        )
+        _select_init_query_vector(value["query_vector"], _require)
     return json.loads(_canonical(value))
 
 
 def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
     """One child MAY and guarded Init; parent ownership is never asserted here."""
     _validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + RECOVERY_SUFFIX)
+    method = plan.get("_reference_method")
+    if "_reference_method" in plan:
+        control = _read_reference_control(plan)
+        _require(method == control.get("method"), "reference_method_binding")
+    instrumented = method == "init-query-vector-v1"
     writer = _Writer(root, sync_dir)
     writer.json(
         "reference-intent.json",
@@ -2458,7 +3226,9 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
             "source_binding": plan["_verified_binding"],
         },
     )
-    observer = _ReferenceObserver(plan, writer, clock)
+    observer = (_InstrumentedReferenceObserver if instrumented else _ReferenceObserver)(
+        plan, writer, clock
+    )
     backend = None
     primary = close_failure = None
     returned = False
@@ -2487,6 +3257,30 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
     finally:
         if backend is not None:
             try:
+                if instrumented:
+                    try:
+                        backend.freeze_query_vector()
+                    except BaseException as error:
+                        if isinstance(error, CaptureRejected) or not isinstance(error, Exception):
+                            # A real guard/interruption is never optional metadata.
+                            observer.record_guard("POST_CONSTRUCTOR", "OTHER_GUARD")
+                            observer.poison = observer.poison or "reference_metadata_refused"
+                            expected = dict(
+                                stage="initialize",
+                                **{"class": "CaptureRejected"},
+                                code="sdk_initial_connection_failed",
+                            )
+                            if primary is None or primary == expected:
+                                primary = _failure("late_guard", error)
+                        # Retain actual send/wait/unpack facts even if the optional
+                        # snapshot/recorder could not finish. Always close below.
+                        backend.query_vector["attribution"] = "RACE_OR_UNKNOWN"
+                        backend.query_vector["guard"] = dict(observer.guard)
+                        backend.query_vector["socket"] = dict(
+                            _empty_query_vector()["socket"], identity="UNKNOWN"
+                        )
+                        backend.query_vector["receive"] = _empty_receive_trace()
+                        backend.query_vector["receive"]["recorder_error"] = True
                 with _phase(clock, min(plan["started_monotonic"] + 390, clock.mono() + 30)):
                     backend.close()
                 normal = backend.close_evidence()
@@ -2503,7 +3297,19 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
         primary = dict(stage="late_guard", **{"class": "CaptureRejected"}, code=observer.poison)
     result = _select_reference_terminal(
         {
-            "schema_id": "qm.ivv.reference-init-terminal.v2",
+            "schema_id": "qm.ivv.reference-init-terminal.v3"
+            if instrumented
+            else "qm.ivv.reference-init-terminal.v2",
+            **(
+                {
+                    "method": method,
+                    "query_vector": backend.query_vector
+                    if backend is not None
+                    else dict(_empty_query_vector(), guard=dict(observer.guard)),
+                }
+                if instrumented
+                else {}
+            ),
             "state": "REFERENCE_READY_CLOSED"
             if primary is None and close_failure is None
             else "REFERENCE_FAILED",
@@ -3121,11 +3927,16 @@ def _capture_owned(
     clock = _NativeClock()
     with clock.phase(plan["started_monotonic"] + 480):
         if reference:
-            _read_reference_control(plan)
+            control = _read_reference_control(plan)
+            plan["_reference_method"] = control.get("method")
             return _run_reference_init(
                 plan,
                 receipt_root,
-                backend_factory=_ReferenceBackend,
+                backend_factory=(
+                    _InstrumentedReferenceBackend
+                    if plan["_reference_method"] is not None
+                    else _ReferenceBackend
+                ),
                 clock=clock,
                 sync_dir=_sync_dir,
             )

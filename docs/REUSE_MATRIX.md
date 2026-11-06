@@ -1,3 +1,15 @@
+## Complete guarded Init-query vector — issue297,2026-11-07
+
+Reuse the protected official SDK loader, existing safety wire, per-request
+identity/restoration, finite send/unpack observers, _InitReceiveTrace and owned
+close behind one new immutable instrumented method. The single new request
+Event.wait wrapper retains its existing call's boolean; no SDK source is copied
+or forked, no global hook/decoder/logger/thread/platform is introduced. An own-FD
+selector/readiness/FIONREAD snapshot is optional metadata, never a permission
+expansion or a new data gate. Existing pure reference/default capture and all
+mandatory source/lease/once/resource/close/READY controls remain. No dependency,
+environment, dataset/math or financial qualification change.
+
 ## Fixed IVV transaction recovery — issue281,2026-11-04
 
 Reuse the capture observer/normalizer/native held admission, ObjectStore,

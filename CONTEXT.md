@@ -1,5 +1,19 @@
 # QuantMesh Domain Context
 
+## Current bounded Init-query method — 2026-11-07
+
+PR296 normally merged d0aaf291 after CI577 (8175 passed,149 skipped,
+frontend793). Actual reference10 returned NON_OK/NOT_READY with proved owned
+close; conditional capture11 was not dispatched. Exact external/context counts
+remain UNKNOWN and no real input or financial qualification followed.
+Issue297 now delivers one complete, explicitly identified instrumented Init-only
+vector under the existing recovery scope. It reuses finite send/unpack/receive
+observation and adds one bound Event.wait observation plus a non-consuming
+own-socket snapshot. Pure reference v1/v2, default capture and all mandatory
+source/lease/once/FD/resource/close/READY/data gates remain intact. This is not
+an established SDK repair or runtime permit. See the active iteration and
+docs/superpowers/{specs,plans}/2026-11-07-init-query-vector.md.
+
 ## Merged owner correction; approved live-policy FD leaf (2026-10-17 Singapore)
 
 This checkpoint supersedes the historical owner-correction status below.
