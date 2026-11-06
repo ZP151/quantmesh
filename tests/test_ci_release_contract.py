@@ -61,3 +61,50 @@ def test_release_closure_refuses_unreviewed_pin_abi_or_missing_role(monkeypatch,
         monkeypatch.setattr(Path, "read_bytes", read)
     with pytest.raises(ValueError, match="release (issuer|ABI|manifest)"):
         quality_gate.validate_release_sources(repository)
+
+
+@pytest.mark.parametrize(
+    ("function", "argument", "replacement"),
+    [
+        ("run_once", "startup_ref", "*, startup_ref"),
+        ("run_once", "startup_ref", "startup_ref, /"),
+        ("run_once", "startup_ref", "startup_ref=None"),
+        ("capture_trusted_once", "expected_go_sha256,", "expected_go_sha256=None,"),
+    ],
+    ids=["keyword-only", "positional-only", "positional-default", "keyword-default"],
+)
+def test_release_closure_refuses_argument_kind_or_required_default_drift(
+    monkeypatch, function, argument, replacement
+):
+    repository = Path(__file__).resolve().parents[1]
+    original_read, original_git = Path.read_bytes, subprocess.check_output
+    relative = "tools/research/" + (
+        "ivv_trusted_runner.py" if function == "run_once" else "capture_opend_ivv_daily.py"
+    )
+    raw = original_git(["git", "show", "HEAD:" + relative], cwd=repository)
+    start = raw.index(f"def {function}(".encode())
+    end = raw.index(b"):", start) + 2
+    signature = raw[start:end]
+    assert signature.count(argument.encode()) == 1
+    updated = raw[:start] + signature.replace(argument.encode(), replacement.encode()) + raw[end:]
+    replacements = {relative: updated}
+    if function == "capture_trusted_once":
+        issuer_path = "tools/research/ivv_dev_diagnostic.py"
+        issuer = original_git(["git", "show", "HEAD:" + issuer_path], cwd=repository)
+        replacements[issuer_path] = issuer.replace(
+            hashlib.sha256(raw).hexdigest().encode(),
+            hashlib.sha256(updated).hexdigest().encode(),
+        )
+
+    def git(command, **kwargs):
+        return replacements.get(command[-1].removeprefix("HEAD:")) or original_git(
+            command, **kwargs
+        )
+
+    def read(path):
+        return replacements.get(path.relative_to(repository).as_posix()) or original_read(path)
+
+    monkeypatch.setattr(subprocess, "check_output", git)
+    monkeypatch.setattr(Path, "read_bytes", read)
+    with pytest.raises(ValueError, match="release ABI differs: " + function):
+        quality_gate.validate_release_sources(repository)

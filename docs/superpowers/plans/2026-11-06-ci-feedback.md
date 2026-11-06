@@ -68,3 +68,13 @@ the native index semantic check and released the temporary commit hold. No
 metadata-history claim or unknown-peak capacity refund follows. Further local
 checks used native Windows Git and the clean original Linux portfolio entry.
 See the iteration checkpoint and the external handoff for exact originals.
+
+## One known-fix review round
+
+Spec R1 accepted6d5a4eaa; Standards R1 identified only the flattened ABI argument
+kinds/default-structure gap. Four actual-source RAM regressions failed before
+the fix; complete static closure plus the selection direct test passed9/2.23s
+after preserving all three argument groups and required parameters. Runtime7
+and12 whole-module selection stay fixed. Expected collection is now654 (old650
+plus4), not yet a completed Linux/CI result. The same independent readers' R2
+and normal final-head CI remain pending; prior evidence limits still apply.

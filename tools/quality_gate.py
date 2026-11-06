@@ -129,15 +129,15 @@ def validate_release_sources(repository: Path = REPO) -> dict[str, str]:
     ):
         if literal("capture_opend_ivv_daily.py", helper_name) != getattr(runner, runner_name):
             raise ValueError("release policy identity differs: " + helper_name)
-    for filename, function, arguments in (
-        ("ivv_trusted_runner.py", "run_once", ("startup_ref",)),
-        ("ivv_trusted_runner.py", "select_capture_lifecycle", ("value",)),
+    for filename, function, positional_only, positional_or_keyword, keyword_only in (
+        ("ivv_trusted_runner.py", "run_once", (), ("startup_ref",), ()),
+        ("ivv_trusted_runner.py", "select_capture_lifecycle", (), ("value",), ()),
         (
             "capture_opend_ivv_daily.py",
             "capture_trusted_once",
+            (),
+            ("plan_path", "receipt_root"),
             (
-                "plan_path",
-                "receipt_root",
                 "permit_fd",
                 "expected_sha256",
                 "expected_policy_sha256",
@@ -150,9 +150,17 @@ def validate_release_sources(repository: Path = REPO) -> dict[str, str]:
             n for n in trees[filename].body if isinstance(n, ast.FunctionDef) and n.name == function
         )
         actual_args = tuple(
-            a.arg for a in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+            tuple(argument.arg for argument in group)
+            for group in (node.args.posonlyargs, node.args.args, node.args.kwonlyargs)
         )
-        if actual_args != arguments or node.args.vararg or node.args.kwarg:
+        # Every parameter in these three frozen public signatures is required.
+        if (
+            actual_args != (positional_only, positional_or_keyword, keyword_only)
+            or node.args.defaults
+            or any(default is not None for default in node.args.kw_defaults)
+            or node.args.vararg
+            or node.args.kwarg
+        ):
             raise ValueError("release ABI differs: " + function)
     return pins
 

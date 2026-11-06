@@ -1,5 +1,27 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Issue292 single known ABI correction —2026-11-06
+
+Independent Spec R1 accepted candidate6d5a4eaa; Standards R1 found one P2:
+flattening AST argument kinds accepted a keyword-only run_once despite its
+positional callers. Implementer reproduced the defect using actual Git/disk
+RAM mutants, without changing runtime files or importing the SDK. The one
+consolidated correction preserves positional-only, positional-or-keyword and
+keyword-only groups separately and rejects defaults for all three reviewed
+public signatures, whose parameters are all required. No runtime, manifest,
+policy, production selection, dependency or plugin diagnostic behavior changed.
+
+Verifier retained ABI-R2-RED-01.log:4FAIL/1.23s (both kind changes and both
+positional/keyword default changes); ABI-R2-GREEN-01.log:9PASS/2.23s across the
+complete static closure module and existing complete-selection direct test.
+Full materialized Ruff, two changed Python formats and whitespace pass. The
+runtime7 byte pins remain identical. No602/portfolio/frontend repeat occurred.
+The same12 complete modules retain the original650 tests and add4 regressions:
+654 is the expected new count, pending actual normal-CI collection and timing.
+All original segmented-validation and harness limitations below remain. Parent
+owns the same readers' one known-fix R2, then normal CI/publication; no third
+structural round or new execution authority is created.
+
 ## Issue292 CI feedback slice —2026-11-06
 
 Planner/Product freezes the named early contract and exact failure-evidence
