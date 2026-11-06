@@ -1,5 +1,53 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Independent CI ownership blocker —2026-11-06
+
+Planner authorizes a separate direct CI-blocker slice after PR291/CI566 at861d
+fails one existing Linux output-retention case:7993PASS/1FAIL/149SKIP. Original
+logs and143103B diagnostics ZIP/SHA8e0c8d58776fab2605c4d6a6a7fc6351d9b573c24c963e988c43f7bab0bf8b13
+remain. Both affected tool/test base bytes were unchanged. Existing Init E2E
+runtime/R1/R2 are frozen; no new Init structural round or automatic CI retry.
+
+User action/outcome: normal release certification retains exact stdout/stderr
+and actual exit7 for its original owned leader during teardown, while live or
+unknown members still cannot be signalled. Quant review: no data, costs,
+leakage, research/math or financial qualification changes; livefalse remains.
+The tracked specification/plan is2026-11-06-portfolio-owner-exit.md.
+
+Implementer uses the existing local WSL Ubuntu fixed portfolio Python3.12.3
+venv (binary SHAe50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f),
+with existing pytest only. No dependencies/environment/host trials are added.
+The baseline case passes alone; a bounded real synthetic sample observes the
+same ownership refusal with admitted exe/argv/generation and a pidfd not yet
+ready. CI's unavailable internal branch trace is not invented. The controlled
+native child/pidfd empty-read/exit regression first fails with the exact same
+message, then passes after allowing one100ms pidfd wait only in the existing
+empty-environ/exact leader/same startticks/registered-member branch. Other
+readiness calls retain zero-time behavior; no ownership error is caught or
+relabelled and no new admission/signal authority is granted.
+
+Verifier: causal GREEN1PASS; complete direct Linux tool tests43PASS/3SKIP/2.31s,
+including actual live unknown-member preservation and prior terminal/nonce
+negatives. The three opt-in PG scenarios remain SKIP, not business acceptance.
+All failures/exploratory matrix patches are retained under
+output/ivv-transaction-recovery-20261104-01/integration/ci-owner-exit-20261106-01.
+Passing owned scratch is retired, failed synthetic originals remain. New P31
+is capacity-only: old538+local7MiB=545MiB, Source21/common113/software151; old
+holds/futures stay intact. FutureP32/batch03 and connection8 remain inactive.
+The separately observed PermissionError path has its own causal RED: before
+terminal readiness the original scanner propagates the unavailable /proc read.
+The same bounded wait is added only after its existing stat re-read matches
+the original leader's startticks and retained member. No generic ownership
+exception is caught. A real live-leader unreadable-environment negative keeps
+PermissionError, a live pidfd, no exit and zero signals. Final direct Linux
+union45PASS/3SKIP/2.51s; causal empty/permission2PASS. Earlier43/44-pass evidence
+and one test-fixture cleanup assertion failure remain, not rewritten as source
+failures. Native tests use deterministic exit boundaries, not long sleeps or
+retries to obtain green. Sparse-worktree local Ruff explicitly classifies tools
+as first-party to match the full-tree namespace; no production import edit is
+made for that local classification difference. Normal CI keeps its full-tree
+unmodified Ruff command. Independent narrow ownership reviews and new actual-head requiredCI remain.
+
 ## Init end-to-end Source R2 READY —2026-11-06
 
 Both original independent readers close the known R1 findings at38022c8a:
