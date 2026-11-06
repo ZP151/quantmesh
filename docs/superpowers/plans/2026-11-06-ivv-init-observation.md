@@ -54,23 +54,29 @@ them in the test/spec checkpoint. Do not create a generic observation platform.
 
 ## Task 2 — Parent review and ordinary release
 
-- [ ] Independently verify focused checks and exact candidate source/transport bounds.
-- [ ] Obtain narrow independent Spec/Standards R1; one consolidated R2 if necessary.
-- [ ] Open issue281 PR, complete ordinary matching-head required CI, qualify exact-lock
+- [x] Independently verify focused checks and exact candidate source/transport bounds.
+- [x] Obtain narrow independent Spec/Standards R1; one consolidated R2 if necessary.
+- [x] Open issue281 PR, complete ordinary matching-head required CI, qualify exact-lock
   release bundle, recheck head/base/review threads, normal expected-head squash merge.
-- [ ] Build/verify one complete merged catalog and private operations publication;
+- [x] Build/verify one complete merged catalog and private operations publication;
   preserve all old carriers/releases. No admin bypass or quota-paid bot rerun.
 
 ## Task 3 — one conditional actual effect
 
-- [ ] Bind fresh batch02/current policy, connection7, changed method and full capacity.
+- [x] Bind fresh batch02/current policy, connection7, changed method and full capacity.
   Preserve old expired batch/permits and cumulative UNKNOWN.
-- [ ] Verify actual current source/provider/config/kernel/namespace/normal-closed
+- [x] Verify actual current source/provider/config/kernel/namespace/normal-closed
   predecessor/free/memory; no new login/service action or health SDK.
-- [ ] Sole Parent executor submits once; READY continues original seven fixed calls.
+- [x] Sole Parent executor submits once; READY continues original seven fixed calls.
   Failure stops with new finite evidence, never an automatic same-method retry.
-- [ ] If complete, submit immutable originals for independent H1/H2/H3 acceptance;
+- [x] If complete, submit immutable originals for independent H1/H2/H3 acceptance;
   otherwise return the specific remaining gap to Planner. No unsupported computation.
+
+Actual outcome: PR290/CI564 and publication completed; connection7 stopped with
+Init sendOK/ReqInfoTimeout/unpackUNOBSERVED/neverREADY. Separate owned close is
+proved and the gap returned to Planner. These checkmarks complete the bounded
+implementation and conditional failure path, not capture or input acceptance.
+Batch02 is SPENT; no retry or numerical grant follows.
 
 Preflight conflict scan: Task1 code emits the same lifecycle Task2 publishes and
 Task3 consumes; no second source writer or alternate schema. Task1 tests use pinned

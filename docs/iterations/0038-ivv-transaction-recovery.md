@@ -1,5 +1,93 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Offline Init receive-chain causal endpoint — 2026-11-06
+
+Planner consumed the completed Init-observation/attempt7/owned-close slice and
+assigned Parent alone one bounded0SDK receive-chain analysis, accepted03:01:45Z
+with first-conclusion deadline03:46:45Z. It reuses actual0b61/helper21a455 and
+the installed10.10.7008 public source; all15 frozen LF pins match, and the extra
+public network/utils/callback/logger files match their recorded source identity.
+No installed SDK or released runtime byte was modified or imported as a package.
+
+Concrete finding: NetManager.send331–337 enqueues work and writes the control
+socket, then returnsOK. Actual TCP.send happens later in do_send/on_write.
+CONNECTED proves the loop completed connection setup, not later queue drainage
+or reception. The request map is populated before enqueue; the context lock is
+released before the20s Event wait. Matching synchronous responses notify directly
+from on_recv/_handle_recv, without the asynchronous push CallbackExecutor.
+Partial/nonmatching input or an ordinary callback/parser exception can leave
+the initial context CONNECTED until Timeout. Current originals cannot choose
+among post-connect progression, external delivery and pre-notification parsing.
+
+Parent tested exactly one falsifiable client hypothesis using hash-checked AST
+methods in an isolated fixture: our wire/Init wrappers lose a correctly matched
+early notification. Four controlled bare/wrapped trials exclude that condition
+at the modeled seam: matching early responses finishOk in both, with restored
+wait/unpack and closed model threads. An intentional Event-clear sensitivity
+mutant fails at LOST_EARLY_NOTIFICATION; it is not a published-code defect.
+No generic observation layer or repair was added. Socket/control/binary parser,
+connect and deadline are modeled; localPython3.13 is not hostPython3.12 proof.
+
+Durable originals are integration/sdk-init-receive-causal-20261106-01 under the
+recovery output: source facts61bbcd4f...d13f6d, executed probebb93a70a...f2fa,
+negative-control REDd6c679df...665ba4 and exclusion outputda5d51aa...3377d0.
+CONCLUSION.md records NO_CONFIRMED_CLIENT_DEFECT/ONE_HYPOTHESIS_EXCLUDED_AT_MODELED_SEAM.
+One separate proposal would fill the deliberately mocked binary decoder with
+a public-schema synthetic Init response, still offline and without SDK/context/
+network/private data. It is handed to Planner, not executed or native authority.
+
+Budget was registered first: local+2MiB/remote0, Source16MiB complete16498688,
+common99MiB complete103530496, software132MiB/all492MiB515899392. Storage-only
+P28 raw1427B/SHAc5025b611facb1bda714607f7d33b5a4a1a16a8fd4427d4cdeb5d677f38062e7
+preserves batch02/SPENT, actor limits, prior policies/objects/futures/failures and
+UNKNOWN counts. No new remote/SDK/context8/PR/CI/numerical authority follows.
+This local documentation checkpoint also mirrors the actual attempt7 closeout
+below; Product/Quant remain without accepted inputs or a financial result.
+
+## Post-publication attempt7 STOP — 2026-11-06
+
+PR290 normally merged0b61ced67e81530668945d311b9a8e7cc889edc9 after CI564
+qualified final43dcf6da:7944PASS/149skipped and frontend793PASS. The merged full
+treefcff150dc1ccdd57d7d31c958265166630c146e1 equals the qualified tree. Actual
+Ops08 publication1088B/SHA7c9a6ffbf920d2c0802a5a3f3399686da4cdb1c8bcbb1bc26ffb2b723731b82f
+and full catalog567852B/SHA63a6e03fbae24e85857b6778a26cb9d41a9325d1b36c1fb24f2981649e18897f
+bind the reviewed runtime and corrected issuer. Actual carrier274368/278528,
+packed173646/262144 and decoded620748/1048576 passed before issuance.
+
+Fresh SDK0 admission verified the fixed machine/provider/config/cohort/listener,
+free144590786560B and MemAvailable7287283712B with normal owned transport close.
+Sole Parent then submitted connection-000007 once in batch02. It stopped at
+READY_CHECK/sdk_initial_connection_failed with constructor_returned/ctx_assigned
+true. New finite Init facts are send=OK, packet_err=Timeout, unpack=UNOBSERVED,
+ever_ready=false and constructor_status=CONNECTED. SDK normal_close proves
+context/callback/data-socket closure. STOP1129B/SHA
+31715ca61f45a9a0b006123af66cf6343441ce7f82619400613fbf551ff23f89 remains original.
+
+Verifier separately checked SDK0 own-ledger readback1057B/SHA
+339b597595195d6409c3574a0cf32b4dc77bf8bdfd53d0b6157baa90615848d8:
+owner_state=CLOSED, owned_cleanup_proven=true, matching manager/clientrc1,
+invocation44258bf0c48141e096d026941b81b43e and startup38017708...eb68b6.
+Only request1/protocol1001 has MAY=true; no business-intent rows were observed.
+Init1001 has no response-observation hook. Its false ledger field and absent
+unpack do not establish vendor nonresponse or invalid account login. Historical
+and external actual counts stay UNKNOWN. The independent post-effect report is
+4009B/SHA78026b736da4da3c0b34042b86b14958b94c03eb844652956aab776f2c76cfdf,
+VERIFIED_STOP_AND_OWNED_CLOSE, not capture/input readiness.
+
+Quant Researcher receives no complete capture originals or accepted inputs;
+no numerical result exists and financial status remains INSUFFICIENT/livefalse.
+This batch02 opportunity is SPENT. Remaining gap: why no same Init response was
+processed before the bound ReqInfo wait timed out. Return that gap to Planner;
+no same-method automatic retry, new login or provider-log/pane inspection follows.
+Immutable closeout integration/ATTEMPT7-CLOSEOUT.json2891B/SHA
+88eb452754636a68da625ef7943619de6599d5173629cde0a0a31822d1465fb6 binds these facts.
+
+Measured retained Git objects required an internal Source census correction:
+forecast08 uses65536 of Source15's remaining margin, complete15712256<=15728640;
+Common102744064<=102760448 and P27/all490MiB513802240 stay unchanged. Old
+objects, failures,524288 future and all earlier holds remain. This post-effect
+documentation checkpoint changes no published runtime or authorization.
+
 ## Final release-binding review checkpoint — 2026-11-06
 
 Original Spec and Standards readers both return READY at
