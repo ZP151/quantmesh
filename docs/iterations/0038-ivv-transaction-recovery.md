@@ -1628,3 +1628,33 @@ Only this checkpoint follows the reviewed code. Matching-final-head normal CI
 is still required; CI569's primary remains UNKNOWN, its original failure and
 cancelled outcome preserved. Legacy local TEMP transient peak remains unmeasured,
 with complete holds retained. No SDK/runtime/host or research authority follows.
+
+### Issue292 test mock lifetime — bounded repair and review 2026-11-06
+
+CI570 on `8dc7c824` stopped at the same original None owner-recovery test:
+557 passed, then pytest reporting hit mocked `os.stat` without `st_size`.
+The external controller truthfully recorded26.032457s and refused the incomplete
+557-result XML. Actual primary remains UNKNOWN; removing the old observer did
+not remove this reporting failure. The complete failure artifact is retained;
+the obsolete release was normally cancelled, completed09:57:29Z.
+
+Planner's bounded repair `162c290ce68c979e0cb094f2f6b7e97335e95693` scopes
+only this test's doubles to `monkeypatch.context()`. Its original eight fault
+parameters, safety assertions and expected exceptions remain. Removing only the
+wrapper and new regression yields the complete original module AST. Runtime7
+and external-controller code are unchanged. The regression first failed because
+restoration had not occurred before the subject error escaped, then the complete
+related file passed83 tests/9.12s. A deliberately failing subject remains exit1
+with its original RuntimeError and source line visible. This local9.1.1 probe
+does not establish CI9.2's hidden primary or a product fix.
+
+Independent bounded Spec/Standards R2 both READY. Spec2572B/SHA256
+`79a395de44d98a821cf8c7560131683920ee3634cfd92c64894a64dfa708f18b`;
+Standards2025B/SHA256
+`26e17f3c6590fc70918de3395fc5484077321d6d2bbab50235b602532c1952e6`.
+Parent read both reports, matched frozen Git/disk bytes, original-module AST,
+runtime7 and450 indexed originals without rerunning tests. New retained scope
+2,756,608B plus prior controller2,433,024B stays under existing P37; no deletion,
+refund or new net charge. Normal final-head CI must reveal any remaining primary;
+required green release and ordinary guarded merge remain outstanding. This is
+source review under standing proxy authority, not a human inspection claim.
