@@ -1,5 +1,33 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Final release-binding review checkpoint — 2026-11-06
+
+Original Spec and Standards readers both return READY at
+a73d54027b212bec1ae6b58d9d12c217b709046f. Their new release-pin originals are
+1527B/SHAecbf09c24c9ef7d3eb51a0b9044251144c1a0aebae9ea947db27d7cce5874e36
+and1745B/SHAf5cc8ac566b12a08a01d475441dd22d7d5522e757736d9ad8b291f85ae38298a.
+Parent read both. Each combines the preserved80ccace R2 runtime review with
+the exact issuer-literal correction, with all other runtime/test bytes unchanged.
+Canonical issuer24709B/SHAa4f26803d5dda61a381ef439682cd8466e99db167b88f29f2029b9bac48e9d14
+is the new release role; the helper remains85914B/SHA21a45576...3e960.
+
+New reviewed-source manifest02 is1254B/SHA4ffd9facfe77b4a19938b72c083f8816c155d21512410f4b3c7babc87815fcfa;
+Ops08 manifest02 is673B/SHAb9e7cb9a82939adc6fcac41de0657e4c9702f80056658cdca6db9fdfd2838618.
+All four Ops08 code bodies, transport, policy and provider are unchanged. Old
+manifests/wiring remain. Literal-reference successors and20 existing RAM checks
+pass; their independent private binding verification remains a separate gate.
+New RAM geometry gives carrier274276/278528, packed173575/262144,
+body620748/1048576, status3057/8192, header843485/870400 and frame8183521/9437184.
+Pending-publication flags still refuse; no carrier or launch anchor was persisted.
+
+Netzero internal wiring forecast07 retains Common102612992 plus131072=102744064
+within102760448; all old futures and Source15646720 within15MiB stay held.
+P27/all490MiB513802240 is unchanged. Current-task SSH authentication03 was
+SDK0, normally owned-closed, refreshed using only the existing browser extension.
+It is not SDK/provider admission. This final checkpoint changes only this
+iteration record. New matching-head full CI, exact-lock qualification, ordinary
+merge and actual publication/fresh admission remain required before context7.
+
 ## Init release-binding correction — 2026-11-06
 
 PR290 head97907ca actual CI563 failed three bootstrap tests with
