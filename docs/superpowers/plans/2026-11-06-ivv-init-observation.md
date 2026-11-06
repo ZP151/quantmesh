@@ -74,4 +74,3 @@ Task3 consumes; no second source writer or alternate schema. Task1 tests use pin
 source through existing installed package files, not live SDK imports. Task2 changes
 release provenance only; it cannot waive Task3 admission. Task3 makes exactly one
 new context in fresh batch02; old six history/holds remain. No file/interface conflict.
-

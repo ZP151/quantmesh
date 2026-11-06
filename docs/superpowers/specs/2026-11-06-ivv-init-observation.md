@@ -55,4 +55,3 @@ CI, ordinary expected-head merge and full merged catalog precede effects. The so
 executor then checks actual source/method/provider/config/resources/owned closure
 and records one bounded new context. If READY, perform the fixed IVV calls in that
 same context; otherwise stop with finite evidence for Planner, no same-method loop.
-
