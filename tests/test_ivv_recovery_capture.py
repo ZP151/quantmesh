@@ -253,6 +253,7 @@ def connected_recovery_capture(
     entry_hook=None,
     capture_failure=False,
     reference=False,
+    provider_binding=None,
 ):
     import contextlib
     import os
@@ -304,6 +305,16 @@ def connected_recovery_capture(
         recovery_contract_sha256=contract.digest(Path(contract.__file__).read_bytes()),
         trusted_runner_sha256=contract.digest(Path(runner.__file__).read_bytes()),
     )
+    if provider_binding is not None:
+        catalog["provider_binding"] = provider_binding
+        launch = provider_binding["launch"]
+        snapshot["provider_actor"] = dict(
+            pid=launch["vendor_pid"],
+            uid=997,
+            start_ticks=launch["vendor_start"],
+            machine_identity_sha256=provider_binding["machine_sha256"],
+            exe_sha256=provider_binding["vendor_sha256"],
+        )
     catalog_ref = put("recovery-catalog.json", catalog)
     plan["catalog_sha256"] = catalog_ref["sha256"]
     if reference:
@@ -506,7 +517,14 @@ def connected_recovery_capture(
         grant,
         scope,
         monitor,
-        {"capture_actor": actor, **(kernel_extra or {})},
+        {
+            "capture_actor": actor,
+            "parent_actor": scope.parent,
+            "child_reaped": True,
+            "control_eof": True,
+            "recursive_populated": 0,
+            **(kernel_extra or {}),
+        },
         {
             "manifest_sha256": contract.digest((root / "capture-manifest.json").read_bytes()),
             "permit_sha256": sha,

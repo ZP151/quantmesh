@@ -2,7 +2,8 @@
 
 > **For agentic workers:** Use superpowers:executing-plans inline; Parent assigns independent review.
 
-**Goal:** Deliver the first source-accurate reference Init/parent-close increment for issue293.
+**Goal:** Deliver the guarded reference Init/parent-close and conditional original
+capture software slice for issue293, ready for independent review.
 **Architecture:** Extend existing recovery plan/permit binding with a closed immutable
 reference control. Reuse the same child, channel, scope and resource/close chain;
 select a finite non-data STOP observation, leaving capture defaults unchanged.
@@ -60,7 +61,7 @@ REDs are recorded with their subsequent GREEN commands.
 
 ### Task 2: conditional second operation (not complete in Task 1)
 
-Parent's next integration must bind the actual carrier claim lease/begin, independent
+The continuation binds the actual carrier claim lease/begin, independent
 manager exit/unit removal and a newly observed Fresh before second intent. The
 negative decision consumes the condition without retry. Do not call begin/MAY
 from a draft coordinator or accept child/typed fake ownership. Existing original
@@ -68,17 +69,18 @@ capture entry and limits are reused. This requires a separate causal RED/GREEN,
 private Ops/ABI/geometry and independent release review; no completion claim here.
 # Approved next bounded execution
 
-- [ ] Causal real-ledger RED: same-source reference closure cannot yet authorize
-  an exact conditional successor. Add only the versioned pair transition route.
-- [ ] Bind immutable claim/outcome to real runner-owned close originals and a
+- [x] Preserve the initial API RED and causal entry/crash/FD-lifetime negatives;
+  add only the versioned pair transition route to the actual ledger.
+- [x] Bind immutable claim/outcome to real runner-owned close originals and a
   post-close same-boot monotonic provider snapshot under the existing lease.
-- [ ] Bind remote second begin and original child MAY to that exact outcome;
+- [x] Bind remote second begin and original child MAY to that exact outcome;
   reject negative/missing/crashed/replayed conditions without another intent.
-- [ ] Wire new private candidate staging/entry through original capture, preserving
+- [x] Wire new private candidate staging/entry through original capture, preserving
   seven business calls and KeepAlive96. Keep historical wrappers unchanged.
-- [ ] Target24–32 offline seam cases; source/tests512KiB, logs128KiB, cumulative
-  new retained scratch192KiB forecast. Record actual use before every run.
-- [ ] Freeze with explicit remaining ABI/geometry/review/release qualification.
+- [x] Preserve the original24–32-case/192KiB forecast and its recorded failures;
+  use the separately documented complete qualification envelope thereafter.
+- [x] Freeze the software candidate with exact evidence and explicit independent
+  review, normal CI and actual publication/runtime qualification still pending.
 
 Parent owns iteration changes. No real SDK, network, host, publication or CI.
 
@@ -106,3 +108,19 @@ Parent confirmed P38 accounting: 8,278,016B closed scratch remains in the
 Next complete qualification phase forecasts at most 2MiB simultaneous scratch
 and 8MiB additional retained history, including negative/fix runs; no deletion,
 refund, extra net capacity or runtime authority. Census includes directory blocks.
+
+## Final offline qualification continuation
+
+The lock gap now has causal Linux unlock and same-number descriptor-reopen
+REDs. The bounded kernel FLOCK/position-epoch check is routed through existing
+parent observe IPC, preserving the child sandbox. Actual supervisor credentials,
+closed dispatch and ledger negatives are tested. Parent never writes child MAY.
+
+The private successor closes staged/capsule/return control sets, retains the
+32KiB per-control read bound, and validates provider originals with the actual
+catalog-pinned producer validator. A Linux software seam joins the actual
+helper/issuer/seven-call capture/_seal to complete_originals; SDK/kernel remain
+explicit models. Historical private candidates are unchanged. Three bootstrap
+source/authentication paths and RAM-only maximum carrier/status/header/frame/IPC
+geometry qualify the candidate, not deployment. Full normal CI, independent
+review and actual publication remeasurement remain Parent-owned release gates.

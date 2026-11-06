@@ -92,3 +92,11 @@ claim inode and intent binding alone are insufficient at child MAY: kernel
 evidence must also establish continued ownership of the original claim lock.
 Private closed-control propagation, strict provider-original return validation,
 bootstrap/ABI/maximum geometry and independent release qualification remain.
+
+The follow-up binds the original claim descriptor and open-file-description
+epoch and verifies kernel FLOCK ownership in the owning parent. Existing closed
+observe IPC conveys the exact pair/outcome and observed boot/monotonic tuple;
+no sandbox access is widened. Child MAY still verifies immutable originals and
+owns its sole durable MAY. A replacement FD cannot inherit the successful
+exclusive condition claimant's epoch. Software evidence stays separate from
+actual published controls, native/provider admission and release CI.

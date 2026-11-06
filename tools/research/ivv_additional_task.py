@@ -697,7 +697,10 @@ class RecoveryLedger:
         _need(
             lease is not None
             and type(getattr(lease, "controller", None)) is dict
-            and type(getattr(lease, "origin", None)) is list,
+            and type(getattr(lease, "origin", None)) is list
+            and type(getattr(lease, "fd", None)) is int
+            and 0 <= lease.fd < 1048576
+            and callable(getattr(lease, "bind_reference_epoch", None)),
             "reference_transition_owner",
         )
         _need(
@@ -713,8 +716,13 @@ class RecoveryLedger:
                 "capture_attempt": f"connection-{int(stem[-6:]) + 1:06d}",
                 "controller": dict(lease.controller),
                 "claim_inode": list(lease.origin),
+                "claim_fd": lease.fd,
+                "claim_offset": int(pair_sha256[:15], 16) + 1,
             },
         )
+        # Only the successful exclusive claimant may mark its existing open
+        # file description. Re-opened/replayed leases keep their initial pos0.
+        lease.bind_reference_epoch(claim["claim_offset"])
         self._reference_claim_owner = lease
         return claim
 
@@ -824,6 +832,8 @@ class RecoveryLedger:
                 lease is not None
                 and getattr(self, "_reference_claim_owner", None) is lease
                 and getattr(lease, "controller", None) == claim.get("controller")
+                and getattr(lease, "fd", None) == claim.get("claim_fd")
+                and getattr(lease, "reference_epoch", None) == claim.get("claim_offset")
                 and getattr(lease, "origin", None) == claim.get("claim_inode"),
                 "reference_transition_owner",
             )
@@ -848,14 +858,19 @@ class RecoveryLedger:
                 "capture_attempt": attempt,
                 "controller": claim.get("controller"),
                 "claim_inode": claim.get("claim_inode"),
+                "claim_fd": claim.get("claim_fd"),
+                "claim_offset": claim.get("claim_offset"),
             }
             and type(claim["controller"]) is dict
-            and type(claim["claim_inode"]) is list,
+            and type(claim["claim_inode"]) is list
+            and type(claim["claim_fd"]) is int
+            and 0 <= claim["claim_fd"] < 1048576
+            and claim["claim_offset"] == int(ref["pair_sha256"][:15], 16) + 1,
             "reference_transition_binding",
         )
         live_owner = getattr(self, "_reference_live_owner", None)
         _need(callable(live_owner), "reference_transition_owner")
-        live_owner(attempt, claim, require_owner)
+        observed_clock = live_owner(attempt, claim, require_owner)
         _need(
             type(outcome) is dict
             and set(outcome)
@@ -883,7 +898,9 @@ class RecoveryLedger:
         )
         evidence = self._read(stem + ".reference-evidence.json")
         fresh = self._read(stem + ".reference-fresh.json")
-        boot, now = reference_clock()
+        # The sandboxed child receives this observation only from its existing
+        # authenticated parent session; the carrier/parent reads procfs locally.
+        boot, now = reference_clock() if observed_clock is None else observed_clock
         _need(
             digest(evidence) == outcome["evidence_sha256"]
             and digest(fresh) == outcome["fresh_sha256"]

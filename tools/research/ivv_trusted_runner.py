@@ -2160,6 +2160,14 @@ class _RecoveryLease:
     def __init__(self, fd):
         self.fd = fd
 
+    def bind_reference_epoch(self, offset):
+        need(
+            self.fd is not None and type(offset) is int and 0 < offset <= 2**60,
+            "REFERENCE_CLAIM_EPOCH",
+        )
+        need(os.lseek(self.fd, offset, os.SEEK_SET) == offset, "REFERENCE_CLAIM_EPOCH")
+        self.reference_epoch = offset
+
     def close(self):
         if self.fd is not None:
             fd, self.fd = self.fd, None
@@ -2592,6 +2600,41 @@ def _reference_condition_lease(book):
     )
 
 
+def _reference_claim_lock(claim):
+    """Read bounded kernel facts for the original controller's exact held flock FD."""
+    pid, fd = claim["controller"]["pid"], claim["claim_fd"]
+    need(type(fd) is int and 0 <= fd < 1048576, "REFERENCE_CLAIM_FD")
+    descriptor = Path(f"/proc/{pid}/fd/{fd}")
+    before = descriptor.stat()
+    need(list(identity(before)) == claim["claim_inode"], "REFERENCE_CLAIM_FD")
+    with Path(f"/proc/{pid}/fdinfo/{fd}").open("rb") as stream:
+        raw = stream.read(4097)
+    need(len(raw) <= 4096, "REFERENCE_CLAIM_LOCK_BOUND")
+    positions = [line for line in raw.splitlines() if line.startswith(b"pos:")]
+    need(
+        type(claim["claim_offset"]) is int
+        and 0 < claim["claim_offset"] <= 2**60
+        and len(positions) == 1
+        and re.fullmatch(rb"pos:\s+" + str(claim["claim_offset"]).encode(), positions[0]),
+        "REFERENCE_CLAIM_EPOCH",
+    )
+    locks = [line for line in raw.splitlines() if line.startswith(b"lock:")]
+    need(len(locks) == 1, "REFERENCE_CLAIM_LOCK")
+    match = re.fullmatch(
+        rb"lock:\s+\d+:\s+FLOCK\s+ADVISORY\s+WRITE\s+(\d+)\s+([0-9a-fA-F]+):([0-9a-fA-F]+):(\d+)\s+0\s+EOF",
+        locks[0],
+    )
+    need(match is not None, "REFERENCE_CLAIM_LOCK")
+    need(
+        int(match[1]) == pid
+        and int(match[2], 16) == os.major(before.st_dev)
+        and int(match[3], 16) == os.minor(before.st_dev)
+        and int(match[4]) == before.st_ino
+        and identity(descriptor.stat()) == identity(before),
+        "REFERENCE_CLAIM_LOCK",
+    )
+
+
 def _reference_transition_owner(book, attempt, claim, require_owner):
     try:
         actual, _ = _controller_actor(claim["controller"]["pid"])
@@ -2599,6 +2642,13 @@ def _reference_transition_owner(book, attempt, claim, require_owner):
         raise Refused("REFERENCE_CONTROLLER_GONE") from None
     need(
         actual == claim["controller"]
+        and list(identity((book.root / "connection-000000.claim-lock.json").lstat()))
+        == claim["claim_inode"],
+        "REFERENCE_CONTROLLER_CHANGED",
+    )
+    _reference_claim_lock(claim)
+    need(
+        _controller_actor(claim["controller"]["pid"])[0] == actual
         and list(identity((book.root / "connection-000000.claim-lock.json").lstat()))
         == claim["claim_inode"],
         "REFERENCE_CONTROLLER_CHANGED",
@@ -3686,7 +3736,7 @@ class _ChildSession:
         self.check = check
         self.lock = threading.Lock()
 
-    def snapshot(self):
+    def snapshot(self, reference_transition=None):
         need(os.getpid() == self.owner, "SESSION_OWNER")
         with self.lock:
             checked = self.check()
@@ -3696,12 +3746,52 @@ class _ChildSession:
                 else None
             )
             self.channel.send(
-                {"op": "observe", **({"executable_origin": witness} if witness is not None else {})}
+                {
+                    "op": "observe",
+                    **({"executable_origin": witness} if witness is not None else {}),
+                    **(
+                        {"reference_transition": reference_transition}
+                        if reference_transition is not None
+                        else {}
+                    ),
+                }
             )
-            return self.channel.recv(self.parent)["snapshot"]
+            answer = self.channel.recv(self.parent)
+            if reference_transition is not None:
+                need(set(answer) == {"snapshot", "reference_transition"}, "REFERENCE_PARENT_REPLY")
+                observed = answer["reference_transition"]
+                need(
+                    type(observed) is dict
+                    and set(observed)
+                    == {"pair_sha256", "outcome_sha256", "boot_id", "observed_monotonic"}
+                    and {k: observed[k] for k in reference_transition} == reference_transition,
+                    "REFERENCE_PARENT_REPLY",
+                )
+                return observed["boot_id"], observed["observed_monotonic"]
+            return answer["snapshot"]
+
+    def reference_owner(self, book, attempt, claim, require_owner):
+        need(not require_owner, "REFERENCE_CHILD_OWNER")
+        ref = book._read(attempt + ".intent.json")["reference_transition"]
+        need(ref["pair_sha256"] == claim["pair_sha256"], "REFERENCE_CHILD_PAIR")
+        return self.snapshot(ref)
 
     def before_effect(self):
         self.snapshot()
+
+
+def _reference_observation(values, attempt, requested):
+    """Owned parent rechecks physical lease and immutable transition for child MAY."""
+    need(_recovery_mode(attempt), "REFERENCE_PARENT_MODE")
+    book = values["_recovery_ledger"]
+    intent = book._read(attempt + ".intent.json")
+    need(
+        requested == intent.get("reference_transition") and type(requested) is dict,
+        "REFERENCE_PARENT_BINDING",
+    )
+    book._reference_transition(attempt, values["_recovery_method"], requested)
+    boot, now = book.reference_clock()
+    return {**requested, "boot_id": boot, "observed_monotonic": now}
 
 
 def _check_capture_result(result, *, recovery):
@@ -3825,6 +3915,9 @@ def _child(channel, parent, context, plan):
         )
         state.recovery_profile = extra
         state.recovery_ledger = values["_recovery_ledger"]
+        state.recovery_ledger._reference_live_owner = lambda attempt, claim, owner: (
+            state.session.reference_owner(state.recovery_ledger, attempt, claim, owner)
+        )
         state.recovery_attempt = additional
     state.plan = m._canonical({k: v for k, v in final.items() if k != "provider_evidence_ref"})
     state.evidence = m._canonical(evidence)
@@ -4215,9 +4308,21 @@ def _supervise(scope, channel, endpoint, context, plan):
                 scope.check_pid()
                 channel.send({"op": "go", "plan_ref": grant[0], "go_ref": grant[1]})
             elif packet and packet.get("op") == "observe" and grant and not terminal:
+                requested = packet.get("reference_transition")
                 need(
                     set(packet)
-                    == ({"op", "executable_origin"} if _recovery_mode(additional) else {"op"}),
+                    == (
+                        ({"op", "executable_origin"} if _recovery_mode(additional) else {"op"})
+                        | ({"reference_transition"} if requested is not None else set())
+                    )
+                    and (
+                        requested is None
+                        or (
+                            _recovery_mode(additional)
+                            and not reference
+                            and "reference_pair_ref" in plan
+                        )
+                    ),
                     "CHILD_PROTOCOL",
                 )
                 if _recovery_mode(additional):
@@ -4238,7 +4343,19 @@ def _supervise(scope, channel, endpoint, context, plan):
                 if pair:
                     need(peer is None or pair == peer, "CAPTURE_PEER_CHANGED")
                     peer = pair
-                channel.send({"snapshot": monitor.last})
+                observation = None
+                if requested is not None:
+                    need(binding is not None, "REFERENCE_PROVIDER_BINDING")
+                    monitor.verify_network(scope)
+                    observation = _reference_observation(values, additional, requested)
+                channel.send(
+                    {
+                        "snapshot": monitor.last,
+                        **(
+                            {"reference_transition": observation} if observation is not None else {}
+                        ),
+                    }
+                )
             elif (
                 reference
                 and packet

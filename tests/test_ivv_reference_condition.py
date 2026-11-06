@@ -2,8 +2,10 @@
 
 import copy
 import importlib.util
+import io
 import os
 import sys
+import tempfile
 import threading
 import unittest
 from contextlib import ExitStack
@@ -55,8 +57,10 @@ def dispatch(book, attempt):
 
 class ConditionLedger(unittest.TestCase):
     def test_same_source_requires_exact_once_transition_and_child_recheck(self):
-        root = Path(os.environ["QM_CONDITION_SCRATCH"])
-        root.mkdir()
+        controlled = os.environ.get("QM_CONDITION_SCRATCH")
+        if controlled:
+            Path(controlled).mkdir(exist_ok=True)
+        root = Path(tempfile.mkdtemp(prefix="ledger-", dir=controlled))
         book = task.RecoveryLedger(root, contract.DEFAULT_POLICY, contract)
         value = pair(book.policy_sha)
         first = book.begin("a" * 64, now=100, reference_pair=value)
@@ -75,8 +79,12 @@ class ConditionLedger(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unrepaired_structural_failure"):
             book.begin("a" * 64, now=101)
         book._claim_lease = NS(
+            fd=88,
             controller=dict(pid=222, start_ticks=3, uid=0, cgroup="/parent"),
             origin=[1, 2, 16832, 0],
+        )
+        book._claim_lease.bind_reference_epoch = lambda offset: setattr(
+            book._claim_lease, "reference_epoch", offset
         )
         book._reference_live_owner = lambda *args: (
             None
@@ -435,6 +443,9 @@ class ConditionOwner(unittest.TestCase):
         book._claim_lease = r._RecoveryLease(88)
         book._claim_lease.controller = controller
         book._claim_lease.origin = [1, 2, 16832, 0]
+        stack.enter_context(
+            patch.object(r.os, "lseek", side_effect=lambda fd, offset, whence: offset)
+        )
         stack.enter_context(patch.object(r, "_controller_actor", return_value=(controller, 1)))
         stack.enter_context(
             patch.object(
@@ -444,6 +455,25 @@ class ConditionOwner(unittest.TestCase):
         stack.enter_context(
             patch.object(
                 r.Path, "lstat", return_value=NS(st_dev=1, st_ino=2, st_mode=16832, st_uid=0)
+            )
+        )
+        stack.enter_context(
+            patch.object(
+                r.Path, "stat", return_value=NS(st_dev=1, st_ino=2, st_mode=16832, st_uid=0)
+            )
+        )
+        stack.enter_context(patch.object(r.os, "major", return_value=0, create=True))
+        stack.enter_context(patch.object(r.os, "minor", return_value=1, create=True))
+        stack.enter_context(
+            patch.object(
+                r.Path,
+                "open",
+                side_effect=lambda *a, **k: io.BytesIO(
+                    (
+                        f"pos:\t{getattr(book._claim_lease, 'reference_epoch', 0)}\n"
+                        "lock:\t1: FLOCK  ADVISORY  WRITE 222 00:01:2 0 EOF\n"
+                    ).encode()
+                ),
             )
         )
         stack.enter_context(
@@ -655,6 +685,90 @@ class ConditionOwner(unittest.TestCase):
             with self.assertRaises(ValueError):
                 book.may_connect(attempt)
         self.assertNotIn(attempt + ".may.json", book.rows)
+
+    def test_child_may_requires_original_fd_lock_with_unchanged_controller(self):
+        r, book, value, pair_sha, native, producer, read = self.fixture()
+        ref = r.reference_capture_condition(book, pair_sha, read, native, producer)
+        attempt = book.begin(
+            value["method_sha256"],
+            now=101,
+            reference_transition=ref,
+            pre_dispatch=dispatch(book, value["capture_attempt"]),
+            expected_connection=value["capture_attempt"],
+        )
+        book.enter(attempt, value["method_sha256"], "5" * 64)
+        plan = dict(
+            recovery={"connection_attempt_id": attempt},
+            reference_pair_ref={"path": "/pair", "sha256": pair_sha},
+            operation_context=value["capture_context"],
+        )
+        book.bind_reference_plan(attempt, plan, value, "5" * 64)
+        for raw in (
+            b"pos:\t0\n",
+            b"x" * 4097,
+            b"lock:\t1: POSIX ADVISORY WRITE 222 00:01:2 0 EOF\n",
+            b"lock:\t1: FLOCK ADVISORY WRITE 333 00:01:2 0 EOF\n",
+            b"lock:\t1: FLOCK ADVISORY WRITE 222 00:01:3 0 EOF\n",
+        ):
+            with (
+                self.subTest(fdinfo=raw[:70]),
+                patch.object(r.Path, "open", side_effect=lambda *a, **k: io.BytesIO(raw)),
+            ):
+                with self.assertRaises(ValueError):
+                    book.may_connect(attempt)
+                self.assertNotIn(attempt + ".may.json", book.rows)
+
+    def test_sandbox_child_rechecks_transition_through_existing_authenticated_session(self):
+        r, book, value, pair_sha, native, producer, read = self.fixture()
+        ref = r.reference_capture_condition(book, pair_sha, read, native, producer)
+        attempt = book.begin(
+            value["method_sha256"],
+            now=101,
+            reference_transition=ref,
+            pre_dispatch=dispatch(book, value["capture_attempt"]),
+            expected_connection=value["capture_attempt"],
+        )
+        book.enter(attempt, value["method_sha256"], "5" * 64)
+        plan = dict(
+            recovery={"connection_attempt_id": attempt},
+            reference_pair_ref={"path": "/pair", "sha256": pair_sha},
+            operation_context=value["capture_context"],
+        )
+        book.bind_reference_plan(attempt, plan, value, "5" * 64)
+        parent_book = book
+        child = MemoryLedger(book.root)
+        child.rows = book.rows
+        calls = []
+
+        class Channel:
+            def send(self, packet):
+                calls.append(packet)
+
+            def recv(self, parent):
+                self_case.assertEqual(parent, 444)
+                reply = r._reference_observation(
+                    dict(_recovery_ledger=parent_book, _recovery_method=value["method_sha256"]),
+                    attempt,
+                    calls[-1]["reference_transition"],
+                )
+                return dict(snapshot={}, reference_transition=reply)
+
+        self_case = self
+        session = r._ChildSession(Channel(), 444, lambda: {})
+        child._reference_live_owner = lambda attempted, claim, owner: session.reference_owner(
+            child, attempted, claim, owner
+        )
+        # Actual parent's clock is accessible; the sandbox child must not call
+        # the ledger's local procfs clock. The owner hook is the only IPC seam.
+        with patch.object(
+            task,
+            "reference_clock",
+            side_effect=[("12345678-1234-1234-1234-123456789abc", 100.0)] * 4,
+        ):
+            child.may_connect(attempt)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(calls[0]["reference_transition"], ref)
+        self.assertIn(attempt + ".may.json", book.rows)
 
     def test_fresh_boot_age_and_child_outcome_drift_refuse(self):
         for fault in ("boot", "age", "outcome", "missing_ref"):
