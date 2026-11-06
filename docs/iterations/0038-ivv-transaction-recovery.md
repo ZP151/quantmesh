@@ -1,5 +1,58 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Reference Init return diagnostic successor — 2026-11-07
+
+Issue293 continues after the actual reference9 NOT_READY/owned CLOSED result.
+Its constructor status and all normal-close facts are retained; manager1/client1
+and independent owned cleanup are proved. Capture10 was not dispatched. Exact
+external/context cumulative accounting remains UNKNOWN; no capture original,
+input acceptance, study, report or financial result was created.
+
+Planner scopes one additional finite fact from the existing official synchronous
+Init delegate return. Quant Researcher confirms no data/window/cost/math or
+qualification change. The public pinned SDK10.10.7008 path distinguishes an OK
+return followed by loss of READY before first sample from official NON_OK; it
+does not identify a network/vendor cause. No new SDK hook/logger/guard is added.
+See docs/superpowers/{specs,plans}/2026-11-07-reference-init-return.md.
+
+Implementer first focused RED25FAIL/22PASS becomes GREEN47PASS/3.96s (wall4.997s),
+then two malformed-schema regression REDs become final49PASS/4.17s,
+including actual pinned public SDK function bodies over synthetic external seams,
+return-object/exception identity, one delegate and strict v1/v2 propagation. The
+earlier scratch-parent setup failure is retained separately from causal RED.
+A known exchange_calendars/NumPy deprecation warning remains. This is offline
+software evidence, not actual SDK/host or a full-suite qualification.
+
+Parent's new private Ops successor preserves old publications. Its causal old-v1
+rejection and absent-enum geometry RED are retained; versioned plain/framed STOP,
+legacy-v1 and malformed-enum controls now pass four methods. Only the maximum
+status sample changes; driver/frame/transport bytes stay unchanged. Maximum geometry at candidate5db43c29 passes: carrier321109/327680, packed201517,
+body733600, status5528/8192, header887301, frame8227337 and IPC reply1238. Both
+independent Spec/Standards R1 reviews are READY with zero findings. The issuer
+bootstrap digest was updated as data only; the affected run's133PASS/31subtests
+and two expected pin failures are preserved, and only those two failed nodes
+were rerun after the pin update:2PASS/0.70s. Full src/tests/tools Ruff, five-file
+format, whitespace and submodule metadata checks pass. The normal local contract
+selected all12modules:637PASS/16SKIP/1FAIL in48.85s; its sole existing Windows
+POSIX-path assertion passes unchanged on the existing Linux environment1PASS/
+2.72s. This is segmented platform evidence, not a full Linux contract success.
+The first incorrect isolated-script invocation failed import before any test;
+its original is retained. Normal matching-head CI and merged publication remain
+pending, without reduced collection or a new platform/environment.
+
+The new independent complete worktree begins at merged ae33657d; no old source,
+main divergence, failure, future or negative pair is reset. Standing-authority
+software phase totals144MiB: Source64/common64/one-normal-CI16. The original
+core4MiB forecast failed at5754880B and final core5816320B plus census remains
+within corrected6MiB. Before the complete contract, common16 was explicitly
+increased to64MiB to cover all fixtures/history/controller/geometry, not called a
+measured transient peak. All holds become962592768B with no refund, paid resource or runtime grant.
+Parent owns source publication and any separately qualified new immutable
+runtime/capacity/once/Fresh. Reference9/capture10 cannot be revived or repurposed.
+Reviewer source readiness and bounded Verifier evidence do not attest actual
+native outcome; release CI/publication and any new runtime remain pending.
+
+
 ## Issue292 external-controller Planner reset —2026-11-06
 
 Planner explicitly supersedes the new in-process observer with the bounded

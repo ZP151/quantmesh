@@ -2273,6 +2273,7 @@ class _ReferenceBackend(_OfficialBackend):
         observer.backend = self
         self.constructor_returned = False
         self.constructor_status = "NOT_RETURNED"
+        self.init_delegate_return = "UNKNOWN"
 
     def open(self):
         self.o.context_created()
@@ -2284,7 +2285,15 @@ class _ReferenceBackend(_OfficialBackend):
                 backend.o.initializing()
                 ctx._auto_reconnect = False
                 backend._install_wire(ctx)
-                return super()._init_connect_sync()
+                result = super()._init_connect_sync()
+                backend.init_delegate_return = (
+                    "OK"
+                    if type(result) is int and result == 0
+                    else "NON_OK"
+                    if type(result) is int and result == -1
+                    else "UNKNOWN"
+                )
+                return result
 
             def keep_alive(ctx):
                 backend.o.check()
@@ -2365,9 +2374,18 @@ def _select_reference_terminal(value):
         "primary_failure",
         "close_failure",
     }
+    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-terminal.v2":
+        keys.add("init_delegate_return")
     _require(type(value) is dict and set(value) == keys, "reference_terminal_shape")
+    if "init_delegate_return" in keys:
+        _require(
+            type(value["init_delegate_return"]) is str
+            and value["init_delegate_return"] in {"OK", "NON_OK", "UNKNOWN"},
+            "reference_terminal_delegate_return",
+        )
     _require(
-        value["schema_id"] == "qm.ivv.reference-init-terminal.v1"
+        value["schema_id"]
+        in ("qm.ivv.reference-init-terminal.v1", "qm.ivv.reference-init-terminal.v2")
         and value["state"] in {"REFERENCE_READY_CLOSED", "REFERENCE_FAILED"}
         and type(value["constructor_returned"]) is bool
         and value["constructor_status"] in {"READY", "NOT_READY", "NOT_RETURNED"}
@@ -2485,7 +2503,7 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
         primary = dict(stage="late_guard", **{"class": "CaptureRejected"}, code=observer.poison)
     result = _select_reference_terminal(
         {
-            "schema_id": "qm.ivv.reference-init-terminal.v1",
+            "schema_id": "qm.ivv.reference-init-terminal.v2",
             "state": "REFERENCE_READY_CLOSED"
             if primary is None and close_failure is None
             else "REFERENCE_FAILED",
@@ -2493,6 +2511,7 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
             "source_binding": plan["_verified_binding"],
             "constructor_returned": returned,
             "constructor_status": status,
+            "init_delegate_return": getattr(backend, "init_delegate_return", "UNKNOWN"),
             "counts": dict(
                 contexts=observer.contexts,
                 initializations=observer.initializations,
