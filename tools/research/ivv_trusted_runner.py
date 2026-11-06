@@ -652,6 +652,7 @@ def _capture_refusal_codes():
             "history_page_incomplete",
             "history_quota_unproved",
             "instrument_metadata",
+            "init_observation_binding",
             "invalid_json",
             "json_object_required",
             "metadata_clock_age",
@@ -714,7 +715,32 @@ def _capture_refusal_codes():
 
 
 def _capture_lifecycle_contract():
+    returns = {"UNOBSERVED", "OK", "NON_OK", "RAISED", "UNKNOWN"}
     return {
+        "init": {
+            "send": returns,
+            "packet_err": {
+                "UNOBSERVED",
+                "Ok",
+                "Timeout",
+                "Invalid",
+                "Disconnect",
+                "SendFail",
+                "UNKNOWN",
+            },
+            "unpack": returns,
+            "constructor_status": {
+                "UNOBSERVED",
+                "START",
+                "CONNECTING",
+                "CONNECTED",
+                "READY",
+                "CLOSING",
+                "CLOSED",
+                "WAIT_RECONNECT",
+                "UNKNOWN",
+            },
+        },
         "phase": {
             "UNKNOWN",
             "ENTRY_GUARD",
@@ -841,7 +867,7 @@ def select_capture_lifecycle(value):
     contract = _capture_lifecycle_contract()
     need(
         type(value) is dict
-        and set(value)
+        and set(value) - {"init_observation"}
         == {
             "schema",
             "primary",
@@ -910,6 +936,21 @@ def select_capture_lifecycle(value):
         "CAPTURE_LIFECYCLE_SHAPE",
     )
     result["normal_close"] = dict(normal)
+    if "init_observation" in value:
+        init = value["init_observation"]
+        fields = contract["init"]
+        need(
+            type(init) is dict
+            and value["ctx_assigned"]
+            and set(init) == {*fields, "ever_ready"}
+            and type(init["ever_ready"]) is bool
+            and all(type(init[k]) is str and init[k] in allowed for k, allowed in fields.items())
+            and (init["packet_err"] == "UNOBSERVED" or init["send"] in ("OK", "UNKNOWN"))
+            and (init["unpack"] == "UNOBSERVED" or init["packet_err"] == "Ok")
+            and (not init["ever_ready"] or init["unpack"] in ("OK", "UNKNOWN")),
+            "CAPTURE_LIFECYCLE_SHAPE",
+        )
+        result["init_observation"] = dict(init)
     return result
 
 

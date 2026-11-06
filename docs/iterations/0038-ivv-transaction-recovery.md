@@ -1,5 +1,178 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Final release-binding review checkpoint — 2026-11-06
+
+Original Spec and Standards readers both return READY at
+a73d54027b212bec1ae6b58d9d12c217b709046f. Their new release-pin originals are
+1527B/SHAecbf09c24c9ef7d3eb51a0b9044251144c1a0aebae9ea947db27d7cce5874e36
+and1745B/SHAf5cc8ac566b12a08a01d475441dd22d7d5522e757736d9ad8b291f85ae38298a.
+Parent read both. Each combines the preserved80ccace R2 runtime review with
+the exact issuer-literal correction, with all other runtime/test bytes unchanged.
+Canonical issuer24709B/SHAa4f26803d5dda61a381ef439682cd8466e99db167b88f29f2029b9bac48e9d14
+is the new release role; the helper remains85914B/SHA21a45576...3e960.
+
+New reviewed-source manifest02 is1254B/SHA4ffd9facfe77b4a19938b72c083f8816c155d21512410f4b3c7babc87815fcfa;
+Ops08 manifest02 is673B/SHAb9e7cb9a82939adc6fcac41de0657e4c9702f80056658cdca6db9fdfd2838618.
+All four Ops08 code bodies, transport, policy and provider are unchanged. Old
+manifests/wiring remain. Literal-reference successors and20 existing RAM checks
+pass; their independent private binding verification remains a separate gate.
+New RAM geometry gives carrier274276/278528, packed173575/262144,
+body620748/1048576, status3057/8192, header843485/870400 and frame8183521/9437184.
+Pending-publication flags still refuse; no carrier or launch anchor was persisted.
+
+Netzero internal wiring forecast07 retains Common102612992 plus131072=102744064
+within102760448; all old futures and Source15646720 within15MiB stay held.
+P27/all490MiB513802240 is unchanged. Current-task SSH authentication03 was
+SDK0, normally owned-closed, refreshed using only the existing browser extension.
+It is not SDK/provider admission. This final checkpoint changes only this
+iteration record. New matching-head full CI, exact-lock qualification, ordinary
+merge and actual publication/fresh admission remain required before context7.
+
+## Init release-binding correction — 2026-11-06
+
+PR290 head97907ca actual CI563 failed three bootstrap tests with
+DEV_NATIVE_SOURCE_PIN; 7941 passed,149 skipped and5 subtests passed. The failed
+job log104269B and original diagnostics ZIP142795B/SHA
+febdb6a6ee7aeb0ea997b56b12d8307627c9259c810d2264563427d84febe4a0
+remain retained. This head is not qualified, merged or used for context7.
+
+Planner explicitly reduced the repair to the issuer's fixed release binding,
+not another runtime structural patch or a new human approval. Quant Researcher
+kept the original IVV window, data gates, math, costs, paper default and livefalse.
+Implementer independently read the canonical reviewed helper Git blob85914B,
+SHA21a45576166e4edc0affee01401bc015f06def22b298ec8f1675a82927b3e960,
+and changed only ivv_dev_diagnostic.py::_CAPTURE_HELPER_SHA256 to that literal.
+The origin, held-byte, close and admission checks and all reviewed runtime and
+test bytes are unchanged. The plan records this exact release-closure exception.
+
+Verifier retained all three causal local REDs at the actual loading entrances,
+then3GREEN/0.52s. One affected-test union covers the previously omitted issuer,
+native and full runner bootstrap chain plus the prior285:512PASS/63.54s with one
+existing calendar deprecation. Full src/tests/tools Ruff, changed issuer format,
+whitespace and literal-only AST-with-locations comparison pass. No test
+expectation was relaxed. Logs are
+integration/CI-PIN-{RED-01,RED-02,RED-03,GREEN-01,AFFECTED-UNION-01}.log under
+the recovery output. The new failed bootstrap fixture358800B remains retained
+inside the separate4MiB failed-history hold; no old fixture or future was deleted.
+
+Standing netzero forecast06 retains old Source15450112 plus196608=15646720
+within Source15MiB; old524288 future stays. Common101826560 plus786432 for the
+new ordinary CI=102612992 within98MiB; failed CI12 and all prior futures remain.
+P27/all490MiB513802240 is unchanged. Independent original readers next verify
+only the literal binding delta, unchanged80ccace runtime and actual final pins.
+New finalhead full CI/exact-lock qualification and fresh manifests/catalog/wire
+remain required. No SDK, OpenD action, context7 or numerical grant occurred.
+
+## Final Init-observation review checkpoint — 2026-11-06
+
+Both original readers return READY at80ccace68166eba718cdd33293e4b2aa12e01b27
+after the sole consolidated correction. Spec1967B/SHA7341e758da798992f666f3a05abcb4af8444d5e620195f4f269c1355b5724800;
+Standards2043B/SHA45c9531542adabbbe05df33431639430293bc13ff18e4f07d5ae4b736e7bb81c.
+Parent read both originals and independently reran285PASS/21.09s plus fullRuff,
+changed3file format and whitespace. R1 source/REDs/reports and two failed fixture
+histories remain; the correction was not a new permission or a third review wave.
+
+PrivateOps08 RAM geometry on actual reviewed Source roles: carrier274272/278528,
+packed173572/262144, body620748/1048576; new optional lifecycle worst3057/8192.
+Modeled full8192B status plus maximum capture/controls returns header843485/870400,
+frame8183521/9437184 and exact codec roundtrip. These are offline size proofs,
+not actual CI, publication, provider login or admitted capture. Pending publication
+flags still refuse assembly. The final merged packet must be rebuilt and frozen.
+
+Source correction complete15335424<15728640 includes old14925824 plus409600;
+the registered correction forecast15450112 retains its remaining margin. All
+old524288 future/DB32MiB/failures and P27/all490MiB holds remain. This final
+checkpoint changes only the iteration; reviewed Python bytes are unchanged.
+Normal finalhead requiredCI/exact-lock qualification and expected-head merge/
+catalog remain mandatory, then fresh actual admission and one batch02/context7.
+No SDK effect, retry, login/restart, data/math or financial promotion is produced.
+
+## Parent Init-observation checkpoint — 2026-11-06
+
+Source779b937424138b8d65b07527f8f63daa13199ba0 adds only recovery Init finite
+facts and their strict optional lifecycle projection. Parent independently ran
+the five affected modules:277PASS/17.74s, one existing calendar deprecation.
+Full src/tests/tools Ruff, changed3file format and whitespace pass. PrivateOps08
+partial-codec/STOP-frame16PASS proves the same extracted Source selectors can
+carry the facts; one contradictory Parent fixture was corrected, not Source.
+Source self-test277PASS/17.83s and six causal RED/GREEN originals are retained.
+No native SDK import/context/host action or real-input acceptance is established.
+
+The tracked spec/plan now records necessary runner selector propagation and P27
+serial scratch. Sourcecomplete14843904 before this small docs checkpoint retains
+old13615104, its524288 future and full conservative index/object/receipt charges.
+P27/all490MiB513802240 remains unchanged; no old DB32MiB hold is borrowed.
+Independent narrow two-axis review, matching-head requiredCI and ordinary merged
+catalog publication remain gates before the sole conditional batch02/context7.
+Oldbatch01 and all6UNKNOWN/history remain; no automatic same-method loop.
+
+## Init observation consolidated R1 correction — 2026-11-06
+
+The Spec R1 reader blocked publication on two attribution defects. Standards R1
+returned READY. Planner kept one correction and the same readers' R2 within
+the frozen scope. Implementer reproduced both failures using the pinned SDK
+methods. A forwarding pack had suppressed the original Init send, and a copied
+ReqInfo bypassed observation when the actual request returned Invalid.
+
+The correction keeps observation invalidity private until the constructor
+boundary. Existing observer guards still decide send admission immediately.
+A normally completed accepted query must have traversed its bound request wait.
+Wrong attribution keeps the request error UNOBSERVED and refuses capture before
+business calls. Return and exception identities pass through the SDK unchanged.
+The finite output shape and existing runner selector are unchanged.
+
+Verifier recorded both causal REDs, then 35 Init tests and all 285 affected tests
+passed in 19.70s with the existing NumPy warning. Tests verify actual ledger MAY
+and Init counts, zero business calls on refusal, wrong-request cleanup, real
+guard precedence and failed-manifest/IPC/STOP propagation. One added test's
+incorrect omission of the existing zero-keepalive field was corrected. Its
+failed fixture and both REDs remain retained. Evidence and the final Source
+census are under server/init-observation-01. The correction reserves 524288B
+inside the current Source15MiB, with old complete work and futures retained.
+Self-review is complete. Same-reader R2 and normal publication precede any
+conditional actual context7 or input acceptance.
+
+## Recovery Init observation checkpoint — 2026-11-06
+
+[Issue 281](https://github.com/ZP151/quantmesh/issues/281). PR289 merged at
+45d711 after normal CI. Actual context 6 returned from its constructor and
+stopped at READY_CHECK with sdk_initial_connection_failed (d8dc66f0).
+Owned closure readback 9b8ede5b was CLOSED. Static diagnosis 5408f5ce and
+review e4d66464 left multiple possible causes. All six historical SDK/business
+outcomes retain UNKNOWN. No real input was admitted.
+
+Planner froze the [Init observation plan](../superpowers/plans/2026-11-06-ivv-init-observation.md).
+One action remains resume the fixed IVV capture. Quant Researcher retained the
+instrument, dates, data gates, math and costs, with paper default and live false.
+P27 reserves Source15/common98/software130MiB, capture112MiB and close3MiB
+each, total490MiB (513802240B). All older holds and futures remain. Batch02
+allows one conditional context/Init, seven business requests, 96 keepalives,
+1 business request/s and 28800s. Batch01 stays closed.
+
+Implementer extended only the recovery helper's existing per-instance wire,
+sync Init and failure lifecycle, plus the runner's closed selector. On failed
+capture the optional init_observation includes send/unpack (UNOBSERVED, OK,
+NON_OK, RAISED, UNKNOWN), packet_err (UNOBSERVED, Ok, Timeout, Invalid,
+Disconnect, SendFail, UNKNOWN), ever_ready (boolean), and constructor_status
+(UNOBSERVED, START, CONNECTING, CONNECTED, READY, CLOSING, CLOSED,
+WAIT_RECONNECT, UNKNOWN). UNOBSERVED describes a local call site. NON_OK
+unpack includes both a vendor error reply and missing s2c. Success manifests
+keep their existing shape. No new request, extra context or provider data is
+needed to produce the observation.
+
+Verifier matched all 15 public SDK LF pins. The offline tests execute selected
+methods from the hashed 10.10.7008 SDK source with fake transport/event/response
+boundaries. Causal REDs covered missing facts, send exception, closed selector,
+constructor exception end status and unknown values that the SDK compared equal
+to success. Directed GREENs include ReqInfo wait outcomes, handler READY then
+CLOSED, wrong serial/request/context, identity-preserving returns and raises,
+private canaries, sequential shared-manager use and the failed-manifest-to-STOP
+round trip. The final affected five-file suite passed 277 cases in 17.83s,
+with one existing NumPy timedelta deprecation warning. Lint, format, whitespace
+and Source census are recorded in server/init-observation-01. Self-review checked request
+lifetime and initialized/legacy paths. Independent review, release, actual
+context 7, H1/H2/H3 input acceptance and any research result remain pending.
+
 ## Final collector review checkpoint - 2026-11-05
 
 Both original axes return READY at8c33e2dda6a7fe5a50cb452ec563a3631e621c67 after
