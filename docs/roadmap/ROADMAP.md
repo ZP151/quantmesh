@@ -4,8 +4,10 @@
 
 Issue293: preserve the existing synchronous Init delegate return as a finite v2
 diagnostic scalar, with strict historical v1 compatibility and unchanged READY,
-wire/once/lease/sandbox/resource/normal-close gates. Focused47-case offline
-RED/GREEN passes; independent review/normal CI/publication remain pending.
+wire/once/lease/sandbox/resource/normal-close gates. Focused49-case offline
+RED/GREEN and both source-review axes pass. Complete RAM geometry qualifies the
+candidate; the local contract has one unchanged Windows/POSIX limit verified on
+existing Linux. Normal matching-head CI/publication remain pending.
 Actual reference9 is NOT_READY with owned normal close; capture10 was withheld.
 No real input or financial qualification exists. See the active IVV recovery
 iteration and docs/superpowers/plans/2026-11-07-reference-init-return.md.

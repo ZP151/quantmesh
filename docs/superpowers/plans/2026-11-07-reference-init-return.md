@@ -38,9 +38,9 @@ owns versioned private Ops outside Git plus this plan/iteration/ADR checkpoint.
 - [x] Run only those targets first; retain actual RED command, log and rc.
 - [x] Add the scalar and inline closed-schema dispatch in existing selectors;
   do not introduce a new failure-codec dependency or optional SDK hook.
-- [ ] Run the same targets GREEN, then the affected reference/default-capture/
+- [x] Run the same targets GREEN, then the affected reference/default-capture/
   conditional/IPC/bootstrap closure, preserving earlier failures.
-- [ ] Parent adapts a new private Ops successor; test actual versioned STOP
+- [x] Parent adapts a new private Ops successor; test actual versioned STOP
   roundtrip and maximum geometry without executing a real carrier.
 - [ ] Freeze one coherent commit and exact source/evidence pins; independent
   Spec/Standards narrow review (maximum two rounds), relevant broad gates and
@@ -52,3 +52,7 @@ owns versioned private Ops outside Git plus this plan/iteration/ADR checkpoint.
 Targeted first command: existing Python313 -I -B -X utf8 -m pytest
 tests/test_ivv_reference_init_return.py -q. Full release uses the repository's
 normal CI/release gate; no reduced collection or changed success semantics.
+
+Checkpoint: source-reviewed core5db43c29; exact runtime7 bytes remain unchanged
+through the final evidence-only checkpoint. Both R1 reports READY; normal CI,
+merge/publication and any actual different-method diagnostic remain pending.
