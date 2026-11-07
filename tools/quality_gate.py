@@ -59,6 +59,7 @@ CONTRACT_TARGETS = (
     "tests/test_ci_release_contract.py",
     "tests/test_ivv_init_e2e.py",
     "tests/test_ivv_init_observation.py",
+    "tests/test_ivv_init_peer_flow.py",
     "tests/test_ivv_sdk_lifecycle_evidence.py",
     "tests/test_ivv_capture_contract.py",
     "tests/test_ivv_dev_diagnostic.py",

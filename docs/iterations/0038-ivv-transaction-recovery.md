@@ -1,5 +1,219 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Current passive same-connection slice — issue299, 2026-11-07
+
+Core frozen for integration at helper4a3ecaa3/runnerb71b76b3/test8d5f47be.
+Final Linux focused109PASS/no skips52.17s (wall61.4804827s), Windows107PASS/
+2 native skips7.67s, and affected legacy354PASS/31 subtests34.79s are retained
+with stable source pins and actual command receipts. Native ephemeral controls
+cover ACK before consume, exact reverse tuple/inode/vendor-FD, queued-unread to
+ZERO, receive progression and frozen-SDK true wait/notify/unpack after query
+restoration. These are synthetic local engineering facts, not vendor evidence.
+
+The Linux environment's missing public test dependencies and the later native
+fixture registry-sink failure remain retained; existing public protobuf files
+were reused read-only in pure Python, with zero SDK package imports or installs.
+Only the test fixture required the native-dispatch correction. AST/public ABI,
+pure/default/old instrumented behavior and mandatory _owned_peer are preserved;
+four immutable roles match base6a0. Parent synchronized the issuer helper digest
+and added only this module to the existing contract selection. The original
+stale-pin bootstrap3FAIL is retained; integrated bootstrap now5PASS/1 platform
+skip0.90s (wall1.4895069s). Global Ruff, five-file formatting and whitespace pass.
+
+Complete local contract is pending a matching Git HEAD: CONTRACT-01 retained
+an isolated invocation import failure; CONTRACT-02 reached the existing exact
+Git-source guard and correctly refused uncommitted runtime bytes. Parent will
+commit the focused-tested candidate, then run the unchanged complete guard.
+No assertion/gate bypass follows. Independent Spec/Standards, full geometry,
+matching-head CI, normal merge/publication and any distinct runtime pair remain
+pending. Evidence: output/ivv-transaction-recovery-20261104-01/integration/
+reference-peer-flow-20261107-01/{core/HANDOFF.md,core/frozen/PINS.json,parent/}.
+
+
+Historical first verifiable issue299 increment: actual RED-01 uses original pinned SDK pure
+wait/query/send_init/pack/header plus real protobuf over synthetic OS/scheduling.
+It reaches False/20s Timeout/no unpack/all owned-close, then fails precisely on
+missing complete peer_flow (1FAIL/1.91s, wall3.0050664s). GREEN-01 first node
+passes; CAUSAL-01 passes2 controls/1.52s, wall2.5557117s, including a rejecting
+RAM RXZERO=>handler_read mutant. Synthetic public packet84B, ACKdelta84/receive0
+and sequential peerRXZERO are kept without a read claim. This is intermediate
+sensor/legacy-envelope evidence, not selected-v4, Parent RPC, native completion,
+release or runtime. Helper c05d4641/testa7cbb5e5 are historical intermediate pins;
+runner is still6a2f699c in that receipt. Complete core remains in progress.
+No SDK package/context/host/provider action or input/financial result occurred.
+Evidence: output/ivv-transaction-recovery-20261104-01/integration/reference-peer-flow-20261107-01/core/{RED-01,CAUSAL-01}.json.
+
+
+PR298 software/release and actual reference11 are complete engineering facts:
+normal CI5798332PASS149SKIP/frontend793, merge6a0c2bd7, then real20s Init timeout
+before unpack with owned normal closure. Capture12 was not prepared/dispatched.
+Subsequent SDK0 local-wire and exact-vendor at-rest evidence establishes no
+repair: two current ZERO queues/same57SLEEPING/STOPPED0/current3 public matches
+cannot reconstruct old ACK/read/wire/login or establish API health. The actual
+at-rest observer/transport closed normally; all historical UNKNOWN/futures stay.
+
+Issue299 selects one complete passive init-peer-flow-v1, control.v3 and
+terminal/observation.v4. Outbound digest follows exact closed public-default
+C2S/header proof; client TCP_INFO and the same-connection Parent proc projection
+reuse existing guarded sockets/channel/OperatorReader. Both end measurements
+are POST_QUERY after original query/finally; no added wait hook. Mandatory
+_owned_peer, privacy/source/lease/once/resources/close/realREADY/Fresh, strict
+legacy/default behaviors and seven runtime roles remain. Optional races and
+unsupported data are UNKNOWN, never handler-read/permission claims or new gates.
+
+The existing managed Source64 worktree is reused on fresh origin/main6a0,
+branch codex/0038-init-peer-flow. Complete new software common64+CI16 nets80MiB;
+actual central import4ec71e1b0359fd171f12407333d24a0b5cbe3b7aa10c45da2a6a327c12b19247
+retains all old holds, negatives/UNKNOWN and unused capture futures without
+refund or paid resources. It grants no new SDK/runtime pair or policy45 change.
+Tracked spec/plan: docs/superpowers/{specs,plans}/2026-11-07-init-peer-flow.md.
+
+Planner/Quant Researcher: one user action produces an attributable causal
+vector or honest UNKNOWN, not capture/input, profitability, OOS, Paper or live
+qualification. Data/window/math/cost remain unchanged. Implementer owns only
+helper/runner/new focused tests; Parent owns issuer/docs/gate/private Ops/Git/CI.
+First milestone is a real pinned-SDK pure-function RED/GREEN with a rejecting
+RXZERO=>read mutant. Full source/TDD/native controls, independent R1/R2,
+unchanged finite geometry and one normal matching-head CI/merge/publication
+precede any separately budgeted distinct runtime pair. No new provider, login,
+configuration, signal, SDK/context or real-input action occurred in this scope
+checkpoint. Whole fixed-IVV owner task remains active.
+
+
+## Current postrelease outcome — issue297, 2026-11-07
+
+Evidence snapshot: 2026-11-06T23:36:58Z (2026-11-07 Singapore). This current
+checkpoint supersedes pending-state wording in the historical entries below;
+those records are retained unchanged.
+
+Planner/Verifier: PR298 completed normal CI579/run42292886986 on final
+42e4197845f92046250fe02b4a49ab93ffcd32b6: 8332PASS/149SKIP, frontend793,
+release terminal8481/rc0/missing[]. Normal merge
+6a0c2bd78bd81aef252d90f6748c4cafcee7136d has full tree
+12377deabf47fd456ac8d36d4746783ff8c25d1e, equal to the final tree; all seven
+runtime sources equal reviewed a62fb215 and the final/merged versions. Exact
+source/private publication and release bindings are recorded, rather than
+inferred from CI. Source SpecR2/StandardsR2 and private SpecR1/StandardsR1 are
+READY. The GitHub bot review did not run because its usage quota was exhausted;
+it is not represented as an additional review.
+
+Private O3's realistic carrier327684B exceeded the unchanged327680B cap by4B
+and was retained as a refusal. O4 reuses the existing bounded decoder to pack
+exact unchanged remote text; its96 RAM entropy cases passed, maximum carrier
+310092B/packed215646B/body788228B/status6958B. Those geometry cases are models,
+not runtime success. The separately recorded actual O4 publication uses
+OPS-PINS SHA2569fcc13591418930f5ccd1fb320edcccdc8f9e71460d7a5efc7a54bc607b57767.
+Source7, carrier limits and normal manager1/client1 semantics remain unchanged.
+
+The complete future pair was actually imported at net96MiB (local48MiB,
+remote48MiB); current policy45 is selected. All holds remain1247805440B;
+all historical negatives, UNKNOWN counts and unused capture futures are
+retained without refund. These records do not replace actual admission/once.
+The earlier publication-time policy-inactive snapshot remains historical.
+
+Actual reference11 invoked once and returned NON_OK/NOT_READY. The bound saved
+send returned OK and the local TCP path accepted84B with0 pending; that does not prove
+peer ACK, application read, API acceptance or response. The actual Event
+returned False after20000ms with Timeout snapshot, before actual unpack;
+unpack/retType are UNOBSERVED. There were205 poll entries, no observed read
+callback/byte/frame/target notify, and the network thread was alive at freeze.
+Its sequential own-FD sample was VERIFIED/READ/not-readable/ZERO unread.
+operation_failed=false/close_failed=false and all normal owned-close flags
+were true. Independent SDK0 readback proved exact attempt11 CLOSED, without
+recovery. Exact actual context/external counts and historical cumulative
+counts remain UNKNOWN. The journal's false response flag supplies no extra
+absence proof because this reference has no Init-response journal writer.
+
+Capture12 remains unprepared and withheld: its condition claim was not
+evaluated and no capture was dispatched. No capture originals, accepted input,
+trial, report, decision, H1/H2/H3 or financial qualification resulted. Quant
+Researcher: dataset/window/math/cost/OOS and paper/live boundaries are unchanged.
+No timeout/login or provider-cause inference supports repair, restart or retry.
+
+The independent causal report narrows the terminal branch to a genuine client
+wait timeout before unpack. The subsequent SDK0 local wire audit used actual
+pinned pack_req/pack_pb_req/header AST bodies and real protobuf definitions,
+with independent44B little-endian FT/header and protobuf semantic checks.
+Implementer29PASS and Parent29PASS/6.03s (wall6.6128308s), plus combined
+Spec/StandardsR1 READY, support synthetic local pinned conformance only.
+Its84B synthetic packet/40B body does not establish reference11's actual wire.
+Actual reference11 wire is NOT_ESTABLISHED; runtime construction drift remains
+NOT_EXCLUDED. Later CURRENT_MATCH of three selected public files establishes
+neither their old loaded identity nor old wire bytes. The wire audit itself
+made0 SDK package import/context/host/network/socket/thread effects.
+
+The private SDK0 at-rest screen's four R1 P2 inspection-guard findings were
+repaired after genuine RED4; final72PASS/2.85s, Parent72PASS/2.90s
+(wall3.5595522s) and combined R2 READY preceded one actual observation.
+These repaired inspection guards, not OpenD; Source7/O4/AD3 stayed unchanged.
+
+Actual observation8592ab2d932f4357a093d2571cddd125 completed normally at
+2026-11-06T23:27:57Z. Two within250ms endpoints showed the exact same vendor/
+listener queueZERO at both and the same57 tasks allSLEEPING; STOPPED,
+UNINTERRUPTIBLE, ZOMBIE, RUNNING and OTHER counts0 at both. The selected three
+public SDK files CURRENT_MATCH their reviewed LF hashes. Owned descriptors
+closed; transport job_closed=true/job_active_zero=true, normal rc0, no timeout
+or cap refusal. SDK/context/ledger-query/credential/service/signal/login
+actions0. These current facts reconstruct no historical reference11 ACK/
+accept/read/wire/response, establish no API health, cause or login state,
+and prove no concrete OpenD repair. Historical reference11 remains NOT_OBSERVED;
+historical exact context/external UNKNOWN counts remain unchanged.
+
+Next is one source-grounded complete passive same-attempt method,
+PROPOSAL_ONLY under existing authority
+6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd.
+Inspect actual owning sources and alternatives before a complete proposal/
+review. These docs grant no new Source work, issue, capacity, import, SDK
+invocation, permit, nonce or once action. No blind retry, configuration,
+signal or login change follows. Capture12 remains unprepared/withheld;
+no financial input exists and the whole owner task remains active.
+
+Pinned private evidence (repository-relative local output; not a claim of
+published remote artifacts):
+
+- CI/merge/source equality:
+  `output/ivv-transaction-recovery-20261104-01/integration/init-query-ci579-qualification-01/MERGED-TREE-SOURCE-QUALIFICATION-01.json`,
+  SHA25660db889a6640e03f909eb89e2b7f450906f11e0172261a065b46c99767709219.
+- Actual publication:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/preparation/ACTUAL-PUBLICATION-CLOSEOUT-01.json`,
+  SHA2565aa254e5ed53dcdfff8a5dc6e1a5c0094999e536e182bde4484db004c595cc96.
+- Private packaging/reviews:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/preparation/PRIVATE-REVIEW-CLOSEOUT-01.json`,
+  SHA256c69220cc258b9fb39279e00e18c8a083bdac74144e810293c3897485ac73a6ee.
+- Actual capacity import:
+  `output/0038-orchestration/ivv-init-query-vector-runtime-pair-96MiB-20261107.json`,
+  SHA25622ce64db940755e64701ce049a184118652b568741a9964e311ed5fdcedb57d7;
+  `output/ivv-transaction-recovery-20261104-01/contracts/RECOVERY-POLICY-45.json`,
+  SHA256cdcdee430c87ea2c87f092b54ca660b950fb0c2d3831619e7322e49837c0230d.
+- Actual reference11 closeout:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/preparation/REFERENCE11-CLOSEOUT-01.json`,
+  SHA2560094cface9d8198aa23b20b04b4e3525011c8c185e992397046154f481943db0.
+- Independent causal report:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/causal-reference11-01/REPORT.md`,
+  SHA256263c24844c68face8760e3ad025d574e217131011e561c7476ff08a156d57262.
+- Parent wire-audit closeout:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/wire-audit-01/PARENT-CLOSEOUT-01.json`,
+  SHA256fb551ffb5131d1c3491a1384e2dc76662dc50e9339aeba9a97218122ddba5ab3.
+- Historical wire-audit checkpoint:
+  `output/ivv-transaction-recovery-20261104-01/checkpoints/20261106T225101Z-wire-audit-complete-vendor-sdk0-implementation.json`,
+  SHA2569158d372b42d01722f6a17a4a8ddd9c229af8ea70f7f7a86839d7d3ede010266.
+
+- actual SDK0 closeout and interpretation limits:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/vendor-atrest-software-01/PARENT-ACTUAL-ATREST-CLOSEOUT-01.json`,
+  SHA25698546d8d77ba2eacc72ed8b771f497bf64b697f4fc65662e40ad49c6b64efb76.
+- independent Parent72PASS receipt:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/parent/VENDOR-ATREST-VERIFY-R2-01.RUN.json`,
+  SHA256e0d8b1786fb5a55155d434e24c5dbfb622c892b361540dddafe34d1dc43dc80a.
+- independent R2 READY:
+  `output/ivv-transaction-recovery-20261104-01/integration/reference-query-vector-20261107-01/vendor-atrest-software-01/REVIEW-R2.md`,
+  SHA256536fd9e114a6f4ab1aa5c4c21bcec7dfdc4342fb094c243d2634cf5b3e2d4032.
+- actual at-rest original VENDOR-ATREST-RESULT.json:
+  `output/ivv-transaction-recovery-20261104-01/integration/init-query-vendor-atrest-20261107-01/atrest-observations/8592ab2d932f4357a093d2571cddd125/VENDOR-ATREST-RESULT.json`,
+  SHA2566b75b270b7310e9c89a6b4df2517d05abe6fe4218f1423ce0eaaab7898ecbb8e.
+- actual at-rest original VENDOR-ATREST-TRANSPORT.json:
+  `output/ivv-transaction-recovery-20261104-01/integration/init-query-vendor-atrest-20261107-01/atrest-observations/8592ab2d932f4357a093d2571cddd125/VENDOR-ATREST-TRANSPORT.json`,
+  SHA256d314ecae9046967b3c8e1697fbc6c9ab6ab618e65bf5c1125b9ccd7a0be047ef.
+
 ## Complete Init-query vector — issue297, 2026-11-07
 
 Planner consumes the new independent ADDENDUM2 (15565B/SHA68d6852c604aec5d76a62b482ce632a8e7ae7d00c5c37b04487f56158e866844),

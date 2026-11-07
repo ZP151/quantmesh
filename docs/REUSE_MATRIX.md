@@ -1,3 +1,13 @@
+## Passive Init peer-flow — issue299,2026-11-07
+
+Reuse the protected SDK loader/actual queued Init bytes, retained socket and
+query-finally seams, existing SCM-authenticated channel, OperatorReader/proc
+parsers and bounded terminal/standalone codecs. TCP_INFO/proc UAPI facts use
+primary Linux references; no upstream implementation is copied or SDK forked.
+The independent public-default wire encoder is a validator expectation only;
+actual sends remain the original SDK packet. No dependency/environment/new
+observer platform, provider mutation, data/math or trading-scope change.
+
 ## Complete guarded Init-query vector — issue297,2026-11-07
 
 Reuse the protected official SDK loader, existing safety wire, per-request

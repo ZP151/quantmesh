@@ -1079,8 +1079,171 @@ def _capture_lifecycle_from_error(error):
     return None
 
 
+def _select_peer_flow(value, require):
+    """Self-contained finite projection, duplicated in standalone STOP codec."""
+
+    def check(condition):
+        require(condition, "init_peer_flow_shape")
+
+    def enum(item, choices):
+        check(type(item) is str and item in choices.split())
+
+    def number(item, maximum):
+        check(item is None or type(item) is int and 0 <= item <= maximum)
+
+    def shape(item, keys):
+        check(type(item) is dict and set(item) == set(keys.split()))
+
+    shape(value, "schema wire client peer_before peer_after timing")
+    check(type(value["schema"]) is str and value["schema"] == "qm.ivv.init-peer-flow.v1")
+    wire = value["wire"]
+    shape(wire, "state reason packet_sha256 ft p1001 fmt0ver0 size_sha reserved0 public_c2s")
+    enum(wire["state"], "UNOBSERVED PUBLIC_CONFORMANT NONCONFORMANT UNKNOWN")
+    enum(wire["reason"], "NONE HEADER BODY UNSUPPORTED OBSERVATION")
+    for key in ("ft", "p1001", "fmt0ver0", "size_sha", "reserved0", "public_c2s"):
+        check(wire[key] is None or type(wire[key]) is bool)
+    pin = wire["packet_sha256"]
+    public = wire["state"] == "PUBLIC_CONFORMANT"
+    check((pin is not None) == public)
+    if public:
+        check(type(pin) is str and len(pin) == 64 and all(c in "0123456789abcdef" for c in pin))
+        check(
+            wire["reason"] == "NONE"
+            and all(
+                wire[k] is True
+                for k in ("ft", "p1001", "fmt0ver0", "size_sha", "reserved0", "public_c2s")
+            )
+        )
+    client = value["client"]
+    shape(
+        client,
+        "identity abi state_before state_end acked_delta received_delta "
+        "unacked_before unacked_end relation",
+    )
+    enum(client["identity"], "UNOBSERVED VERIFIED DRIFT UNKNOWN")
+    enum(client["abi"], "SUPPORTED UNSUPPORTED UNKNOWN")
+    for key in ("state_before", "state_end"):
+        enum(client[key], "ESTABLISHED OTHER UNKNOWN")
+    for key in ("acked_delta", "received_delta"):
+        number(client[key], (1 << 63) - 1)
+    for key in ("unacked_before", "unacked_end"):
+        number(client[key], (1 << 32) - 1)
+    enum(client["relation"], "VALID RACE_OR_UNKNOWN UNOBSERVED")
+    if client["relation"] == "VALID":
+        check(
+            client["identity"] == "VERIFIED"
+            and client["abi"] == "SUPPORTED"
+            and client["state_before"] == client["state_end"] == "ESTABLISHED"
+            and type(client["acked_delta"]) is int
+            and type(client["received_delta"]) is int
+            and client["unacked_before"] == 0
+            and public
+        )
+    for key in ("peer_before", "peer_after"):
+        peer = value[key]
+        shape(peer, "identity row state vendor_fd rx tx offset_ms")
+        enum(peer["identity"], "VERIFIED DRIFT UNKNOWN UNOBSERVED")
+        enum(peer["row"], "MATCH NOT_OBSERVED AMBIGUOUS UNKNOWN")
+        enum(peer["state"], "ESTABLISHED CLOSING OTHER UNKNOWN")
+        enum(peer["vendor_fd"], "PRESENT NOT_OBSERVED UNKNOWN")
+        for field in ("rx", "tx"):
+            enum(peer[field], "ZERO LE_1K LE_64K GT_64K UNKNOWN")
+        number(peer["offset_ms"], 480000)
+        check(peer["vendor_fd"] != "PRESENT" or peer["row"] == "MATCH")
+        check(peer["row"] == "MATCH" or all(peer[k] == "UNKNOWN" for k in ("state", "rx", "tx")))
+        check(peer["state"] == "ESTABLISHED" or peer["rx"] == peer["tx"] == "UNKNOWN")
+    shape(value["timing"], "sequential wait_to_post_ms")
+    check(value["timing"]["sequential"] is True)
+    number(value["timing"]["wait_to_post_ms"], 480000)
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    check(len(encoded.encode()) <= 1100)
+    return json.loads(encoded)
+
+
 def select_reference_observation(value):
     """Closed non-data STOP observation; parent closure never comes from child IPC."""
+
+    def _select_peer_flow(value, require):
+        """Self-contained finite projection, duplicated in standalone STOP codec."""
+
+        def check(condition):
+            require(condition, "init_peer_flow_shape")
+
+        def enum(item, choices):
+            check(type(item) is str and item in choices.split())
+
+        def number(item, maximum):
+            check(item is None or type(item) is int and 0 <= item <= maximum)
+
+        def shape(item, keys):
+            check(type(item) is dict and set(item) == set(keys.split()))
+
+        shape(value, "schema wire client peer_before peer_after timing")
+        check(type(value["schema"]) is str and value["schema"] == "qm.ivv.init-peer-flow.v1")
+        wire = value["wire"]
+        shape(wire, "state reason packet_sha256 ft p1001 fmt0ver0 size_sha reserved0 public_c2s")
+        enum(wire["state"], "UNOBSERVED PUBLIC_CONFORMANT NONCONFORMANT UNKNOWN")
+        enum(wire["reason"], "NONE HEADER BODY UNSUPPORTED OBSERVATION")
+        for key in ("ft", "p1001", "fmt0ver0", "size_sha", "reserved0", "public_c2s"):
+            check(wire[key] is None or type(wire[key]) is bool)
+        pin = wire["packet_sha256"]
+        public = wire["state"] == "PUBLIC_CONFORMANT"
+        check((pin is not None) == public)
+        if public:
+            check(type(pin) is str and len(pin) == 64 and all(c in "0123456789abcdef" for c in pin))
+            check(
+                wire["reason"] == "NONE"
+                and all(
+                    wire[k] is True
+                    for k in ("ft", "p1001", "fmt0ver0", "size_sha", "reserved0", "public_c2s")
+                )
+            )
+        client = value["client"]
+        shape(
+            client,
+            "identity abi state_before state_end acked_delta received_delta "
+            "unacked_before unacked_end relation",
+        )
+        enum(client["identity"], "UNOBSERVED VERIFIED DRIFT UNKNOWN")
+        enum(client["abi"], "SUPPORTED UNSUPPORTED UNKNOWN")
+        for key in ("state_before", "state_end"):
+            enum(client[key], "ESTABLISHED OTHER UNKNOWN")
+        for key in ("acked_delta", "received_delta"):
+            number(client[key], (1 << 63) - 1)
+        for key in ("unacked_before", "unacked_end"):
+            number(client[key], (1 << 32) - 1)
+        enum(client["relation"], "VALID RACE_OR_UNKNOWN UNOBSERVED")
+        if client["relation"] == "VALID":
+            check(
+                client["identity"] == "VERIFIED"
+                and client["abi"] == "SUPPORTED"
+                and client["state_before"] == client["state_end"] == "ESTABLISHED"
+                and type(client["acked_delta"]) is int
+                and type(client["received_delta"]) is int
+                and client["unacked_before"] == 0
+                and public
+            )
+        for key in ("peer_before", "peer_after"):
+            peer = value[key]
+            shape(peer, "identity row state vendor_fd rx tx offset_ms")
+            enum(peer["identity"], "VERIFIED DRIFT UNKNOWN UNOBSERVED")
+            enum(peer["row"], "MATCH NOT_OBSERVED AMBIGUOUS UNKNOWN")
+            enum(peer["state"], "ESTABLISHED CLOSING OTHER UNKNOWN")
+            enum(peer["vendor_fd"], "PRESENT NOT_OBSERVED UNKNOWN")
+            for field in ("rx", "tx"):
+                enum(peer[field], "ZERO LE_1K LE_64K GT_64K UNKNOWN")
+            number(peer["offset_ms"], 480000)
+            check(peer["vendor_fd"] != "PRESENT" or peer["row"] == "MATCH")
+            check(
+                peer["row"] == "MATCH" or all(peer[k] == "UNKNOWN" for k in ("state", "rx", "tx"))
+            )
+            check(peer["state"] == "ESTABLISHED" or peer["rx"] == peer["tx"] == "UNKNOWN")
+        shape(value["timing"], "sequential wait_to_post_ms")
+        check(value["timing"]["sequential"] is True)
+        number(value["timing"]["wait_to_post_ms"], 480000)
+        encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+        check(len(encoded.encode()) <= 1100)
+        return json.loads(encoded)
 
     def _select_init_query_vector(value, require):
         """Closed scalar contract, also embedded in the standalone STOP selector."""
@@ -1261,10 +1424,16 @@ def select_reference_observation(value):
     if type(value) is dict and value.get("schema_id") in (
         "qm.ivv.reference-init-observation.v2",
         "qm.ivv.reference-init-observation.v3",
+        "qm.ivv.reference-init-observation.v4",
     ):
         keys.add("init_delegate_return")
-    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-observation.v3":
+    if type(value) is dict and value.get("schema_id") in (
+        "qm.ivv.reference-init-observation.v3",
+        "qm.ivv.reference-init-observation.v4",
+    ):
         keys.update(("method", "query_vector"))
+    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-observation.v4":
+        keys.add("peer_flow")
     need(
         type(value) is dict and set(value) == keys,
         "REFERENCE_OBSERVATION_SHAPE",
@@ -1281,6 +1450,7 @@ def select_reference_observation(value):
             "qm.ivv.reference-init-observation.v1",
             "qm.ivv.reference-init-observation.v2",
             "qm.ivv.reference-init-observation.v3",
+            "qm.ivv.reference-init-observation.v4",
         )
         and type(value["reference_control_sha256"]) is str
         and re.fullmatch("[0-9a-f]{64}", value["reference_control_sha256"])
@@ -1310,10 +1480,14 @@ def select_reference_observation(value):
     result = {**value, "normal_close": dict(normal)}
     if "query_vector" in keys:
         need(
-            type(value["method"]) is str and value["method"] == "init-query-vector-v1",
+            type(value["method"]) is str
+            and value["method"]
+            == ("init-peer-flow-v1" if "peer_flow" in keys else "init-query-vector-v1"),
             "REFERENCE_OBSERVATION_METHOD",
         )
         result["query_vector"] = _select_init_query_vector(value["query_vector"], need)
+    if "peer_flow" in keys:
+        result["peer_flow"] = _select_peer_flow(value["peer_flow"], need)
     return result
 
 
@@ -2984,14 +3158,28 @@ def reference_capture_condition(book, pair_sha256, read_owned, native, producer)
             "policy_sha256": pair["policy_sha256"],
         }
         parsed_control = json.loads(control)
-        if (
-            type(parsed_control) is dict
-            and parsed_control.get("schema_id") == "qm.ivv.reference-control.v2"
+        if type(parsed_control) is dict and parsed_control.get("schema_id") in (
+            "qm.ivv.reference-control.v2",
+            "qm.ivv.reference-control.v3",
         ):
             expected_control.update(
-                schema_id="qm.ivv.reference-control.v2", method="init-query-vector-v1"
+                schema_id=parsed_control["schema_id"],
+                method=(
+                    "init-peer-flow-v1"
+                    if parsed_control["schema_id"] == "qm.ivv.reference-control.v3"
+                    else "init-query-vector-v1"
+                ),
             )
         need(parsed_control == expected_control, "REFERENCE_CONTROL_BINDING")
+        need(
+            (observation.get("schema_id") == "qm.ivv.reference-init-observation.v4")
+            == (parsed_control["schema_id"] == "qm.ivv.reference-control.v3")
+            and (
+                parsed_control["schema_id"] != "qm.ivv.reference-control.v3"
+                or observation.get("method") == "init-peer-flow-v1"
+            ),
+            "REFERENCE_CONTROL_METHOD",
+        )
         plan = json.loads(original(loc.control / "plan.json"))
         need(
             digest(original(loc.control / "reference-pair.json", 4096)) == pair_sha256,
@@ -3554,6 +3742,146 @@ def _environment():
     os.environ.update({"HOME": home, "PATH": "/usr/bin:/bin", "LC_ALL": "C"})
 
 
+def _peer_unknown():
+    return dict(
+        identity="UNKNOWN",
+        row="UNKNOWN",
+        state="UNKNOWN",
+        vendor_fd="UNKNOWN",
+        rx="UNKNOWN",
+        tx="UNKNOWN",
+        offset_ms=None,
+    )
+
+
+def _peer_read(reader, parent, name, bound=262144):
+    """Optional bounded metadata read; no mandatory READ_BOUND exception catch."""
+    if time.monotonic() >= getattr(reader, "peer_deadline", reader.deadline):
+        return None
+    fd = reader.keep(os.open(name, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=parent))
+    try:
+        data = bytearray()
+        while len(data) <= bound:
+            if time.monotonic() >= getattr(reader, "peer_deadline", reader.deadline):
+                return None
+            part = os.read(fd, min(8192, bound + 1 - len(data)))
+            if not part:
+                return bytes(data)
+            data.extend(part)
+        return None
+    finally:
+        try:
+            reader.release(fd)
+        except OSError as error:
+            raise Refused("PEER_METADATA_CLOSE") from error
+
+
+def _peer_socket_inodes(reader, process):
+    if time.monotonic() >= getattr(reader, "peer_deadline", reader.deadline):
+        return None
+    directory = reader.keep(
+        os.open("fd", os.O_RDONLY | os.O_DIRECTORY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=process)
+    )
+    stream = None
+    try:
+        # Keep the iterator live: unlike listdir's closed transient FD, its
+        # own entry cannot disappear before stat in native own-process controls.
+        stream = os.scandir(directory)
+        result = set()
+        for index, entry in enumerate(stream):
+            name = entry.name
+            if index >= 256 or not name.isdigit():
+                return None
+            if time.monotonic() >= getattr(reader, "peer_deadline", reader.deadline):
+                return None
+            before = os.stat(name, dir_fd=directory)
+            if stat.S_ISSOCK(before.st_mode):
+                link = os.readlink(name, dir_fd=directory)
+                need(
+                    link == "socket:[" + str(before.st_ino) + "]"
+                    and reader.stamp(before) == reader.stamp(os.stat(name, dir_fd=directory)),
+                    "PEER_VENDOR_FD_RACE",
+                )
+                result.add(before.st_ino)
+        return result
+    finally:
+        try:
+            if stream is not None:
+                stream.close()
+        except OSError as error:
+            raise Refused("PEER_METADATA_CLOSE") from error
+        finally:
+            try:
+                reader.release(directory)
+            except OSError as error:
+                raise Refused("PEER_METADATA_CLOSE") from error
+
+
+def _peer_table_projection(raw, inode, vendor_inodes):
+    """Low-level parser for a known own inode; exact tuples remain RAM-only.
+
+    Runtime fixed-endpoint validation is in _Provider.peer_flow. Synthetic
+    native tests may pass their own ephemeral table to this private parser.
+    """
+    sample = _peer_unknown()
+    if type(raw) is not bytes or len(raw) > 262144 or vendor_inodes is None:
+        return sample, None
+    lines = raw.splitlines()
+    if not 1 <= len(lines) <= 4096:
+        return sample, None
+    table = []
+    for line in lines[1:]:
+        row = line.split()
+        if (
+            len(row) < 10
+            or not re.fullmatch(b"[0-9A-F]{8}:[0-9A-F]{4}", row[1])
+            or not re.fullmatch(b"[0-9A-F]{8}:[0-9A-F]{4}", row[2])
+            or not re.fullmatch(b"[0-9A-F]{2}", row[3])
+            or not re.fullmatch(b"[0-9A-F]{8}:[0-9A-F]{8}", row[4])
+            or not row[9].isdigit()
+            or int(row[9]) > (1 << 63) - 1
+        ):
+            return sample, None
+        table.append(row)
+    clients = [r for r in table if int(r[9]) == inode]
+    if len(clients) != 1:
+        sample["row"] = "AMBIGUOUS" if clients else "NOT_OBSERVED"
+        return sample, None
+    client = clients[0]
+    key = (client[1], client[2])
+    reverse = [r for r in table if (r[1], r[2]) == key[::-1]]
+    sample["identity"] = "VERIFIED"
+    if len(reverse) != 1:
+        sample["row"] = "AMBIGUOUS" if reverse else "NOT_OBSERVED"
+        return sample, key
+    peer = reverse[0]
+    sample.update(
+        row="MATCH",
+        vendor_fd="PRESENT" if int(peer[9]) in vendor_inodes else "NOT_OBSERVED",
+        state="ESTABLISHED"
+        if peer[3] == b"01"
+        else "CLOSING"
+        if peer[3] in (b"04", b"05", b"06", b"08", b"09", b"0B")
+        else "OTHER",
+    )
+    if sample["state"] == "ESTABLISHED":
+
+        def bucket(number):
+            return (
+                "ZERO"
+                if number == 0
+                else "LE_1K"
+                if number <= 1024
+                else "LE_64K"
+                if number <= 65536
+                else "GT_64K"
+            )
+
+        tx, rx = (int(x, 16) for x in peer[4].split(b":"))
+        sample.update(rx=bucket(rx), tx=bucket(tx))
+    return sample, key
+
+
 class _Provider:
     """Single independently sampled provider, with monotonic per-inode growth."""
 
@@ -3579,6 +3907,148 @@ class _Provider:
         self.last = None
         self.next = 0
         self.peak = 0
+        self._peer_phase = None
+        self._peer_key = None
+        self._peer_descriptor = None
+        self._peer_owned_pair = None
+
+    def peer_flow(self, scope, request):
+        """Two authenticated finite samples of the same known child connection."""
+        need(
+            type(request) is dict
+            and set(request) == {"op", "phase", "fd", "inode", "executable_origin"}
+            and type(request["op"]) is str
+            and request["op"] == "init_peer_flow"
+            and type(request["phase"]) is str
+            and request["phase"] in ("BEFORE_SEND", "POST_QUERY")
+            and type(request["fd"]) is int
+            and 0 <= request["fd"] <= 1048575
+            and type(request["inode"]) is int
+            and 0 < request["inode"] <= (1 << 63) - 1,
+            "PEER_FLOW_PROTOCOL",
+        )
+        control = self.helper._read_reference_control(self.plan)
+        need(
+            control.get("schema_id") == "qm.ivv.reference-control.v3"
+            and control.get("method") == "init-peer-flow-v1"
+            and self.binding is not None,
+            "PEER_FLOW_METHOD",
+        )
+        phase = request["phase"]
+        need(
+            (phase == "BEFORE_SEND" and self._peer_phase is None)
+            or (phase == "POST_QUERY" and self._peer_phase == "BEFORE_SEND"),
+            "PEER_FLOW_ORDER",
+        )
+        descriptor = (request["fd"], request["inode"])
+        need(
+            self._peer_descriptor is None or self._peer_descriptor == descriptor,
+            "PEER_FLOW_DESCRIPTOR",
+        )
+        self._peer_descriptor = descriptor
+        self._peer_phase = phase
+        scope.check_pid()
+        reader = self.producer.OperatorReader(self.binding)
+        reader.deadline = min(
+            getattr(self, "_peer_rpc_started", time.monotonic()) + 2,
+            self.plan["started_monotonic"] + 480,
+        )
+        sample = _peer_unknown()
+        try:
+            # Identity/source/provider controls are mandatory, never swallowed as
+            # optional scan absence. Reuse protected directories and lifecycle.
+            self.native._operator_identity(self.producer, self.binding, self.gateway_gid, reader)
+            self.native._provider_controls(reader)
+            # Reserve mandatory postchecks inside the same two-second envelope.
+            reader.peer_deadline = min(time.monotonic() + 0.5, reader.deadline - 0.5)
+            vendor = reader.processes[self.binding.cohort[2][0]][0]
+            # Keep the original mandatory ownership proof exact. Its authority
+            # and refusal semantics are independent of optional peer metadata.
+            pair = _owned_peer(scope.pid, vendor_sockets=reader.socket_inodes(vendor))
+            if pair is not None:
+                previous = getattr(self, "_peer_owned_pair", None)
+                need(
+                    pair[0] == request["inode"] and (previous is None or pair == previous),
+                    "CAPTURE_PEER_CHANGED",
+                )
+                self._peer_owned_pair = pair
+            child = reader.directory(str(scope.pid), reader.directory("/proc"))
+            fd_name = "fd/" + str(request["fd"])
+
+            def connection_stamp():
+                scope.check_pid()
+                named = os.stat(fd_name, dir_fd=child)
+                need(
+                    stat.S_ISSOCK(named.st_mode)
+                    and named.st_ino == request["inode"]
+                    and os.readlink(fd_name, dir_fd=child)
+                    == "socket:[" + str(request["inode"]) + "]",
+                    "PEER_CLIENT_FD",
+                )
+                namespaces = []
+                for process in (child, vendor):
+                    current = os.stat("ns/net", dir_fd=process)
+                    need(current.st_ino == self.binding.net, "PROVIDER_IDENTITY")
+                    namespaces.append((current.st_dev, current.st_ino))
+                need(namespaces[0] == namespaces[1], "PROVIDER_IDENTITY")
+                return (
+                    namespaces[0],
+                    scope.pid,
+                    scope.child["start_ticks"],
+                    reader.stamp(named),
+                    fd_name,
+                )
+
+            stamp = connection_stamp()
+            try:
+                sockets = _peer_socket_inodes(reader, vendor)
+                raw = _peer_read(reader, child, "net/tcp")
+                sample, four_tuple = _peer_table_projection(raw, request["inode"], sockets)
+                if four_tuple is not None:
+                    need(
+                        four_tuple[1] == b"0100007F:2B68"
+                        and four_tuple[0].startswith(b"0100007F:"),
+                        "PEER_FIXED_ENDPOINT",
+                    )
+                    key = (*stamp, four_tuple)
+                    if phase == "BEFORE_SEND":
+                        self._peer_key = key
+                    elif self._peer_key != key:
+                        sample = dict(_peer_unknown(), identity="DRIFT")
+                    if connection_stamp() != stamp:
+                        raise Refused("PEER_CLIENT_FD_DRIFT")
+                    # Recheck table tuple and membership without exporting either.
+                    again, tuple_after = _peer_table_projection(
+                        _peer_read(reader, child, "net/tcp"),
+                        request["inode"],
+                        _peer_socket_inodes(reader, vendor),
+                    )
+                    if (
+                        tuple_after != four_tuple
+                        or again["row"] != sample["row"]
+                        or again["vendor_fd"] != sample["vendor_fd"]
+                    ):
+                        sample = dict(_peer_unknown(), identity="DRIFT")
+                elif phase == "POST_QUERY" and self._peer_key is not None:
+                    sample = dict(_peer_unknown(), identity="DRIFT")
+                if phase == "POST_QUERY" and self._peer_key is None:
+                    sample = _peer_unknown()
+                elapsed = time.monotonic() - self.plan["started_monotonic"]
+                if 0 <= elapsed <= 480:
+                    sample["offset_ms"] = int(elapsed * 1000)
+            except OSError:
+                sample = _peer_unknown()
+            need(connection_stamp() == stamp and not reader.finish(), "PROVIDER_DRIFT")
+            scope.check_pid()
+        finally:
+            primary = sys.exc_info()[1]
+            try:
+                reader.close()
+            except BaseException as error:
+                if primary is not None:
+                    raise primary
+                raise Refused("PEER_METADATA_CLOSE") from error
+        return sample
 
     def peer(self, pid):
         reader = self.producer.OperatorReader(self.binding)
@@ -3868,7 +4338,9 @@ def _seed(values, startup, helper, issuer, *, started=None):
     helper._validate_fixed_plan(plan, schema="qm.ivv.capture-plan" + family)
     if "reference_init_ref" in plan:
         need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
-        helper._read_reference_control(plan)
+        control = helper._read_reference_control(plan)
+        if control.get("schema_id") == "qm.ivv.reference-control.v3":
+            values["_reference_method"] = control["method"]
     if "reference_pair_ref" in plan:
         need(_recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
         helper._read_reference_pair(plan)
@@ -3938,6 +4410,67 @@ class _ChildSession:
         self.owner = os.getpid()
         self.check = check
         self.lock = threading.Lock()
+        self._peer_phase = None
+        self._peer_descriptor = None
+
+    def peer_flow(self, phase, fd, inode):
+        need(os.getpid() == self.owner, "SESSION_OWNER")
+        need(
+            type(phase) is str
+            and phase in ("BEFORE_SEND", "POST_QUERY")
+            and type(fd) is int
+            and 0 <= fd <= 1048575
+            and type(inode) is int
+            and 0 < inode <= (1 << 63) - 1,
+            "PEER_FLOW_PROTOCOL",
+        )
+        with self.lock:
+            need(
+                (phase == "BEFORE_SEND" and self._peer_phase is None)
+                or (phase == "POST_QUERY" and self._peer_phase == "BEFORE_SEND"),
+                "PEER_FLOW_ORDER",
+            )
+            need(
+                self._peer_descriptor is None or self._peer_descriptor == (fd, inode),
+                "PEER_FLOW_DESCRIPTOR",
+            )
+            self._peer_phase, self._peer_descriptor = phase, (fd, inode)
+            checked = self.check()
+            need(type(checked) is dict and "executable_origin" in checked, "PEER_FLOW_ORIGIN")
+            witness = select_executable_origin(checked["executable_origin"])
+            self.channel.send(
+                dict(
+                    op="init_peer_flow", phase=phase, fd=fd, inode=inode, executable_origin=witness
+                )
+            )
+            answer = self.channel.recv(self.parent)
+            need(type(answer) is dict and set(answer) == {"peer_flow"}, "PEER_FLOW_REPLY")
+            sample = answer["peer_flow"]
+            need(type(sample) is dict and set(sample) == set(_peer_unknown()), "PEER_FLOW_REPLY")
+            choices = dict(
+                identity="VERIFIED DRIFT UNKNOWN UNOBSERVED",
+                row="MATCH NOT_OBSERVED AMBIGUOUS UNKNOWN",
+                state="ESTABLISHED CLOSING OTHER UNKNOWN",
+                vendor_fd="PRESENT NOT_OBSERVED UNKNOWN",
+                rx="ZERO LE_1K LE_64K GT_64K UNKNOWN",
+                tx="ZERO LE_1K LE_64K GT_64K UNKNOWN",
+            )
+            need(
+                all(type(sample[k]) is str and sample[k] in v.split() for k, v in choices.items())
+                and (
+                    sample["offset_ms"] is None
+                    or type(sample["offset_ms"]) is int
+                    and 0 <= sample["offset_ms"] <= 480000
+                )
+                and (sample["vendor_fd"] != "PRESENT" or sample["row"] == "MATCH")
+                and (
+                    sample["row"] == "MATCH"
+                    or all(sample[k] == "UNKNOWN" for k in ("state", "rx", "tx"))
+                )
+                and (sample["state"] == "ESTABLISHED" or sample["rx"] == sample["tx"] == "UNKNOWN"),
+                "PEER_FLOW_REPLY",
+            )
+            return dict(sample)
 
     def snapshot(self, reference_transition=None):
         need(os.getpid() == self.owner, "SESSION_OWNER")
@@ -4014,7 +4547,7 @@ def _check_capture_result(result, *, recovery):
 
 def _reference_result(result):
     version = result["schema_id"].rsplit(".", 1)[-1]
-    v2 = version in ("v2", "v3")
+    v2 = version in ("v2", "v3", "v4")
     primary = result["primary_failure"]
     not_ready = (
         result["constructor_returned"] is True
@@ -4031,9 +4564,10 @@ def _reference_result(result):
             "schema_id": "qm.ivv.reference-init-observation." + version,
             **(
                 {"method": result["method"], "query_vector": result["query_vector"]}
-                if version == "v3"
+                if version in ("v3", "v4")
                 else {}
             ),
+            **({"peer_flow": result["peer_flow"]} if version == "v4" else {}),
             **({"init_delegate_return": result["init_delegate_return"]} if v2 else {}),
             "reference_control_sha256": result["reference_control_sha256"],
             "constructor_status": result["constructor_status"],
@@ -4441,6 +4975,12 @@ def _reference_packet(packet, plan):
     )
     error = _child_failure(packet)
     observation = _reference_from_error(error)
+    peer_method = plan.get("_reference_method") == "init-peer-flow-v1"
+    need(
+        (observation.get("schema_id") == "qm.ivv.reference-init-observation.v4") == peer_method
+        and (not peer_method or observation.get("method") == "init-peer-flow-v1"),
+        "REFERENCE_TERMINAL_METHOD",
+    )
     need(
         observation is not None
         and observation["reference_control_sha256"] == plan["reference_init_ref"]["sha256"]
@@ -4458,6 +4998,15 @@ def _supervise(scope, channel, endpoint, context, plan):
     additional = _task_mode(values)
     binding = values["catalog_ref"].get("provider_binding") if _recovery_mode(additional) else None
     reference = "reference_init_ref" in plan
+    reference_plan = plan
+    if reference and values.get("_reference_method") == "init-peer-flow-v1":
+        control = m._read_reference_control(plan)
+        need(
+            control.get("schema_id") == "qm.ivv.reference-control.v3"
+            and control.get("method") == values["_reference_method"],
+            "REFERENCE_TERMINAL_METHOD",
+        )
+        reference_plan = dict(plan, _reference_method=control["method"])
     need(not reference or _recovery_mode(additional), "REFERENCE_RECOVERY_ONLY")
     monitor = _for_task(_Provider, additional)(
         native,
@@ -4518,6 +5067,30 @@ def _supervise(scope, channel, endpoint, context, plan):
                 grant = _authorize(context, plan, scope, monitor)
                 scope.check_pid()
                 channel.send({"op": "go", "plan_ref": grant[0], "go_ref": grant[1]})
+            elif packet and packet.get("op") == "init_peer_flow" and grant and not terminal:
+                monitor._peer_rpc_started = time.monotonic()
+                need(
+                    reference
+                    and binding is not None
+                    and _recovery_mode(additional)
+                    and set(packet) == {"op", "phase", "fd", "inode", "executable_origin"},
+                    "PEER_FLOW_PROTOCOL",
+                )
+                origin_last = _accept_executable_origin(
+                    packet["executable_origin"],
+                    values,
+                    phase="SESSION",
+                    namespace=kernel["namespace_inode"],
+                )
+                origin_checks += 1
+                values["_executable_origin"] = origin_last
+                scope.verify_manager()
+                need(
+                    _for_task(_child_kernel, additional)(scope, producer, endpoint, False)
+                    == kernel,
+                    "CHILD_NAMESPACE_DRIFT",
+                )
+                channel.send({"peer_flow": monitor.peer_flow(scope, packet)})
             elif packet and packet.get("op") == "observe" and grant and not terminal:
                 requested = packet.get("reference_transition")
                 need(
@@ -4574,7 +5147,7 @@ def _supervise(scope, channel, endpoint, context, plan):
                 and grant
                 and not terminal
             ):
-                terminal = _reference_packet(packet, plan)
+                terminal = _reference_packet(packet, reference_plan)
             elif packet and packet.get("op") == "terminal" and grant and not terminal:
                 need(
                     not reference
@@ -4627,7 +5200,7 @@ def _supervise(scope, channel, endpoint, context, plan):
                     break
                 need(terminal is None, "CHILD_TERMINAL_PROTOCOL")
                 if reference:
-                    _reference_packet(packet, plan)
+                    _reference_packet(packet, reference_plan)
                 else:
                     need(
                         type(packet) is dict

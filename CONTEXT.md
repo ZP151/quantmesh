@@ -1,5 +1,43 @@
 # QuantMesh Domain Context
 
+## Current passive same-connection slice — issue299, 2026-11-07
+
+PR298 software/release and actual reference11 are complete engineering facts:
+normal CI5798332PASS149SKIP/frontend793, merge6a0c2bd7, then real20s Init timeout
+before unpack with owned normal closure. Capture12 was not prepared/dispatched.
+Subsequent SDK0 local-wire and exact-vendor at-rest evidence establishes no
+repair: two current ZERO queues/same57SLEEPING/STOPPED0/current3 public matches
+cannot reconstruct old ACK/read/wire/login or establish API health. The actual
+at-rest observer/transport closed normally; all historical UNKNOWN/futures stay.
+
+Issue299 selects one complete passive init-peer-flow-v1, control.v3 and
+terminal/observation.v4. Outbound digest follows exact closed public-default
+C2S/header proof; client TCP_INFO and the same-connection Parent proc projection
+reuse existing guarded sockets/channel/OperatorReader. Both end measurements
+are POST_QUERY after original query/finally; no added wait hook. Mandatory
+_owned_peer, privacy/source/lease/once/resources/close/realREADY/Fresh, strict
+legacy/default behaviors and seven runtime roles remain. Optional races and
+unsupported data are UNKNOWN, never handler-read/permission claims or new gates.
+
+The existing managed Source64 worktree is reused on fresh origin/main6a0,
+branch codex/0038-init-peer-flow. Complete new software common64+CI16 nets80MiB;
+actual central import4ec71e1b0359fd171f12407333d24a0b5cbe3b7aa10c45da2a6a327c12b19247
+retains all old holds, negatives/UNKNOWN and unused capture futures without
+refund or paid resources. It grants no new SDK/runtime pair or policy45 change.
+Tracked spec/plan: docs/superpowers/{specs,plans}/2026-11-07-init-peer-flow.md.
+
+Planner/Quant Researcher: one user action produces an attributable causal
+vector or honest UNKNOWN, not capture/input, profitability, OOS, Paper or live
+qualification. Data/window/math/cost remain unchanged. Implementer owns only
+helper/runner/new focused tests; Parent owns issuer/docs/gate/private Ops/Git/CI.
+First milestone is a real pinned-SDK pure-function RED/GREEN with a rejecting
+RXZERO=>read mutant. Full source/TDD/native controls, independent R1/R2,
+unchanged finite geometry and one normal matching-head CI/merge/publication
+precede any separately budgeted distinct runtime pair. No new provider, login,
+configuration, signal, SDK/context or real-input action occurred in this scope
+checkpoint. Whole fixed-IVV owner task remains active.
+
+
 ## Current bounded Init-query method — 2026-11-07
 
 PR296 normally merged d0aaf291 after CI577 (8175 passed,149 skipped,
