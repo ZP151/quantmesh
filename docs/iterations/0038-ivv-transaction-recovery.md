@@ -4,6 +4,53 @@
 
 ### Reduced terminal compatibility — 2026-11-07T15:36:41.942770Z
 
+Verifier actual same-props mountview successor:5235B/c94cec3d, all17 original
+callsite contracts and18 actual unit properties PASS. Eleven release FDs are
+readonly; other six original readonly=False calls pass, their forced-true
+refusals are expected ancillary evidence. All17 hashes unchanged. Worker84.711ms,
+metadata17.965ms, actual new free sample age17.973ms/5s PASS/free144558587904B;
+sample scope is free-only, not fresh G/P. Own invocation6daf2355 exited0/cgroup
+empty then stopped/collected; launcher joined and EOF/drain complete. Owned
+transport10.622s/input22249/stdout4650/full closure. Old health/provider properties
+unchanged, SDK0/no Journal or credential action. Old historical cause UNKNOWN,
+STOP/SPENT/no normal-close proof or refund persists.
+
+The first mountview invocation was not a pass: original pipe/remain lifecycle
+left exited0 unit active/exited, wrapper timeout40.010s/input17577/stdout0, all
+local owned closure but remote result UNKNOWN. Exact own-unit readback1465B/
+77947707 proved code pin, empty recursive cgroup and exited MainPID0 before
+stopping only that unit; old health/provider unchanged. Contract output stayed
+UNKNOWN. Planner isolated this wrapper defect with real local systemd255 marker
+RED, preserving all originals. Independent narrow R1 NOT_READY6178B/63170fc8
+led to one consolidated correction: bounded nonblocking stdin, deadline before
+launch, exact empty-unit closure before pipe wait/join, finite lifecycle stages.
+Same reader sole R2 READY6963B/91c9e97c corrects R1's overstated stale-cgroup
+claim: two RED-named caller records really PASS, not fabricated failure evidence.
+Actual corrected caller JSON marker0.291s and stalled-input refusal/own close/join
+1.309s support only this lifecycle slice. Immutable9896B worker6a591cf4 unchanged.
+The reviewed successor is22249B/8be7d5e0; no third structural correction occurred.
+
+Root clarified central G/P/future/receipt are commitments and forecasts, not a
+realtime physical getter. Authoritative current object is orchestration/
+resume-after-pr270-20261101.json:capacity_current_authoritative; immutable latest
+import2195B/f26924e4. Actual entry _provider630-694 already performs local native
+identity/growth/tree/free observations. Resource repair must keep fixed ledger
+provenance separate from a genuinely sampled physical timestamp, preserve all
+5s/210s/caps/receipt/native/once rules explicitly, and avoid a new Parent channel
+unless demonstrated necessary. No resource guard expression has changed.
+
+Implementer has an independent finite-firstguard copy only: entry catch emits a
+strict fixed-stage frame, mature packet stage forwards only validated error frame,
+closed caller preserves it with STOP/resultNone/UNKNOWN remote facts. No exception
+payload, SDK/count/normal-close claim. Actual targeted RED4FAIL/6PASS0.22s then
+GREEN10PASS0.13s includes real badCLI, actual stage AST seam and complete closed
+caller/invalid-secret-bool cases. Original entry need-call predicates remain
+exact; actor/Source7/published files/default unarmed release unchanged. Fresh
+bounded R1 READY5442B/c43ce119; no runtime follows candidate tests. Quant role keeps
+all real-input/financial qualification absent. Entire mountview phase forecast
+local1MiB, remote two unit metadata forecasts2MiB; firstguard software1MiB uses
+existing software128MiB/future32MiB, no new cap/paid resources/refund/deletion.
+
 Planner/Verifier causal continuation: actual frozen __main__/CLI reaches its
 first protected read with no SDK, and fixed failed-unit launch properties match.
 Precise original start age4.2345829s/exit5.2286369s falsifies already-expired-at-

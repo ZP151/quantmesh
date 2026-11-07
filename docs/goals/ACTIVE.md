@@ -2,6 +2,37 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Current same-property mountview SDK0 verification actually passed. Successor
+result5235B/c94cec3d proves17 original callsite contracts and18 systemd properties,
+all hashes unchanged;11 release FDs readonly,6 original non-RO contracts pass.
+Worker84.711ms/metadata17.965ms, genuine new free-only sample17.973ms old at check,
+original5s predicate passes; free144558587904B. This is explicitly not fresh G/P.
+Own empty exited unit was stopped/collected, launcher joined/pipe drained; owned
+transport10.622s/22249 input/4650 stdout fully closed. Old health/provider match
+before/after, no SDK/Journal/credential action. Historical manager failure stays
+UNKNOWN; old health STOP/SPENT and normal-close UNKNOWN are not changed.
+
+Original mount diagnostic01's output envelope failed: actual worker exited0 but
+remain-after-exit kept unit active/exited and blocking pipe wait timed out40s.
+Its contract result stays UNKNOWN. Exact-own readback1465B/77947707 closed the
+empty attributed unit without signaling running PIDs. A real local systemd255
+marker reproduces the wait defect. Independent lifecycle R1 NOT_READY, then one
+consolidated correction and sole R2 READY6963B/91c9e97c preceded the successor;
+bounded stdin/own empty-unit stop/pipe join all proved in targeted positive/error
+cases. R2 corrects R1's overstated stale-cgroup hazard: local caller RED-named
+records actually passed. All originals/failed evidence remain.
+
+Root has clarified G/P/futures are central commitments/forecasts, not realtime
+physical samples. Canonical capacity_current_authoritative is in orchestration
+resume-after-pr270-20261101.json, latest immutable import f26924e4. Do not relabel
+old ledger numbers with a fresh observed_ns or claim free-only is complete G/P.
+The existing _provider already samples real growth/tree/free facts locally.
+Next resource-timing repair must separate these provenances and keep original
+freshness/cap/receipt/native/once checks; no new channel is assumed necessary.
+Independent finite-firstguard offline candidate has actual4FAIL/6PASS RED then
+10PASS GREEN, original entry need predicates retained; fresh bounded R1 READY
+5442B/c43ce119. No candidate publication, resource-guard change, health or SDK yet.
+
 Latest causal read-only checkpoint: actual frozen __main__ accepts the real CLI;
 same failed unit launch/read-only declarations match. Exact process timestamps
 put the old resource age at4.2345829s on entry and5.2286369s on exit; this does
