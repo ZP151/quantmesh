@@ -4,6 +4,24 @@
 
 ### Chosen independent operator status slice — 2026-11-07T12:12Z
 
+Final whole R2: Spec NOT READY / quality NOT READY, report13060B/
+3c2d21eacc27cc4aadac88aedc1293bbf8dc2d625f6e81ddef587411d0385fd9.
+Original F1–F9 are addressed. F10 remains incomplete: P1 packet239 drops valid
+REFUSED and its exact known reservation/close facts; P2 packet194 requires
+nonempty stdout even when all stream counts/EOF/drain/job closure are proven.
+The sole original in-memory witness uses frozen687B/c200893f timeout output;
+no SDK/host operation or second witness was run. Parent read the complete report,
+pinned the original sample and froze STOP closeout2672B/787e19f5. No candidate
+publication/bind/SDK occurs and no next rolling author patch is dispatched.
+Planner's separately frozen terminal-contract proposal6580B/3429b5fe answers
+all nine prior P1 closures, the two residual F10 predicates, exact inner/outer
+terminal vocabularies and immutable finite input/output regressions. It proposes
+only caller predicate compatibility with actor/entry/Source7/SDK/Scope/resource/
+once/codec bytes fixed, conditional25–40min if Root explicitly selects a new
+reduced scope. It is not an implementation or release authorization. Whole real
+SDK/IVV task remains ACTIVE; old UNKNOWN/history/holds and actual unused purpose
+are retained. User-confirmed login is retained without a fresh machine claim.
+
 Parent final freeze verification: index17412B/713f6927,105/105 files with no
 unindexed objects; Source7 current bytes equal gitM and fixed pins. Complete
 delta130706B/1a0de0c1 and author report10351B/80c38374 went to original reader's

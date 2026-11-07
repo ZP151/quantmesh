@@ -94,6 +94,11 @@ use existing local WSL qualification patterns; mark the actual OS boundary.
 
 ## Task2: Complete review, actual one-shot and durable checkpoint
 
+- [x] Sole R2 completed NOT READY, report13060B/3c2d21ea. Current slice STOPPED:
+  F1–F9 closed, F10 has valid REFUSED projection P1 and counted-empty-stdout P2.
+  No publication/bind/SDK or further rolling patch. Complete evidence/immutable
+  timeout original retained; Root Planner gets only the separate finite terminal
+  compatibility proposal, with no action before an explicit new scope ruling.
 - [x] Initial complete whole02 R1 is NOT READY on both axes, report0d6c4d2e,
   nine P1/one P2; actual effects remain blocked. Planner reduced ONE integrated
   correction under task-1-combined-fix-ruling/brief and the frozen ten-row reuse

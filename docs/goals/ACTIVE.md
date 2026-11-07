@@ -4,6 +4,18 @@
 
 Current chosen slice is the independent operator SDK status design/plan
 2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z.
+Latest health R2 is NOT READY on both axes: report13060B/3c2d21ea. This candidate
+is STOPPED, not eligible for publish/bind/SDK. Original F1–F9 nine P1s closed;
+F10 retains P1 valid REFUSED losing exact reservations/proved close and P2 fully
+counted empty stdout losing known transport closure. Both reside in the caller's
+terminal projection. Complete R2, immutable timeout original and STOP closeout
+2672B/787e19f5 are retained. No direct author fix, review restart, new host action
+or old-alternative inventory is active. Root Planner alone receives the finite
+terminal-contract proposal3429b5fe for a transparent separate scope ruling;
+proposal is not permission or implementation. Whole SDK/IVV goal remains ACTIVE,
+existing service/credentials/claims and unused SDK opportunity remain untouched.
+
+Earlier frozen-review snapshot, superseded by the final STOP above:
 Latest sole health R2 is RUNNING on frozen fix index17412B/713f6927,105/105
 Parent-verified files and unchanged Source7/gitM. Parent current inert import
 checks all three actual bodies with zero effect attempts/SDK imports and default
