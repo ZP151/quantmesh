@@ -4,6 +4,35 @@ Date:2026-10-19. Status: accepted for the explicitly requested implementation;
 actual release, private login, authentication and SDK evidence remain separate.
 Issue:[#192](https://github.com/ZP151/quantmesh/issues/192).
 
+## Selected-instance maintenance preparation — 2026-11-07
+
+Issue [301](https://github.com/ZP151/quantmesh/issues/301) prepares an operator-only
+retirement transaction separate from the read-only collector. It binds the old
+authenticated provider and one sole successor, holds exact cohort pidfds,
+persists a stop intent before revalidation/SIGTERM to held MainPID, and requires
+old recursive cgroup/process/listener/manager closure plus owned cleanup before
+any successor claim. A second durable maintenance-level start claim precedes the
+existing immutable instance-local start route. No raw service-name restart,
+numeric-PID signal, extra operator KILL, claim reset or automatic retry is added.
+Unchanged systemd-owned stop cleanup remains part of the reviewed template.
+
+This is offline repair preparation, not approval to interrupt the user's
+currently logged-in provider. It may lose the original in-memory login, which
+cannot be rolled back. The same-build startup/private saved-login/binding route
+and one changed-condition READY/normal-close acceptance require the actual
+consolidated interruption decision, applicable native/software/source/resource
+gates and current immutable controls. No credentials/private pane/log reads,
+global desktop automation, SDK actor/data/math/trading change or vendor
+root-cause claim follows. A necessary ledger-consumer amendment recognises a
+genuine root-protected stop/sole-start/strict-binding handoff after structural
+failure; it consumes that proof once under the same ledger before new INTENT.
+Old failures, method/Source provenance and counts are not rewritten, and an old
+source hash alone is not a repair. Only the additional-task Source7 role changes;
+the other six remain exact. The trusted Operator issues the proof after actual
+maintenance, while the ledger and SDK actor keep their existing trust/resource/
+Fresh/READY/normal-close gates. See the selected-maintenance spec/plan and active
+IVV recovery iteration. The historical accepted decisions below remain retained.
+
 The human clarified that earlier operator/reviewer/SafetyOwner roles were one
 person, assigned the alias Operator, and explicitly requested changing the flow
 to single-person approval and keeping the login process running. Do not encode

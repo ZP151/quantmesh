@@ -1,5 +1,256 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Selected-instance maintenance preparation — issue301, 2026-11-07
+
+Latest Verifier checkpoint: PR302 head33ce3c45 normal CI585/run42344888669
+failed its full release suite,2399PASS/1FAIL/3SKIP, at the existing workspace
+quote/history snapshot test. Fast and independent research-service gates passed;
+the PR is not merged and the exact-lock frontend match is preliminary only.
+Original diagnostics ZIP112571B/51eb80b3 and extracted failure404 are retained.
+Planner admitted only this necessary release blocker into the same bounded slice.
+The real asynchronous pump and DuckDB sweep deleted the fixed August12 rows
+under the current November7 wall clock. The exact owning-source API RED then
+reproduced the same404 after a real prune (1FAIL2.88s). A test-only retention=0
+fixture plus explicit before/after-sweep cases passed2tests1.20s; every original
+quote/history ordering assertion remains. Product retention and data semantics
+are unchanged. An initial project-venv missing dependency and a subsequent
+wrong-worktree-root RED are preserved and do not qualify the owning source.
+Existing global Python dependencies sufficed; no package was installed.
+
+Entry25127B/ce49e8cf, private four-body Ops, login21979B/16bcbfd4 and offline
+publisher20790B/4ccd3fb9 are frozen candidates. Parent verified respectively
+43/46/38/35 actual indexed references. Login route04b12eb7 has17Windows and
+17Linux inert passes; it never read vault status/material or called a host/SDK.
+Publisher remains DISARMED and its old head33/CI585 binding must be superseded
+after the necessary fixture commit. Combined fresh Spec/Standards R1 has not yet
+started; at most one consolidated fix and same-reader R2 remain. Normal exact-
+head green CI, actual merge/publication and the complete data-only package still
+precede the sole active-stop decision. No runtime IDs, controls or proof exist.
+
+Capacity suballocation amendment06 (1069B/12d94563) keeps final24MiB at login4,
+publisher4, necessary CI-fixture evidence12 and remaining binding4MiB. Initial
+review2MiB remains separate; complete common forward91832320 and96MiB cap are
+unchanged, net0. Every failed fixture/history/future is retained without refund.
+Runtime192MiB remains unimported; current provider/login/policy46 remain intact.
+
+The actual API fixtures then exceeded that12MiB subforecast by927007B
+(13509919B retained); this forecast failure and every database remain. Forecast07
+assigns4MiB of previously unused common headroom rather than squeezing the final
+binding package: CI16, login4, publisher4, binding4 total28MiB. Full common forward
+96026624 remains below100663296, including the unchanged prior futures/margin;
+central holds/net0 remain unchanged. No further fixture is planned.
+
+Current acceptance amendment: actual reference12 close.failure is
+REFERENCE_INIT_OBSERVATION and method542ab41e. Existing begin requires a changed
+method or legitimate READY transition; preparer/runner bind that method to seven
+source hashes. Merely rebuilding provider while retaining those bytes would
+refuse before acceptance. Planner rejected PR295's old pure SHA as a bypass.
+The same maintenance slice instead adds a real protected Operator changed-
+provider handoff consumer. Only additional_task Source7 changes, for a necessary
+implementation; the six SDK actor/source roles remain exact. On the selected
+maintenance path, private Root admission requires proof even if the implementation
+hash differs. No new SDK method, observer, generic platform, actor context or
+reinterpreted old failure/once/counter follows.
+
+The actual Operator creates the immutable proof only after stop/owned CLOSED,
+sole-successor start claim and strict new binding. Same-ledger begin reads exact
+raw proof bytes and canonical closed schema, binds latest normally closed old
+reference/pair/provider and new pair/provider, then fsyncs an exclusive repair
+claim before new pair/INTENT. Explicit bad ref refuses even with a changed source
+hash; orphan ordinary/capture refs refuse; crash/re-entry remain spent. Legacy
+no-ref behaviour/intent bytes and actual READY capture transition remain. No new
+proof TTL or self-issued permission/READY/data qualification is introduced.
+
+Consumer candidate is frozen56450B/eb363bcd and test21449B/00995955, index8767B/
+e5cdfaa1. Parent verified all25 actual refs (924B/0447fee1). Actual tests: causal
+2FAIL/1PASS->3PASS,44 controls pass; broader198PASS/1 malformed new budget-fixture
+FAIL/31subtests, corrected exact node1PASS; one real mutable-ref provenance RED
+then final7PASS after a dict snapshot. Do not sum these into a fictitious single
+green suite. Ruff/format pass; final exact-head CI remains required. DraftPR302
+head75262/CI584 is the earlier core checkpoint and cannot qualify this new delta.
+
+Fixed native adapter16941B/4a6a27d8 is frozen, with20Windows+20WSLLinux checks and
+actual local kernel pidfd/root-record/O_EXCL/fsync/owned-child proof. Persistent
+fixture final selected readback succeeds,16384B4K; all4 owned children reaped,
+foreign fixture child preserved until its own cleanup, all held descriptors
+closed. Earlier/tmp fixture success followed by ENOENT remains UNKNOWN; no
+deletion/recreation/cause claim. Parent verified42 indexed refs (917B/99ad8ae2).
+This is local primitive evidence, not production systemd/provider qualification.
+Actual Tailscale binary matches the existing private route69d5abe7 pin; no vault
+or credential metadata was accessed. Pure successor source derivation2PASS
+closes the known5fb->356 previous-installer pin mismatch with exact one-string
+AST/byte delta and no install/start. Full entry/private packet/proof issuance
+remain active and unexecuted; two source owners use independent files.
+
+Standing central software32MiB receipt2337B/f7e0d043 was actually read/hashed:
+common96MiB, full forward91832320, allholds1465909248/software650117120,
+guardG11852148826/P5814076430/stress5870699534. Forecast05 is5577B/8aae6d9a;
+all previous suballocations/futures remain. Runtime192MiB is NOT imported. Its
+future Parent projection uses full-net conservative6015403022, superseding
+the local-only5897962510 proposal without another112MiB budget. Current login
+and policy46 remain unchanged; no runtime control/nonce/GO or SDK action exists.
+
+Planner: [issue301](https://github.com/ZP151/quantmesh/issues/301) proposes one
+same-build selected-owned retirement -> proved closure -> mature fresh-instance
+start/private-login/authenticated-binding route. See
+the [design](../superpowers/specs/2026-11-07-opend-selected-maintenance.md) and
+[plan](../superpowers/plans/2026-11-07-opend-selected-maintenance.md).
+These are offline preparation, not an active interruption decision or runtime GO.
+The user confirms current login and browser-plugin-only interaction. The current
+Edge tab shows Tailscale Authorization successful; that is SSH authorization,
+not vendor/SDK proof. No global/native UI, provider restart/logout/relogin or
+credential/private-pane/log read occurred in this continuation.
+
+Quant Researcher: no financial data/math/window/cost/sample or trading scope
+changes. The whole fixed-IVV task remains ACTIVE and no input/trial/report exists.
+Reference12 remains SPENT/owned CLOSED; capture13 never prepared/dispatched.
+The independent existing ADDENDUM3 (8548B/d28911fc) was consumed. Finite permitted
+existing-record lookup terminates application-disposition UNAVAILABLE, not a
+global claim that vendor records do not exist. No additional host/SDK request,
+observer release or healthy CI rerun was used for that lookup.
+
+Implementer: current reviewed restore_runtime requires confirmed stopped and
+has no selected-active stop transaction. Existing snapshot closes handles before
+return, so it cannot alone justify numeric-PID signalling. The proposed missing
+bounded helper holds exact pidfds, persists intent, revalidates then signals only
+held MainPID; any drift/incomplete closure stops before mature successor startup.
+Original process/login cannot be restored after stop; no automatic retry is a
+rollback plan. Existing source/template/config/secure-login/binding are reused.
+Plan-builder R1 found one cross-instance successor once gap: instance-local
+START-INTENT cannot prevent trying another new instance under the same maintenance
+receipt. The fix binds a sole successor in the maintenance control/stop receipts
+and fsyncs a per-maintenance SUCCESSOR-START-INTENT before mature delegation;
+concurrency/re-entry/crash tests are explicit. Same-reader R2 ADDRESSED/READY
+2999B/59aea719bf43d6225cc4238055f0a1dc6d1b9976802fad9f7c1a95123e285462.
+Task1/2 ACTIVE with independent core/native adapter owners, Task3 NOT_STARTED;
+Source7/collector unchanged. First pure-core RED1/RED22 -> GREEN22 is intermediate,
+not final review/native evidence. Task1 is now frozen: source8910B/536dc9e6,
+tests19227B/7bf91b8c, final actual81PASS0.65s, Ruff/format checks pass. Actual
+RED14 showed monotonic-clock refusal must precede signal; RED1/80 showed a
+non-None cleanup result must block CLOSED. These bounded corrections precede
+independent R1, not extra post-review rounds. Parent verified all288 actual
+frozen-index refs and source/test stability (728B/0a7e500a), read GREEN03 raw
+stdout and ran fresh global src/tests/tools Ruff successfully. No healthy pytest
+rerun solely for two test-format wraps. Complete package/native review is pending.
+Native adapter uses existing local WSL only
+for owned synthetic pidfd verification, never the real provider as a fixture.
+
+Verifier: fresh origin/main4887f75b was fetched; new branch
+codex/0038-opend-selected-maintenance starts there, preserving the clean pushed
+runtime-closeout branch0a1d3f5d. The five existing closeout docs are carried into
+this bounded branch; no per-bit docs PR/CI was opened. Local packet and draft
+support text are retained under reference-peer-flow-20261107-01/provider-disposition-01;
+the support draft was not sent. Durable current checkpoint4900B/e4490022 was
+updated to actual reference12 CLOSED and Planner consumed; prior snapshots stay.
+
+Reviewer: the independent bounded plan/builder R2 is READY. New active
+interruption remains the sole unresolved operational difference; ordinary login,
+count, review and reasonable small capacity approvals are not re-requested.
+The proposed new maintenance+acceptance reservations are192MiB complete future,
+not yet centrally activated and not recycled from old pair96MiB. Fresh offline
+retained census/complete forecast3350B/abd5e610 precedes code, with explicit
+4112B/5a482aa4 successor after actual core evidence2,215,936B exceeded its2MiB
+suballocation. Core3/native3/review2/Parent1 now complete9MiB, all other futures
+unchanged: common49,889,280 including source caches, prior wiring8MiB future and
+2MiB margin fits64MiB; source+1MiB future66,211,840 fits64MiB/free408.69GB. Net0
+offline, no runtime import. Exact old installer previous-stage5fb differs from
+attributed installed356; a reviewed data-only pin successor must close this
+known refusal before downtime. All old holds/UNKNOWN remain.
+
+## Actual peer-flow closeout — issue299/PR300, 2026-11-07
+
+Planner/Quant Researcher: the selected user action now has one attributable
+same-attempt wire/client/peer vector plus independently proved owned closure.
+The engineering slice is complete; the original capture/research goal remains
+ACTIVE and financially unqualified. ACK is not API acceptance/handler-read;
+RX/TX ZERO are sequential queue samples, not consumption/full transmit history.
+No login or vendor-cause inference and no concrete repair follows.
+
+Implementer/Verifier: actual final d5458972 passed CI582/run42329154499,
+8459PASS/149SKIP and frontend793. Vite8.2.4 exact-lock artifact455058B,
+88a50cc1fe161f55c7896bb8994b1e104bb1897057bdcde9ece2826b335e20cd,
+contains11 generated files exactly equal committed bytes. Qualification SHA
+46c3314395de7cbda10bae8fdf351ef50c71a56b3030796ad5af0462d2726a19.
+Normal guarded squash PR300 merged4887f75b77171e46d88c3d2ed305bdaea3270009;
+full tree0c217cf5e1d97b30c78bba0fd64274ce1d4674a2 equals the tested final.
+Reviewed dfdbb827 Source7 equals final and merged. Source/private soleR2 and
+publisher R1 are READY, followed by actual five-wrapper finalR2 READY after
+94 actual-binding checks. These are standing-authorized agent/proxy reviews,
+not independent-human source approval. Bot review did not run: usage limit,
+not a passing review and no paid retry. Failed581 remains retained.
+
+Actual software publication1088B SHA
+0bf623acf54e9b3d762fd16f70c6185ce1601b6f88a2157b2d3136d11e55ceda
+and full catalog571060B/cfaaf8ab are policy-independent. Actual unique central
+96MiB import3317B/a82d2c53f2498956b2396c5144c0110bc0651efd07147aecbafba6cbad35f7dd
+preceded active policy46 (1427B/72df86a5), batch07, allholds1432354816,
+software616562688, guardG11818594394/P5780521998/stress5837145102. Original
+caps/free floor/actor/request/math/data limits and every old future stay;
+no refund/deletion/paid resource. Actual release666B/6446a893 and context1284B/
+cbef610c bind the source/Ops/current policy; metadata remains byte-identical.
+Three inherited private wrapper E501 statements are explicitly retained under
+the exact-byte compatibility ruling; private unfiltered lint is not all-green.
+Tracked Source global Ruff/full CI passes. No safety assertion was dropped.
+
+The initial SDK0 transport attempts were refused before payload input when the
+plugin child environment lacked standard Windows APPDATA/COMSPEC/PROGRAMDATA.
+Local controlled status and normal-terminal contrasts are retained. Standard
+terminal invocation plus an actual browser-extension SSH check using the
+matching existing Google session established Authorization successful. An
+in-flight auth wait timed out and was owned-closed; only after that new auth
+fact did a fresh SDK0 admission succeed. No account password, global computer
+use or OpenD login/config/service change occurred. These are SSH transport facts,
+not provider login proof. SDK17/source/config/cohort/listener/Python same-inode,
+remote disk/memory and owning-ledger checks passed; exact global context/external
+counts remain UNKNOWN. No source/profile/cap was changed to repair the caller.
+
+The owning ledger actually had11 INTENTs and prescribed next12/13. New pair
+nonce2e84a2760b8f47c69d0424a76603c37e, reference context4028593f40b14e9599418a1c84886803
+and capture context0cf66f52bbcf432da1ce239a7bd6a3f3 bind source method
+542ab41e64a65cfab32897dc02492b68b548ebaee7dd30281d483ed72b99ba01.
+An earlier retired pair's unissued capture12 was only a forecast, not an INTENT;
+no old nonce/context/control/once was revived. Actual first-use sequence came
+from the owning ledger and was independently rechecked at prebegin. Original
+pair11/capture12 and every hold remain immutable/retired. Ref12 carrier312412B
+(SHA05c2fac8) fits327680; status7857 fits8192. Full96 synthetic geometry and
+all original packed/body/header/frame/future caps remain qualified. A new
+predispatch Fresh899e7581 preceded the sole durable dispatch; its local intent
+937B/7263dd50 makes the opportunity spent, never automatically retryable.
+
+Actual terminal.v4/reference observation.v4: constructorNOT_READY/NON_OK,
+BOUND saved sendOK, real20s EventFALSE/Timeout, no unpack/read/frame/notify or
+response observed, network thread ALIVE. Public closed-default Init packet
+SHA706c7b8dc3edc5e3c3dc42751655fed46b23cf18e2a80c3a5dffc3f7c55efaf5;
+client identityVERIFIED/ABI SUPPORTED/relationVALID/ESTABLISHED before and end,
+acked_delta84/received_delta0/unacked0. Both exact reverse rows MATCH,
+identityVERIFIED/vendorFDPRESENT/ESTABLISHED with RXZERO/TXZERO; sequential
+peer offsets10275/30691ms and wait_to_post1ms are not atomic endpoint proof.
+Operation_failed=false/close_failed=false/parent_closed=true and all selected
+normal-close fields true. Independent SDK0 readback returns ownerCLOSED and
+owned_cleanup_proven=true, matching unit/manager invocation and startup;
+manager/client rc1. Its only request journal row is protocol1001/MAYtrue/
+responsefalse. This does not establish exact external cumulative counts.
+
+Capture13 carrier was never prepared, its condition never evaluated by Parent,
+and no capture was dispatched. The new pair is locally retired without a claim
+about remote claim state. No captured original/input acceptance/trial/report/
+decision exists; H1/H2/H3 remain unqualified. User-confirmed OpenD login is
+preserved, with no restart/logout/relogin or vendor service/config action.
+
+Evidence root: output/ivv-transaction-recovery-20261104-01/integration/
+reference-peer-flow-20261107-01/. Actual closeout preparation/REFERENCE12-CLOSEOUT-01.json
+8587B SHA77b32b02f8b88f6332e735ea7c2248addd53f1d6623501092459f4f9f9d32203;
+terminal2387B/8f17fe97; local retirement693B/0ff4fb96. Raw STOP at
+capture/connection-000012/submissions/submission-000001/STOP.json2702B SHA
+a9318ecb063cfd0bafdd1116001d49d509bee9f88cf3af4bd9a810dc4c586e67.
+Root integration also retains OWNED-INIT-PEER-READBACK-{INTENT,TRANSPORT,RESULT}-01.json.
+Actual wrapper R2 closeout1a117b46 and all prior failed/retained evidence stay.
+
+Handoff to Planner: consume this finite same-attempt information and select a
+cause-distinguishing next action under the existing authority. No identical
+method replay, field-by-field release loop, login/config/signal change or
+financial promotion follows. Whole fixed-IVV owner goal remains ACTIVE.
+
 ## Current passive same-connection slice — issue299, 2026-11-07
 
 CI integration correction: PR300 actual final ab078a1a started CI581/run42328152651.

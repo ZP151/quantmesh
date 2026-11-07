@@ -1,5 +1,19 @@
 # ADR0043: Immutable reference Init conditional transition
 
+## Actual successor outcome — PR300/reference12, 2026-11-07
+
+The control.v3/init-peer-flow-v1 and terminal/observation.v4 software is normally
+merged/published after exact-head CI582 and independent agent reviews. One
+actual reference12 produced public-wire conformity, valid client ACKdelta84 /
+receiveddelta0 and two matched/vendor-owned reverse-peer ZERO queue samples.
+SDK Init still timed out before unpack; owner CLOSED/owned cleanup is separately
+proved. The unchanged transition correctly withholds unprepared capture13.
+No request was promoted from ACK/queue facts to READY or application-read proof.
+No login/configuration/guard/cap change or financial qualification followed.
+The complete factual checkpoint and original hashes are in iteration0038.
+This actual status supersedes pending implementation wording below without
+changing the accepted conditional transition architecture.
+
 ## Current successor under implementation — issue299, 2026-11-07
 
 Source R2 is READY at dfdbb827 after the one cleanup correction. Complete

@@ -495,7 +495,7 @@ class RecoveryLedger:
         self.policy_sha = contract.digest(contract.canonical(self.policy))
         self.sync = sync_dir or _sync_directory
 
-    def _read(self, name):
+    def _read(self, name, *, raw_bytes=False):
         _need(
             type(name) is str
             and re.fullmatch(r"connection-[0-9]{6}(?:-request-[0-9]{6})?\.[a-z-]+\.json", name),
@@ -523,7 +523,7 @@ class RecoveryLedger:
                 and os.path.samestat(held, path.lstat()),
                 "recovery_journal_changed",
             )
-            return json.loads(raw)
+            return raw if raw_bytes else json.loads(raw)
         finally:
             os.close(fd)
 
@@ -547,6 +547,111 @@ class RecoveryLedger:
             rows.append(self._read(path.name))
         return rows
 
+    def _provider_repair(self, ref, previous, closed, reference_pair, method, attempt):
+        """Consume a protected Operator handoff, never issue repair/native authority.
+
+        The fixed trusted root entry/importer owns the immutable original and
+        expected pin. This read reuses stable-ledger/O_NOFOLLOW/single-file custody
+        and authenticates its exact bytes; assertions in caller JSON are not a
+        substitute for the separately reviewed native Operator lineage checks.
+        Completed condition evidence has no new TTL; live admission stays separate.
+        """
+        _need(
+            type(ref) is dict
+            and set(ref) == {"previous_connection_attempt_id", "proof_sha256"}
+            and ref["previous_connection_attempt_id"] == previous["connection_attempt_id"]
+            and self.contract._sha(ref["proof_sha256"]),
+            "provider_repair_ref",
+        )
+        ref = dict(ref)
+        stem = previous["connection_attempt_id"]
+        _need(
+            previous["logical_task_id"] == self.contract.LOGICAL_TASK_ID
+            and "reference_pair_sha256" in previous
+            and "reference_transition" not in previous
+            and closed["owner_state"] == "CLOSED"
+            and closed["failure"] == "REFERENCE_INIT_OBSERVATION"
+            and closed["connection_attempt_id"] == stem
+            and closed["method_sha256"] == previous["method_sha256"],
+            "provider_repair_previous",
+        )
+        original = self._read(stem + ".provider-repair.json", raw_bytes=True)
+        _need(_sha(original) == ref["proof_sha256"], "provider_repair_pin")
+        proof = json.loads(original)
+        pins = {
+            "previous_method_sha256",
+            "old_provider_binding_sha256",
+            "new_provider_binding_sha256",
+            "maintenance_control_sha256",
+            "maintenance_source_sha256",
+            "interruption_authority_sha256",
+            "stop_closed_sha256",
+            "successor_start_intent_sha256",
+        }
+        _need(
+            type(proof) is dict
+            and set(proof)
+            == pins
+            | {
+                "schema_id",
+                "change",
+                "logical_task_id",
+                "previous_connection_attempt_id",
+                "maintenance_id",
+                "successor_nonce",
+                "owned_old_closed",
+                "successor_binding_verified",
+                "sdk_or_data_qualification",
+            }
+            and _canonical(proof) == original
+            and proof["schema_id"] == "qm.ivv.provider-repair.v1"
+            and proof["change"] == "same-build-owned-provider-replacement"
+            and all(self.contract._sha(proof[key]) for key in pins)
+            and all(
+                type(proof[key]) is str and re.fullmatch("[0-9a-f]{32}", proof[key])
+                for key in ("maintenance_id", "successor_nonce")
+            )
+            and proof["owned_old_closed"] is True
+            and proof["successor_binding_verified"] is True
+            and proof["sdk_or_data_qualification"] is False,
+            "provider_repair_proof",
+        )
+        old_pair = validate_reference_pair(self._read(stem + ".reference-pair.json"))
+        new_pair = validate_reference_pair(reference_pair)
+        _need(
+            proof["logical_task_id"] == self.contract.LOGICAL_TASK_ID
+            and proof["previous_connection_attempt_id"] == stem
+            and proof["previous_method_sha256"] == previous["method_sha256"]
+            and old_pair["reference_attempt"] == stem
+            and old_pair["method_sha256"] == previous["method_sha256"]
+            and old_pair["policy_sha256"] == previous["policy_sha256"]
+            and self.contract.digest(self.contract.canonical(old_pair))
+            == previous["reference_pair_sha256"]
+            and old_pair["provider_binding_sha256"] == proof["old_provider_binding_sha256"]
+            and new_pair["reference_attempt"] == attempt
+            and new_pair["method_sha256"] == method
+            and new_pair["policy_sha256"] == self.policy_sha
+            and new_pair["provider_binding_sha256"] == proof["new_provider_binding_sha256"]
+            and proof["new_provider_binding_sha256"] != proof["old_provider_binding_sha256"],
+            "provider_repair_binding",
+        )
+        return (
+            {
+                "schema_id": "qm.ivv.provider-repair-claim.v1",
+                "logical_task_id": self.contract.LOGICAL_TASK_ID,
+                "previous_connection_attempt_id": stem,
+                "proof_sha256": ref["proof_sha256"],
+                "maintenance_id": proof["maintenance_id"],
+                "maintenance_control_sha256": proof["maintenance_control_sha256"],
+                "old_provider_binding_sha256": proof["old_provider_binding_sha256"],
+                "new_provider_binding_sha256": proof["new_provider_binding_sha256"],
+                "reference_pair_sha256": self.contract.digest(self.contract.canonical(new_pair)),
+                "connection_attempt_id": attempt,
+                "method_sha256": method,
+            },
+            new_pair,
+        )
+
     @_serialized
     def begin(
         self,
@@ -557,6 +662,7 @@ class RecoveryLedger:
         pre_dispatch=None,
         reference_pair=None,
         reference_transition=None,
+        provider_repair_ref=None,
     ):
         if pre_dispatch is not None:
             _need(
@@ -571,8 +677,16 @@ class RecoveryLedger:
         _need(type(now) in (int, float) and math.isfinite(now) and now >= 0, "recovery_clock")
         rows = self._intents()
         attempt = f"connection-{len(rows) + 1:06d}"
+        _need(
+            provider_repair_ref is None
+            or bool(rows)
+            and reference_pair is not None
+            and reference_transition is None,
+            "provider_repair_role",
+        )
         _need(reference_pair is None or reference_transition is None, "reference_pair_mode")
         transition = None
+        repair = repair_pair = None
         if reference_transition is not None:
             transition = self._reference_transition(
                 attempt, method_sha256, reference_transition, require_owner=True
@@ -641,11 +755,16 @@ class RecoveryLedger:
                     },
                     "owned_unit_cleanup_unknown",
                 )
+            if provider_repair_ref is not None:
+                repair, repair_pair = self._provider_repair(
+                    provider_repair_ref, previous, closed, reference_pair, method_sha256, attempt
+                )
             _need(
                 closed["failure"]
                 in (None, "SDK_CLOSE_UNKNOWN", "CAPTURE_TIMEOUT", "CAPTURE_INTERRUPTED")
                 or closed["method_sha256"] != method_sha256
-                or transition is not None,
+                or transition is not None
+                or repair is not None,
                 "unrepaired_structural_failure",
             )
         batch_rows = [r for r in rows if r["batch_id"] == self.policy["batch"]["batch_id"]]
@@ -656,9 +775,25 @@ class RecoveryLedger:
             )
         _need(len(batch_rows) < self.policy["batch"]["contexts"], "context_budget")
         attempt = f"connection-{len(rows) + 1:06d}"
+        repair_fields = {}
+        if repair is not None:
+            self._write(
+                repair["previous_connection_attempt_id"] + ".provider-repair-claim.json", repair
+            )
+            repair_fields = {
+                "provider_repair_ref": {
+                    "previous_connection_attempt_id": repair["previous_connection_attempt_id"],
+                    "proof_sha256": repair["proof_sha256"],
+                },
+                "provider_repair_claim_sha256": self.contract.digest(
+                    self.contract.canonical(repair)
+                ),
+            }
         pair_sha = None
         if reference_pair is not None:
-            value = validate_reference_pair(reference_pair)
+            value = (
+                repair_pair if repair_pair is not None else validate_reference_pair(reference_pair)
+            )
             _need(
                 value["reference_attempt"] == attempt
                 and value["method_sha256"] == method_sha256
@@ -672,6 +807,7 @@ class RecoveryLedger:
             {
                 "schema_id": "qm.ivv.connection-attempt.v1",
                 "state": "INTENT",
+                **repair_fields,
                 **({"reference_pair_sha256": pair_sha} if pair_sha else {}),
                 **({"reference_transition": dict(reference_transition)} if transition else {}),
                 **({"pre_dispatch": pre_dispatch} if pre_dispatch is not None else {}),
