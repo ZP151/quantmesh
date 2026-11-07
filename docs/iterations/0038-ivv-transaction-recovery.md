@@ -2,6 +2,44 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+Latest Verifier checkpoint: PR302 head33ce3c45 normal CI585/run42344888669
+failed its full release suite,2399PASS/1FAIL/3SKIP, at the existing workspace
+quote/history snapshot test. Fast and independent research-service gates passed;
+the PR is not merged and the exact-lock frontend match is preliminary only.
+Original diagnostics ZIP112571B/51eb80b3 and extracted failure404 are retained.
+Planner admitted only this necessary release blocker into the same bounded slice.
+The real asynchronous pump and DuckDB sweep deleted the fixed August12 rows
+under the current November7 wall clock. The exact owning-source API RED then
+reproduced the same404 after a real prune (1FAIL2.88s). A test-only retention=0
+fixture plus explicit before/after-sweep cases passed2tests1.20s; every original
+quote/history ordering assertion remains. Product retention and data semantics
+are unchanged. An initial project-venv missing dependency and a subsequent
+wrong-worktree-root RED are preserved and do not qualify the owning source.
+Existing global Python dependencies sufficed; no package was installed.
+
+Entry25127B/ce49e8cf, private four-body Ops, login21979B/16bcbfd4 and offline
+publisher20790B/4ccd3fb9 are frozen candidates. Parent verified respectively
+43/46/38/35 actual indexed references. Login route04b12eb7 has17Windows and
+17Linux inert passes; it never read vault status/material or called a host/SDK.
+Publisher remains DISARMED and its old head33/CI585 binding must be superseded
+after the necessary fixture commit. Combined fresh Spec/Standards R1 has not yet
+started; at most one consolidated fix and same-reader R2 remain. Normal exact-
+head green CI, actual merge/publication and the complete data-only package still
+precede the sole active-stop decision. No runtime IDs, controls or proof exist.
+
+Capacity suballocation amendment06 (1069B/12d94563) keeps final24MiB at login4,
+publisher4, necessary CI-fixture evidence12 and remaining binding4MiB. Initial
+review2MiB remains separate; complete common forward91832320 and96MiB cap are
+unchanged, net0. Every failed fixture/history/future is retained without refund.
+Runtime192MiB remains unimported; current provider/login/policy46 remain intact.
+
+The actual API fixtures then exceeded that12MiB subforecast by927007B
+(13509919B retained); this forecast failure and every database remain. Forecast07
+assigns4MiB of previously unused common headroom rather than squeezing the final
+binding package: CI16, login4, publisher4, binding4 total28MiB. Full common forward
+96026624 remains below100663296, including the unchanged prior futures/margin;
+central holds/net0 remain unchanged. No further fixture is planned.
+
 Current acceptance amendment: actual reference12 close.failure is
 REFERENCE_INIT_OBSERVATION and method542ab41e. Existing begin requires a changed
 method or legitimate READY transition; preparer/runner bind that method to seven

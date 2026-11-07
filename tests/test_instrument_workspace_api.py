@@ -778,8 +778,9 @@ def test_workspace_valuation_cannot_observe_a_quote_after_generated_at(
     assert workspace["risk"]["equity"] == pytest.approx(account.equity({position_key(NVDA): 105.0}))
 
 
+@pytest.mark.parametrize("prune_before_request", [False, True], ids=["before-sweep", "after-sweep"])
 def test_workspace_pins_quote_before_live_history_and_next_request_observes_arrival(
-    tmp_path: Path, monkeypatch
+    tmp_path: Path, monkeypatch, prune_before_request: bool
 ) -> None:
     cut = NOW.replace(second=51)
 
@@ -795,7 +796,8 @@ def test_workspace_pins_quote_before_live_history_and_next_request_observes_arri
             payload={"bid": bid, "ask": bid + 1, "bid_size": 1, "ask_size": 1},
         )
 
-    with LiveBuffer(tmp_path / "replay") as buffer:
+    # Fixed historical fixture rows must survive the pump's wall-clock retention sweep.
+    with LiveBuffer(tmp_path / "replay", retention_days=0) as buffer:
         feed = LiveFeed(lake=buffer)
         opened = cut.replace(second=0)
         feed.ingest(
@@ -827,6 +829,8 @@ def test_workspace_pins_quote_before_live_history_and_next_request_observes_arri
                 quote(2, cut - timedelta(milliseconds=1)),
             ]
         )
+        if prune_before_request:
+            assert feed.prune_if_due(now=cut) == 0
         replay = buffer.replay
         injected = False
 

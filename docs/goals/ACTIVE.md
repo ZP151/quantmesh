@@ -12,8 +12,11 @@ and a durable per-maintenance start claim. The real acceptance-consumer gap is
 now explicit: same-method structural failure needs a genuine protected Operator
 repair handoff, not an older Source hash. One additional-task Source7 role changes
 for that consumer; the other six roles and SDK actor remain unchanged. Core and
-native primitives are frozen; fixed entry/proof issuer and private packet wiring
-are independent active writers. Actual interruption, fresh runtime capacity, maintenance
+native primitives, fixed entry/proof issuer, private packet, login and publisher
+are frozen offline candidates. Normal CI585 failed one existing historical-
+fixture retention race; its exact-source causal RED and test-only two-case
+GREEN are retained. The necessary fixture repair, final matching-head CI and
+combined fresh two-axis review remain unreleased. Actual interruption, fresh runtime capacity, maintenance
 and one READY/normal-close acceptance remain unreleased. No repeat ordinary
 login/count/review/capacity question is pending. Actual common32MiB standing import
 f7e0d043 raises common64->96; allholds1465909248/software650117120, complete
