@@ -3,6 +3,67 @@
 Issue [301](https://github.com/ZP151/quantmesh/issues/301). Status: offline repair
 preparation only. No active-provider interruption or runtime GO is granted.
 
+## Acceptance-consumer amendment before maintenance
+
+This supersedes the original assumption below that all Source7 bytes can stay
+unchanged. The SDK method,20s wait, source/identity/privacy/resource/once/owned
+close and READY gates stay unchanged. A necessary recovery-consumer change is
+part of this same maintenance slice; it is not a source-version/hash change made
+merely to obtain a retry or a new observer/collector platform.
+
+Actual reference12 closed as `REFERENCE_INIT_OBSERVATION`, method542ab41e.
+`RecoveryLedger.begin` currently rejects that structural failure with the same
+method; both preparer and runner bind method to the canonical Source7 pins. Thus
+changing only provider identity would fail before acceptance. PR295's previously
+published pure method is not selected just because its older hash differs.
+
+The minimum contract adds optional `provider_repair_ref` to `RecoveryLedger.begin`
+in `tools/research/ivv_additional_task.py`, with a new focused test module. Default
+legacy behaviour remains exact. For this selected maintenance path the fixed
+private root adapter MUST require/validate repair evidence even if the source
+hash changes incidentally because the consumer implementation changes.
+
+The ref has exactly `previous_connection_attempt_id` and `proof_sha256`. It names
+only that attempt's create-only `connection-NNNNNN.provider-repair.json` in the
+same protected ledger, never a caller path/body. The reviewed Operator writes
+that original only after actual successful selected stop/cleanup, sole-successor
+start claim and strict authenticated successor binding. It is a finite technical
+handoff, not a permission/READY/data qualification minted by the ledger.
+
+The proof's closed schema is `qm.ivv.provider-repair.v1`, change
+`same-build-owned-provider-replacement`, logical_task_id, previous attempt/method,
+old/new provider-binding digests, maintenance id/control/source digests, actual
+interruption-authority digest, STOP-CLOSED digest, SUCCESSOR-START-INTENT digest,
+sole successor nonce, `owned_old_closed=true`, `successor_binding_verified=true`
+and `sdk_or_data_qualification=false`. Public pins/ids have strict shapes. The
+reviewed importer checks original control/stop/claim/binding lineage and old/new
+host/vendor/config/endpoint equivalence; current new provider still passes every
+ordinary live native/source/Fresh gate. Metadata assertions alone are not native
+proof and the code must not let an untrusted JSON caller issue this handoff.
+
+Under the existing serialized ledger lock, `begin` verifies the proof's exact
+digest/schema, same logical task, latest old failure/method and that failure's
+old reference-pair binding; requires a new reference pair with exactly the new,
+different provider binding; and exclusively fsyncs the old attempt's
+`provider-repair-claim.json` before new INTENT. The claim binds proof/new attempt/
+new pair/method. Crash after claim stays SPENT; re-entry, changed nonce/changed
+method or another new pair cannot consume it twice. Old failures/MAY/once/counts
+remain immutable. Conditional capture continues only through the unchanged real
+READY/normal-close transition, with no repair-ref orphan on capture/ordinary jobs.
+
+The proof records a completed condition change, not a new time-limited action
+permit. An expired consumed stop control cannot stop again, while its historical
+successful closure remains historical evidence. Current pair/policy/Fresh/live
+binding govern later acceptance; do not add an arbitrary new proof TTL.
+
+Private native_packet/root packet admission needs one bounded ref and actual
+protected-original import/claim seam, with strict role/orphan checks, source pin
+cascade and complete unchanged-cap geometry. Do not alter the SDK actor or its
+source-method binding to an invented digest. Only the additional-task Source7
+role changes for this necessary implementation; its new pin is published normally
+with actual exact-head CI, other six roles remain byte-identical. CI584/head75262
+is an intermediate core checkpoint and never qualifies this later consumer delta.
+
 The user confirms OpenD is logged in and requires browser-extension interaction,
 not global desktop automation. Reference12's public Init received TCP ACK84 but
 no response bytes during its actual20s wait; all owned resources closed normally.
@@ -18,8 +79,8 @@ route, and publish an authenticated successor binding. The service acceptance
 metric is one actual SDK READY followed by complete normal owned closure after
 the condition changes. Success does not identify the former vendor defect.
 
-The whole fixed-IVV task remains ACTIVE. No data/math/window/cost, Source7,
-collector method/version, OOS/Paper/live or provider-entitlement change belongs
+The whole fixed-IVV task remains ACTIVE. No data/math/window/cost, SDK actor or
+call-method, OOS/Paper/live or provider-entitlement change belongs
 to this slice. Old reference12 is SPENT; capture13 was not prepared/dispatched.
 All UNKNOWN counts, failed attempts, old claims and future reservations remain.
 
@@ -181,8 +242,9 @@ Shared existing vendor binary/config/state are not copied. The existing accepted
 trusted-external-provider growth limitation remains; forecast is not a hard disk
 quota. Root centrally registers actual deduplicated totals before runtime.
 
-No runtime hold/permit is activated by this spec. Current allholds1432354816,
-software616562688; administrative G12GiB/P6GiB/free50GiB; no new paid resources.
+No runtime hold/permit is activated by this spec. Actual central software32MiB
+import2337B/f7e0d043 sets common96MiB, allholds1465909248/software650117120;
+administrative G12GiB/P6GiB/free50GiB and no new paid resources remain.
 
 Initial forecast3350B/abd5e610 and explicit successor4112B/5a482aa4 retain prior
 wiring8MiB future and charge retained source-generated caches to common64. Actual
@@ -190,6 +252,13 @@ core RED/GREEN evidence2,215,936B requires core3/native3/review2/Parent1MiB, all
 other futures unchanged. Common retained plus all current futures/new9/margin2
 totals49,889,280<67,108,864; source checkout
 plus complete1MiB code/docs future66,211,840<67,108,864; free408,693,149,696. Net0
-for offline preparation. Proposed later192MiB is not imported: allholds would
-become1,633,681,408, guardG12,019,920,986/P5,864,408,078/stress6,038,471,694, under
-unchanged12GiB/6GiB caps; require actual current central receipt before runtime.
+for that historical offline checkpoint. Later forecasts explicitly retain every
+old future, add consumer6/privateOps6/fixed-entry4MiB and a complete24MiB final
+publication/binding package after the actual common32 import. Current complete
+common forward91,832,320<100,663,296 is recorded in forecast05 (5577B/8aae6d9a).
+Proposed later192MiB is NOT imported: with that future full-net conservative
+Parent accounting, allholds would become1,667,235,840,
+guardG12,053,475,418/P6,015,403,022/stress6,072,026,126 under unchanged caps.
+The earlier local-only Parent projection5,897,962,510 stays historical and is
+superseded without another112MiB budget. Require actual current central receipt
+before runtime; neither software import nor this projection grants runtime GO.

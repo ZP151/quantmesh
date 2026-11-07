@@ -7,7 +7,10 @@ fresh reviewed successor/private-login/binding route. Current OpenD login stays
 untouched during offline implementation, focused verification and review.
 No active interruption or SDK recovery is claimed; actual READY plus complete
 normal closure after a changed instance is the maintenance acceptance endpoint.
-Source7/collector/data/math/trading boundaries and old UNKNOWN/futures remain.
+The required ledger consumer recognises one actual durable changed-provider
+handoff even with the same SDK method. Only that Source7 role changes; the other
+six roles, data/math/trading gates and old UNKNOWN/futures remain. An old Source
+version is not used merely to obtain a different retry hash.
 See the [plan](../superpowers/plans/2026-11-07-opend-selected-maintenance.md).
 
 ## Actual peer-flow outcome — 2026-11-07

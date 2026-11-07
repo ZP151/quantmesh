@@ -2,6 +2,56 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+Current acceptance amendment: actual reference12 close.failure is
+REFERENCE_INIT_OBSERVATION and method542ab41e. Existing begin requires a changed
+method or legitimate READY transition; preparer/runner bind that method to seven
+source hashes. Merely rebuilding provider while retaining those bytes would
+refuse before acceptance. Planner rejected PR295's old pure SHA as a bypass.
+The same maintenance slice instead adds a real protected Operator changed-
+provider handoff consumer. Only additional_task Source7 changes, for a necessary
+implementation; the six SDK actor/source roles remain exact. On the selected
+maintenance path, private Root admission requires proof even if the implementation
+hash differs. No new SDK method, observer, generic platform, actor context or
+reinterpreted old failure/once/counter follows.
+
+The actual Operator creates the immutable proof only after stop/owned CLOSED,
+sole-successor start claim and strict new binding. Same-ledger begin reads exact
+raw proof bytes and canonical closed schema, binds latest normally closed old
+reference/pair/provider and new pair/provider, then fsyncs an exclusive repair
+claim before new pair/INTENT. Explicit bad ref refuses even with a changed source
+hash; orphan ordinary/capture refs refuse; crash/re-entry remain spent. Legacy
+no-ref behaviour/intent bytes and actual READY capture transition remain. No new
+proof TTL or self-issued permission/READY/data qualification is introduced.
+
+Consumer candidate is frozen56450B/eb363bcd and test21449B/00995955, index8767B/
+e5cdfaa1. Parent verified all25 actual refs (924B/0447fee1). Actual tests: causal
+2FAIL/1PASS->3PASS,44 controls pass; broader198PASS/1 malformed new budget-fixture
+FAIL/31subtests, corrected exact node1PASS; one real mutable-ref provenance RED
+then final7PASS after a dict snapshot. Do not sum these into a fictitious single
+green suite. Ruff/format pass; final exact-head CI remains required. DraftPR302
+head75262/CI584 is the earlier core checkpoint and cannot qualify this new delta.
+
+Fixed native adapter16941B/4a6a27d8 is frozen, with20Windows+20WSLLinux checks and
+actual local kernel pidfd/root-record/O_EXCL/fsync/owned-child proof. Persistent
+fixture final selected readback succeeds,16384B4K; all4 owned children reaped,
+foreign fixture child preserved until its own cleanup, all held descriptors
+closed. Earlier/tmp fixture success followed by ENOENT remains UNKNOWN; no
+deletion/recreation/cause claim. Parent verified42 indexed refs (917B/99ad8ae2).
+This is local primitive evidence, not production systemd/provider qualification.
+Actual Tailscale binary matches the existing private route69d5abe7 pin; no vault
+or credential metadata was accessed. Pure successor source derivation2PASS
+closes the known5fb->356 previous-installer pin mismatch with exact one-string
+AST/byte delta and no install/start. Full entry/private packet/proof issuance
+remain active and unexecuted; two source owners use independent files.
+
+Standing central software32MiB receipt2337B/f7e0d043 was actually read/hashed:
+common96MiB, full forward91832320, allholds1465909248/software650117120,
+guardG11852148826/P5814076430/stress5870699534. Forecast05 is5577B/8aae6d9a;
+all previous suballocations/futures remain. Runtime192MiB is NOT imported. Its
+future Parent projection uses full-net conservative6015403022, superseding
+the local-only5897962510 proposal without another112MiB budget. Current login
+and policy46 remain unchanged; no runtime control/nonce/GO or SDK action exists.
+
 Planner: [issue301](https://github.com/ZP151/quantmesh/issues/301) proposes one
 same-build selected-owned retirement -> proved closure -> mature fresh-instance
 start/private-login/authenticated-binding route. See

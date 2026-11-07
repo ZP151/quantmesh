@@ -22,8 +22,15 @@ cannot be rolled back. The same-build startup/private saved-login/binding route
 and one changed-condition READY/normal-close acceptance require the actual
 consolidated interruption decision, applicable native/software/source/resource
 gates and current immutable controls. No credentials/private pane/log reads,
-global desktop automation, Source7/collector/data/math/trading change or vendor
-root-cause claim follows. See the selected-maintenance spec/plan and active
+global desktop automation, SDK actor/data/math/trading change or vendor
+root-cause claim follows. A necessary ledger-consumer amendment recognises a
+genuine root-protected stop/sole-start/strict-binding handoff after structural
+failure; it consumes that proof once under the same ledger before new INTENT.
+Old failures, method/Source provenance and counts are not rewritten, and an old
+source hash alone is not a repair. Only the additional-task Source7 role changes;
+the other six remain exact. The trusted Operator issues the proof after actual
+maintenance, while the ledger and SDK actor keep their existing trust/resource/
+Fresh/READY/normal-close gates. See the selected-maintenance spec/plan and active
 IVV recovery iteration. The historical accepted decisions below remain retained.
 
 The human clarified that earlier operator/reviewer/SafetyOwner roles were one

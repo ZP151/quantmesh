@@ -11,8 +11,9 @@ interruption decision and all applicable admission gates.
 **Architecture:** One finite operator retirement module uses existing authenticated
 provider identity plus held pidfds; the unchanged reviewed service manager owns
 descendant cleanup. An immutable private adapter reuses stopped-provider start,
-private CB1 login and authenticated successor binding. Source7/collector stay
-unchanged; offline preparation and actual maintenance are separate phases.
+private CB1 login and authenticated successor binding. Only the ledger Source7
+consumer recognises the repaired-condition handoff; SDK actor/other six roles
+stay unchanged. Offline preparation and actual maintenance are separate phases.
 
 **Tech Stack:** Existing Python stdlib, Linux pidfd/proc/cgroup2/systemd and the
 already reviewed Windows secure-credential/browser-extension route. No install.
@@ -25,7 +26,8 @@ Issue [301](https://github.com/ZP151/quantmesh/issues/301).
 - Exact same host/OpenD+SDK10.10.7008/config/loopback11112/template and limits.
 - Provider memory1GiB/swap0/CPU50%/tasks128; no automatic restart/boot enablement.
 - Current login preserved during preparation; no host/SDK/credential actions.
-- No new observer/platform/collector version/dependency/data/math/live changes.
+- No new observer/platform/SDK method/dependency/data/math/live changes; only the
+  bounded ledger handoff consumer changes one actual Source7 implementation pin.
 - Spent/UNKNOWN/old holds/futures retained; fresh control/once after real decision.
 - Maximum300s maintenance control and30s selected closure window; no escalation.
 - Complete fresh census/forecasts before writes/runtime; free floor50GiB.
@@ -85,6 +87,55 @@ from authenticated existing modules, not from runtime caller objects.
 
 ## Task2: concrete successor/operation packet
 
+### Required Task1b before Task2 publication: changed-provider consumer
+
+**Files:** Modify only `tools/research/ivv_additional_task.py`; create
+`tests/test_ivv_provider_repair.py`. A separate fixed private packet/importer
+adapter remains Parent-owned after the native writer freezes. See the spec's
+acceptance-consumer amendment; no old Source hash fallback is selected.
+
+**Interfaces:** `RecoveryLedger.begin(..., provider_repair_ref=None)` preserves
+the legacy default. Its exact ref points to the same ledger's protected latest
+attempt `provider-repair.json` original, already issued by the reviewed actual
+Operator. Consume a per-old-attempt exclusive repair claim before new INTENT;
+bind same logical task, last failure/method/old pair, new pair/new provider and
+the actual durable maintenance lineage. It never issues a repair proof or SDK
+permission itself. New implementation hash is not the reason to permit retry.
+
+- [ ] Write causal RED: same method and normally closed structural failure still
+  refuse without proof; a genuine control/stop/sole-start/new-binding proof for
+  that exact previous attempt and new pair can reach one new INTENT.
+- [ ] Add negative proof/pin/task/old-new binding/lineage shape/orphan role tests;
+  unchanged provider and arbitrary caller path/body always refuse.
+- [ ] Implement minimal strict proof/ref validation and serialized durable claim
+  before INTENT, retaining old failure and all history. An explicitly supplied
+  invalid ref refuses even if source hash differs; no missing-ref bypass in the
+  fixed selected-maintenance packet path.
+- [ ] Add real O_EXCL/fsync concurrent/re-entry/claim-after-fsync-crash tests;
+  verify at most one accepted repair consumption and no overwrite/refund.
+- [ ] Verify normal legacy/no-ref and READY capture transition remain unchanged;
+  malformed ref/capture/ordinary-job orphan cannot consume a repair claim.
+- [ ] Run focused new+existing recovery-ledger contract tests, Ruff/format and
+  actual strict packet-to-`book.begin` seam tests with zero SDK/provider actions.
+- [ ] Freeze code/raw RED/GREEN/pins for combined Spec/Standards R1 and soleR2.
+  Commit the coherent final maintenance slice and push normally; existing PR
+  concurrency supersedes intermediate CI584. Required green final exact-head CI,
+  new actual Source7 pins/private extraction/geometry/publication qualify only
+  their actual final bytes. Never present old-head success as new qualification.
+
+Forecast03 retains all old futures and explicitly adds complete6MiB consumer
+and6MiB private repair wiring/geometry future: new preparation21MiB inside the
+existing common64, complete common62,472,192<67,108,864, net0. Source64/CI16 and
+later proposed192MiB runtime remain separate; no refund or new runtime import.
+
+Forecast04 adds a complete4MiB fixed-entry/proof-issuer unit before code; actual
+central32MiB/f7e0d043 then raises common64->96 under standing disk authority.
+Forecast05 preserves all old futures and adds24MiB complete final source/private
+publication and actual binding package: forward91,832,320<100,663,296,
+allholds1465909248/software650117120. Runtime192MiB remains unimported. Parent's
+future projection must use central full-net192 accounting6,015,403,022, not the
+preserved local-only5,897,962,510 proposal. No extra112MiB or runtime GO follows.
+
 **Files:** New immutable ignored `operator-maintenance-01` package under the
 existing recovery output, using pinned operator-restore-02 modules and the frozen
 candidate Task1 helper for offline assembly/review. Actual publication/runtime
@@ -122,7 +173,9 @@ provider binding are not fabricated during preparation.
   complete adapter bytes, not only an abstract model.
 - [ ] Run appropriate normal exact-head CI/publication for the actual tracked
   diff and standard guarded merge. No old healthy CI rerun, admin/force/bypass
-  or fake human/GitHub approval. Source7 equality must remain exact.
+  or fake human/GitHub approval. Reviewed/final/merged Source7 pins must match;
+  the other six roles remain equal to4887f75b and the additional-task consumer
+  changes only for the genuine repaired-condition contract.
 - [ ] Present the complete reviewable packet to Root for the sole new active
   interruption decision. Include rollback limit (original login process cannot
   be restored), verified available saved-credential route, one successor/one

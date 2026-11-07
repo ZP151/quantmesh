@@ -5,13 +5,19 @@
 The fixed-IVV task remains ACTIVE. The user confirms OpenD is logged in and
 requests browser-extension interaction only. Keep the active provider untouched
 while preparing one exact-owned-instance retirement and same-build successor
-transaction; no new observer/collector version is selected. The existing handler
+transaction; no new observer or SDK call method is selected. The existing handler
 history is UNAVAILABLE from permitted records, not a proved vendor defect.
 The independent plan-builder soleR2 is READY after binding exactly one successor
-and a durable per-maintenance start claim. Core/native adapter writers are
-independent; actual interruption, fresh runtime controls/capacity, maintenance
+and a durable per-maintenance start claim. The real acceptance-consumer gap is
+now explicit: same-method structural failure needs a genuine protected Operator
+repair handoff, not an older Source hash. One additional-task Source7 role changes
+for that consumer; the other six roles and SDK actor remain unchanged. Core and
+native primitives are frozen; fixed entry/proof issuer and private packet wiring
+are independent active writers. Actual interruption, fresh runtime capacity, maintenance
 and one READY/normal-close acceptance remain unreleased. No repeat ordinary
-login/count/review/capacity question is pending. See the
+login/count/review/capacity question is pending. Actual common32MiB standing import
+f7e0d043 raises common64->96; allholds1465909248/software650117120, complete
+forward91832320; runtime192MiB remains proposal-only. See the
 [plan](../superpowers/plans/2026-11-07-opend-selected-maintenance.md) and
 active [iteration](../iterations/0038-ivv-transaction-recovery.md).
 
