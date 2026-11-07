@@ -2,6 +2,33 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Current precise login-repair scope: one reviewed public-prefix check refused in
+the socket metadata group; one fixed lstat proved mode0600, UID997/GID987/type and
+parent0700 all correct. Consumer e923 extra exact0700 is the current mismatch.
+New tracked preinput-recovery design/plan2026-11-07 specifies a new exact0600
+adapter sibling plus complete existing public preflight before a separately
+exclusive same33f recovery claim, continuous identity holds and unchanged trusted
+private input/cleanup. No live chmod, old helper/manifest overwrite, instance
+restart or SDK. Task1 fresh Implementer is preparing only new frozen software;
+ordinary login remains UNKNOWN until actual qualified recovery.
+
+Actual incident/recovery supersedes the older preparation snapshots below:
+EXEC3 reached STOP-INTENT but returned after31.16s without STOP-CLOSED. The
+one real interruption is spent or unknown; no replay/refund is permitted.
+A separately authorized bounded read proved current old18 closure: unit
+inactive/dead/MainPID0, all three original PIDs and old cgroup absent, port
+unoccupied. This is current state, not the missing historical held-fd witness.
+Under the existing confirmed-stopped restore authority and supervisory ruling
+c890a649, the unchanged mature installer/start path successfully created the
+sole33f successor with actual attributed/native origin5034a8ee and no SDK.
+One unchanged ordinary-login call then returned BRIDGE_REFUSED before credential
+material. Current strict native origin still verifies and unit33f is running;
+login remains UNKNOWN. CB1-SESSION-INTENT exists, CB1-EFFECTS and provider binding
+do not. Never retry that occupied CB1 entry or claim login/SDK readiness.
+Server current_checkpoint and operator-restore-03 hold actual evidence; Root
+Planner must bound the next same-provider login recovery without deleting claims,
+creating another successor, weakening guards or querying private pane content.
+
 Software closeout as of2026-11-07T08:06Z: normal PR302 merge de245152/treebfc2,
 CI5868592PASS149SKIP, whole-package sole same-reader Spec/Standards R2 READY and
 actual reviewed publication/readback complete. Root protected export, immutable

@@ -2,6 +2,70 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Precise same-provider preinput repair scope — 2026-11-07
+
+Planner/Quant: preserve same live33f, all prior claims/unknown effects and separate
+SDK/financial gates; this slice changes no dataset, fees, metrics or confidence.
+Independent source-contract audit a8a208bf distinguished the durable material
+barrier, journal-before-vendor-input and earlier private load-buffer side effect.
+It did not infer historical cause from a missing journal or add host-wide scans.
+
+The small public-only wrapper qualified actual mature-class inert-OS RED/GREEN
+(6PASS/11subtests; later two affected cleanup cases separately2PASS), whole-source
+9023B/3c1ff316 and bounded independent review7830B/c013f8e0. Parent checked14pins
+and the reviewed owned caller, then invoked it exactly once: normal0.962s,
+SDK/input/prompt/journal0, cleanup proven, PUBLIC_GUARD_REFUSED at old adapter36.
+One authorized fixed public lstat/native-GID comparison then proved socket600,
+UID997/GID987/S_ISSOCK and parent700, with actual strict origin still verified.
+The precise current mismatch is the consumer's extra socket exact700, while
+deployed producer356310 only requires owner-private/no077. No socket data was
+read or connected, no mode was changed and no session was reopened.
+
+Tracked design and executable plan2026-11-07-opend-preinput-recovery now bind a
+new adapter sibling with ONLY exact600 socket literal, full existing public
+preflight before a fresh exclusive same-provider recovery claim, continuous
+socket/parent/cohort holds and original private channel/vault/input/cleanup.
+Fresh Task1 Implementer owns new Server output package only; Parent owns docs
+and future review/publication. Source302/CI586 unchanged, no new broad CI. Actual
+login remains UNKNOWN; current source progress is not runtime recovery evidence.
+
+### Actual interruption, stopped recovery and login refusal — 2026-11-07
+
+Planner reduced the real pre-signal custody failure to one exact preowner
+read-mode600-to444 correction; history was not chmoded or rewritten. Implementer
+Entry03 retained causal real UID0 RED and six physical GREEN cases through actual
+load_context/retire_start/FixedNativeOps.prepare to the acquire sentinel. Fresh
+independent bounded Reviewer found no P0/P1/P2; Parent verified the exact byte/AST
+delta,16 frozen pin references and13 data-only preparation files. Source PR302,
+CI586 and released Source7 remain unchanged; no extra broad CI was run.
+
+Actual EXEC3 mid029fc77d761c8815b8a282e5550e620a had fresh PRESENT credential
+metadata with no material access and verified the old exact provider. Its sole
+retire-start returned rc1 after31.16s with STOP-INTENT but no STOP-CLOSED or
+successor claim. Exact SIGTERM delivery is not separately recorded. This real
+interruption opportunity is spent or unknown and cannot be replayed/refunded.
+A bounded current-state read then found old18 inactive/dead/MainPID0, its three
+original PIDs and cgroup absent, and no listener. No historical closure receipt
+was fabricated; current state cannot recreate the former held-fd witness.
+
+Root Planner ruling c890a649 retained existing restore/login authority and
+prioritized service restoration. Sole Server used unchanged mature installer
+and confirmed-stopped restore_entry/start for the already planned33f successor,
+with fresh stopped/port/source/resource/credential gates. Actual start succeeded
+in22.97s with origin5034a8ee, manifest651fbf5b and Invocation b0b6b64f555543608a6c1825af43d8bb.
+The private SID/SYSTEM-only held login namespace used unchanged login_once once;
+it returned BRIDGE_REFUSED with transport cleanup proven, before material intent.
+One authorized public-record read confirmed source pins and strict live origin,
+CB1-SESSION-INTENT215B/410f482d bound to that origin, no CB1-EFFECTS and no provider
+binding. No pane/PTY contents, XML, vendor logs, credentials or SDK were read.
+
+Verifier conclusion: service process restored; login UNKNOWN, SDK0, no financial
+or selected-maintenance lineage acceptance. Preserve occupied CB1/old STOP intent,
+all failures and futures. No same-entry login replay, new instance, stop signal or
+SDK. Planner must reduce the next same-provider private login scope; only actual
+OTP/device/invalid credentials require the user. Actual artifacts are under Server
+maintenance-execution-03 and operator-restore-03, with the current_checkpoint pointer.
+
 ### Qualified software closeout — 2026-11-07T08:06Z
 
 Subsequent actual central runtime192MiB import at08:08:49Z is3038B/
