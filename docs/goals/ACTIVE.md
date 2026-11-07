@@ -2,6 +2,16 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Active reduced slice:2026-11-07-opend-terminal-compat, actual Root ruling2111B/
+545d82d7. New anchor15:36:41.942770Z; original health12:12 clock remains. Original
+author/new operator-terminal-compat-01 owns only packet194 counted-empty and239
+inner REFUSED predicates plus directed finite caller tests. Actor/entry/Source7/
+Scope/network/kernel/SDK/resource/once/codec/633–651 remain byte exact. One fresh
+read-only delta follows; no third whole review, SDK/117/50/fullCI replay. Old whole
+candidate/R2 remain STOP/NOT READY. No host/bind/publication/SDK occurred. All
+current qualification and actual admission gates remain. Conditional software
+25–40min from new anchor; actual health is separate, not a success deadline.
+
 Current chosen slice is the independent operator SDK status design/plan
 2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z.
 Latest health R2 is NOT READY on both axes: report13060B/3c2d21ea. This candidate

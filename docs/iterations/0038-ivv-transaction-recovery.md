@@ -2,6 +2,22 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Reduced terminal compatibility — 2026-11-07T15:36:41.942770Z
+
+Planner consumed actual Root2111B/545d82d7 ruling after complete R2 STOP, then
+froze finite scopec68b4c66 and exact838B/ed8421d3 two-predicate proposal. Original
+author owns a separate operator-terminal-compat-01, firstRED finite full-object
+contracts, then only counted-empty/vocabulary predicates and actual durable
+caller seam under synthetic transport. Actor/entry/all other runtime identities
+stay exact. Quant role: no SDK/data/cost/leakage/financial admission changes.
+Fresh read-only delta checks interface and original nine frozen addressed items;
+it does not rewrite old R2 or perform a third framework review. Parent verifies
+necessary inert/geometry/pins/census and owns actual effects only after gates.
+No SDK/117/50/fullCI replay or new platform/safety mechanism. All failed/UNKNOWN/
+old holds persist under software128MiB; runtime/counts unchanged. Conditional
+25–40min new software estimate, original health clock retained. Work is active,
+not qualified or deployed; old full candidate remains stopped.
+
 ### Chosen independent operator status slice — 2026-11-07T12:12Z
 
 Final whole R2: Spec NOT READY / quality NOT READY, report13060B/
