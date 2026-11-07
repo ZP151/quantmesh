@@ -4,6 +4,23 @@
 
 Current chosen slice is the independent operator SDK status design/plan
 2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z.
+Latest sole health R2 is RUNNING on frozen fix index17412B/713f6927,105/105
+Parent-verified files and unchanged Source7/gitM. Parent current inert import
+checks all three actual bodies with zero effect attempts/SDK imports and default
+release unarmed. Final strict WSL70512640B includes symlink directory entries
+omitted by the preliminary census; Parent complete current89116672B+future
+33554432B=122671104B<134217728. This supersedes preliminary census totals below.
+Original reader alone owns this final review; residual structural failure stops
+the slice. Runtime/publication/bind/SDK remain unexecuted.
+Latest15:16Z: combined correction final Linux117PASS26.28s/Windows50PASS36.94s
+and actual96 geometry pass; all are offline/software evidence. Exact staged
+controls/SDK files feed original child INITIAL/SESSION in both stage branches.
+The complete retained census exceeded software64MiB: this remains an actual
+FAIL. Root unique software-only supplement2195B/f26924e4 adds64MiB to128MiB;
+observed88518656B+future33554432B=122073088B fits. RuntimeLocal8/remote24,
+SDK counts, old holds, source and hard caps are unchanged. Parent is verifying
+final metadata/pins/census before the original reader's sole R2; no further
+tests/code wave is authorized by the storage import and no actual effects occurred.
 Latest whole R1 is NOT READY on both axes, report14856B/0d6c4d2e: nine P1
 and one P2 across physical file custody, bind/peer/kernel identity, child cleanup,
 close/deadline, the remote hold and refusal accounting. Codec2 passed review.
@@ -43,7 +60,7 @@ remote24MiB; allholds1767899136/software717225984, guardG12154138714/
 P6116066318/stress6172689422, old192/unused pairs/UNKNOWN retained without reuse.
 The60–105min engineering estimate is anchored to12:12Z, not SDK success DDL.
 
-Sole complete R2 is **NOT READY; package02 STOPPED**. Review7901B/215b68e0
+Historical CB1 sole complete R2 is **NOT READY; package02 STOPPED**. Review7901B/215b68e0
 accepted six R1 fixes but reproduced a remaining P1: the final socket lookup
 observes a replacement inode and its returned identity is discarded before the
 material-bearing command. Package01/index13aa9533 and02/indexca2cd6cc remain

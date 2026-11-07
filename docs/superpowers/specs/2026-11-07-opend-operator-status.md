@@ -116,7 +116,9 @@ strictly and check original file lengths/hashes before stage. Actual new v2
 bytes need fresh whole-carrier roundtrip and fixed-caller qualification/review;
 this offline model alone is not readiness. Keep fixture originals in a unique
 persistent WSL path and archive them promptly; never backfill old unavailable
-originals. Complete both retained versions inside the same64MiB software hold.
+originals. The original64MiB hold was exceeded by the later physical correction
+fixtures; that failure remains recorded. The software-only amendment below is
+the current bound; runtime and protocol caps do not change.
 
 Source-send audit4440c018 is a read-only map; local17SDK files match existing
 E2E pins, but actual remote files still require owning runtime verification.
@@ -133,6 +135,19 @@ stay held; no silent reuse. From actual47485bb0 projection, allholds1767899136,
 software717225984, guardG12154138714/P6116066318/stress6172689422 remain below
 global12884901888/parent6442450944, with free floor53687091200 and paid0. Root
 deduplicates the actual import; forecast is not host readiness or runtime GO.
+
+Software-only amendment, actual Root original2195B/f26924e4: retain the original
+64MiB overrun as FAIL and import a unique additional64MiB, making this health
+software hold128MiB. Actual packages/retained WSL originals plus Parent SDD/R1
+census are88518656B before final metadata; explicit future33554432B yields
+122073088B<134217728. All originals, archives and old holds remain. This is
+evidence storage only: original runtimeLocal8/remote24MiB receiptdbc2aece, one
+Init/state, source, paid0, hard global/parent caps and free floor stay unchanged.
+Updated central allholds1835008000/software784334848 and conservative guard
+G12221247578/P6183175182/stress6239798286 fit those caps. No Root runtime GO or
+fresh host/VHD/free-space claim follows. Do not rerun healthy tests or create
+another code wave because of this import; verify final census/metadata and send
+the same frozen correction to the original reader's unique R2.
 
 After genuine review/necessary private publication, actual independent binding,
 fresh source/native/resource/free/once gates, sole Server executes once. Quote

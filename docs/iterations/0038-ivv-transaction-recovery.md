@@ -4,6 +4,33 @@
 
 ### Chosen independent operator status slice — 2026-11-07T12:12Z
 
+Parent final freeze verification: index17412B/713f6927,105/105 files with no
+unindexed objects; Source7 current bytes equal gitM and fixed pins. Complete
+delta130706B/1a0de0c1 and author report10351B/80c38374 went to original reader's
+unique R2, now RUNNING. Parent one focused frozen-body inert-import witness
+ec15fefe verifies3 modules/zero effect attempts/zero SDK imports/default release
+unarmed; it does not inherit old02 evidence or rerun the healthy full suite.
+Final WSL strict census70512640B includes symlink directory entries omitted by
+preliminary70283264B. Parent all-current strict census89116672B plus explicit
+33554432B future=122671104B<134217728, record2184B/7d3fc6ef. Earlier64MiB failure
+and preliminary originals stay unchanged. No code wave or actual host/bind/SDK
+followed the software-only import; further structural NOT READY stops this slice.
+
+Verifier15:16Z: matching final Linux117PASS26.28s/Windows50PASS36.94s and96
+current-body geometry pass (inner687448/encoded195243/executable274499/status461).
+Physical same-child positive and negative cases feed the actual staged control/
+SDK files through original INITIAL/SESSION in fresh/preinstalled branches.
+All failed fixtures remain. Full capacity census then exposed an actual64MiB
+software-hold failure: retained WSL allocated70283264B plus local packages gives
+88109056B; Parent SDD/R1 adds409600B. Root actual unique software-only original
+2195B/f26924e4308c6f2d0d9f7ff5e59458586673199318480dd55b77ff16dfbf87d3
+imports net64MiB, increasing software to128MiB. Current88518656B+explicitfuture
+33554432B=122073088B fits134217728; old overrun stays FAIL. RuntimeLocal8/
+remote24, one Init/state, all old holds and hard caps remain unchanged. No test
+rerun/code wave follows the import; author freezes exact current bytes/metadata,
+Parent verifies final census/pins then original reader alone performs sole R2.
+No host/publication/bind/SDK/credential action occurred; Root does not issue GO.
+
 Verifier checkpoint 14:42Z: Parent read all three retained causal RED logs in
 operator-status-fix-01/evidence. Wave01 has 12 failures, wave02 has 3, and wave03
 has 5. The third wave replaces two close-test harness scoping errors with actual

@@ -79,7 +79,8 @@ in the frozen schemas/handoff. Parent fills data only after genuine review.
   packet does not fit, STOP to Planner; no cap increase or evidence pruning.
 - [ ] Run only changed-package/necessary mature targets and real synthetic wire;
   run Ruff/format/inert-import checks. Preserve every failed log/fixture within
-  the complete64MiB software bound, use UTF8 and -B. No whole Source CI rerun.
+  the current128MiB software bound under actual software-only supplementf26924e4;
+  preserve the original64MiB overrun as FAIL. Use UTF8/-B, no whole Source CI rerun.
 - [ ] Freeze every source/schema/runtime path/pin/evidence/census. Self-review
   actual loop; write task-1-report.md and handoff, then STOP before any host,
   private binding/publication, SDK or source/Git action.
@@ -101,6 +102,8 @@ use existing local WSL qualification patterns; mark the actual OS boundary.
 - [ ] Parent authenticates the single frozen correction and source/AST/census/
   real wire evidence. The original whole-package reader performs the sole R2
   across all ten findings and the complete delta. No third structural patch.
+  Parent105/105 freeze/source/current inert/census verification is complete;
+  original reader sole R2 is RUNNING on index713f6927, no verdict yet.
 - [ ] Verify actual Root capacity import, current unchanged source publication/
   catalog/CI and review pins. Bind only reviewed data slots/module constants,
   independent external bootstrap pins, reverse-byte proof; build real geometry.
