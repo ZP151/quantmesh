@@ -3,7 +3,21 @@
 ## Selected-instance recovery preparation — issue301
 
 Current chosen slice is the independent operator SDK status design/plan
-2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z. Parent/Planner
+2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z.
+Latest whole R1 is NOT READY on both axes, report14856B/0d6c4d2e: nine P1
+and one P2 across physical file custody, bind/peer/kernel identity, child cleanup,
+close/deadline, the remote hold and refusal accounting. Codec2 passed review.
+SourceM/actual33f/service/credentials/research ledger remain untouched; no actual
+publish/bind/SDK occurred. Parent retains one combined correction in a fresh
+operator-status-fix-01, then the same complete reader's sole R2. All prior
+software/indexes and unavailable-original history remain frozen. The full
+9P1/P2-to-reuse/counterexample/positive map and original-function constraints
+are in this slice's SDD; physical stage-to-original-reader custody must not be
+modeled away. A further structural NOT READY at R2 stops this slice, no rolling
+next patch. Original12:12 clock remains; next result is conditional qualification,
+not a promised SDK recovery time.
+
+Earlier software snapshots follow, superseded by the complete R1 above.
 Full initial caller qualification stopped at actual encoded/carrier limits;
 software01 is frozen BLOCKED_GEOMETRY, index15439B/0fe8eb79, Parent verified99
 files. Linux42 and real local-wire9 passing tests are partial evidence, not

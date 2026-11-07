@@ -93,9 +93,14 @@ use existing local WSL qualification patterns; mark the actual OS boundary.
 
 ## Task2: Complete review, actual one-shot and durable checkpoint
 
-- [ ] Parent authenticates frozen files and source/AST/census/real wire evidence.
-  Fresh whole-package reviewer checks Spec and code quality once, bounded; one
-  consolidated correction/same reader R2 maximum. No third structural patch.
+- [x] Initial complete whole02 R1 is NOT READY on both axes, report0d6c4d2e,
+  nine P1/one P2; actual effects remain blocked. Planner reduced ONE integrated
+  correction under task-1-combined-fix-ruling/brief and the frozen ten-row reuse
+  map. Original Implementer/new operator-status-fix-01, original reader soleR2;
+  further structural NOT READY stops this slice, no next rolling patch.
+- [ ] Parent authenticates the single frozen correction and source/AST/census/
+  real wire evidence. The original whole-package reader performs the sole R2
+  across all ten findings and the complete delta. No third structural patch.
 - [ ] Verify actual Root capacity import, current unchanged source publication/
   catalog/CI and review pins. Bind only reviewed data slots/module constants,
   independent external bootstrap pins, reverse-byte proof; build real geometry.

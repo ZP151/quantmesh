@@ -4,6 +4,54 @@
 
 ### Chosen independent operator status slice — 2026-11-07T12:12Z
 
+Verifier checkpoint 14:42Z: Parent read all three retained causal RED logs in
+operator-status-fix-01/evidence. Wave01 has 12 failures, wave02 has 3, and wave03
+has 5. The third wave replaces two close-test harness scoping errors with actual
+behavioral failures: a 45-second close is accepted and send guards are restored
+after a close exception. Actual unchanged SourceM read_ref rejects both physically
+staged mode branches; wrong-origin bind, strict eligibility and closed-transport
+counterexamples also fail as expected. These overlapping waves are regression
+evidence, not twenty distinct defects or passing qualification. Production edits
+began after this RED evidence; the single integrated correction is in progress.
+No actual host, binding, SDK or credential action occurred.
+
+Complete whole R1 outcome: Spec NOT READY / code quality NOT READY, independent
+report14856B/0d6c4d2e. Reviewer checked the full171797B package, not just codec;
+Parent had verified80/80 frozen02 files/indexe97c1891 and then read the entire
+review. Nine P1 findings cover stage0400 versus actual read_ref exact0444, actual
+origin missing at bind boundary, unbound observed namespace/listener/pair,
+RESULT/exit race and discarded live pair, READY expected pins/origin/kernel,
+fork child's inherited parent cleanup, close/child deadline and guard lifetime,
+observed remote hold breach, and lookup-error/existing-empty-root eligibility.
+One P2 separates a known closed rc2 transport from unknown SDK/child closure.
+Parent independently confirmed the mode failure in owning producer/reader;
+archive headers likewise show it. No failed native action or SDK result is
+inferred: actual remote publication/bind/SDK has not occurred.
+
+Planner keeps one bounded integrated correction, original Implementer writing
+only new operator-status-fix-01, followed by the original reader's sole R2.
+The reduced contract is exact producer custody, retained observed identities,
+parent-only cleanup/final ACK, real elapsed/hold bounds and strict once/refusal
+accounting. Reuse actual SourceM network/origin/kernel/fork/close primitives;
+do not change readers, enlarge mode sets/caps or build another observer/platform.
+Qualify the entire physical Linux staged tree and actual SourceM reader/pre-GO
+filesystem chain under umask077, including both stage branches; only named
+kernel/cgroup/readonly-mount models remain. SourceM's original terminal itself
+sends/returns; a bounded health final-live ACK ordering is explicit new glue,
+not falsely described as an unchanged whole supervisor. Freeze a single complete
+fix and all counterexample/positive evidence. A new structural R2 failure stops
+this slice for Planner, no further rolling revision. Actual/runtime/financial
+gates and old UNAVAILABLE/UNKNOWN/holds remain. Latest conditional estimate is
+30–45min correction+12–20min R2+5–10min actual after qualification;12:12 anchor
+is not reset, and no success deadline is promised.
+
+Prior software qualification: final02 Windows50PASS41.65s/Linux45PASS11.35s,
+Ruff/format/inert imports and actual96-case geometry passed. Maxinner674786,
+encoded192139, executable265497 and status393 meet unchanged caps. Original
+actor/entry remained byte-exact and only packet build/decode changed. Combined
+retained01+02/WSL originals/archive allowance11354112B fits64MiB. These software
+facts do not override the real producer/consumer and ownership findings above.
+
 Actual software01 STOP: complete fixed-caller test reaches build but refuses
 encoded296989>262144; executable carrier396156>327680. Inner848075 fits1MiB.
 No host/stage/manager/vendor effect followed this software cap failure. Candidate
