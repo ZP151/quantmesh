@@ -1,5 +1,99 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Actual peer-flow closeout — issue299/PR300, 2026-11-07
+
+Planner/Quant Researcher: the selected user action now has one attributable
+same-attempt wire/client/peer vector plus independently proved owned closure.
+The engineering slice is complete; the original capture/research goal remains
+ACTIVE and financially unqualified. ACK is not API acceptance/handler-read;
+RX/TX ZERO are sequential queue samples, not consumption/full transmit history.
+No login or vendor-cause inference and no concrete repair follows.
+
+Implementer/Verifier: actual final d5458972 passed CI582/run42329154499,
+8459PASS/149SKIP and frontend793. Vite8.2.4 exact-lock artifact455058B,
+88a50cc1fe161f55c7896bb8994b1e104bb1897057bdcde9ece2826b335e20cd,
+contains11 generated files exactly equal committed bytes. Qualification SHA
+46c3314395de7cbda10bae8fdf351ef50c71a56b3030796ad5af0462d2726a19.
+Normal guarded squash PR300 merged4887f75b77171e46d88c3d2ed305bdaea3270009;
+full tree0c217cf5e1d97b30c78bba0fd64274ce1d4674a2 equals the tested final.
+Reviewed dfdbb827 Source7 equals final and merged. Source/private soleR2 and
+publisher R1 are READY, followed by actual five-wrapper finalR2 READY after
+94 actual-binding checks. These are standing-authorized agent/proxy reviews,
+not independent-human source approval. Bot review did not run: usage limit,
+not a passing review and no paid retry. Failed581 remains retained.
+
+Actual software publication1088B SHA
+0bf623acf54e9b3d762fd16f70c6185ce1601b6f88a2157b2d3136d11e55ceda
+and full catalog571060B/cfaaf8ab are policy-independent. Actual unique central
+96MiB import3317B/a82d2c53f2498956b2396c5144c0110bc0651efd07147aecbafba6cbad35f7dd
+preceded active policy46 (1427B/72df86a5), batch07, allholds1432354816,
+software616562688, guardG11818594394/P5780521998/stress5837145102. Original
+caps/free floor/actor/request/math/data limits and every old future stay;
+no refund/deletion/paid resource. Actual release666B/6446a893 and context1284B/
+cbef610c bind the source/Ops/current policy; metadata remains byte-identical.
+Three inherited private wrapper E501 statements are explicitly retained under
+the exact-byte compatibility ruling; private unfiltered lint is not all-green.
+Tracked Source global Ruff/full CI passes. No safety assertion was dropped.
+
+The initial SDK0 transport attempts were refused before payload input when the
+plugin child environment lacked standard Windows APPDATA/COMSPEC/PROGRAMDATA.
+Local controlled status and normal-terminal contrasts are retained. Standard
+terminal invocation plus an actual browser-extension SSH check using the
+matching existing Google session established Authorization successful. An
+in-flight auth wait timed out and was owned-closed; only after that new auth
+fact did a fresh SDK0 admission succeed. No account password, global computer
+use or OpenD login/config/service change occurred. These are SSH transport facts,
+not provider login proof. SDK17/source/config/cohort/listener/Python same-inode,
+remote disk/memory and owning-ledger checks passed; exact global context/external
+counts remain UNKNOWN. No source/profile/cap was changed to repair the caller.
+
+The owning ledger actually had11 INTENTs and prescribed next12/13. New pair
+nonce2e84a2760b8f47c69d0424a76603c37e, reference context4028593f40b14e9599418a1c84886803
+and capture context0cf66f52bbcf432da1ce239a7bd6a3f3 bind source method
+542ab41e64a65cfab32897dc02492b68b548ebaee7dd30281d483ed72b99ba01.
+An earlier retired pair's unissued capture12 was only a forecast, not an INTENT;
+no old nonce/context/control/once was revived. Actual first-use sequence came
+from the owning ledger and was independently rechecked at prebegin. Original
+pair11/capture12 and every hold remain immutable/retired. Ref12 carrier312412B
+(SHA05c2fac8) fits327680; status7857 fits8192. Full96 synthetic geometry and
+all original packed/body/header/frame/future caps remain qualified. A new
+predispatch Fresh899e7581 preceded the sole durable dispatch; its local intent
+937B/7263dd50 makes the opportunity spent, never automatically retryable.
+
+Actual terminal.v4/reference observation.v4: constructorNOT_READY/NON_OK,
+BOUND saved sendOK, real20s EventFALSE/Timeout, no unpack/read/frame/notify or
+response observed, network thread ALIVE. Public closed-default Init packet
+SHA706c7b8dc3edc5e3c3dc42751655fed46b23cf18e2a80c3a5dffc3f7c55efaf5;
+client identityVERIFIED/ABI SUPPORTED/relationVALID/ESTABLISHED before and end,
+acked_delta84/received_delta0/unacked0. Both exact reverse rows MATCH,
+identityVERIFIED/vendorFDPRESENT/ESTABLISHED with RXZERO/TXZERO; sequential
+peer offsets10275/30691ms and wait_to_post1ms are not atomic endpoint proof.
+Operation_failed=false/close_failed=false/parent_closed=true and all selected
+normal-close fields true. Independent SDK0 readback returns ownerCLOSED and
+owned_cleanup_proven=true, matching unit/manager invocation and startup;
+manager/client rc1. Its only request journal row is protocol1001/MAYtrue/
+responsefalse. This does not establish exact external cumulative counts.
+
+Capture13 carrier was never prepared, its condition never evaluated by Parent,
+and no capture was dispatched. The new pair is locally retired without a claim
+about remote claim state. No captured original/input acceptance/trial/report/
+decision exists; H1/H2/H3 remain unqualified. User-confirmed OpenD login is
+preserved, with no restart/logout/relogin or vendor service/config action.
+
+Evidence root: output/ivv-transaction-recovery-20261104-01/integration/
+reference-peer-flow-20261107-01/. Actual closeout preparation/REFERENCE12-CLOSEOUT-01.json
+8587B SHA77b32b02f8b88f6332e735ea7c2248addd53f1d6623501092459f4f9f9d32203;
+terminal2387B/8f17fe97; local retirement693B/0ff4fb96. Raw STOP at
+capture/connection-000012/submissions/submission-000001/STOP.json2702B SHA
+a9318ecb063cfd0bafdd1116001d49d509bee9f88cf3af4bd9a810dc4c586e67.
+Root integration also retains OWNED-INIT-PEER-READBACK-{INTENT,TRANSPORT,RESULT}-01.json.
+Actual wrapper R2 closeout1a117b46 and all prior failed/retained evidence stay.
+
+Handoff to Planner: consume this finite same-attempt information and select a
+cause-distinguishing next action under the existing authority. No identical
+method replay, field-by-field release loop, login/config/signal change or
+financial promotion follows. Whole fixed-IVV owner goal remains ACTIVE.
+
 ## Current passive same-connection slice — issue299, 2026-11-07
 
 CI integration correction: PR300 actual final ab078a1a started CI581/run42328152651.

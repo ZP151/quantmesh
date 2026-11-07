@@ -126,8 +126,8 @@ Files: helper/runner, new tests/test_ivv_init_peer_flow.py. Parent owns issuer d
 
 - [x] Adopt exact schema/interface in tracked spec. Independent complete Spec/Standards review, maxR1/R2; third structural failure returns Planner reduction. Review privacy/ABI/authority/deadline/lifecycle/causal claims.
 - [x] Mature new private Ops after source freeze; strict new control/method/Source7 bindings, reverse proof, entropy/failure/UNKNOWN geometry. Caps IPC/status8192, carrier327680, packed262144, body1MiB, all prior header/frame/resources unchanged. Actual current carrier310076 leaves17604B, status6958 leaves1234B. Compact schema arithmetic is not real carrier qualification; enforce peer_flow<=1100 and whole envelopes<=8192. Source compression uncertain. No cap increase/dropped facts: fail=>Planner reduction.
-- [ ] One matching-head normal fullCI/exact-lock artifact, expected-head normal merge/full-tree/reviewed Source7 equality and exact actual publication/catalog/release. No per-bit CI/healthy rerun/cancel/stale-base qualification. Seven roles and diagnostic manager1/client1/capture0/0 unchanged.
-- [ ] Only after software/review/CI/merge/publication/full future accounting may Parent prepare distinct immutable method namespace/intent/context/request/provider/actor/source budgets. No replay of11, nonce/once revival or capture12 reuse. Actual Fresh/SDK identity/FD/sandbox/resources/held/lease/normal-close mandatory. This proposal creates none.
+- [x] One matching-head normal fullCI/exact-lock artifact, expected-head normal merge/full-tree/reviewed Source7 equality and exact actual publication/catalog/release. No per-bit CI/healthy rerun/cancel/stale-base qualification. Seven roles and diagnostic manager1/client1/capture0/0 unchanged.
+- [x] Only after software/review/CI/merge/publication/full future accounting may Parent prepare distinct immutable method namespace/intent/context/request/provider/actor/source budgets. No replay of11, nonce/once revival or capture12 reuse. Actual Fresh/SDK identity/FD/sandbox/resources/held/lease/normal-close mandatory. This proposal creates none.
 - [ ] One separately qualified invocation; original fixed capture only real READY/allnormalclose/original claim+manager rules/new Fresh. UNKNOWN cannot set READY. Diagnostic hash/queue never FRAME/STORED/input/seal/research. Quant data/window/math/cost/OOS/H1/H2/H3 unchanged, paper default/live disabled.
 - [ ] Record actual distinctions at legitimate iteration/goal/roadmap/ADR checkpoint; retain all failures/futures. Parent alone executes actual operations under existing authority.
 
@@ -199,3 +199,11 @@ module membership; actual RED1 -> complete gate-module39PASS/2SKIP, independent
 integration review READY. Source7 and gate code remain frozen. Preserve failed
 CI581 and wait for its release terminal before corrected-head normal CI; no
 healthy cancellation/rerun or old artifact qualification.
+
+Actual execution checkpoint: SourcePR300/CI582 normallymerged4887/published,
+actualcentral96MiB/activepolicy46 and finalactualwrapperR2 preceded new actual
+reference12. Its publicwire/clientACK84+RXdelta0/exactpeerFDPRESENT+ZERO queues
+are an attributable causal vector; realInit20sTimeout/NOT_READY and ownedCLOSED
+leave capture13 unprepared/withheld. Ref12 is spent, pairlocallyretired, no retry.
+Original capture/research goalACTIVE, no realinput/trial/report/decision.
+Detailed actual evidence/hashes are mirrored in the active recovery iteration.
