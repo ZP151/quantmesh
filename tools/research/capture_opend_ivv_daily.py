@@ -1265,10 +1265,9 @@ def _load_official_sdk(writer, plan):
         sdk = importlib.import_module("moomoo")
         util = importlib.import_module("moomoo.common.utils")
         constants = importlib.import_module("moomoo.common.constant")
-        if (
-            type(plan.get("_capture_lifecycle")) is _CaptureLifecycle
-            or plan.get("_reference_method") == "init-query-vector-v1"
-        ):
+        if type(plan.get("_capture_lifecycle")) is _CaptureLifecycle or plan.get(
+            "_reference_method"
+        ) in ("init-query-vector-v1", "init-peer-flow-v1"):
             _verify_receive_modules(sdk, util, plan)
         return (sdk, util, constants), sink
     except BaseException:
@@ -1736,10 +1735,9 @@ class _OfficialBackend:
             "data_socket_closed": False,
         }
         if modules is None:
-            if (
-                type(plan.get("_capture_lifecycle")) is _CaptureLifecycle
-                or plan.get("_reference_method") == "init-query-vector-v1"
-            ):
+            if type(plan.get("_capture_lifecycle")) is _CaptureLifecycle or plan.get(
+                "_reference_method"
+            ) in ("init-query-vector-v1", "init-peer-flow-v1"):
                 _verify_receive_sources(plan)
             modules, self.sink = _load_official_sdk(writer, plan)
         self.sdk, self.util, self.constants = modules
@@ -2227,7 +2225,12 @@ def _read_reference_control(plan):
             "catalog_sha256",
             "sdk_pins_sha256",
             "policy_sha256",
-            *({"method"} if value.get("schema_id") == "qm.ivv.reference-control.v2" else set()),
+            *(
+                {"method"}
+                if value.get("schema_id")
+                in ("qm.ivv.reference-control.v2", "qm.ivv.reference-control.v3")
+                else set()
+            ),
         }
         and (
             value["schema_id"] == "qm.ivv.reference-control.v1"
@@ -2235,6 +2238,11 @@ def _read_reference_control(plan):
                 value["schema_id"] == "qm.ivv.reference-control.v2"
                 and type(value["method"]) is str
                 and value["method"] == "init-query-vector-v1"
+            )
+            or (
+                value["schema_id"] == "qm.ivv.reference-control.v3"
+                and type(value["method"]) is str
+                and value["method"] == "init-peer-flow-v1"
             )
         ),
         "reference_control_shape",
@@ -2951,6 +2959,389 @@ class _InstrumentedReferenceBackend(_OfficialBackend):
         )
 
 
+def _empty_peer_sample():
+    return dict(
+        identity="UNOBSERVED",
+        row="UNKNOWN",
+        state="UNKNOWN",
+        vendor_fd="UNKNOWN",
+        rx="UNKNOWN",
+        tx="UNKNOWN",
+        offset_ms=None,
+    )
+
+
+def _empty_peer_flow():
+    return dict(
+        schema="qm.ivv.init-peer-flow.v1",
+        wire=dict(
+            state="UNOBSERVED",
+            reason="NONE",
+            packet_sha256=None,
+            ft=None,
+            p1001=None,
+            fmt0ver0=None,
+            size_sha=None,
+            reserved0=None,
+            public_c2s=None,
+        ),
+        client=dict(
+            identity="UNOBSERVED",
+            abi="UNKNOWN",
+            state_before="UNKNOWN",
+            state_end="UNKNOWN",
+            acked_delta=None,
+            received_delta=None,
+            unacked_before=None,
+            unacked_end=None,
+            relation="UNOBSERVED",
+        ),
+        peer_before=_empty_peer_sample(),
+        peer_after=_empty_peer_sample(),
+        timing=dict(sequential=True, wait_to_post_ms=None),
+    )
+
+
+def _public_init_wire(raw, serial):
+    """Prove the closed public default before hashing the actual held packet.
+
+    The tiny independent encoder is an expectation validator, never a sender.
+    No protobuf/SDK import, private body, offending value or body hash escapes.
+    """
+    value = _empty_peer_flow()["wire"]
+    value.update(state="UNKNOWN", reason="UNSUPPORTED")
+    if type(raw) not in (bytes, bytearray) or not 44 <= len(raw) <= 1024:
+        return value
+    if type(serial) is not int or not 0 < serial <= 0xFFFFFFFF:
+        return value
+    packet = bytes(raw)
+    f, t, proto, fmt, version, bound, size, sha, reserved = struct.unpack(
+        "<ccIBBII20s8s", packet[:44]
+    )
+    body = memoryview(packet)[44:]
+    value.update(
+        ft=f == b"F" and t == b"T",
+        p1001=proto == 1001,
+        fmt0ver0=fmt == version == 0,
+        reserved0=reserved == b"\0" * 8,
+        size_sha=bound == serial and size == len(body) and hashlib.sha1(body).digest() == sha,
+    )
+    if not all(value[k] for k in ("ft", "p1001", "fmt0ver0", "reserved0", "size_sha")):
+        value.update(state="NONCONFORMANT", reason="HEADER")
+        return value
+
+    def varint(number):
+        result = bytearray()
+        while number > 127:
+            result.append((number & 127) | 128)
+            number >>= 7
+        result.append(number)
+        return bytes(result)
+
+    # Fixed public field tags/types, including canonical signed int32 -1.
+    c2s = (
+        b"\x08"
+        + varint(300)
+        + b"\x12\x08PyNormal\x18\x01\x20"
+        + varint((1 << 64) - 1)
+        + b"\x28\x00\x32\x06Python\x38\x00"
+    )
+    value["public_c2s"] = body == b"\x0a" + varint(len(c2s)) + c2s
+    if not value["public_c2s"]:
+        value.update(state="NONCONFORMANT", reason="BODY")
+        return value
+    value.update(
+        state="PUBLIC_CONFORMANT", reason="NONE", packet_sha256=hashlib.sha256(packet).hexdigest()
+    )
+    return value
+
+
+def _owned_tcp_info(binding, phase):
+    """Read TCP_INFO only on the retained own socket; raw counters stay in RAM."""
+    value = dict(
+        identity="UNKNOWN", abi="UNKNOWN", state="UNKNOWN", acked=None, received=None, unacked=None
+    )
+    if binding is None or phase not in ("BEFORE_SEND", "POST_QUERY"):
+        return value
+    net, conn_id, conn, sock, fd, stamp = binding
+
+    def same():
+        observed = sock.fileno()
+        return (
+            type(observed) is int
+            and observed == fd
+            and net._conn_map.get(conn_id) is conn
+            and conn.sock is sock
+            and _InstrumentedReferenceBackend._socket_stamp(fd) == stamp
+        )
+
+    try:
+        if not same():
+            value["identity"] = "DRIFT"
+            return value
+        value["identity"] = "VERIFIED"
+        # Linux UAPI native prefix: 8 bytes, 24 u32, 4 aligned u64. Refuse
+        # unqualified platforms/endianness and short returns; never pad bytes.
+        import ctypes
+
+        class Prefix(ctypes.Structure):
+            _fields_ = [
+                ("flags", ctypes.c_uint8 * 8),
+                ("words", ctypes.c_uint32 * 24),
+                ("counters", ctypes.c_uint64 * 4),
+            ]
+
+        if (
+            sys.platform != "linux"
+            or sys.byteorder != "little"
+            or ctypes.sizeof(Prefix) != 136
+            or Prefix.words.offset != 8
+            or Prefix.counters.offset != 104
+            or os.uname().machine not in ("x86_64", "aarch64")
+        ):
+            value["abi"] = "UNSUPPORTED"
+            return value
+        raw = sock.getsockopt(6, 11, 256)  # SOL_TCP/TCP_INFO, retained FD only.
+        if type(raw) is not bytes or not 136 <= len(raw) <= 256:
+            value["abi"] = "UNSUPPORTED"
+            return value
+        value.update(
+            abi="SUPPORTED",
+            state="ESTABLISHED" if raw[0] == 1 else "OTHER",
+            unacked=struct.unpack_from("=I", raw, 24)[0],
+            acked=struct.unpack_from("=Q", raw, 120)[0],
+            received=struct.unpack_from("=Q", raw, 128)[0],
+        )
+        if not same():
+            value.update(identity="DRIFT", state="UNKNOWN", acked=None, received=None, unacked=None)
+    except CaptureRejected:
+        raise
+    except Exception:
+        value.update(identity="UNKNOWN", state="UNKNOWN", acked=None, received=None, unacked=None)
+    return value
+
+
+class _PeerFlowReferenceBackend(_InstrumentedReferenceBackend):
+    """Explicit new method; baseline before send, end after original finally."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.peer_flow = _empty_peer_flow()
+        self._tcp_before = None
+        self._peer_packet_size = None
+        self._peer_done = False
+        self._peer_binding = None
+
+    def _peer_method(self):
+        control = _read_reference_control(self.plan)
+        _require(
+            control.get("schema_id") == "qm.ivv.reference-control.v3"
+            and control.get("method") == self.plan.get("_reference_method") == "init-peer-flow-v1",
+            "reference_peer_method",
+        )
+
+    def _peer_observe(self, operation):
+        try:
+            return operation()
+        except BaseException as error:
+            if isinstance(error, CaptureRejected) or not isinstance(error, Exception):
+                self.o.poison = self.o.poison or "reference_peer_refused"
+                try:
+                    self.o.record_guard("REQUEST", "OTHER_GUARD")
+                finally:
+                    raise error
+            # Optional local sensor unavailable; do not alter a delegate call.
+            self.peer_flow["client"]["relation"] = "RACE_OR_UNKNOWN"
+            return None
+
+    def _peer_sample(self, phase):
+        binding = self._peer_binding
+        if binding is None:
+            return dict(_empty_peer_sample(), identity="UNKNOWN")
+        callback = self.plan.get("_peer_flow")
+        _require(callable(callback), "reference_peer_channel_required")
+        _, _, _, _, fd, stamp = binding
+        sample = callback(phase, fd, stamp[1])
+        flow = _empty_peer_flow()
+        flow["peer_before"] = sample
+        _select_peer_flow(flow, _require)
+        return sample
+
+    def _peer_before_send(self, raw, serial):
+        self._peer_method()
+        self._peer_binding = self._socket_binding
+        self.peer_flow["wire"] = _public_init_wire(raw, serial)
+        self._peer_packet_size = (
+            len(raw) if self.peer_flow["wire"]["state"] == "PUBLIC_CONFORMANT" else None
+        )
+        self._tcp_before = _owned_tcp_info(self._peer_binding, "BEFORE_SEND")
+        self.peer_flow["peer_before"] = self._peer_sample("BEFORE_SEND")
+
+    def _observe_init_return(self, field, delegate, *args, **kwargs):
+        if field == "send":
+            self._bind_socket()
+            self._peer_observe(
+                lambda: self._peer_before_send(args[1], self._query_request.serial_no)
+            )
+        return super()._observe_init_return(field, delegate, *args, **kwargs)
+
+    def _peer_post_query(self):
+        if self._peer_done or self._query_request is None or self._tcp_before is None:
+            return
+        self._peer_done = True
+        self._peer_method()
+        before = self._tcp_before
+        end = _owned_tcp_info(self._peer_binding, "POST_QUERY")
+        if (
+            self._peer_binding is not None
+            and vars(self.ctx).get("_conn_id") != self._peer_binding[1]
+        ):
+            end.update(identity="DRIFT", acked=None, received=None, unacked=None, state="UNKNOWN")
+        client = self.peer_flow["client"]
+        abi = (
+            "SUPPORTED"
+            if before["abi"] == end["abi"] == "SUPPORTED"
+            else "UNSUPPORTED"
+            if "UNSUPPORTED" in (before["abi"], end["abi"])
+            else "UNKNOWN"
+        )
+        client.update(
+            identity=end["identity"],
+            abi=abi,
+            state_before=before["state"],
+            state_end=end["state"],
+            unacked_before=before["unacked"],
+            unacked_end=end["unacked"],
+            relation="RACE_OR_UNKNOWN",
+        )
+        same = before["identity"] == end["identity"] == "VERIFIED"
+        if same and before["abi"] == end["abi"] == "SUPPORTED":
+            for source, target in (("acked", "acked_delta"), ("received", "received_delta")):
+                delta = (
+                    end[source] - before[source]
+                    if end[source] is not None and before[source] is not None
+                    else -1
+                )
+                if 0 <= delta <= (1 << 63) - 1:
+                    client[target] = delta
+            if (
+                before["state"] == end["state"] == "ESTABLISHED"
+                and before["acked"] == 1
+                and before["received"] == 0
+                and before["unacked"] == 0
+                and self._peer_packet_size is not None
+                and type(client["acked_delta"]) is int
+                and client["acked_delta"] <= self._peer_packet_size
+                and type(client["received_delta"]) is int
+                and self.query_vector["send"] == "OK"
+                and not self._init_invalid
+            ):
+                client["relation"] = "VALID"
+        if not same:
+            client["identity"] = (
+                "DRIFT" if "DRIFT" in (before["identity"], end["identity"]) else "UNKNOWN"
+            )
+        if self._wait_end_mono is not None:
+            delay = self.clock.mono() - self._wait_end_mono
+            if type(delay) in (int, float) and math.isfinite(delay) and 0 <= delay <= 480:
+                self.peer_flow["timing"]["wait_to_post_ms"] = int(delay * 1000)
+        self.peer_flow["peer_after"] = self._peer_sample("POST_QUERY")
+        if self.peer_flow["peer_after"]["identity"] == "DRIFT":
+            client["relation"] = "RACE_OR_UNKNOWN"
+
+    def _observe_init_query(self, *args, **kwargs):
+        try:
+            return super()._observe_init_query(*args, **kwargs)
+        finally:
+            primary = sys.exc_info()[1]
+            try:
+                self._peer_observe(self._peer_post_query)
+            finally:
+                if primary is not None:
+                    raise primary
+
+
+def _select_peer_flow(value, require):
+    """Self-contained finite projection, duplicated in standalone STOP codec."""
+
+    def check(condition):
+        require(condition, "init_peer_flow_shape")
+
+    def enum(item, choices):
+        check(type(item) is str and item in choices.split())
+
+    def number(item, maximum):
+        check(item is None or type(item) is int and 0 <= item <= maximum)
+
+    def shape(item, keys):
+        check(type(item) is dict and set(item) == set(keys.split()))
+
+    shape(value, "schema wire client peer_before peer_after timing")
+    check(type(value["schema"]) is str and value["schema"] == "qm.ivv.init-peer-flow.v1")
+    wire = value["wire"]
+    shape(wire, "state reason packet_sha256 ft p1001 fmt0ver0 size_sha reserved0 public_c2s")
+    enum(wire["state"], "UNOBSERVED PUBLIC_CONFORMANT NONCONFORMANT UNKNOWN")
+    enum(wire["reason"], "NONE HEADER BODY UNSUPPORTED OBSERVATION")
+    for key in ("ft", "p1001", "fmt0ver0", "size_sha", "reserved0", "public_c2s"):
+        check(wire[key] is None or type(wire[key]) is bool)
+    pin = wire["packet_sha256"]
+    public = wire["state"] == "PUBLIC_CONFORMANT"
+    check((pin is not None) == public)
+    if public:
+        check(type(pin) is str and len(pin) == 64 and all(c in "0123456789abcdef" for c in pin))
+        check(
+            wire["reason"] == "NONE"
+            and all(
+                wire[k] is True
+                for k in ("ft", "p1001", "fmt0ver0", "size_sha", "reserved0", "public_c2s")
+            )
+        )
+    client = value["client"]
+    shape(
+        client,
+        "identity abi state_before state_end acked_delta received_delta "
+        "unacked_before unacked_end relation",
+    )
+    enum(client["identity"], "UNOBSERVED VERIFIED DRIFT UNKNOWN")
+    enum(client["abi"], "SUPPORTED UNSUPPORTED UNKNOWN")
+    for key in ("state_before", "state_end"):
+        enum(client[key], "ESTABLISHED OTHER UNKNOWN")
+    for key in ("acked_delta", "received_delta"):
+        number(client[key], (1 << 63) - 1)
+    for key in ("unacked_before", "unacked_end"):
+        number(client[key], (1 << 32) - 1)
+    enum(client["relation"], "VALID RACE_OR_UNKNOWN UNOBSERVED")
+    if client["relation"] == "VALID":
+        check(
+            client["identity"] == "VERIFIED"
+            and client["abi"] == "SUPPORTED"
+            and client["state_before"] == client["state_end"] == "ESTABLISHED"
+            and type(client["acked_delta"]) is int
+            and type(client["received_delta"]) is int
+            and client["unacked_before"] == 0
+            and public
+        )
+    for key in ("peer_before", "peer_after"):
+        peer = value[key]
+        shape(peer, "identity row state vendor_fd rx tx offset_ms")
+        enum(peer["identity"], "VERIFIED DRIFT UNKNOWN UNOBSERVED")
+        enum(peer["row"], "MATCH NOT_OBSERVED AMBIGUOUS UNKNOWN")
+        enum(peer["state"], "ESTABLISHED CLOSING OTHER UNKNOWN")
+        enum(peer["vendor_fd"], "PRESENT NOT_OBSERVED UNKNOWN")
+        for field in ("rx", "tx"):
+            enum(peer[field], "ZERO LE_1K LE_64K GT_64K UNKNOWN")
+        number(peer["offset_ms"], 480000)
+        check(peer["vendor_fd"] != "PRESENT" or peer["row"] == "MATCH")
+        check(peer["row"] == "MATCH" or all(peer[k] == "UNKNOWN" for k in ("state", "rx", "tx")))
+        check(peer["state"] == "ESTABLISHED" or peer["rx"] == peer["tx"] == "UNKNOWN")
+    shape(value["timing"], "sequential wait_to_post_ms")
+    check(value["timing"]["sequential"] is True)
+    number(value["timing"]["wait_to_post_ms"], 480000)
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    check(len(encoded.encode()) <= 1100)
+    return json.loads(encoded)
+
+
 def _select_init_query_vector(value, require):
     """Closed scalar contract, also embedded in the standalone STOP selector."""
 
@@ -3125,10 +3516,16 @@ def _select_reference_terminal(value):
     if type(value) is dict and value.get("schema_id") in (
         "qm.ivv.reference-init-terminal.v2",
         "qm.ivv.reference-init-terminal.v3",
+        "qm.ivv.reference-init-terminal.v4",
     ):
         keys.add("init_delegate_return")
-    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-terminal.v3":
+    if type(value) is dict and value.get("schema_id") in (
+        "qm.ivv.reference-init-terminal.v3",
+        "qm.ivv.reference-init-terminal.v4",
+    ):
         keys.update(("method", "query_vector"))
+    if type(value) is dict and value.get("schema_id") == "qm.ivv.reference-init-terminal.v4":
+        keys.add("peer_flow")
     _require(type(value) is dict and set(value) == keys, "reference_terminal_shape")
     if "init_delegate_return" in keys:
         _require(
@@ -3142,6 +3539,7 @@ def _select_reference_terminal(value):
             "qm.ivv.reference-init-terminal.v1",
             "qm.ivv.reference-init-terminal.v2",
             "qm.ivv.reference-init-terminal.v3",
+            "qm.ivv.reference-init-terminal.v4",
         )
         and value["state"] in {"REFERENCE_READY_CLOSED", "REFERENCE_FAILED"}
         and type(value["constructor_returned"]) is bool
@@ -3201,10 +3599,14 @@ def _select_reference_terminal(value):
     _require((value["state"] == "REFERENCE_READY_CLOSED") == ready, "reference_terminal_state")
     if "query_vector" in keys:
         _require(
-            type(value["method"]) is str and value["method"] == "init-query-vector-v1",
+            type(value["method"]) is str
+            and value["method"]
+            == ("init-peer-flow-v1" if "peer_flow" in keys else "init-query-vector-v1"),
             "reference_terminal_method",
         )
         _select_init_query_vector(value["query_vector"], _require)
+    if "peer_flow" in keys:
+        _select_peer_flow(value["peer_flow"], _require)
     return json.loads(_canonical(value))
 
 
@@ -3215,7 +3617,8 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
     if "_reference_method" in plan:
         control = _read_reference_control(plan)
         _require(method == control.get("method"), "reference_method_binding")
-    instrumented = method == "init-query-vector-v1"
+    instrumented = method in ("init-query-vector-v1", "init-peer-flow-v1")
+    peer_flow = method == "init-peer-flow-v1"
     writer = _Writer(root, sync_dir)
     writer.json(
         "reference-intent.json",
@@ -3297,7 +3700,9 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
         primary = dict(stage="late_guard", **{"class": "CaptureRejected"}, code=observer.poison)
     result = _select_reference_terminal(
         {
-            "schema_id": "qm.ivv.reference-init-terminal.v3"
+            "schema_id": "qm.ivv.reference-init-terminal.v4"
+            if peer_flow
+            else "qm.ivv.reference-init-terminal.v3"
             if instrumented
             else "qm.ivv.reference-init-terminal.v2",
             **(
@@ -3308,6 +3713,11 @@ def _run_reference_init(plan, root, *, backend_factory, clock, sync_dir):
                     else dict(_empty_query_vector(), guard=dict(observer.guard)),
                 }
                 if instrumented
+                else {}
+            ),
+            **(
+                {"peer_flow": backend.peer_flow if backend is not None else _empty_peer_flow()}
+                if peer_flow
                 else {}
             ),
             "state": "REFERENCE_READY_CLOSED"
@@ -3929,11 +4339,22 @@ def _capture_owned(
         if reference:
             control = _read_reference_control(plan)
             plan["_reference_method"] = control.get("method")
+            if plan["_reference_method"] == "init-peer-flow-v1":
+
+                def peer_flow(phase, fd, inode):
+                    try:
+                        return state.session.peer_flow(phase, fd, inode)
+                    except Exception as error:
+                        raise CaptureRejected("reference_peer_protocol") from error
+
+                plan["_peer_flow"] = peer_flow
             return _run_reference_init(
                 plan,
                 receipt_root,
                 backend_factory=(
-                    _InstrumentedReferenceBackend
+                    _PeerFlowReferenceBackend
+                    if plan["_reference_method"] == "init-peer-flow-v1"
+                    else _InstrumentedReferenceBackend
                     if plan["_reference_method"] is not None
                     else _ReferenceBackend
                 ),

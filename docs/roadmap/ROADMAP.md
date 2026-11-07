@@ -1,5 +1,96 @@
 # QuantMesh Product Roadmap
 
+## Current passive same-connection slice — issue299, 2026-11-07
+
+PR298 software/release and actual reference11 are complete engineering facts:
+normal CI5798332PASS149SKIP/frontend793, merge6a0c2bd7, then real20s Init timeout
+before unpack with owned normal closure. Capture12 was not prepared/dispatched.
+Subsequent SDK0 local-wire and exact-vendor at-rest evidence establishes no
+repair: two current ZERO queues/same57SLEEPING/STOPPED0/current3 public matches
+cannot reconstruct old ACK/read/wire/login or establish API health. The actual
+at-rest observer/transport closed normally; all historical UNKNOWN/futures stay.
+
+Issue299 selects one complete passive init-peer-flow-v1, control.v3 and
+terminal/observation.v4. Outbound digest follows exact closed public-default
+C2S/header proof; client TCP_INFO and the same-connection Parent proc projection
+reuse existing guarded sockets/channel/OperatorReader. Both end measurements
+are POST_QUERY after original query/finally; no added wait hook. Mandatory
+_owned_peer, privacy/source/lease/once/resources/close/realREADY/Fresh, strict
+legacy/default behaviors and seven runtime roles remain. Optional races and
+unsupported data are UNKNOWN, never handler-read/permission claims or new gates.
+
+The existing managed Source64 worktree is reused on fresh origin/main6a0,
+branch codex/0038-init-peer-flow. Complete new software common64+CI16 nets80MiB;
+actual central import4ec71e1b0359fd171f12407333d24a0b5cbe3b7aa10c45da2a6a327c12b19247
+retains all old holds, negatives/UNKNOWN and unused capture futures without
+refund or paid resources. It grants no new SDK/runtime pair or policy45 change.
+Tracked spec/plan: docs/superpowers/{specs,plans}/2026-11-07-init-peer-flow.md.
+
+Planner/Quant Researcher: one user action produces an attributable causal
+vector or honest UNKNOWN, not capture/input, profitability, OOS, Paper or live
+qualification. Data/window/math/cost remain unchanged. Implementer owns only
+helper/runner/new focused tests; Parent owns issuer/docs/gate/private Ops/Git/CI.
+Core TDD/native controls and both Source R2 axes are READY at dfdbb827 after
+one cleanup correction. Private Ops01 cap refusal is retained. Versioned outer
+Base85 Ops02 passed geometry; its one R1 role-binding finding was corrected in
+immutable Ops03. Both same-reader private R2 axes are READY. Final 96 synthetic
+cases fit every unchanged cap, carrier maximum312424<327680. One normal
+matching-head CI/merge/publication still precedes a distinct runtime pair. No new provider, login,
+configuration, signal, SDK/context or real-input action occurred in this scope
+checkpoint. Whole fixed-IVV owner task remains active.
+
+
+## Current postrelease checkpoint — 2026-11-07
+
+Evidence snapshot: 2026-11-06T23:36:58Z (2026-11-07 Singapore). This current
+checkpoint supersedes pending-state wording in the historical entries below;
+those records are retained unchanged.
+
+PR298/CI579 completed8332PASS/149SKIP, frontend793 and release terminal8481/rc0.
+Normal merge6a0c2bd78bd81aef252d90f6748c4cafcee7136d equals final42e41978's
+full tree and reviewed Source7. Exact publication, reviewed private O4 packaging,
+the actual96MiB pair import and current policy45 are recorded in the active
+IVV recovery iteration, with repository-relative evidence paths and hashes.
+O3's over-cap refusal and all historical/unused holds remain retained.
+
+One actual reference11 reached a genuine20000ms Event Timeout before unpack,
+after84B local TCP acceptance; independent SDK0 readback proves owned CLOSED.
+Peer acceptance/response and exact external/context counts remain UNKNOWN.
+Capture12 is unprepared/withheld; no input, trial, report, decision or financial
+qualification exists. Local wire audit29PASS plus Parent29PASS/6.03s and
+combined review READY establishes synthetic local pinned conformance only:
+actual reference11 wire NOT_ESTABLISHED. Later current-file matches do not
+establish old loaded supplemental identity or old wire.
+
+The private SDK0 at-rest screen's four R1 P2 inspection-guard findings were
+repaired after genuine RED4; final72PASS/2.85s, Parent72PASS/2.90s
+(wall3.5595522s) and combined R2 READY preceded one actual observation.
+These repaired inspection guards, not OpenD; Source7/O4/AD3 stayed unchanged.
+
+Actual observation8592ab2d932f4357a093d2571cddd125 completed normally at
+2026-11-06T23:27:57Z. Two within250ms endpoints showed the exact same vendor/
+listener queueZERO at both and the same57 tasks allSLEEPING; STOPPED,
+UNINTERRUPTIBLE, ZOMBIE, RUNNING and OTHER counts0 at both. The selected three
+public SDK files CURRENT_MATCH their reviewed LF hashes. Owned descriptors
+closed; transport job_closed=true/job_active_zero=true, normal rc0, no timeout
+or cap refusal. SDK/context/ledger-query/credential/service/signal/login
+actions0. These current facts reconstruct no historical reference11 ACK/
+accept/read/wire/response, establish no API health, cause or login state,
+and prove no concrete OpenD repair. Historical reference11 remains NOT_OBSERVED;
+historical exact context/external UNKNOWN counts remain unchanged.
+
+Next is one source-grounded complete passive same-attempt method,
+PROPOSAL_ONLY under existing authority
+6db1254cdf428a17952ae764b10d597435067dc151219c39b3c4fc18c1853dfd.
+Inspect actual owning sources and alternatives before a complete proposal/
+review. These docs grant no new Source work, issue, capacity, import, SDK
+invocation, permit, nonce or once action. No blind retry, configuration,
+signal or login change follows. Capture12 remains unprepared/withheld;
+no financial input exists and the whole owner task remains active.
+
+Paper/live and original research gates remain unchanged. See
+[iteration0038](../iterations/0038-ivv-transaction-recovery.md#current-postrelease-outcome--issue297-2026-11-07).
+
 ## Current complete Init-query vector — 2026-11-07
 
 Issue297 preserves the completed pure-reference control and introduces one

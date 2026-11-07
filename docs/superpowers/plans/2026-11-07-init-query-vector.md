@@ -1,5 +1,55 @@
 # Execute one complete guarded Init-query vector
 
+## Current postrelease checklist — 2026-11-07
+
+Evidence snapshot: 2026-11-06T23:36:58Z (2026-11-07 Singapore). This current
+checkpoint supersedes pending-state wording in the historical entries below;
+those records are retained unchanged.
+
+The execution-time task checklist below is historical. This current checklist
+records the completed software/release and negative runtime boundary; it does
+not mark the entire owner/research goal complete.
+
+- [x] Independent source SpecR2/StandardsR2 READY; normal CI579 on final42e41978:
+  8332PASS/149SKIP, frontend793, terminal8481/rc0/missing[].
+- [x] Normal PR298 merge6a0c2bd78bd81aef252d90f6748c4cafcee7136d, full tree
+  equality with final42e41978/reviewed Source7, exact publication/release pins.
+- [x] Retain O3 carrier327684B refusal; O4 unchanged-text bounded packaging
+  qualifies96 RAM cases and independent private reviews READY, then actual
+  publication. Source7 and original caps unchanged.
+- [x] Actual complete96MiB pair import and current policy45; retain all old
+  holds, negative pairs and unused futures without refund.
+- [x] One actual reference11: Event False/Timeout20000ms before unpack after
+  local send84B; NON_OK/NOT_READY and independent owned CLOSED. Exact external/
+  context counts UNKNOWN. Capture12 unprepared/withheld; no condition evaluation.
+- [x] Independent causal report and real-function/protobuf SDK0 local audit:
+  29PASS, Parent29PASS/6.03s, combined review READY. Synthetic local conformance
+  only; actual reference11 wire NOT_ESTABLISHED, runtime construction drift
+  NOT_EXCLUDED. Later current-file matches do not prove old loaded identity.
+- [x] Preserve four R1 P2 inspection findings, genuine RED4 and bounded guard
+  repair: final72PASS/2.85s, Parent72PASS/2.90s and combined R2 READY.
+  This fixed inspection guards, not OpenD; Source7/O4/AD3 unchanged.
+- [x] One normal SDK0 observation8592ab2d932f4357a093d2571cddd125 at
+  2026-11-06T23:27:57Z: two within250ms endpoints queueZERO at both, same57
+  SLEEPING tasks, STOPPED/D/Z0, extra3 CURRENT public SDK LF matches, owned
+  close and normal job_closed/active-zero. SDK/context/ledger-query/credential/
+  service/signal/login actions0. Historical reference11 NOT_OBSERVED; no API
+  health/cause/login inference or concrete OpenD repair established.
+- [ ] One source-grounded complete passive same-attempt method is PROPOSAL_ONLY
+  under existing6db authority; inspect actual owning sources/alternatives first.
+  These docs authorize no new Source work/issue/capacity/import/SDK/permit/
+  nonce/once or blind retry/configuration/signal/login action.
+- [ ] Combine this refresh with a later legitimate Source checkpoint/normal PR;
+  no per-bit release. Capture12 stays unprepared/withheld; no capture originals/
+  accepted input/trial/report/decision/H1/H2/H3 or financial qualification;
+  owner task remains active.
+
+Exact repository-relative evidence paths and hashes are in the
+[current iteration checkpoint](../../iterations/0038-ivv-transaction-recovery.md#current-postrelease-outcome--issue297-2026-11-07),
+including reference11 closeout0094cface, causal263c2484, wire-auditfb551ffb
+and current at-rest closeout98546d8d. Snapshot9158d372 is historical.
+This checklist does not change the spec or runtime contract.
+
 Issue #297, parent #281. Spec: ../specs/2026-11-07-init-query-vector.md.
 Start: origin/main d0aaf291; branch codex/0038-init-query-vector in the already
 isolated managed worktree. Retain the old branch/Git objects and all published
