@@ -100,6 +100,17 @@ Do not change repository runtime Source7 or old output files.
 
 ## Task2: Bounded review, Parent publication and actual ordinary login
 
+- [x] Sole same-reader R2 completed: NOT READY on both axes, report215b68e0.
+  Six findings addressed; final socket_stamp mismatch is observed then discarded
+  before the actual private command. STOP package02, retain01/02, no03 fix.
+  All publication/private execution items below are blocked, not next actions.
+  Existing independent bind/status capability inventory is recorded in the
+  active iteration; Planner owns the distinct controlled alternative decision.
+- [x] Initial complete R1 performed: NOT READY, five P1/two P2 in report009d75dc.
+  Original package01 remains frozen/unpublished. Planner reduction is recorded
+  in the active iteration and SDD task-1-correction-ruling.md: one package02
+  correction with real private/competition/read seams, then this same reader's
+  sole R2. No third rolling revision or live retry is allowed.
 - [ ] Fresh independent reviewer checks the COMPLETE fix/admission/client chain,
   all source pins, physical RED/GREEN, prefix-before-claim, actual durable order,
   evidence custody and failure/cleanup semantics. One correction round maximum;

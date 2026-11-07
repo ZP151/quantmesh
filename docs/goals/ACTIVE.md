@@ -2,6 +2,38 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Sole complete R2 is **NOT READY; package02 STOPPED**. Review7901B/215b68e0
+accepted six R1 fixes but reproduced a remaining P1: the final socket lookup
+observes a replacement inode and its returned identity is discarded before the
+material-bearing command. Package01/index13aa9533 and02/indexca2cd6cc remain
+frozen, unpublished and unexecuted. No package03 rolling patch, new Root claim,
+credential material or SDK follows. The remaining fixed-IVV goal stays ACTIVE.
+
+Local alternative inventory confirms mature restore_entry --bind is independent
+of CB1 input completion and can produce a strict same33f provider binding without
+SDK or credential access. This is capability evidence, not an executed bind.
+The official get_global_state response can distinguish quote login; Init READY
+alone cannot. The existing init-only runner forbids that business request;
+generic readiness adds quote/history requests. The selected research repair
+route requires the missing historical STOP-CLOSED, which current closure cannot
+replace. No equally guarded existing standalone operator status entry was found.
+Planner owns selection of the bounded independent status alternative; Server
+owns implementation/execution only within that concrete scope. User-confirmed
+login is retained; browser-extension enumeration works but DOM/screenshot reads
+still time out. There is no new observation of logout or login failure.
+
+Historical preparation snapshots follow; the STOP above supersedes their
+pending correction/publication language.
+
+Complete recovery-package R1 is NOT READY (five P1/two P2, review009d75dc).
+Package01 remains frozen and unpublished; no actual recovery claim/material/SDK.
+Planner reduced one combined correction to admission ownership, continuous
+identity through private operations/cleanup, terminal-only unjournaled prompts,
+strict ENOENT absence and durable terminal success, plus actual old-source checks.
+Only package02 and the original complete reader's sole R2 may follow. A new
+structural gap at R2 stops this package for a concrete controlled alternative;
+no package03 rolling patch, new user count question or provider restart.
+
 Current precise login-repair scope: one reviewed public-prefix check refused in
 the socket metadata group; one fixed lstat proved mode0600, UID997/GID987/type and
 parent0700 all correct. Consumer e923 extra exact0700 is the current mismatch.

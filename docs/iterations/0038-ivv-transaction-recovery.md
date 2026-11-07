@@ -4,6 +4,70 @@
 
 ### Precise same-provider preinput repair scope — 2026-11-07
 
+Final bounded review: **Spec NOT READY / code quality NOT READY; package02
+STOPPED**. The original complete reader's sole R2 report7901B/215b68e0 accepted
+six findings but reproduced one remaining P1 on the actual frozen call chain:
+OwnedPane.tmux -> Context.identity -> Holds.recheck reads held socket233051,
+performs the native snapshot, then socket_stamp observes233052. The returned
+tuple is discarded and an inert synthetic material-bearing load-buffer proceeds.
+This is an observed mismatch, not a claim about an unknowable later OS race.
+Package02's56 targeted passes and earlier physical controls do not override it.
+Parent read the complete report; all125 package02 and81 package01 file pins had
+already been independently verified. Both immutable packages and all RED/GREEN
+logs remain; no third rolling patch, release binding, publication, private Root
+claim, vault material or SDK occurred. Task1 software is rejected, Task2 actual
+recovery is blocked, and the whole fixed-IVV goal remains ACTIVE.
+
+Planner/Server alternative inventory: unchanged mature restore_entry --bind and
+restore_runtime.bind392–409 do not depend on CB1 input completion. They verify
+the same origin, create-only provider binding and strict native provider proof;
+no actual bind ran in this inventory. Official SDK get_global_state1002 returns
+quote/trade login state; constructor READY alone does not. The released reference
+runner intentionally allows Init1001 only and zero business sends, while generic
+readiness probes/subscribes/reads quotes/history. Existing selected repair Ops
+requires provider_repair_ref and historical STOP-CLOSED/owned_old_closed; EXEC3's
+missing original cannot be replaced by later current-closure evidence. Thus an
+independent operator-status contract is the concrete missing guarded capability,
+not a new user approval or successful credential input. Proposed bound is one
+context/Init and at most one GetGlobalState, independent durable accounting,
+same33f/SourceM/profile/actor/owned-close, no research ledger/old hashes reused.
+It is not runtime GO. Owner: Root Planner selects, sole Server implements/runs;
+first software/review estimate45–75min +10–20min, actual one-shot5–10min after
+qualification, subject to actual failures rather than a success-time promise.
+
+Existing private alternative operator-login-repair-01 was reviewed and installed
+for old18, but is bound to those old hashes and retains the known unjournaled
+prompt transition; it is not directly reusable on33f. Official Telnet/relogin
+requires configured control access/current account/startup password; no such
+route is established by the pinned current profile, and no port/config/restart
+is authorized by this inventory. Browser-extension tab listing succeeded, but
+the documented screenshot fallback also timed out. User-confirmed logged-in
+status is retained and no negative vendor-status inference follows. Ordinary
+login remains the agent's work; only a real challenge needs user action.
+
+The following R1/preparation paragraphs are retained historical evidence,
+superseded by the final STOP and alternative inventory above.
+
+Complete-delivery R1 by a fresh independent reader rejected package01 on both
+Spec and code quality: five P1 findings (postclaim identity substitution,
+unjournaled prompt transition, new material-intent race, contender cleanup
+collision and lookup-error-as-absence) plus two P2 (old source revalidation and
+terminal persistence). Report8586B/009d75dc and frozen01/index13aa9533 remain.
+The passing32/4 tests and20 physical controls do not override these concrete
+counterexamples. Nothing from this new admission was privately published or
+executed, and no material/SDK was used.
+
+Planner returned the slice for one complete reduced correction under the same
+actual provider/recovery namespace. New package02 must bind private operations
+and vendor-independent owned cleanup to admitted identity; let only the admission
+winner write shared stages; make unjournaled initial nonaccount states terminal
+without rereading into input; treat only ENOENT as absence; check new material
+before channel; revalidate actual old sources; and publish terminal status only
+after persistence. Counterexamples must exercise actual serve/read/_operate
+competition seams. Original implementer owns this sole combined correction;
+original complete reviewer owns the sole R2. Further structure stops this package
+for a concrete existing controlled alternative, not a third rolling revision.
+
 Planner/Quant: preserve same live33f, all prior claims/unknown effects and separate
 SDK/financial gates; this slice changes no dataset, fees, metrics or confidence.
 Independent source-contract audit a8a208bf distinguished the durable material
