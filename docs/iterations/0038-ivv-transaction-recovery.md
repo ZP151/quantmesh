@@ -2,6 +2,27 @@
 
 ## Current passive same-connection slice — issue299, 2026-11-07
 
+Both fresh Source R1 axes found the same P2: cleanup could replace an active
+interruption/mandatory primary. One consolidated correction changes only the
+two new reader finally blocks, preserving original identity, attempting every
+cleanup and retaining sticky close uncertainty. Genuine RED13FAIL/5PASS became
+GREEN18PASS; final Windows module125PASS/2 native skips, Linux changed cleanup
+and both native controls21PASS, targeted legacy17PASS. These are separate runs,
+not a fabricated single127-pass Linux run. Parent independently verified18PASS
+plus global Ruff/changed formatting/whitespace at the frozen correction.
+Runner465ec1ea/testb69be869 replace the R1 candidate; helper4a3ecaa3, issuer,
+gate and four other roles are unchanged. Original frozen reports and failures
+remain byte-exact. The same two readers' sole R2 is next; no new fix loop.
+
+Prior exact-head local contract d6f2a7b1 completed744PASS18SKIP then stopped at
+the existing Windows POSIX-path assertion; the exact same node passed on real
+Linux1PASS/2.71s. This is a platform-limited terminal, not an all-green complete
+contract or release. Matching-head CI is still required. Deferred minor: the
+new native test predicates cover current Linux/Windows; non-Linux POSIX test
+execution is not qualified. No runtime/data/financial gate is waived.
+Correction evidence: output/ivv-transaction-recovery-20261104-01/integration/
+reference-peer-flow-20261107-01/core-fix-01/{HANDOFF.md,frozen/PINS.json}.
+
 Core frozen for integration at helper4a3ecaa3/runnerb71b76b3/test8d5f47be.
 Final Linux focused109PASS/no skips52.17s (wall61.4804827s), Windows107PASS/
 2 native skips7.67s, and affected legacy354PASS/31 subtests34.79s are retained

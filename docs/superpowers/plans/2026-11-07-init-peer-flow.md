@@ -163,4 +163,15 @@ Commit this coherent candidate without pushing or qualifying it, then run the
 unchanged complete contract against that HEAD. Preserve both the isolated
 command import failure and exact-source refusal; no gate assertion is relaxed.
 
+R1 correction checkpoint: both independent axes reported one identical P2 in
+the two new metadata-reader finally blocks. One consolidated TDD fix preserves
+primary identity/all cleanup/sticky close state:13FAIL->18PASS, final complete
+Windows module125PASS/2 native skips, Linux changed/native controls21PASS and
+legacy cleanup17PASS. Parent18PASS and global Ruff/format/whitespace pass at
+runner465ec1ea/testb69be869; helper/issuer/gate/four roles remain unchanged.
+Same-reader R2 is next, with no third structural patch round. The non-Linux
+POSIX test-predicate minor is deferred. Exact-head prior contract744PASS18SKIP
+plus the unchanged Windows path assertion and same-node Linux1PASS remain
+retained; never label the complete contract or future CI green from that.
+
 Issue/software capacity/current main were actually checked. Actual evidence snapshots, code checks and completion evidence belong in the active iteration and private PLAN-PROGRESS; no self-certified runtime GO. All previous immutable evidence remains, and only final actual source/review/CI/merge/publication can enter a later runtime binding.

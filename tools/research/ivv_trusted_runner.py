@@ -3770,9 +3770,15 @@ def _peer_read(reader, parent, name, bound=262144):
             data.extend(part)
         return None
     finally:
+        primary = sys.exc_info()[1]
         try:
             reader.release(fd)
-        except OSError as error:
+        except BaseException as error:
+            reader.close_failed = True
+            if primary is not None:
+                raise primary
+            if not isinstance(error, Exception):
+                raise
             raise Refused("PEER_METADATA_CLOSE") from error
 
 
@@ -3805,16 +3811,28 @@ def _peer_socket_inodes(reader, process):
                 result.add(before.st_ino)
         return result
     finally:
+        primary = sys.exc_info()[1]
+        cleanup_error = None
         try:
             if stream is not None:
                 stream.close()
-        except OSError as error:
-            raise Refused("PEER_METADATA_CLOSE") from error
-        finally:
-            try:
-                reader.release(directory)
-            except OSError as error:
-                raise Refused("PEER_METADATA_CLOSE") from error
+        except BaseException as error:
+            reader.close_failed = True
+            cleanup_error = error
+        # A failed/interrupted stream close must not skip directory release or
+        # let its later failure replace the entry primary/first interruption.
+        try:
+            reader.release(directory)
+        except BaseException as error:
+            reader.close_failed = True
+            if cleanup_error is None:
+                cleanup_error = error
+        if primary is not None:
+            raise primary
+        if cleanup_error is not None:
+            if not isinstance(cleanup_error, Exception):
+                raise cleanup_error
+            raise Refused("PEER_METADATA_CLOSE") from cleanup_error
 
 
 def _peer_table_projection(raw, inode, vendor_inodes):

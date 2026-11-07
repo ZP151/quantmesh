@@ -8,6 +8,7 @@ import os
 import socket
 import stat
 import struct
+import sys
 import time
 from importlib.metadata import distribution
 from pathlib import Path
@@ -20,6 +21,164 @@ from test_ivv_init_query_vector import instrumented, run
 from test_ivv_recovery_capture import module
 
 METHOD = "init-peer-flow-v1"
+
+
+def cleanup_probe(kind, body_error=None, stream_error=None, release_error=None):
+    """Actual cleanup-helper AST with inert OS edges; no real file/socket opens."""
+    import inspect
+
+    r = module("ivv_trusted_runner")
+    events = []
+
+    class Stream:
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if body_error is not None:
+                raise body_error
+            raise StopIteration
+
+        def close(self):
+            events.append("stream_close")
+            if stream_error is not None:
+                raise stream_error
+
+    reader = NS(deadline=2, fds=[], close_failed=False)
+
+    def keep(fd):
+        reader.fds.append(fd)
+        return fd
+
+    def release(fd):
+        events.append("release")
+        reader.fds.remove(fd)
+        if release_error is not None:
+            # Model the real PosixReader.release sticky os.close-failure state.
+            reader.close_failed = True
+            raise release_error
+
+    def read(*args):
+        if body_error is not None:
+            raise body_error
+        return b""
+
+    reader.keep, reader.release = keep, release
+    fake_os = NS(
+        O_RDONLY=0,
+        O_CLOEXEC=1,
+        O_NOFOLLOW=2,
+        O_DIRECTORY=4,
+        open=lambda *a, **kw: 7,
+        read=read,
+        scandir=lambda fd: Stream(),
+    )
+    function = r._peer_read if kind == "read" else r._peer_socket_inodes
+    namespace = dict(
+        os=fake_os, time=NS(monotonic=lambda: 0), sys=sys, Refused=r.Refused, stat=stat, need=r.need
+    )
+    exec(compile(ast.parse(inspect.getsource(function)), "actual-peer-cleanup", "exec"), namespace)
+    action = (
+        (lambda: namespace[function.__name__](reader, 1, "net/tcp"))
+        if kind == "read"
+        else (lambda: namespace[function.__name__](reader, 1))
+    )
+    return r, action, reader, events
+
+
+@pytest.mark.parametrize("kind", ["read", "scan"])
+@pytest.mark.parametrize("primary_kind", ["keyboard", "exit", "mandatory"])
+def test_peer_cleanup_preserves_body_primary_and_sticky_release_failure(kind, primary_kind):
+    primary = (
+        KeyboardInterrupt("PRIVATE")
+        if primary_kind == "keyboard"
+        else SystemExit("PRIVATE")
+        if primary_kind == "exit"
+        else module("ivv_trusted_runner").Refused("MANDATORY_GUARD")
+    )
+    _, action, reader, events = cleanup_probe(kind, primary, release_error=OSError("PRIVATE"))
+    with pytest.raises(BaseException) as caught:
+        action()
+    assert caught.value is primary
+    assert events == (["release"] if kind == "read" else ["stream_close", "release"])
+    assert reader.fds == [] and reader.close_failed is True
+    # The real owning-reader final close consumes this sticky state and cannot
+    # turn an optionally caught body OSError into an accepted UNKNOWN sample.
+    with pytest.raises(OSError, match="owned descriptor close not established"):
+        module("ivv_native_producer").PosixReader.close(reader)
+
+
+@pytest.mark.parametrize("primary_kind", ["keyboard", "exit", "mandatory"])
+def test_peer_scanner_attempts_both_cleanups_without_replacing_body_primary(primary_kind):
+    primary = (
+        KeyboardInterrupt("PRIVATE")
+        if primary_kind == "keyboard"
+        else SystemExit("PRIVATE")
+        if primary_kind == "exit"
+        else module("ivv_trusted_runner").Refused("MANDATORY_GUARD")
+    )
+    _, action, reader, events = cleanup_probe(
+        "scan", primary, OSError("PRIVATE"), OSError("PRIVATE")
+    )
+    with pytest.raises(BaseException) as caught:
+        action()
+    assert caught.value is primary
+    assert events == ["stream_close", "release"] and reader.fds == []
+    assert reader.close_failed is True
+    with pytest.raises(OSError, match="owned descriptor close not established"):
+        module("ivv_native_producer").PosixReader.close(reader)
+
+
+@pytest.mark.parametrize(
+    "kind,stream_kind,release_kind",
+    [
+        ("read", None, "os"),
+        ("scan", "os", None),
+        ("scan", "os", "os"),
+        ("scan", "keyboard", "os"),
+        ("scan", "exit", "os"),
+        ("scan", None, "keyboard"),
+        ("read", None, "exit"),
+    ],
+)
+def test_peer_cleanup_only_failure_is_mandatory_and_first_interrupt_survives(
+    kind, stream_kind, release_kind
+):
+    def error(name):
+        return (
+            KeyboardInterrupt("PRIVATE")
+            if name == "keyboard"
+            else SystemExit("PRIVATE")
+            if name == "exit"
+            else OSError("PRIVATE")
+            if name
+            else None
+        )
+
+    stream_error, release_error = error(stream_kind), error(release_kind)
+    r, action, reader, events = cleanup_probe(
+        kind, stream_error=stream_error, release_error=release_error
+    )
+    with pytest.raises(BaseException) as caught:
+        action()
+    first = stream_error if stream_error is not None else release_error
+    if not isinstance(first, Exception):
+        assert caught.value is first
+    else:
+        assert type(caught.value) is r.Refused and r.reason(caught.value) == "PEER_METADATA_CLOSE"
+        assert caught.value.__cause__ is first
+    assert events == (["release"] if kind == "read" else ["stream_close", "release"])
+    assert reader.fds == [] and reader.close_failed is True
+    with pytest.raises(OSError, match="owned descriptor close not established"):
+        module("ivv_native_producer").PosixReader.close(reader)
+
+
+@pytest.mark.parametrize("kind", ["read", "scan"])
+def test_peer_clean_return_attempts_all_cleanup_without_poison(kind):
+    _, action, reader, events = cleanup_probe(kind)
+    assert action() == (b"" if kind == "read" else set())
+    assert events == (["release"] if kind == "read" else ["stream_close", "release"])
+    assert reader.fds == [] and reader.close_failed is False
 
 
 def test_active_checkout_provenance():
