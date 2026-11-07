@@ -192,3 +192,10 @@ axes READY. Carrier maximum312424<327680; every original cap unchanged.
 Canonical Source manifest02 c08a5dbc preserves Source7; canonical Ops03 manifest
 e40f62a2 binds the four final bodies. Old failures remain. Task2 CI/merge/actual
 publication and any distinct fully accounted runtime pair remain pending.
+
+CI581 fast exposed stale contract-selection test count12 vsactual13. The
+bounded test-only correction keeps exact uniqueness and adds explicit peer
+module membership; actual RED1 -> complete gate-module39PASS/2SKIP, independent
+integration review READY. Source7 and gate code remain frozen. Preserve failed
+CI581 and wait for its release terminal before corrected-head normal CI; no
+healthy cancellation/rerun or old artifact qualification.

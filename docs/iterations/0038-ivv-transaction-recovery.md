@@ -2,6 +2,23 @@
 
 ## Current passive same-connection slice — issue299, 2026-11-07
 
+CI integration correction: PR300 actual final ab078a1a started CI581/run42328152651.
+The fast job passed its release-contract stage then failed the unchanged
+quality-gate regression's stale exact target count12 after this slice added the
+13th module. Local RED reproduces assert13==12. Parent changes only the test's
+expected count to13 and explicitly requires test_ivv_init_peer_flow.py, retaining
+uniqueness and every legacy assertion. Complete quality-gate module39PASS/2SKIP,
+global Ruff, changed formatting and whitespace pass; independent bounded
+Spec/Standards integration review READY. This is test integration alignment,
+not another runtime Source correction or a dropped assertion. Source7/gate
+bytes and original Source/private R2 verdicts remain unchanged. Preserve CI581's
+failure and artifact; let its active release job reach its normal terminal.
+A corrected-head normal CI is necessary after this failure, never a healthy
+rerun or a qualification borrowed from failed581. No merge/publication/runtime
+or financial success is claimed. Evidence: reference-peer-flow-20261107-01/
+ci-gate-fix-01/{RED-01.json,GREEN-01.json,REVIEW-01.md} under the same recovery
+integration root. All retained CI evidence remains inside the existing CI16MiB.
+
 Final software checkpoint: both Source sole R2 axes are READY at dfdbb827;
 all seven runtime files remain frozen. Private Ops02 completed geometry but
 Standards R1 found that an unbound reference control could reach capture-side

@@ -106,7 +106,8 @@ def test_contract_selects_whole_native_ownership_and_required_bootstraps():
     assert "--ci-contract" in command.argv
     assert "tools.ci_profile_plugin" in command.argv
     targets = [a for a in command.argv if a.startswith("tests/")]
-    assert len(targets) == len(set(targets)) == 12
+    assert len(targets) == len(set(targets)) == 13
+    assert "tests/test_ivv_init_peer_flow.py" in targets
     assert "tests/test_portfolio_budget_qualification.py" in targets
     assert "tests/test_ci_release_contract.py" in targets
     assert not any(a in command.argv[3:] for a in ("-k", "--ignore", "-m"))
