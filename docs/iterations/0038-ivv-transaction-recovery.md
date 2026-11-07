@@ -2,6 +2,63 @@
 
 ## Current passive same-connection slice — issue299, 2026-11-07
 
+Final software checkpoint: both Source sole R2 axes are READY at dfdbb827;
+all seven runtime files remain frozen. Private Ops02 completed geometry but
+Standards R1 found that an unbound reference control could reach capture-side
+once bookkeeping before later rejection. One consolidated TDD correction in
+new immutable Ops03 rejects the role mismatch at builder, receiver and binder
+before effects. Genuine RED9 became GREEN14 tests/37 subtests; final private
+unit39 tests/70 subtests passed. Both original private readers' sole R2 are READY.
+These are authorized agent/proxy reviews, not independent-human review facts.
+
+Complete final96 synthetic cases (32 per default/reference/conditional variant)
+restore exact Source7/inner bytes and fit all unchanged caps. Carrier maxima
+311118/312424/312055; packed230509/body844966/status7857/peer889, header887301,
+frame8227337 and future16697861. Combined retained Ops01/02/03 physical census
+1454080<16777216. The fixed outer Base85 wrapper changes no source/authority
+or decompression cap. OPS3 reviewed manifest673B SHA256
+e40f62a2f9365d3fb2bc45d165c4081ff815fe0673e1dc708619b4b3d06520f3.
+Canonical Source manifest02 (1255B,c08a5dbc) preserves manifest01's exact JSON
+values/Source7; retained01 CRLF fails the unchanged canonical-input guard.
+
+Parent raw verification covers87 old/new private references. Actual closeout:
+output/ivv-transaction-recovery-20261104-01/integration/
+reference-peer-flow-20261107-01/PARENT-PRIVATE-OPS-R2-CLOSEOUT-01.json;
+source-review-02 and ops-review-02 retain both R2 reports and original R1 facts.
+Final exact-head Windows contract762PASS18SKIP then the unchanged POSIX-path
+assertion is retained; its same Linux node passed. Normal Linux CI remains
+mandatory. The following intermediate checkpoints are historical.
+
+Normal PR/CI, exact-lock bundle, guarded merge/full-tree/Source7 equality and
+actual publication remain pending at this docs-only final checkpoint. No new
+runtime pair/policy/SDK/context, provider/login/service or financial action.
+Software publisher provenance will be independent of runtime policy; after
+actual publication, a separately pinned preparer binds the actual new policy
+and retains all policy/current-pointer/pair/release/once checks. An unused old
+publisher POLICY constant is not authority to pre-create runtime objects.
+
+Source soleR2 is complete: both original readers ADDRESSED/READY at dfdbb827
+after the single cleanup correction; helper4a3ecaa3/runner465ec1ea/issuer0003c0c5
+and Source7 remain frozen. The branch is normally pushed; fresh main is6a0.
+At that intermediate checkpoint no PR/fullCI/publication or runtime pair had started.
+
+Private Ops01 hit the mandatory Planner boundary: actual default carrier329923B
+exceeds327680B by2243B. Body842782/packed229501/REMOTE29368 compressed7907/
+codec31919 compressed8326 and status7857/peer889 are retained. Reference and96-
+case/full frame qualification stopped at the first refusal. The16 focused pure
+checks and prior Source reviews do not qualify this failed package.
+
+Planner selected a bounded outer PACKET Base85 representation using the existing
+stdlib module, with explicit fixed encoding tag/canonical validation and the
+same compressed bytes, bounded zlib/body/SHA/source/authority contracts. Public
+synthetic229501B controls on existing Python3.13.9/Linux3.12.3 roundtrip exactly;
+encoded saving19127B is arithmetic only, not a built accepted carrier. New
+immutable Ops02 must prove complete actual geometry under every unchanged cap.
+Source7 stays unchanged; no Source third patch round or cap increase follows.
+See docs/superpowers/{specs,plans}/2026-11-07-init-peer-carrier-encoding.md.
+Ops01 failure/history stays retained; Ops01+02 share the same Ops16MiB/common64,
+with no net resource, policy, SDK/provider/login or financial action.
+
 Both fresh Source R1 axes found the same P2: cleanup could replace an active
 interruption/mandatory primary. One consolidated correction changes only the
 two new reader finally blocks, preserving original identity, attempting every

@@ -2,6 +2,19 @@
 
 ## Current successor under implementation — issue299, 2026-11-07
 
+Source R2 is READY at dfdbb827 after the one cleanup correction. Complete
+private Ops01 then refused carrier329923>327680. Parent returned to Planner
+and selected a versioned outer PACKET text encoding reduction with exact
+restored bytes/canonicality and unchanged Source7/decompression/source/once/
+resource limits. Complete Ops02 geometry passed; one role-binding R1 concern
+was corrected in immutable Ops03 and both same-reader private R2 axes are READY.
+The fixed qm.ivv.packet.zlib-base85.v1 representation restores identical inner
+bytes; 96 synthetic cases fit every unchanged cap (maximum312424<327680).
+This bounded software encoding choice is accepted on actual engineering
+evidence; normal CI/merge/publication and runtime gates remain pending.
+It does not change the conditional transition below. See the
+tracked init-peer-carrier-encoding spec/plan and current iteration evidence.
+
 Issue299 advances the approved software scope to explicit control.v3 /
 init-peer-flow-v1 and terminal/observation.v4, preserving the complete query
 vector and adding bounded public-wire, client TCP_INFO and same-connection
@@ -12,8 +25,8 @@ metadata is UNKNOWN, with no application-read, login or vendor-cause inference.
 
 The tracked spec and plan are docs/superpowers/{specs,plans}/
 2026-11-07-init-peer-flow.md. Source core TDD and synthetic native controls are
-frozen; complete integration, review, geometry, CI, normal merge and publication are still
-required. The actual software80MiB import retains Source64 and every historical
+frozen; source/private integration, review and synthetic geometry are complete.
+Normal matching-head CI, merge and publication are still required. The actual software80MiB import retains Source64 and every historical
 hold/negative/UNKNOWN/future. It creates no new runtime pair, SDK/context action
 or policy change. Reference11 remains closed negative and capture12 withheld.
 This successor status supersedes the proposal-only next-step wording in the
