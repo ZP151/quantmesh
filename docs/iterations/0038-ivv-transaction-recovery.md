@@ -4,6 +4,36 @@
 
 ### Reduced terminal compatibility — 2026-11-07T15:36:41.942770Z
 
+Planner/Verifier causal continuation: actual frozen __main__/CLI reaches its
+first protected read with no SDK, and fixed failed-unit launch properties match.
+Precise original start age4.2345829s/exit5.2286369s falsifies already-expired-at-
+process-start but does not identify the first false guard. Source guard map,
+local original content prefix and pure binding all pass to declared fences;
+no expired clock replay or modeled custody is called actual host evidence.
+
+Root selected one RAM-only SDK0 diagnostic on current33f and stopped originals.
+Diagnostic01 authenticated17 actual files, layout and binding, then stopped at
+READ_SCOPE_FENCE. Static full native closure inspection found diagnostic-only
+omissions: exact provider cgroup.stat and same vendor net/tcp6; both already
+belong to approved fixed numeric/identity scope. Root selected one immutable
+correction, retaining01 unchanged. Local old-predicate RED/corrected GREEN and
+seven negative targets plus real WSL eight effect-denial checks passed. An
+initial Windows-only predicate harness path-normalization failure occurred
+before output/intent/runtime and is retained in SDK0-NATIVE-READ-TARGETS-02.md.
+
+Actual diagnostic02 returned READONLY_PREFIX_PASS_NO_CLAIM:17 actual file
+custody/hash checks, pure binding, original native snapshot and growth constructor
+all pass. Prepared03:23392B/3a1c94ab; result3839B/2728fea3. Owned transport1.537s,
+all23392 input bytes delivered,3254 stdout bytes, no stderr, process/Job/EOF/drain
+all closed. No SDK/Journal/health dispatch/remote write/signal/namespace/private
+sample occurred. This is current host-view evidence, not the historical manager
+mount or exact old resource-check time. No source/TTL repair or new runtime was
+selected; old health remains STOP/SPENT and all historical UNKNOWNs/holds stay.
+Quant role: no capture/input/trial/report/decision/financial qualification.
+User-confirmed login is retained; browser-extension Edge3 confirms existing
+Tailscale Authorization successful only, with no global UI or repeated login.
+Whole SDK/IVV task remains ACTIVE; Root receives the actual narrowed boundary.
+
 Fresh delta reviewer10721B/bac4d087 returned bounded Spec/correctness READY.
 Parent read complete report and verified39 files, exact byte inverse/immutable
 nine identities, current finite35/inert/geometry/census evidence. Actual Parent

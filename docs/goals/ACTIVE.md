@@ -2,6 +2,27 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Latest causal read-only checkpoint: actual frozen __main__ accepts the real CLI;
+same failed unit launch/read-only declarations match. Exact process timestamps
+put the old resource age at4.2345829s on entry and5.2286369s on exit; this does
+not prove which guard failed. Local authenticated content/hash/schema/import and
+pure binding checks pass without evaluating expired time or claiming host mounts.
+Root selected one SDK0 current-host admission diagnostic. Original01 fenced due
+to its whitelist omission, not an original provider refusal. Complete mature
+native read-closure inspection found only exact provider cgroup.stat and same
+vendor net/tcp6 missing from already approved numeric/identity metadata scope.
+One immutable correction passed targeted RED/GREEN/negative and eight effect
+fences, then actual diagnostic02 passed all17 original custody/hash checks,
+pure binding, unchanged native snapshot and growth constructor, stopping before
+Journal/claim. Result3839B/2728fea3; owned transport1.537s/full closure. No SDK,
+health replay, namespace, signal, remote write or private inventory occurred.
+Original01 fence, health STOP/SPENT and all old UNKNOWNs/holds remain. Current
+host-view guards pass; historical manager mount view and exact old check-time
+remain unproven. No TTL/source repair or new health/profile was selected.
+User again confirms login and browser-extension-only operation. Edge3 existing
+Tailscale page shows Authorization successful; that establishes SSH auth only,
+not SDK flags. Preserve the OpenD session without repeat login/global UI use.
+
 Latest actual outcome: terminal compatibility delta10721B/bac4d087 is READY on
 both bounded axes; old whole R2 stays NOT READY. Actual mature bind produced
 1387B/bdbd5fdb and preserved original33f unit/invocation/three processes. The sole
