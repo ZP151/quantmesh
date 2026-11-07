@@ -4,6 +4,69 @@
 
 ### Reduced terminal compatibility — 2026-11-07T15:36:41.942770Z
 
+Final unified candidate and actual new purpose — 2026-11-08 Singapore:
+resource firstguard+late local physical sampling and actual health lifecycle are
+one frozen candidate, not serial partial readiness claims. Index4714B/30b9d56b,
+qualification7744B/3d1cfb18; entry43520B/16161338,packet28817B/ab6c6563,actor15969B/
+515a6a7b. Resource soleR2 READY4156B/e915aa6f, actual callsite soleR2 READY5878B/
+0a348f5a. The latter's one launcher-status normalization bug had2RED→2GREEN and
+real local success/error seams; no third correction. Current24 tests0.28s, three
+inert imports/no SDK or effect/default unarmed, Ruff/format all pass.96 current
+pure vectors maxinner693944/encoded197663/carrier283846/status461 fit unchanged
+caps. Initial final geometry's stale carrier-path AST expectation failed after
+vector loops; only the harness normalizes the authorized fresh-purpose path,
+then final96 pass. Source7 actual/current/gitM de245 bytes all match.
+
+Planner/central once-only registration2953B/90bfbdb2 adds new L8/R24MiB to new
+status33f-02/unit qm-opend-status-33f-02.service/local runtime02. Old32MiB/old
+purpose/UNKNOWNs/futures stay charged. Draft forecast01 raced this actual import
+and predicted another32; it was never imported. Corrected bound02 and central
+net0 source binding2326B/fc6e523f point only at the one90bf receipt. Software
+current conservative92884992+full future33554432=126439424<134217728, no cap/paid
+increase or deletion. Runtime holds source4/WAL8/provider8/margin4 remain exact.
+
+Actual SDK0 preflight verified current same machine/Python e50d/free144558551040,
+provider b0b6/1031737 active/running, new root/unit absent and transport closed.
+Server then consumed this one separately registered opportunity. Parent actual
+result574B/f3b64c65 is STOP with real REFUSED/statusnull; reservations IMPORT,
+CONTEXT,INITIALIZATION,CONNECT,INIT1001. Normal close context/callback/socket all
+true/23ms, logclosed/withinDeadline true. Child/cgroup/resources/channel/transport
+and manager closure all true; actual pending/result and client TERMINAL link.
+No automatic retry, no provider login/logout/restart or credential operation.
+
+Authenticated current-purpose public readback6265B/53cc1f4a delivered in0.994s
+with all owned closure. Three release hashes match frozen bytes, Root INTENT/
+OWNER/GO and five MAYs exist, State MAY absent, cleanup-unknown/forced absent.
+The real physical observation recordsgrowth0/free144557813760 and separate
+capacity schema/hash/90bf reference, observed-start→INTENT0.312754584s<5. This
+actually validates late genuine sampling, immutable capacity's distinct original
+210s gate, real child kernel/GO, and actual consumer pipe/normal-close delivery.
+Finite firstguard was not triggered by this attempt and remains offline-tested;
+do not claim a live pre-claim refusal test. Root TERMINAL absence is implementation
+design: RESULT-PENDING-TRANSPORT and MANAGER-CLOSE plus local final TERMINAL.
+
+Farthest source-attributable point is guarded valid-header Init1001 reservation
+with a verified vendor TCP peer. One context allocation/official construction
+attempt and initialization entry occurred. Actual Init delegate/queued/packet
+bytes/response/INIT_READY remain UNKNOWN; State outgoing requests0, but a possible
+pre-send GlobalState method edge is0..1 UNKNOWN. Only fixed REFUSED survives the
+unchanged actor catch; exact first guard/exception UNKNOWN. LastInitMAY→pending
+file interval20.986778873s is not a measured pure wait or confirmed timeout.
+Whole Parent invoke→local result32.803s; stage→managerclose29.156s. Source/private
+vendor logs, panes/XML or raw SDK responses were not read to fill these gaps.
+
+Provider current same invocation/MainPID active; SDK login flags not returned,
+user-confirmed login retained. New status02 STOP/SPENT, old status01/older
+cumulative UNKNOWNs unchanged without refund/remap. Current closeout7644B/
+3e2cf40a returns the first actual SDK-stage failure once to Planner. No rolling
+patch, new purpose or SDK call follows. Concrete alternative for Planner is reuse
+of existing pinned official SDK client code/provenance under the same outer
+source/isolation/once/quota/close, rather than another actor retry or UI-login
+confirmation. Original Server remains sole implementer/host owner. A20–30min
+exact-client/defaults/offline preparation estimate has existing-source basis;
+actual service recovery duration/success is UNKNOWN. Quant role: no capture,
+input, trial, report, decision, OOS/Paper/live or financial admission.
+
 Verifier actual same-props mountview successor:5235B/c94cec3d, all17 original
 callsite contracts and18 actual unit properties PASS. Eleven release FDs are
 readonly; other six original readonly=False calls pass, their forced-true

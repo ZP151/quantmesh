@@ -2,6 +2,41 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Actual new status33f-02 is now STOP/SPENT after one fully delivered REFUSED.
+Unified frozen index4714B/30b9d56b; final qualification7744B/3d1cfb18,24 targeted
+PASS, current inert SDK0/default unarmed,96 complete geometry inside all caps.
+Resource finalR2/e915 and actual-health-callsite finalR2/0a348 are bounded reviews,
+not a rewritten old whole-framework READY. Source7/current==gitM remains exact.
+Unique new registration2953B/90bf adds32MiB once, old32/UNKNOWNs retained; duplicate
+forecast draft01 was never imported and corrected02 uses the one canonical receipt.
+
+Actual Root INTENT/OWNER/GO and five MAYs through INIT1001 exist. Physical sample
+reached INTENT in0.312754584s with provider growth0/free144557813760B; original5s
+and distinct immutable-capacity210s gates really passed. New actual actor created
+one context/attempted official construction and initialization; Init send-header
+guard was reached with verified vendor peer, but actual delegate/queued/bytes/
+response/READY are UNKNOWN. State1002 MAY is absent: outgoing State requests0,
+while pre-send GlobalState method invocation stays0..1 UNKNOWN. Do not equate
+reservations with actual delivered requests or infer an initialization timeout.
+Only REFUSED is recorded; first SDK guard/exception is suppressed by unchanged
+actor. Init MAY→pending-result metadata interval20.986778873s includes control/
+cleanup, consistent with a wait but not a recorded timeout code.
+
+Context/callback/socket/log closed normally in23ms; child/cgroup/resources/channel/
+manager/owned transport all closed. Parent delivered and durably retained the
+actual finite refusal, with no pipe hang; new named unit is not-found/no cgroup.
+Provider remains original active b0b6/MainPID1031737, login untouched/unmeasured.
+Result574B/f3b64c65; public readback6265B/53cc1f4a; closeout7644B/3e2cf40a.
+Root terminal absence is by design: Root pending+managerclose links client durable
+TERMINAL. Old health01 first-guard/normal-close UNKNOWN and cumulative UNKNOWNs
+stay unchanged. No GetGlobalState result, capture/input/trial/report/financial GO.
+First actual failure has returned once to Planner; no rolling patch/new purpose
+or SDK replay. Proposed least-disruptive alternative is the existing pinned
+official SDK client compatibility baseline with unchanged outer isolation/once/
+quota/close, selected separately by Planner. Original Server owns preparation/
+execution;20–30min bounded exact-client/defaults/offline route preparation is an
+estimate, actual SDK/service recovery time UNKNOWN. No UI-login reconfirmation.
+
 Current same-property mountview SDK0 verification actually passed. Successor
 result5235B/c94cec3d proves17 original callsite contracts and18 systemd properties,
 all hashes unchanged;11 release FDs readonly,6 original non-RO contracts pass.

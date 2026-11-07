@@ -2,6 +2,13 @@
 
 ## Independent operator status — issue301
 
+Latest actual status02 reaches real child/source/kernel/physical admission and
+Init1001 guarded reservation, then returns REFUSED with all ordinary close facts
+and actual caller delivery proved. It supplies no GlobalState result or login
+flags. Provider login/process is preserved. This new opportunity is STOP/SPENT;
+exact SDK first failure and delivery details remain UNKNOWN, not a replay grant.
+See the active recovery iteration for the one complete closeout and Planner route.
+
 After same33f service restoration and rejected CB1 recovery, verify SDK/login
 status independently of credential input. One guarded context/Init plus at most
 one official GetGlobalState, independent durable operational accounting and
