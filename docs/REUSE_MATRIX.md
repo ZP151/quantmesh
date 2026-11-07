@@ -1,3 +1,16 @@
+## Same-build selected-instance maintenance preparation — issue301
+
+Reuse authenticated provider/native snapshots, held pidfds and the unchanged
+service manager's owned cgroup cleanup, then mature instance-data/launcher/start,
+private CB1 credential route and authenticated binding. Add only a finite pure
+retirement/once contract and fixed private adapter; no SDK/vendor source copying,
+new dependency/platform/observer/collector version or trading/data/math change.
+The existing snapshot closes its own handles; separately retained pidfds and
+post-fsync revalidation are required for a selected stop. Mature instance-local
+START-INTENT is retained alongside the new maintenance-level sole-successor
+claim. A known prior-stage pin mismatch receives an explicit reviewed data-only
+successor, never a live guard bypass. Actual interruption remains unreleased.
+
 ## Passive Init peer-flow — issue299,2026-11-07
 
 Reuse the protected SDK loader/actual queued Init bytes, retained socket and

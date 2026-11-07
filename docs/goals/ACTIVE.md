@@ -1,5 +1,46 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Selected-instance recovery preparation — issue301
+
+The fixed-IVV task remains ACTIVE. The user confirms OpenD is logged in and
+requests browser-extension interaction only. Keep the active provider untouched
+while preparing one exact-owned-instance retirement and same-build successor
+transaction; no new observer/collector version is selected. The existing handler
+history is UNAVAILABLE from permitted records, not a proved vendor defect.
+The independent plan-builder soleR2 is READY after binding exactly one successor
+and a durable per-maintenance start claim. Core/native adapter writers are
+independent; actual interruption, fresh runtime controls/capacity, maintenance
+and one READY/normal-close acceptance remain unreleased. No repeat ordinary
+login/count/review/capacity question is pending. See the
+[plan](../superpowers/plans/2026-11-07-opend-selected-maintenance.md) and
+active [iteration](../iterations/0038-ivv-transaction-recovery.md).
+
+## Actual peer-flow outcome — 2026-11-07
+
+This checkpoint supersedes pending software/release wording in CONTEXT.md and
+the retained historical entries below. PR300 normally merged4887f75b after
+CI582 (8459 passed,149 skipped; frontend793), exact-lock11-file equality and
+reviewed/final/merged Source7 equality. Source/private/publisher reviews and
+actual wrapper final R2 are agent/proxy reviews under standing authority,
+not independent-human inspection claims.
+
+One actual init-peer-flow-v1 reference12 is spent and owned CLOSED. Its bound
+public Init packet conforms; the same verified established client socket shows
+84 acknowledged bytes and zero received-byte progression. Both sequential exact
+reverse-peer samples match the vendor FD, with RX/TX queues ZERO. Actual20s
+Event Timeout occurred before unpack/SDK receive/notify. These distinguish TCP
+sequence acknowledgement from the missing SDK response; they establish no
+handler-read, login state, API health, cause or concrete repair. User-confirmed
+OpenD login was preserved; no restart/logout/configuration change occurred.
+
+Capture13 remains unprepared/withheld and its pair locally retired. No real
+input, trial, report, decision, OOS/Paper/live or financial qualification exists.
+All historical UNKNOWN, negative pairs and unused futures remain without refund;
+allholds1432354816/software616562688 follow the actual96MiB central import and
+active policy46. The fixed-IVV owner task remains ACTIVE. Next Planner work must
+add distinguishing information, not replay this method or revive retired pairs.
+See the actual closeout in the active recovery iteration.
+
 ## Current passive same-connection slice — issue299, 2026-11-07
 
 PR298 software/release and actual reference11 are complete engineering facts:
