@@ -1,3 +1,15 @@
+## Independent operator status — issue301
+
+Reuse the authenticated SourceM protected SDK loader, numeric log sink, SDK
+normal close and _Scope/_Channel/namespace/kernel/runtime/OperatorReader/owned
+peer primitives. A fixed health adapter binds independent paths and ownership;
+the disclosed HealthScope activation hook and exact three-gate runtime AST
+derivation require focused qualification and complete review. Do not copy a new
+platform, mutate installed SDK/Source7, relabel the reference actor, query old
+research ledgers or treat health status as financial admission. The dedicated
+shared send budget/typed selector is the necessary new policy, with no upstream
+implementation copied or dependency added. No runtime effect is claimed yet.
+
 ## Same-build selected-instance maintenance preparation — issue301
 
 Reuse authenticated provider/native snapshots, held pidfds and the unchanged

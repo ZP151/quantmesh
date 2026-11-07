@@ -2,6 +2,20 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Current chosen slice is the independent operator SDK status design/plan
+2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z. Parent/Planner
+selected it under the actual reconstruction/SDK and standing necessary-count
+answers. One context, at most one Init1001 and one GetGlobalState1002; no
+credential input, quote/history, research ledger/repair-ref or CB1package02 work.
+SourceM stays fixed. Source audit4440c018 and local17SDK pin equality are offline
+facts. A fresh Implementer owns one complete private package/TDD; independent
+whole review and actual source/native/once/resource/normal-close gates precede
+the sole Server execution. Actual bind/SDK/publication have not occurred.
+Unique actual capacity import2711B/dbc2aece adds software64+runtimeLocal8/
+remote24MiB; allholds1767899136/software717225984, guardG12154138714/
+P6116066318/stress6172689422, old192/unused pairs/UNKNOWN retained without reuse.
+The60–105min engineering estimate is anchored to12:12Z, not SDK success DDL.
+
 Sole complete R2 is **NOT READY; package02 STOPPED**. Review7901B/215b68e0
 accepted six R1 fixes but reproduced a remaining P1: the final socket lookup
 observes a replacement inode and its returned identity is discarded before the

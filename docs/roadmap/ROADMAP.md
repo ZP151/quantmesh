@@ -1,5 +1,15 @@
 # QuantMesh Product Roadmap
 
+## Independent operator status — issue301
+
+After same33f service restoration and rejected CB1 recovery, verify SDK/login
+status independently of credential input. One guarded context/Init plus at most
+one official GetGlobalState, independent durable operational accounting and
+normal close reuse the mature actor; SourceM and financial research remain
+unchanged. Software qualification/review and actual current identity/resource
+gates precede execution. No login/SDK success is yet established by this slice.
+See [plan](../superpowers/plans/2026-11-07-opend-operator-status.md).
+
 ## Same-build recovery preparation — issue301
 
 Prepare a concrete exact-owned-instance retirement -> proved closure -> one

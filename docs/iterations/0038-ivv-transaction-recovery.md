@@ -2,6 +2,51 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Chosen independent operator status slice — 2026-11-07T12:12Z
+
+Planner/Product: one operator action verifies the restored same33f SDK/login
+status without entering credentials again. Root selected the complete finite
+slice under the actual aa3d38ef reconstruction/SDK answer and6db1254c standing
+direction; no new ordinary approval question. Success is typed finite status
+plus independently attributed normal closure, not provider existence alone.
+Quant Researcher: no dataset, costs, window, OOS or financial confidence change;
+health status cannot release input/capture/trial/report/decision/Paper/live.
+
+Read-only source audit4440c018 traced the actual pinned constructor, synchronous
+Init/GetGlobalState, KeepAlive1004, disconnect retries, quote resubscription and
+normal close. Parent actual local17SDK LF checks match the existing pinset; this
+does not attest current remote source. New shared budget is one context/Init1001
+and at most one1002, all implicit sends included, no other requests. The three
+allowed status fields use exact booleans and12 closed upstream program strings;
+raw account/response/error/description never leaves RAM. Init READY is distinct
+from quote login and unknown wire delivery is not zero.
+
+Architecture reuses authenticated SourceM _Scope/_Channel/namespace/kernel/
+runtime and OperatorReader/owned peer, with independent health paths/WAL rather
+than research Ledger. A small HealthScope first-event-files activation hook
+retains original controllers/lifecycle. An explicit health-only _runtime AST
+derivation replaces exactly three recovery feature gates with True, preserving
+all downstream checks and proving the reverse AST. This is new compatibility
+software requiring review, not an unchanged reference actor or connection-N.
+SourceM de245152, Source7, SDK/build/profile and original provider stay fixed.
+
+Implementer: fresh operator_status_implementer owns the complete new Server
+operator-status-01 package and causal TDD/local synthetic wire/actor tests;
+Parent owns tracked docs/actual effects. Complete spec/plan and preflight conflict
+table are recorded; no conflicting file ownership. Reviewer: one future fresh
+complete Spec+quality reader, one consolidated correction/R2 maximum. Verifier:
+targeted package/necessary mature and synthetic wire checks only; no healthy
+Source CI replay. Actual bind/status/publication remain unexecuted.
+
+Capacity: full forecast2289B/d5f834ab and independently read central unique
+import2711B/dbc2aece allocate NEW softwareLocal64+runtimeLocal8/remote24MiB.
+All old192MiB and unused pairs/failures/UNKNOWN/futures stay independently held.
+Allholds1767899136/software717225984, guardG12154138714/P6116066318/
+stress6172689422 stay below existing caps/free floor, paid0. Current execution
+needs fresh actual resource/ownership conditions; accounting is not runtime GO.
+Scope anchor12:12:00.921038Z; estimate45–75min software+10–20min review+5–10min
+actual once is an engineering estimate, not login/SDK recovery promise.
+
 ### Precise same-provider preinput repair scope — 2026-11-07
 
 Final bounded review: **Spec NOT READY / code quality NOT READY; package02
