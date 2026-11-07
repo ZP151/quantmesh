@@ -4,6 +4,19 @@
 
 Current chosen slice is the independent operator SDK status design/plan
 2026-11-07-opend-operator-status, scope anchor12:12:00.921038Z. Parent/Planner
+Full initial caller qualification stopped at actual encoded/carrier limits;
+software01 is frozen BLOCKED_GEOMETRY, index15439B/0fe8eb79, Parent verified99
+files. Linux42 and real local-wire9 passing tests are partial evidence, not
+complete qualification. Late qualification style failures and ten unavailable
+WSL temporary originals are explicitly retained as failures/unknowns. A local
+96-case reversible proof4d45ea8e preserves every631703B source/control and fits
+strict UTF8 text representation. The same author now owns only software02's
+versioned packet codec and necessary complete-caller/style/persistent-fixture
+qualification; actor/entry/SourceM/caps/actual purpose are unchanged. No review
+round, host/bind/SDK or release occurred. Scope clock is not reset; estimates
+are revised in the current Server checkpoint, not an SDK success deadline.
+
+Original selected-slice scope follows. Parent/Planner
 selected it under the actual reconstruction/SDK and standing necessary-count
 answers. One context, at most one Init1001 and one GetGlobalState1002; no
 credential input, quote/history, research ledger/repair-ref or CB1package02 work.

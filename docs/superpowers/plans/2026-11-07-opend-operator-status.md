@@ -27,6 +27,15 @@ remain one product slice and disjoint files, not another product/soak track.
 
 ## Task1: Complete fixed private operator health package
 
+Initial software01 STOPPED at the mandated full geometry guard, index0fe8eb79.
+No independent review or actual effects occurred. Parent's reversible96-case
+proof4d45ea8e supports the same-scope software02 continuation: strict UTF8
+per-file v2 representation only, identical restored originals, unchanged actor/
+entry/Source7/outer codecs/caps. Follow SDD task-1-codec-ruling.md and
+task-1-codec-brief.md. Requalify the actual complete caller; preserve01, its failed
+style checks and unavailable temporary originals without backfilling. New WSL
+fixtures use persistent unique paths and prompt archive. No new runtime slot.
+
 **Create in E3/operator-status-01:** operator_status.py (SDK budget/finite selector),
 status_entry.py (fixed Root parent/child/WAL adapter), status_packet.py (offline
 packet/staging and fixed once caller support), test_operator_status.py,

@@ -4,6 +4,31 @@
 
 ### Chosen independent operator status slice — 2026-11-07T12:12Z
 
+Actual software01 STOP: complete fixed-caller test reaches build but refuses
+encoded296989>262144; executable carrier396156>327680. Inner848075 fits1MiB.
+No host/stage/manager/vendor effect followed this software cap failure. Candidate
+index15439B/0fe8eb79 is frozen; Parent independently verified99/99 file pins.
+Linux42PASS7.22s and real local synthetic SDK wire9PASS35.27s remain scoped;
+full caller1FAIL and late qualification lint/formatFAIL prevent readiness.
+Ten named WSL/tmp original fixture paths were unavailable at archive time;
+source/logs remain, correction02 supersedes the mistaken retention summary,
+and no missing original will be backfilled or called retained.
+
+Planner reduction uses an actual96-case reversible representation proof,
+47212B/4d45ea8e: all Source7+three private bodies631703B and complete controls
+restore identically. Strict UTF8 per-file text gives modeled maxinner674491,
+encoded192117 and actual original-bootstrap expression265066 within unchanged
+caps. New software02 may change only packet version/representation and necessary
+qualification artifacts; actor022a7f6c, entryf9dd7466, SourceM, outer codecs,
+actual health purpose and SDK limits remain. Preserve01 and all old holds.
+New Linux fixture originals use unique persistent paths and prompt archive.
+Original Implementer owns this continuation; first complete independent R1 is
+still pending, not consumed by failed geometry. Actual v2 full caller, final
+whole geometry, style and review must pass before any private runtime effect.
+No new Source CI is needed for unchanged SourceM. From codec dispatch, remaining
+estimate15–25min software+10–20min review+5–10min actual is uncertain; the12:12
+scope anchor stays and the earlier105min total may overrun. Not an SDK promise.
+
 Planner/Product: one operator action verifies the restored same33f SDK/login
 status without entering credentials again. Root selected the complete finite
 slice under the actual aa3d38ef reconstruction/SDK answer and6db1254c standing

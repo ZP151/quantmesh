@@ -23,7 +23,7 @@ and establishes no login. No synthetic binding or historical STOP-CLOSED.
 SourceM de245152c726c2ca76d97571fbe0aee20b18332f, treebfc2c087ceaee0f3c7de3a907997c86b4f221492,
 Source7 and CI586/publication9870bb2e remain unchanged. Reuse their authenticated
 actual source bodies, source catalog, protected reads, _Scope, _Channel,
-_child_namespace, _child_kernel, _runtime, OperatorReader and _owned_peer.
+_bind_parent, _child_namespace, _child_kernel, _runtime, OperatorReader and _owned_peer.
 Do not call research bootstrap/supervision/RecoveryLedger/reference actor.
 No old ledger/history query, pair reuse/refund, method-hash retry or financial
 repair-ref consumption occurs. All old failed/SPENT/UNKNOWN/futures remain.
@@ -68,6 +68,9 @@ manager subgroup. Reuse the original delegated manager/owned child pattern,
 Manager wall deadline180s, child execution120s, normal SDK close<=30s inside it;
 owned transport210s. Preserve any original stricter phase bounds. One timeout
 normal-closes and STOPs; no observer/retry/next instance is selected.
+The child calls original _bind_parent before enter/namespace, retaining the
+forking-thread parent-death signal and PPID recheck through capability drop.
+Manager loss is forced/unknown closure, never normal SDK close.
 
 Bind the isolated runner module's CONTROL/CHILD/RECEIPT/LEDGER/RELEASE and SOURCES
 data to these exact health paths/Source7, additional=False. A small HealthScope
@@ -96,6 +99,24 @@ owned cgroup, stable final resource counters and channel/transport close before
 success. Preserve forced/unknown cleanup separately, no normal-close fiction.
 
 ## Qualification, capacity and endpoint
+
+The initial complete-carrier check stopped software01 before review or effects:
+inner848075 fit, but encoded296989>262144 and executable396156>327680. Freeze
+index0fe8eb79 and all old evidence, including unavailable WSL temporary originals
+and failed final qualification style checks. Do not relabel them as retained or
+passing. This remains the same health slice and same unused actual purpose.
+
+Parent reversible96-case proof4d45ea8e restores all ten631703B source originals
+and complete controls identically. A versioned per-file strict UTF8 text codec
+reduces modeled maxima to inner674491/encoded192117/caller265066 within unchanged
+caps. Only software02's packet build/decode representation changes; actor/entry,
+Source7, outer zlib/Base85 and caller Base85 stay exact. Explicit v2 schemas and
+file-encoding tag reject old/malformed/noncanonical/non-UTF8 inputs. Reencode
+strictly and check original file lengths/hashes before stage. Actual new v2
+bytes need fresh whole-carrier roundtrip and fixed-caller qualification/review;
+this offline model alone is not readiness. Keep fixture originals in a unique
+persistent WSL path and archive them promptly; never backfill old unavailable
+originals. Complete both retained versions inside the same64MiB software hold.
 
 Source-send audit4440c018 is a read-only map; local17SDK files match existing
 E2E pins, but actual remote files still require owning runtime verification.
