@@ -4,6 +4,38 @@
 
 ### Reduced terminal compatibility — 2026-11-07T15:36:41.942770Z
 
+Fresh delta reviewer10721B/bac4d087 returned bounded Spec/correctness READY.
+Parent read complete report and verified39 files, exact byte inverse/immutable
+nine identities, current finite35/inert/geometry/census evidence. Actual Parent
+then invoked unchanged mature --bind after protected origin/manifest/helper
+prechecks: real1387B/bdbd5fdb original, native verified same33f processes, actual
+PythonSHAe50d468e/free144559480832B, SDK0 and closed1.4617s owned transport.
+Qualified once-only health with genuine review/data returned outerSTOP/null in
+about6.08s, local transport closed; remote SDK/close initially UNKNOWN. Local
+INTENT/MAY/TERMINAL and all originals remain, no automatic retry.
+
+First fixed current-public-WAL readback had WAIT40.0096s/input0/stdout0 and closed
+local Job, with remote protocol unproven. It did not establish missing Root WAL.
+Normal APPDATA/COMSPEC/PROGRAMDATA/SYSTEMROOT/user/path presence was complete.
+Root authorized local channel diagnosis only, no SDK/CB1/bind/health. Exact
+reviewed AUTH04 lifecycle was reused with only new output directory, auth300s
+separate from payload45s. A genuine new SSH authorization URI was handled RAM-only
+via Edge3 extension, existing authorized Google identity, visible Authorization
+successful. Auth102.379s/input1/stdout0/full owned closure, SDK0; no URI/stderr or
+URI digest saved, no global computer use/oldURL refresh/credential entry.
+
+Same fixed current-health payload after actual auth completed1.3233s. Root three
+body hashes/release data and STAGING match actual Parent packet. All ledger
+INTENT/OWNER/GO/six MAY/result/terminal/cleanup records are absent; health manager
+loaded/failed exit2/MainPID0/currentControlGroup empty. With authenticated producer
+gates before all SDK effects this proves pre-SDK stop and current health SDK
+contexts/Init/State=0. Exact failed guard is unreported/UNKNOWN; no normal-close
+or final-counter proof is invented. Provider is active/running with original
+MainPID1031737/invocation. Current login flags unobserved, not logout. Whole task
+ACTIVE, purposeSTOP/SPENT without replay/refund; old UNKNOWNs/holds preserved.
+Closeout02:4134B/802d5089; readback2730B/f191aed2; auth934B/33ad9484. Root gets
+this concrete entry/pre-claim boundary before any new scope, no blind author fix.
+
 Planner consumed actual Root2111B/545d82d7 ruling after complete R2 STOP, then
 froze finite scopec68b4c66 and exact838B/ed8421d3 two-predicate proposal. Original
 author owns a separate operator-terminal-compat-01, firstRED finite full-object

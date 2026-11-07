@@ -2,6 +2,26 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Latest actual outcome: terminal compatibility delta10721B/bac4d087 is READY on
+both bounded axes; old whole R2 stays NOT READY. Actual mature bind produced
+1387B/bdbd5fdb and preserved original33f unit/invocation/three processes. The sole
+health action returned STOP/null with known local transport close. First fixed
+public readback timed out before input; old uncertainty remains in closeout01.
+Normal environment presence was complete. A genuine new SSH check was handled
+through Edge3 extension/authorized Google account with reviewed AUTH04, separate
+300s authentication102.379s, SDK0 and full closure. The same fixed readback then
+completed1.323s, not a second health/SDK/bind. Authenticated deployed bodies/release/
+STAGING match current packet; every health ledger INTENT/OWNER/GO/MAY/result is
+absent. Manager failed exit2/MainPID0/no current named cgroup. Original producer
+gates therefore prove this health stopped before SDK import/context/send: all
+three SDK counts0, not inferred from timing and not refunded. Exact failed guard
+is not emitted/UNKNOWN; normal protocol close and final counters not produced.
+Provider remains active/running/MainPID1031737/original invocation. SDK login flags
+remain unobserved; user-confirmed login is retained. Actual closeout02:4134B/
+802d5089; readback2730B/f191aed2; auth934B/33ad9484. Purpose stays STOP/SPENT,
+old UNKNOWN/history/holds unchanged. Whole real SDK/IVV goal remains ACTIVE;
+Root Planner receives facts before further work, no blind patch/retry/profile.
+
 Active reduced slice:2026-11-07-opend-terminal-compat, actual Root ruling2111B/
 545d82d7. New anchor15:36:41.942770Z; original health12:12 clock remains. Original
 author/new operator-terminal-compat-01 owns only packet194 counted-empty and239
