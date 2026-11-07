@@ -201,6 +201,18 @@ provider binding are not fabricated during preparation.
 
 ## Self-review and current status
 
+2026-11-07T08:06Z superseding software checkpoint: Task1/Task2 implementation,
+complete protected export/local writer/preparer/both-role handoff, actual NTFS
+bridge, sole same-reader whole-package R2, normalCI586 and PR302 merge/de245152,
+and actual reviewed publication are complete. Actual Source7/core/tree equality
+and single-literal Entry release binding are proved in the newest iteration.
+Runtime Task3 remains unexecuted and gated by one actual current-instance
+interruption decision plus actual central runtime capacity/current admission.
+No implementation TODO remains disguised as a future Parent protocol. Preserve
+the original failed R1, failed CI/fixtures and UNKNOWNs; further structural scope
+returns to Planner once rather than another patch round. Historical checkpoints
+below do not supersede this entry or the actual Server current_checkpoint.
+
 Planner selected only offline preparation of the same-build alternative; actual
 interruption selection remains unresolved. Quant Researcher: no data/math or
 sample reuse is touched and software/maintenance success is not financial

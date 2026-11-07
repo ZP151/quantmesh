@@ -2,6 +2,87 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Qualified software closeout — 2026-11-07T08:06Z
+
+Subsequent actual central runtime192MiB import at08:08:49Z is3038B/
+47485bb0712a17cd62d3317db522eb830eb45ab630861ebd9b2c7a8d3d5ce66f,
+ID IVV_SELECTED_MAINTENANCE_AND_ACCEPTANCE_LOCAL80_REMOTE112_NET192MiB_20261107_01.
+Server read and hashed the original: local80/remote112MiB; allholds1667235840,
+guardG12053475418/P6015403022/stress6072026126; software650117120 unchanged.
+All old failed/UNKNOWN/unused futures remain, paid0; this is capacity only,
+not active-stop authority, activated policy or fresh-host readiness. Root has
+concentrated the sole active-stop question in the coordinating chat; Server
+does not repeat it or act before an actual human reply. The snapshot below
+correctly records the earlier pre-import state.
+
+Planner: PR302 normally squash-merged as de245152c726c2ca76d97571fbe0aee20b18332f,
+single parent4887f75b and treebfc2c087. All software and private operating-package
+gates below are complete. The current logged-in instance remains untouched;
+the one unresolved operator difference is its planned active interruption,
+which cannot restore the old process or in-memory login. Runtime192MiB was not
+imported at this snapshot; it is ordinary standing-authority capacity, not a
+repeat disk-approval request. Whole fixed-IVV remains ACTIVE.
+
+Quant Researcher: no new IVV originals/input acceptance/trial/report/decision,
+financial, OOS, Paper or live qualification exists. H1/H2/H3 remain independently
+required. Ref12 stays spent/normally closed, old capture13 remains retired, and
+all historical UNKNOWN/count/future evidence is preserved without refund.
+
+Implementer: only one additional-task Source7 role changes; the other six,
+SDK method,20s boundary, data/math and trading gates remain exact. The complete
+handoff now includes Root Entry02's bounded protected-original export, a fixed
+private immutable Windows writer, actual preparer/anchor and both reference AND
+conditional-capture wrapper/packet paths. Old originals remain immutable; no
+selected fallback, arbitrary path or new observer platform is introduced.
+
+Reviewer: whole-package R1 Spec NOT_READY found a genuine missing executable
+successor handoff; Standards R1 READY remained separate. Completion explicitly
+included export and local staging, not merely an old path edit or future recipe.
+The same two readers' sole R2 is READY: Spec2839B/b2cf3c8d and Standards2825B/
+4525f1ee. These are actual INDEPENDENT_AGENT_PROXY reviews under standing owner
+authority, not fabricated independent-human facts. Combined canonical closeout
+879B/434aa51a binds actual R2 package31781B/1b0c1499. No further patch round.
+
+Verifier: normal exact-head CI586/run42348229095 succeeded,8592PASS/149SKIP;
+all selected required jobs including final python succeeded. Actual CI checkout
+fe0a51fb/treebfc2 equals checked d37706f8 and merged de245152 tree. All11 frontend
+artifact bytes and exact lock/workflow match; qualifier4680B/2a2c7e2d. Actual
+publication1088B/9870bb2e, catalog571723B/1e81ad4a and Ops673B/3ae7bee4 were
+created and read back equal through reviewed publisher03; all reviewed/final/
+merged Source7 and the separately pinned core are exact. No SDK/carrier issued.
+
+Entry33PASS/36subtests, stager9PASS on each Windows/Linux, and96 geometry samples
+retain the original caps. The required combined physical bridge is1PASS18.76s:
+actual export function under explicit synthetic Root facts -> real own-only NTFS
+private/readonly/O_EXCL/file+directory persistence -> new-process held read ->
+actual preparer and both-role packet/capsule using the same physical original.
+It is neither a RAM-only bridge nor real provider/SDK evidence. Failed fixtures,
+the initial ACL/attribute order error, CI585 failure and index-self-pin error
+remain preserved; current corrected index and actual raw references pass.
+
+Final decision package: maintenance-final-package-01/FINAL-PINS.json2264B/
+f02ce87d; typed packet7452B/a10e6f00; actual release780B/28c3ace4; bound Entry
+25772B/07960614 with only one module None-to-real-release-SHA change and exact
+reverse-byte/normalized-whole-AST proof1392B/39ba7b53. Login/stager actual request
+bindings wait for genuine transaction outputs; the producers, parsers, writers
+and data-binding path are implemented/tested, with no invented runtime values.
+Actual control/nonce/AUTH/provider proof or current credential-status read has
+not occurred. Entry+old/new bound921600<4MiB; local stager380928<1MiB inside
+existing binding4MiB. Forecast08 charges actual generated cache growth and keeps
+common full forward97681408<100663296, all central holds/net0 unchanged.
+
+Runtime current pointer is the retained Server artifact under
+output/ivv-transaction-recovery-20261104-01/current_checkpoint.json in the
+security-runtime-alignment worktree, snapshot080620Z34241B/2f77ff24. It preserves
+actual policy46 and the old provider rather than pretending software merge is
+deployment. After the single actual interruption decision, perform fresh
+host/owner/source/resources/credential-PRESENT checks, exact owned closure,
+sole mature successor/login/binding/export/stage and one normal Init validation.
+Timeout stops this alternative; no identical probe/restart loop. Real immutable
+capture originals go to original Quant; only actual accepted inputs go to the
+original Product loop. Normal main must not advance while the fixed publication
+preparer still requires release merge de245152 as current origin/main.
+
 Latest Verifier checkpoint: PR302 head33ce3c45 normal CI585/run42344888669
 failed its full release suite,2399PASS/1FAIL/3SKIP, at the existing workspace
 quote/history snapshot test. Fast and independent research-service gates passed;

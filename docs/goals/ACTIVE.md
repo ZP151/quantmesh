@@ -2,6 +2,24 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Software closeout as of2026-11-07T08:06Z: normal PR302 merge de245152/treebfc2,
+CI5868592PASS149SKIP, whole-package sole same-reader Spec/Standards R2 READY and
+actual reviewed publication/readback complete. Root protected export, immutable
+local writer and actual preparer/reference+capture handoff are implemented with
+the joint physical NTFS witness; no future protocol substitutes for execution.
+See the newest active iteration entry and qualified operator decision packet.
+Current provider/login/policy46 remain unchanged, runtime192MiB unimported at
+this snapshot, and the only human difference is active interruption of that
+currently logged-in selected instance. No new runtime controls/IDs/proof or SDK
+action occurred. Keep this Source release's origin/main pin until its normal
+preparer/paired execution no longer needs it; do not merge this evidence branch
+early. Later actual runtime state lives in the Server current_checkpoint pointer.
+Later08:08:49Z central runtime192MiB3038B/47485bb0 was actually read/verified;
+allholds1667235840 and guardG12053475418/P6015403022 are current. It grants no
+active-stop authority or policy activation. Root has asked the one concentrated
+current-instance interruption question; do not duplicate it or effect before
+the actual human reply. Keep origin/main at released de245152 for the preparer.
+
 The fixed-IVV task remains ACTIVE. The user confirms OpenD is logged in and
 requests browser-extension interaction only. Keep the active provider untouched
 while preparing one exact-owned-instance retirement and same-build successor
