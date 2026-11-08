@@ -30,8 +30,11 @@ the10s connection-eligibility timeout. These implementation boundaries are
 explicitly
 unqualified, not a new actor READY or replay permission.
 
-Current conservative software+retained prior WSL+unchanged full32MiB future is
-127148032<134217728. A distinct unregistered officialcompat33f-01 runtime draft
+Final sealed conservative software+retained prior WSL+full32MiB future is
+127254528<134217728 (initial draft127148032). Final preparation18197B/de2dd872
+binds15 current file pins and848B diagnostic upper-size example; checkpoint
+20261108T002259Z/123947B/5b1adbc8 preserves the original20:01 anchor and actual
+15669s elapsed, not a restarted estimate. A distinct unregistered runtime draft
 adds32MiB/local8remote24; projected guardG12288356442/guardP6250284046 and full
 all-parent6306907150 fit original caps. Central held forecasts are not new
 physical usage. Old holds/UNKNOWNs/status02 SPENT stay unchanged; no deletion,

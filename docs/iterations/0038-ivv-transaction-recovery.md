@@ -48,7 +48,12 @@ based on existing outer reuse and these concrete edges, not a restarted original
 preparation deadline or a service-recovery promise. No actual SDK before new
 registered purpose/final source/native/real physical admission.
 
-Software current+prior WSL+full unchanged future127148032<134217728. Draft new
+Final seal18197B/de2dd872 binds15 current file pins,848B fixed upper-size case,
+and current recensus+prior WSL+full future127254528<134217728; the initial draft
+127148032 is retained as generation-time evidence. Checkpoint123947B/5b1adbc8 at
+20261108T002259Z supersedes the old20:01 pointer while retaining its15669s elapsed.
+Sole offline R2 report5493B/7403c1f4 is READY only for this preparation.
+Draft new
 runtime officialcompat33f-01 is independently32MiB/local8remote24, not old32
 leftovers. Projected guardG12288356442/guardP6250284046/allparent6306907150 fit
 original caps; central forecasts are not new physical samples. All old holds,
