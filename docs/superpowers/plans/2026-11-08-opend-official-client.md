@@ -44,26 +44,26 @@ survive the same terminal even when later close changes the Init outcome.
 
 ## Steps and acceptance
 
-- [ ] RED: actual new actor absent/old actor cannot produce strict new diagnostic,
+- [x] RED: actual new actor absent/old actor cannot produce strict new diagnostic,
   original-class identity, async packet-order/worker-close tests. Preserve logs.
-- [ ] Implement one bounded actor, using authenticated SDK loader, typed pack/
+- [x] Implement one bounded actor, using authenticated SDK loader, typed pack/
   send/query delegates, fixed finite exception/guard projection, unchanged MAY
   order and sticky reservations. Keep source/import inert and default unarmed.
-- [ ] RED strict terminal and real consumer: reject old/wrong/extra schema,
+- [x] RED strict terminal and real consumer: reject old/wrong/extra schema,
   policy contradictions and missing worker proof; retain valid REFUSED and STATUS
   diagnostic through pending/local terminal. Implement minimal entry/packet delta.
-- [ ] Run actual pinned SDK only against a fresh local synthetic provider under
+- [x] Run actual pinned SDK only against a fresh local synthetic provider under
   process audit fence. Cover success, Init error/no response, async state-before-
   Init pack, implicit forbidden send/retry, close race, close failure, private
   payload suppression. Assert <=1 connect/Init/state; actual thread/socket joins.
-- [ ] Current qualification: changed tests, Ruff/format, inert imports and exact
+- [x] Current qualification: changed tests, Ruff/format, inert imports and exact
   SourceM/reverse outer delta; full96 real carrier vectors fit unchanged caps.
   Census retained artifacts plus full future under existing128MiB; stop before
   exceeding, no borrowing from runtime or deletion. One independent whole delta
   review and at most one consolidated correction, freeze complete candidate.
-- [ ] Bind all layers to receipt051679781684a5a9fa1a69e4b40424b6806ed726b7c191d1ba6ddb5c4adf7262
+- [x] Bind all layers to receipt051679781684a5a9fa1a69e4b40424b6806ed726b7c191d1ba6ddb5c4adf7262
   (3916B), new officialcompat33f-01 root/unit/local as registered. No second32MiB.
-- [ ] Sole executor checks current source/review/freeze/true physical identity/
+- [x] Sole executor checks current source/review/freeze/true physical identity/
   native5s and immutable issued-capacity210s/once/close. Consume the one new
   purpose only after all real guards pass; retain complete result and ordinary
   transport close. Any failure is SPENT; return one informative route ruling,
@@ -80,3 +80,10 @@ inert/geometry/census scripts with -I -S -B. Broad old suites/CI are not rerun f
 this private implementation; no tracked production source changes are planned.
 Record actual targeted evidence, review, resource provenance and result in the
 active iteration; branch docs checkpoint normally committed/pushed.
+
+Completion evidence: actual purpose STOP/SPENT with finite STATE SDK_NON_OK/-1,
+policy-clear/Init-queued/no-receive observations and ordinary SDK4ms/all owned
+closure. Result1582B/ad9dba9b, public readback6904B/78f83a6c, closeout6411B/
+196587a7. This completes the engineering/one-observation plan, not SDK usability,
+provider/root-cause, data or financial qualification. No retries or new scope
+were started. See the active iteration and checkpoint20261108T013650Z/d070134a.
