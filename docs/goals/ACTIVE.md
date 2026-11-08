@@ -2,6 +2,31 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Orthogonal control SDK0 preparation completed — 2026-11-08:
+Decision package10866B/e0f4eba9 recommends NO-GO for a credential-free second
+OpenD now; no process/purpose/SDK/host action occurred. Official10.12 FAQ17 does
+support same-host command-line instances with full folders/configs/distinct
+ports, but its authenticated examples do not establish empty-state pre-login
+Init. Overview describes Socket startup after login; pre-ready status definitions
+are not exact10.10.7008 CLI guarantees. An unlogged control failure would be
+inconclusive, not evidence of common binary/protocol failure or current logout.
+
+One missing fact: the exact build's documented credential-free Init-serving
+mode. Concrete alternative is unsent version-contract inquiry1590B/c48f016c to
+official API support, with only public versions/protocol and finite redacted
+result facts. No external message is authorized/sent by preparation. Do not add
+Telnet, read private logs/panes or replay the spent client to obtain it.
+
+Packet bounds a conditional future isolated control (new UID/home/filesystem/
+PID/IPC/net namespaces, no current state/credentials/egress, vendor1, Init1,
+State/business/login/retry0,180s/1GiB/CPU25%, local8/remote64MiB). That72MiB is
+not registered or granted; startup fit is unknown and hard-quota failure stays
+inconclusive. Complete preparation result22420B/b68d854e and checkpoint158607B/
+2313ec7c preserve all old SPENT/UNKNOWNs. New preparation237568B is within512KiB
+from existing4MiB; softwareforward137265152<138412032, remaining new3219456.
+Planner receives one completed decision package; whole goal ACTIVE, no user
+input pending for SDK0 preparation and no new runtime selection implied.
+
 Actual uncensored Init result — 2026-11-08:
 The one registered initcomplete33f-01 is now STOP/SPENT/no retry. Actual1766B/
 7a9f4449 reports first INIT/SDK_NON_OK with original query_error TIMEOUT, later

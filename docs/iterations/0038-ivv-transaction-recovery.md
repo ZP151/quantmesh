@@ -2,6 +2,67 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Orthogonal provider control feasibility prepared — 2026-11-08
+
+Planner selected SDK0 preparation only after actual5770B/1f8f9836. Original
+client rolling changes/retries stop; current33f login/provider remains preserved.
+One decision package evaluates same published10.10.7008 binary with clean state,
+private loopback and no credentials; it does not launch or register a control.
+
+New primary-source facts: [official FAQ17](https://openapi.moomoo.com/moomoo-api-doc/en/qa/opend.html)
+explicitly supports simultaneous same-host command-line instances with full
+folders, configurations and distinct ports. The examples use authenticated
+accounts. The [overview](https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-intro.html)
+describes API Socket startup after login, and the [CLI contract](https://openapi.moomoo.com/moomoo-api-doc/en/opend/opend-cmd.html)
+describes interactive prompting from10.10. These current10.12 pages do not give
+an exact10.10.7008 credential-free serving guarantee. The Init credential-free
+request shape and pre-ready program statuses do not supply that prerequisite.
+FAQ2/Q6 per-user state/device identity also prevents treating separate XML/port
+as safe state isolation; no HOME/getpwuid assumption or current state copy.
+
+Quant Researcher/Reviewer: successful eligible control could disfavor universal
+binary inability, but a failed unlogged/egress-blocked/quota-limited control is
+confounded and cannot distinguish instance conditions from common behavior.
+Thus NO-GO now, not a proof of impossibility or current-user logout. Exactly one
+decision-critical fact is missing: documented exact-version pre-login Init1001
+serving mode. The single concrete alternative is a1590B unsent vendor-contract
+question, not a new client observer or speculative private provider command.
+Public operations do not supply that exact contract; enabling Telnet/logging
+would add lifecycle/privacy risk. No contact, private data or provider command
+is executed. Existing public origin5034a8ee/binding1387B/bdbd5fdb are reused as
+identity/pre-input attribution; neither is called authentication or SDK READY.
+User-confirmed login is kept without rechecking private XML/logs/panes.
+
+Implementer prepared P=E3/opend-control-feasibility-01/CONTROL-DECISION-PACKET.md
+10866B/e0f4eba9d1df055056c239057a908b13cf1352503f81386d36ef5b8a93091b97,
+VENDOR-CONTRACT-QUESTION.txt1590B/c48f016cceec520946dd5e1a90ec0f2b491d810ec0c81e92ba478659ee52e0dc,
+source locator JSON and visible owner-role static review (not independent runtime
+approval). Packet specifies hypotheses/outcomes, conditional isolated control,
+exact stop conditions, preservation, sole original owner, authorization differences
+and45–60min implementation/review plus≤180s/≤2min closeout estimate only if
+eligibility is later confirmed. It is not an executable carrier or new grant.
+
+Conditional new runtime bound is local8/remote64=72MiB, with no binary/archive
+copy, aggregate state hard quota, no credentials or current state access/egress,
+vendor start/stop1, context/connect/Init1, State/business/login/retry0. Prospective
+guardG12401602650, guardP6363530254, stress6420153358<6442450944 has only22297586B
+parent headroom; no registration/fresh physical admission or startup-fit proof.
+Memory≤1GiB/CPU25%/swap0/tasks128/total180s would need its own current admission.
+New provider lifecycle/isolation risk and any external vendor message are real
+authorization differences; ordinary host/count/capacity standing consent alone
+does not grant them. Draft≤8KiB/answer≤64KiB uses existing software, no new charge.
+
+Verifier sealed PREPARATION-RESULT-01.json22420B/
+b68d854e944203aad1e6d0576c9d05496b06dacf85d1d8d43affae5688d20134 and checkpoint
+158607B/2313ec7c9791a37a6618b09e5b998a94acc769fd0d5b9aea98bf89150e2d469c.
+All new provider/SDK/host/login/config/private-read/outbound-message counts0.
+Prep growth237568<524288 from already charged4MiB; current software100139008 +
+old33554432 + old352256 + remaining new3219456 =137265152<138412032. New charge0,
+all old/future/runtime holds retained. Seal assertions/Ruff/whitespace checked;
+no tests for reversible document-only preparation, no old suites repeated.
+Planner receives one complete package for concentrated decision. Whole goal
+ACTIVE/unachieved; old initcomplete33f-01 stays SPENT, no new runtime selected.
+
 ### Actual completed-Init runtime closeout — 2026-11-08
 
 Sole Server verified frozen caller/profile/receipt pins, then one SDK0 current
