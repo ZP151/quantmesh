@@ -4,6 +4,26 @@ Date:2026-10-19. Status: accepted for the explicitly requested implementation;
 actual release, private login, authentication and SDK evidence remain separate.
 Issue:[#192](https://github.com/ZP151/quantmesh/issues/192).
 
+## Official-class finite comparison — issue301, 2026-11-08
+
+One private operational adapter retains the authenticated original quote class,
+async entry and official method bodies behind per-instance once/send guards.
+Retain/join the actual initial Timer before its field can be cleared, and preserve
+ordinary context/callback/socket/worker close without inventing CLOSED when
+official error cleanup uses CloseNoNotify. A new strict finite result records
+first stage/code/enum failure, policy, queue/callback and close order through the
+same durable terminal. Existing source/kernel/once/resource/native peer controls
+remain mandatory. READY notification uses the existing SCM channel's fixed ACK
+after original parent peer validation, under the SDK lock; no generic transport
+or additional API call is introduced. This is scoped operational software, not
+a global change to SDK/trading/data authority or persistent-login permissions.
+
+The sole registered actual comparison returned non-OK state with no callback,
+all ordinary SDK/owned-process/transport closure proved, and the original vendor
+session preserved. No runtime success, login contradiction, capture or financial
+qualification follows. Its purpose is SPENT and cannot be replayed. See the
+active recovery iteration for reviewed bytes and actual diagnostic evidence.
+
 ## Selected-instance maintenance preparation — 2026-11-07
 
 Issue [301](https://github.com/ZP151/quantmesh/issues/301) prepares an operator-only

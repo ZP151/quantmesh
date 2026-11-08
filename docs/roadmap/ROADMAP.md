@@ -2,6 +2,15 @@
 
 ## Independent operator status — issue301
 
+The single actual official-class comparison is now complete and STOP/SPENT.
+All admission and ordinary closure passed, but SDK state returned-1: Init was
+accepted by the SDK queue with no receive callback/READY observed and no policy
+refusal. No State request was sent. This establishes neither wire delivery nor
+server handling/cause or SDK login state. Original OpenD/login remains preserved.
+The complete finite diagnostic and closure evidence are retained; no retry or
+capture follows. See the active iteration for actual facts and one Planner-only
+next-route proposal. Whole research/provider qualification remains unachieved.
+
 The selected official-client comparison now has an offline preparation packet:
 verified original client/22 SDK pins,18 deterministic source/inference tests and
 finite diagnostic projection. It separates current official usability from the

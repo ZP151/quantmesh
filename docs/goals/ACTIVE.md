@@ -2,6 +2,38 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Actual official-class compatibility result — 2026-11-08:
+The complete candidate was implemented,28 unique targeted tests and3 real local
+SCM/fork/EOF/reap cases passed;96 final carriers fit caps. Independent whole R1
+READY_FOR_FINAL_OWNER_ADMISSION7902B/734f654b, frozen index4640B/eb84261d.
+One uniquely registered officialcompat33f-01 was then consumed through actual
+source/native/readonly/physical/once guards. It is now STOP/SPENT, no retry.
+
+Actual result1582B/ad9dba9b is REFUSED/statusnull with first observed STATE
+SDK_NON_OK/-1, policy_clear=True. Actual official async class was constructed,
+Init was delegated once and accepted by SDK queue; no receive callback/READY
+was observed. State method was invoked once/returned-1, but outgoing1002=0.
+Init returned-1 after close began, request-error DISCONNECT; this does not prove
+a natural Init timeout or which side caused disconnect. Packet delivery/handler
+read and SDK login flags remain UNKNOWN. No adapter policy refusal occurred.
+
+SDK context/callback/socket/actual Init-worker all closed normally in4ms; child/
+cgroup/channel/resources/manager/transport closure all proved. Public readback
+6904B/78f83a6c confirms3 deployed hashes, five MAYs through Init, no state MAY,
+pending+managerclose matching local TERMINAL; Root TERMINAL absence is by design.
+New unit is not-found/no cgroup. Provider remains original b0b6/MainPID1031737
+active/running; human-confirmed login was preserved without login/restart/UI.
+Genuine physical sample→INTENT0.315845004s<5, growth0/free144574361600B and distinct
+issued-capacity210s gate passed. It is not a fresh physical G/P census.
+
+The actual SDK comparison is complete but did not establish SDK usability; the
+whole IVV objective remains ACTIVE/unachieved. No capture/input/trial/report/
+decision/financial GO. All old UNKNOWNs/holds and the full new32MiB remain without
+refund. Return once to Planner: stop real-client retries; proposed next route is
+a SDK0 public launcher/config protocol-contract audit against official startup
+documentation, with no private XML/log/pane, new nonce or blind restart. This
+proposal is not executed by the completed baseline scope.
+
 Official-client compatibility offline preparation — 2026-11-08:
 Original20:01:50Z checkpoint/20–30min estimate is retained; the intervening
 login-only completed turn did not complete preparation and did not pause the

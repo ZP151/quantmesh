@@ -2,6 +2,83 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Official-class implementation — issue301, 2026-11-08
+
+Actual closeout supersedes the in-progress paragraphs below. Final source pins:
+actor28786B/3726563c, entry47780B/be90224d, packet35425B/ef6aa7ef. Final96 geometry
+inner719034/encoded203864/carrier299860/status1401 fits unchanged caps; actual
+carrier299755.28 unique pytest cases and3 real local Linux SCM credentials/
+fork/EOF/reap cases pass, default three imports inert/unarmed, Source7 exactM.
+Original entry needs remain; fixed existing-channel ACK is the explicit bounded
+new control contract. Unique whole reader R1 READY7902B/734f654b (agent proxy,
+not an independent human or runtime success); no correction/R2 needed. Frozen
+index4640B/eb84261d, complete conservative software131055616<134217728 with full
+32MiB future retained.35–50min engineering estimate was exceeded; no historical
+clock was reset or preparation READY reused as implementation qualification.
+
+Verifier/sole executor: new SDK0 preflight0.712s/full owned closure proves original
+provider b0b6/1031737 active/running, new root/unit absent, free144575127552B and
+Python e50d unchanged. Then exactly one registered officialcompat33f-01 dispatched
+through actual original source/native/readonly/kernel/once/physical guards.
+Physical sample growth0/free144574361600B, true observation start→INTENT
+0.315845004s<5; immutable capacity provenance05167978 separately passes original
+210s. No additional32 charge, copied timestamp on G/P or hypothetical freshness.
+
+Result1582B/ad9dba9b is STOP/REFUSED/statusnull, with explicit first observed
+STATE/SDK_NON_OK/-1 and policy_clear=True. Official class/constructor returned,
+one original Init and connection attempt occurred; Init final send delegated
+once and SDK accepted queue. No socket-receive/request callback/unpack/READY
+observed. State method invoked once, returned-1, outgoing State1002=0; all other
+business0. Init returned-1 after close began with DISCONNECT observation. Do not
+infer natural Init timeout, precise eligibility failure, bytes delivered, server
+handler read or which side caused disconnect. Current SDK login flags remain
+unreturned; human-confirmed login is not contradicted by this result.
+
+Ordinary SDK context/callback/socket/retained Timer-worker close all true/4ms,
+within deadline/logclosed. Parent delivered that SAME finite diagnostic; all
+child/cgroup/resource/channel/manager/transport close facts true. One SDK0 fixed
+public readback6904B/78f83a6c in5.473s, full owned closure, verifies three actual
+release hashes, Root INTENT/OWNER/GO/MAY00–04, no StateMAY and no forced/unknown
+cleanup. Pending result matches local result/TERMINAL. Root TERMINAL absence is
+by design; manager-close/pending link local durable transport-closed terminal.
+Named new unit not-found/no cgroup, original OpenD active/running/b0b6 unchanged.
+The fixed READY_ACK was not exercised by this failed runtime; only the explicit
+local tests qualify it. No vendor/login/restart/config/credential/private UI action.
+
+Planner handoff: this opportunity is STOP/SPENT, full32MiB and all historical
+UNKNOWNs/negatives/futures retained, no repeat or nonce change. The custom Health
+pre-send guard did not refuse this actual original-class path, but this does not
+eliminate shared SDK/isolation/provider causes. Missing fact is OpenD-side Init
+disposition. Recommend exactly one next SDK0 audit of public launcher/config
+generation versus official port/protocol/encryption/config-selection contract;
+no private XML/log/pane or actual service/SDK action. Planner selects separately.
+No capture/input/trial/report/decision/OOS/Paper/live/financial qualification.
+Whole owner objective remains active and unachieved.
+
+Planner continued the single complete remaining engineering unit after the
+offline-only preparation/R2; original Server remains author and sole executor.
+Plan:docs/superpowers/plans/2026-11-08-opend-official-client.md. Unique actual
+runtime receipt3916B/05167978 registers officialcompat33f-01 net32MiB/L8/R24 once;
+all old holds/UNKNOWNs/SPENT remain. It is not GO, and no real baseline/host/login
+action has occurred. The implementation estimate35–50min is distinct from the
+preserved original preparation20:01:50Z/15669s elapsed, not a reset.
+
+Implementer: original official class with instance guards installed before Timer,
+original RLock retains actual Init worker before callback can clear it; no SDK
+source/class mutation or Health subclass. Dual pending packet map supports STATE
+pack preceding Init, shared final send budget remains1/1/1 with other protocols0.
+New finite first failure/codes/request errors/policy/queued/callback/own-close
+facts use one strict result version, actual entry and consumer validation, and
+the existing durable pending/local terminal. Current implementation is not yet
+frozen/reviewed or runtime-qualified. Verifier: new local-only real SDK cases
+first6RED→4PASS2FAIL, then16PASS90.74s including new terminal/KeepAlive controls.
+Original error cases prove a limit: SDK CloseNoNotify can remove its connection
+without CLOSED; retain CLOSE_UNKNOWN, never synthesize a notification or state.
+Callback/socket/worker termination is separately proved. No-response ordinary
+close does wake/join the real Init worker. One queued-observer-failure negative
+and final whole-candidate qualification/review remain. Quant: no data/input,
+trial/report/OOS/Paper/live/financial permission follows.
+
 ### Official-client offline compatibility preparation — 2026-11-08
 
 Planner: one future comparison may establish current official-class usability
