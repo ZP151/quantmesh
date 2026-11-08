@@ -2,6 +2,30 @@
 
 ## Selected-instance recovery preparation — issue301
 
+SDK0 contract/causality audit completed — 2026-11-08:
+Existing local no-response case6061fe34 already reproduces the actual State-first/
+Init-after-close/DISCONNECT signature in about10.815s including SDK loading; no
+new SDK/test/host checks were run. Official source has State eligibility10 vs
+Init event wait20; ordinary close can produce pending Init DISCONNECT. Actual
+InitMAY→pending7.980647972s is metadata, not a natural20s Init timeout measurement.
+Exact live State negative branch and disconnect causality remain UNKNOWN.
+Evidence3079B/176a0a03 records this limit without changing the spent actual result.
+
+Exact selected public launcher35631085/profile0e0b15be/validator53fb2821 agree
+with intended native API11112, PB, absolute cfg path and no RSA/WS/Telnet fields.
+Current official documentation isv10.12, not an archived exact10.10.7008 parser
+proof. No public mismatch is confirmed; actual loaded/accepted values stay
+UNKNOWN. No port/config rewrite, restart or new real SDK is justified now.
+
+One proposed next measure is local-only Init-completion observation: wait for
+the retained original worker's complete outcome inside existing budgets before
+optional State; verify with one fixed12s synthetic Init delay. This corrects a
+measurement limitation, not vendor behavior.20–30min estimate uses existing
+adapter/thread/validators; current slice did not implement it or request a new
+real purpose/forecast. No user input pending; original opportunity remains
+STOP/SPENT and login/holds/UNKNOWNs unchanged. Full combined conclusion is in
+SDD/opend-contract-audit-20261108/CONCLUSION.md.
+
 Actual official-class compatibility result — 2026-11-08:
 The complete candidate was implemented,28 unique targeted tests and3 real local
 SCM/fork/EOF/reap cases passed;96 final carriers fit caps. Independent whole R1

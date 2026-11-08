@@ -2,6 +2,45 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Completed SDK0 causal/config contract slice — 2026-11-08
+
+Planner scope was two bounded source/evidence checks, not another provider
+attempt. Original Server analyzed existing local/actual traces; a disjoint
+read-only source/document agent audited exact public configuration. No SDK
+imports/context/request, host/source/mount/physical/login check, namespace,
+restart, private XML/log/pane, new test/suite or new purpose occurred.
+
+Causal evidence3079B/176a0a03 pins SDK base d88cc478, actor3726563c and existing
+last local no-response record6061fe34. State eligibility10 starts before Init
+packet in this path; Init's own Event.wait is20, and pending requests can be
+marked DISCONNECT by ordinary close. The local fake provider holds its connection
+without a reply, sees client close without server error and produces identical
+STATE-1/Init-1-after-close/DISCONNECT/policy-clear signature. Directory→result
+metadata interval~10.815s includes SDK loading. Actual InitMAY→pending7.980647972s
+includes delegate/wait/close and is not a monotonic natural Init20 timeout proof.
+Actual State negative subbranch (eligibility expiration vs already-CLOSED) and
+whether notification preceded own close remain unrecorded/UNKNOWN. Do not turn
+the later Init code into vendor/login cause; no old result or count is rewritten.
+
+Public contract report11163B/076dbe72 ties exact launcher35631085, selected
+profile0e0b15be, validator53fb2821 and public version/archive path10.10.7008 to
+explicit cfg_file/API11112/PB/noRSA/noWS/noTelnet intent. argv flags have no
+duplicated binary. Official current docs v10.12 agree in these respects; archived
+exact10.10.7008 parser acceptance is not proved. No confirmed public template
+mismatch and no loaded-value evidence. MainPID/tmux1031737 is distinguished
+from vendor1031749/start395526653. A proposed future3-token argv boolean check
+would prove passing only, not parser loading, and is not selected or executed.
+
+One combined recommendation: first a LOCAL-ONLY diagnostic lifetime correction,
+waiting for retained original Init completion within existing budgets before
+optional State, with fixed12s synthetic response acceptance. Do not change SDK
+Init wait20, source7/provider/config/login/once/native/caps; do not claim a repair
+or retrospectively relabel the original compatibility route.20–30min estimated
+from existing thread/terminal reuse and one local case; no new real purpose or
+registration requested. Actual listener/parser values and server Init disposition
+remain unknown until a separately qualified observation; no restart or port/
+encryption change is supported now. Whole task ACTIVE, no financial admission.
+
 ### Official-class implementation — issue301, 2026-11-08
 
 Actual closeout supersedes the in-progress paragraphs below. Final source pins:
