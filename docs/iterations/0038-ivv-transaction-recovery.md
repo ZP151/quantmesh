@@ -2,6 +2,65 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Completed local-only Init-completion correction — 2026-11-08
+
+Planner scope [issue301](https://github.com/ZP151/quantmesh/issues/301): one user
+action obtains the completed outcome of the same retained Init worker before
+optional State. Success metric: fixed12s fake Init succeeds without the old10s
+State eligibility censoring, and genuine nonOK/no reply skip State with no1002.
+No new real purpose, admission, provider/login/config/native/physical action or
+capture/input/research qualification is included. Quant Researcher: synthetic
+wire evidence changes no dataset, strategy, cost, OOS or financial confidence.
+
+Implementer reused the official async class/Timer and original SDK bodies;
+session90/Init20/total120/close30, Source7 and existing outer gates remain.
+New strict result/diagnostic versions record worker completion, return/notify
+vs close, finite State reason and original typed query error separately from
+later notification errors. LOCAL_ONLY guards block entry.run, packet.stage and
+execute_once before any identity claim/staging/transport. Inherited old identity
+and receipt remain SPENT provenance. Old frozen adapter/results are unchanged.
+
+Verifier:3RED78.48s then3PASS108.33s; an additional pre-R1 final18PASS109.73s
+includes3 wire+15 contract cases. Actual fixed12s new flow Init0→State0/STATUS
+closes context/callback/socket/worker; old same-delay flow stops State first.
+Fake Init-1 and never-reply original20s timeout skip State, outgoing1002=0;
+original query errors OK/TIMEOUT remain separate from cleanup notification.
+Both failure paths honestly retain CLOSE_UNKNOWN for context after30s while
+worker/callback/socket close. No fake CLOSED or SDK state repair is introduced.
+
+Reviewer: independent narrow agent R1 found one P2: named reason could contradict
+send/completion facts.2 inert RED regressions preceded the consolidated validator
+correction; current17PASS0.76s also prove actual consumer rejects contradictions
+and preserves valid finite outcomes. Same-reader R2 READY_LOCAL_ONLY resolves
+that finding; agent review is not independent human or real-runtime approval.
+There are20 unique targeted cases across these records. Wire actor body was
+unchanged by R1's validator-only fix; no post-fix SDK wire replay is claimed.
+Ruff check/format pass; targeted scope deliberately excludes old SDK suites.
+
+Final candidate P=E3/operator-init-completion-01: actor33615B/7eea0b0e,
+entry50542B/9897b280, packet38227B/27a06174.96 current-body builds/decodes recover
+all source bytes and parse unexecuted carriers; maxima inner730187<1048576,
+encoded206599<262144, carrier306780<327680. New strict consumer covers3 actual
+local outcome types. LOCAL-QUALIFICATION-02 supersedes preliminary01, whose
+inherited census omitted older actual admission/runtime folders and audit's own
+later checkpoint; final conservative census explicitly includes them.
+
+Final result7903B/3d702832a6617aaa49b076b3fef22c53145314ff295c02127970b5d7b465f875,
+index2812B/af47d963085f80b93b4905f93473fb2c4194d11a5fd8070129883bb2df6c5565,
+checkpoint152736B/2874d11cfad5cd3811a337b0691febe5ab6cfc286a037df3883dda5c3fef545a.
+Post-seal conservative software99147776 + full retained33554432 + remaining
+closeout/docs/Git352256 =133054464<134217728. No runtime balance/history is
+borrowed/deleted and no physical census is inferred. Local result and detailed
+conclusion/review are under SDD/opend-init-completion-20261108.
+
+A separately qualified real observation could now distinguish completed Init
+outcome from old State10s censoring; this local scope does not request/register
+or consume it. Even Init nonOK can leave wire/handler/remote cause unknown.
+Whole IVV owner task ACTIVE/unachieved, old opportunities SPENT/no retries,
+UNKNOWNs/holds/futures preserved. User-confirmed OpenD login was not modified;
+browser-extension-only readback confirms Tailscale authorization successful.
+No global computer use or ordinary approval repeat occurred.
+
 ### Completed SDK0 causal/config contract slice — 2026-11-08
 
 Planner scope was two bounded source/evidence checks, not another provider

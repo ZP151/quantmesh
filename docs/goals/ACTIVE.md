@@ -2,6 +2,30 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Local-only Init-completion correction completed — 2026-11-08:
+Same retained official Init Timer worker is now joined within session90 before
+optional State; original Init20/total120/close30 and outer/Source7/once guards
+remain. Three local synthetic-provider cases prove delayed12s Init0→State0,
+genuine Init nonOK and never-reply timeout with State skipped. Separate typed
+query error preserves TIMEOUT before later cleanup DISCONNECT. The two failure
+cases retain CLOSE_UNKNOWN for SDK context while worker/callback/socket close.
+
+New closed diagnostic/result versions survive both validators and actual
+consumer. R1's one P2 reason/order inconsistency has2RED regressions, corrected
+in all3 validators; same-reader R2 READY_LOCAL_ONLY. Current17 inert contract
+cases and prior3 wire cases are20 unique cases, not a post-correction SDK replay.
+Final96 carrier geometry fits:730187/206599/306780 below original caps. Entry,
+stage and caller are hard LOCAL_ONLY; old identity/receipt is spent provenance.
+No real purpose, registration, provider request, restart or login change.
+
+Private E3/operator-init-completion-01: final result7903B/3d702832,
+frozen local index2812B/af47d963; checkpoint152736B/2874d11c. Complete software
+forward133054464<134217728 includes all retained actual folders/checkpoints,
+full old32MiB future and remaining closeout/docs/Git allowance. No physical or
+runtime grant is implied. Potential future gain is an uncensored Init outcome,
+not a provider repair or financial result. Whole task ACTIVE; no human input
+pending. Preserve existing OpenD login and all historical SPENT/UNKNOWNs/holds.
+
 SDK0 contract/causality audit completed — 2026-11-08:
 Existing local no-response case6061fe34 already reproduces the actual State-first/
 Init-after-close/DISCONNECT signature in about10.815s including SDK loading; no
