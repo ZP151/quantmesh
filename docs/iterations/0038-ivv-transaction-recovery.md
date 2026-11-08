@@ -2,6 +2,31 @@
 
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
+### Actual real-approved local entry stop — 2026-11-08
+
+The actual user approved this exact replacement via call_f358f9dd4fd2448db87ffa80a2083a70/0;
+immutable event2735B/7dc6f84d binds frozen1f6dd217, packet0acf40c1 and old33f to
+sole6b4ad. Original Server verified all46 frozen files and used the reviewed
+pure binder to create canonical authority316ac5b0 and bootstrap192bfb13, with no
+implementation change. It ran that bootstrap exactly once, not merely ACKing.
+
+Actual local process exited2, empty stdout/stderr. procedure/runtime and the
+separate service-export/bound-source/SDK-runtime namespaces do not exist. Under
+the exact frozen claim→metadata→stage→retire→login flow, sequence intent/status/
+material/transport/old-stop/successor/SDK/State/business are all0 for THIS attempt.
+This does not change any prior UNKNOWN totals. The local process was reaped with
+closed output; no SSH/provider/SDK helper was created. Original provider/login
+was not touched by the attempt; no fresh host or authentication claim is made.
+
+Closeout4777B/013353c8 and checkpoint164225B/d362b872 preserve the actual decision
+and failure. State is STOP/SPENT/NO_RETRY before sequence claim. The one blocker
+is actual frozen local entry refusal; exact underlying predicate/exception is
+UNKNOWN because the bootstrap deliberately returns a finite2 without rendering
+its exception. No inference of credential absence, postfailure vault/host/SDK
+probe, automatic retry, source repair, new nonce or maintenance is authorized.
+All failed evidence, old approvals/UNKNOWNs and unused/future holds remain.
+Whole goal ACTIVE/unachieved; return actual finite closeout to Parent.
+
 ### Final software freeze; no runtime authority
 
 Planner/Implementer/Reviewer/Verifier close this SDK0 preparation slice. One

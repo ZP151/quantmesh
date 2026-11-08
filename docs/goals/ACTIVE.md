@@ -2,6 +2,28 @@
 
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
+ACTUAL APPROVED ATTEMPT — 2026-11-08: the real human approval2735B/7dc6f84d
+was verified against frozen1f6dd217 and execution packet0acf40c1, then consumed
+once through the frozen pure data binder. Approved bootstrap192bfb13 ran once
+and exited2 with empty captured output before the local sequence namespace or
+intent existed. No source implementation was edited and no retry occurred.
+
+Finite closeout4777B/013353c8 and checkpoint164225B/d362b872 record
+STOP_SPENT_NO_RETRY_LOCAL_ENTRY_REFUSED_BEFORE_SEQUENCE_CLAIM. Exact frozen flow
+ordering plus absent procedure/runtime proves no credential status/material,
+remote transport, old stop, successor start or SDK operation was reached. The
+unified executor observed the local Python process exit/reap and closed output;
+remote/provider/SDK cleanup is not applicable because none was created. Current
+provider was not modified by this attempt. Old UNKNOWNs and all unused/future
+holds remain, without refund or remapping.
+
+The sole remaining blocker is actual local procedure-entry refusal before its
+sequence claim; the frozen bootstrap suppressed the failed predicate/exception,
+so its underlying cause is UNKNOWN. Do not infer missing credentials or attempt
+another metadata/host/SDK probe, code patch, nonce or maintenance from this
+consumed event. Return the finite failure to Parent. Whole objective remains
+ACTIVE/unachieved; software qualification below is historical, not runtime GO.
+
 FINAL SDK0 SOFTWARE CHECKPOINT: whole R2 READY, report0ab308a4; main's fresh
 integrated79 tests pass, independent caller26 pass, unchanged procedure38 and
 accepted login74/service41/status15 evidence retained. Final caller20320B/
