@@ -2,6 +2,56 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### New runtime wiring frozen before current admission — 2026-11-08
+
+Planner selects one new initcomplete33f-01 purpose to measure original Init's
+completed outcome before deciding State; no provider repair/capture/financial
+claim. Unique central receipt19611B/e81eeb14 imports36MiB exactly once (software4,
+runtime local8/remote24). New profile43c89905 binds new root/unit/Windows ledger,
+same selected restore nonce33f, machine, receipt, exact actor and finite quotas.
+Original LOCAL_ONLY/SPENT copies remain byte-for-byte unchanged. No new provider
+identity/login/restart/config/port/RSA operation follows from this registration.
+
+Implementer: early profile/receipt gates at entry.run, packet.stage and caller
+refuse missing/mismatched binding before side effects; fixed caller/index/
+new release remains separately authenticated. Candidate actor33615B/7eea0b0e
+is unchanged from local qualification, new entry54187B/f3ea8a60 and packet41652B/
+75c7734a preserve the strict finite result/consumer and all other outer guards.
+One necessary scoped Parent adaptation keeps original authenticated SCM/FD/
+8192 recv and20s idle periods during post-GO RESULT wait, checking the original
+absolute120 deadline/kernel/resources/sources after each idle. It never renews
+child_started, retries SDK/messages or swallows EOF/malformed/policy/identity
+exceptions. READY/ENTER/ACK/EOF retain first20 timeout. Root explicitly approved
+this bounded wiring; SDKInit20/session90/total120/close30, source/native/once,
+physical5s/issued210s/alarm/owned cleanup all remain. Context_closed=false still
+requires CLOSE_UNKNOWN, independently of physical worker/socket closure.
+
+Verifier:6 initial profileRED,4 RESULT-waitRED and1 canonical Win/Linux pathRED
+precede current activation tests; original19 targeted tests pass. Narrow R1
+identified one P1: wrapping callers had indented embedded remote Python. Two
+actual fixed literal parse tests failed, precise stdlib dedent corrected only
+those bodies;21 current tests PASS0.47s, independent R2 repeats21PASS0.46s.
+R2 READY_FOR_FINAL_CURRENT_ADMISSION is agent-only, not human/runtime success.
+No SDK import/context, original12s/20s wire replay or new WSL fixture occurred.
+Runtime3 Ruff check/format pass; private fixed payload tools exclude only E501.
+
+96 exact-current-body build/decode/AST carrier cases fit737678<1048576 inner,
+208745<262144 encoded,313750<327680 carrier; carrier never executed. Caller-only
+dedent correction reuses that exact-three geometry after source-pin matching.
+FROZEN-PINS21004B/f9d17ee7b05d99cde09bdb0c2e66160a0060a526d5a107545623f1e6a8f90224;
+QUALIFICATION-FINAL21828B/08461b1b6ccbd2ec58a16be7c1c3aa23f30d07708e0e0d3b10b6bb366fee0309;
+EXECUTOR-PINS2402B/fddb3bfce6bca651ad7f9e76ea84cf9fa62ebfb049be35fccdeb2d58535e9ffc.
+Executor final-index literal binding is the sole post-review change, actual AST
+normalized to None equals reviewed template. All final caller bytes are pinned.
+
+At freeze conservative software99721216 + full old33554432 + old closeout352256
++ new remaining3637248 =137265152<138412032. Actual new growth consumes its
+separate4MiB allocation, never old32 future; runtime full32MiB remains distinct.
+Current checkpoint155112B/3ff1a891b37b592203e76ddbeaaac904c7239c572d4ea3027e2e42a9b2c14c4e.
+Sole original Server next performs SDK0 current preflight and one registered
+runtime only if unchanged real current admission succeeds. No ordinary ACK wait;
+actual runtime outcome is not established by freeze. Whole goal ACTIVE.
+
 ### Completed local-only Init-completion correction — 2026-11-08
 
 Planner scope [issue301](https://github.com/ZP151/quantmesh/issues/301): one user

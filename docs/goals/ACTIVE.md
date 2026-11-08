@@ -2,6 +2,27 @@
 
 ## Selected-instance recovery preparation — issue301
 
+New Init-completion runtime candidate frozen — 2026-11-08:
+Central unique receipt19611B/e81eeb14 registers36MiB exactly once: software4,
+runtime local8/remote24. New purpose initcomplete33f-01 has distinct root/unit/
+Windows ledger and embedded profile43c89905; original selected restore nonce33f
+stays unchanged. Old LOCAL_ONLY candidate and all old SPENT provenance remain.
+Actor is byte-exact7eea0b0e; new entryf3ea8a60/packet75c7734a add only explicit
+activation/profile wiring and required Parent RESULT idle observation periods.
+Only true socket idle20 may continue in RESULT phase after source/kernel/resource
+checks; original absolute child120 epoch is never renewed. READY/ACK/EOF wait20,
+SDKInit20/session90/total120/close30, physical5s/issued210s and once gates remain.
+
+21 inert tests pass, no old SDK wire replay; narrow R1's sole payload indentation
+P1 has2RED then21GREEN, same-reader R2 READY_FOR_FINAL_CURRENT_ADMISSION. Final96
+geometry737678/208745/313750 fits. Frozen index21004B/f9d17ee7, qualification
+21828B/08461b1b, fixed caller pins2402B/fddb3bfc; checkpoint155112B/3ff1a891.
+Software complete forward137265152<newcap138412032 preserves full old32MiB,
+old352256 closeout and remaining new3637248 at freeze. No second36 charge.
+Next sole Server current SDK0 preflight, then at most registeredctx/connect/Init1
+and State≤1 only after InitOK through original genuine current gates. Registration
+and frozen software alone are not runtime GO; context_unknown remains honest.
+
 Local-only Init-completion correction completed — 2026-11-08:
 Same retained official Init Timer worker is now joined within session90 before
 optional State; original Init20/total120/close30 and outer/Source7/once guards
