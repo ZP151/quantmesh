@@ -2,6 +2,15 @@
 
 ## Independent operator status — issue301
 
+The selected official-client comparison now has an offline preparation packet:
+verified original client/22 SDK pins,18 deterministic source/inference tests and
+finite diagnostic projection. It separates current official usability from the
+shared no-response path without reconstructing historical cause. Bare original
+async code is not releasable: initial-worker join and a strict same-terminal
+diagnostic version remain concrete integration boundaries. No SDK/host/login
+action occurred; a distinct new purpose/runtime budget is only a draft. See the
+active iteration for full evidence, limitations and bounded offline review.
+
 Latest actual status02 reaches real child/source/kernel/physical admission and
 Init1001 guarded reservation, then returns REFUSED with all ordinary close facts
 and actual caller delivery proved. It supplies no GlobalState result or login

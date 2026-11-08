@@ -2,6 +2,43 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Official-client compatibility offline preparation — 2026-11-08:
+Original20:01:50Z checkpoint/20–30min estimate is retained; the intervening
+login-only completed turn did not complete preparation and did not pause the
+owner task. Current source audit verifies original3690B/72d8 client and22 SDK
+pins. Official async constructor schedules Timer Init, which may race return;
+its Init is the
+same official _init_connect_sync, and GlobalState creates no second Init.
+Default failed Init does schedule retry; the controlled model disables it before
+delegating the first original method. Actual AST control bodies with synthetic
+Timer/network/query and finite inference prototype produce18 targeted PASS;
+no SDK import/context/request,
+thread/network/host/provider/login operation occurred.
+
+One coherent preparation packet is in E3/official-client-compat-01: proof6452B/
+f0cf9dc4, full forecast draft14278B/280ba0e5; full explanation/probe/tests are in
+SDD/OFFICIAL-COMPAT-PREPARATION.md. The finite projection prototype preserves
+independent INIT/STATE stage bits, official codes/first closed-enum exception,
+delegate/queue/callback/unpack observations without messages or private payload.
+R1's one P2 is corrected: refusal at any boundary invalidates common-path
+inference; delegate entry is insufficient, and queue acceptance is not physical
+delivery. Added negative cases have4RED→18 total PASS.
+Existing v1 exact terminal cannot carry extras; a strict new version must retain
+the diagnostic through refusal and normal close in the same durable terminal.
+The old bare client also lacks proof of initial Timer/Init worker join after
+the10s connection-eligibility timeout. These implementation boundaries are
+explicitly
+unqualified, not a new actor READY or replay permission.
+
+Current conservative software+retained prior WSL+unchanged full32MiB future is
+127148032<134217728. A distinct unregistered officialcompat33f-01 runtime draft
+adds32MiB/local8remote24; projected guardG12288356442/guardP6250284046 and full
+all-parent6306907150 fit original caps. Central held forecasts are not new
+physical usage. Old holds/UNKNOWNs/status02 SPENT stay unchanged; no deletion,
+refund, borrowing, new resource or ordinary login approval. The sole narrow R2
+is READY for offline feasibility only;18 tests reproduced. All listed runtime
+integration/release/admission boundaries remain open and unqualified.
+
 Actual new status33f-02 is now STOP/SPENT after one fully delivered REFUSED.
 Unified frozen index4714B/30b9d56b; final qualification7744B/3d1cfb18,24 targeted
 PASS, current inert SDK0/default unarmed,96 complete geometry inside all caps.

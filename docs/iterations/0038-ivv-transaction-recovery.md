@@ -2,6 +2,61 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Official-client offline compatibility preparation — 2026-11-08
+
+Planner: one future comparison may establish current official-class usability
+or a failure in the common SDK/provider path. It cannot reconstruct the old
+suppressed first guard/exception or establish vendor handler-read/root cause.
+Original scope clock20:01:50Z and missed20–30min estimate remain; no cancellation
+or pause exists. All three previous readers were complete, with no author running;
+the original Server resumed directly and did not duplicate author delegation.
+Quant: no data/capture/input/trial/report/financial OOS/Paper/live scope follows.
+
+Implementer: source72d8 original client3690B and all22 pins verified. Original
+async constructor Timer calls the same official _init_connect_sync; GlobalState
+does not add Init. Actual official AST bodies, manual Timer and synthetic
+network/query demonstrate default failed Init schedules a second timer, while
+pre-delegate auto_reconnect=False removes it. Projection prototype uses fixed
+parallel stage bits/official signed32 codes/first enum exception and finite
+send/callback/unpack/closure observations. It never serializes messages, private
+payloads or arbitrary names. It is not an executable health actor or carrier.
+
+Verifier:13 genuine RED assertions for missing probe; first implementation5FAIL/
+8PASS due literal bytes and omitted model conn_str; corrected13PASS0.14s.
+Narrow R1 found one P2: policy refusal after delegate entry can also prevent a
+send and invalidates H2. One consolidated correction requires full-interval
+policy-clear, completed diagnostic, successful queue acceptance and official
+non-OK Init with no callback; queue acceptance still is not delivery. New fixed
+policy-refused bit and negative assertions have4FAIL/14PASS RED→18PASS0.16s.
+Failures remain. Four new offline files pass current Ruff check/format. No SDK
+import/context/request, network, actual thread, host or provider/login action.
+Proof6452B/f0cf9dc4 and complete forecast draft14278B/280ba0e5 reside under
+E3/official-client-compat-01. Generator's three long descriptive strings were
+shortened for E501 after generation; exact old generator is retained .pre-format,
+not a hidden source/runtime change. Final manifest will bind both versions.
+
+Safety/remaining boundary: bare old client lacks initial Timer/Init worker join;
+connection-eligibility timeout10 may return before Init worker. It does not bound
+subsequent request wait. Strict existing terminal v1
+rejects diagnostic extras and transient OBSERVE is insufficient. One remaining
+cohesive implementation must bind the actual official class before Timer, retain
+uniform once/send guards, join its exact worker plus callbacks/socket within
+existing120/30s, carry strict versioned diagnostics through the SAME durable
+terminal, and prove real pinned local wire/close-race plus complete geometry.
+This has not been claimed qualified. Additional35–50min engineering estimate is
+based on existing outer reuse and these concrete edges, not a restarted original
+preparation deadline or a service-recovery promise. No actual SDK before new
+registered purpose/final source/native/real physical admission.
+
+Software current+prior WSL+full unchanged future127148032<134217728. Draft new
+runtime officialcompat33f-01 is independently32MiB/local8remote24, not old32
+leftovers. Projected guardG12288356442/guardP6250284046/allparent6306907150 fit
+original caps; central forecasts are not new physical samples. All old holds,
+negatives/UNKNOWNs and status02 SPENT remain. Reviewer: sole narrow R2 READY for
+offline feasibility only, current18 tests independently reproduced; no blocking
+finding remains within preparation. All stated runtime integration/release gaps
+stay open; no whole-framework/deployment READY or ordinary approval requested.
+
 ### Reduced terminal compatibility — 2026-11-07T15:36:41.942770Z
 
 Final unified candidate and actual new purpose — 2026-11-08 Singapore:
