@@ -2,6 +2,55 @@
 
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
+### Actual completed-Init runtime closeout — 2026-11-08
+
+Sole Server verified frozen caller/profile/receipt pins, then one SDK0 current
+preflight in1.022s closed normally: selected original provider b0b6/MainPID1031737
+active/running, new root/unit absent and Python pin/free floor true. One actual
+initcomplete33f-01 carrier313659B then passed the unchanged real source/native/
+readonly/ownership/once/resource gates. Issued central capsule was not a new
+physical G/P census; distinct genuine late physical observation→INTENT
+0.365705863s<5, original210s issuance gate also passed, providergrowth0 and
+free144573468672B. No second36MiB registration or paid resource was added.
+
+Actual1766B/7a9f44491943a0f9dc3c9b344059d7bbba8523ae0f151245e9083c8722b1918e
+is outerSTOP/innerCLOSE_UNKNOWN, statusnull/policy_clear. One actual official
+context/connect/Init and one delegated/SDK-queued Init1001; no socket-receive,
+response callback, unpack or READY observed. Original Init query returned-1
+with query_errors.INIT=TIMEOUT; later request notification is DISCONNECT. The
+same retained worker completed, and Init returned BEFORE own CLOSE_ENTER.
+State was skipped (method0/send0), otherbusiness0/retries0. This purpose now
+provides an uncensored completed Init failure, rather than the prior State10s
+eligibility/early-close signature. No physical-delivery/server-read/login-cause
+inference follows; those remain UNKNOWN and historical results are unchanged.
+
+SDK close consumed30000ms; callback/socket/retained worker all closed/logclosed,
+but context state was not CLOSED, so close_within_deadline=false and honest
+CLOSE_UNKNOWN remain. No fake state or extra close signal was introduced.
+Actual child/cgroup/resources/channel/manager/transport closures all true.
+SDK0 fixed public readback7100B/775546c12ff5ae683adacaec0bef14af7a5d996406d2e12fcdc90245924036b4
+in0.651s/normal owned closure confirms3 exact deployed hashes, Root INTENT/OWNER/
+GO/five MAYs through Init, no StateMAY and no forced/unknown cleanup. Pending
+finite result and manager-close match actual/local TERMINAL. Root TERMINAL is
+absent by design because only local caller can attest transport closure; no
+record is invented. Newunitnotfound/no cgroup proves own runtime is gone. The
+original provider remains b0b6/MainPID1031737 active/running; no login/restart/UI/
+config/port/RSA/private XML/log/pane action occurred. SDK login flags unreturned.
+
+Closeout5770B/1f8f9836af2a7f06fef4eb81f21ad2d3dfc7f34a2596592759f8ba98a9e9630a
+seals the only purpose STOP/SPENT/no retry. Checkpoint156786B/
+340c11e50e52917a408520ce4e66bac7352b2f6130628925f72151c8722fe48c.
+Post-checkpoint conservative software99901440 + retained old33554432 + old
+closeout352256 + remaining new3457024 =137265152<138412032. Local runtime A+L
+were278528B conservatively before writing its closeout, far below8MiB; its
+separate full32MiB runtime hold remains without refund, as do all old holds.
+
+Planner receives one remaining blocker: actual original Init completed TIMEOUT
+with no response callback; packet delivery/server disposition/root cause remain
+unknown. No blind nonce, rerun, reconfiguration, relogin or restart is selected.
+No capture/input acceptance/trial/report/decision/financial qualification.
+Whole owner task ACTIVE/unachieved; no user action pending for this closeout.
+
 ### New runtime wiring frozen before current admission — 2026-11-08
 
 Planner selects one new initcomplete33f-01 purpose to measure original Init's

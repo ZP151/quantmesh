@@ -2,6 +2,29 @@
 
 ## Selected-instance recovery preparation — issue301
 
+Actual uncensored Init result — 2026-11-08:
+The one registered initcomplete33f-01 is now STOP/SPENT/no retry. Actual1766B/
+7a9f4449 reports first INIT/SDK_NON_OK with original query_error TIMEOUT, later
+notification DISCONNECT; Init returned-1 and same worker completed BEFORE own
+close. No receive/response/unpack/READY observed, State method/sends0. This
+resolves the old State10s censoring ambiguity for THIS purpose; it does not
+establish packet delivery, server-handler read or a provider/login root cause.
+
+SDK callback/socket/worker closed and logclosed; context_closed=false remains
+honest CLOSE_UNKNOWN after close30000ms. Child/cgroup/resources/channel/manager/
+transport closure all proved, no forced/unknown outer cleanup. SDK0 readback
+7100B/775546c1 confirms current3 deployed pins, five MAYs through Init/no State,
+same pending/manager-close/local TERMINAL, own unitnotfound/no cgroup. Original
+provider b0b6/MainPID1031737 active/running; existing login was not modified.
+
+Real physical observation→INTENT0.365705863s<5 and separate issuance210s gate
+passed; growth0/free144573468672B, not fresh G/P census. Closeout5770B/1f8f9836,
+checkpoint156786B/340c11e5. Softwareforward137265152<138412032 retains all old
+futures and new remaining3457024 after checkpoint; runtime32MiB hold stays fully
+retained. Whole IVV objective ACTIVE/unachieved, no input/capture/trial/report/
+decision/financial result. Return once to Planner with the finite Init timeout
+as the sole current blocker; no automatic nonce/relogin/restart/retry.
+
 New Init-completion runtime candidate frozen — 2026-11-08:
 Central unique receipt19611B/e81eeb14 registers36MiB exactly once: software4,
 runtime local8/remote24. New purpose initcomplete33f-01 has distinct root/unit/

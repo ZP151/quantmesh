@@ -59,3 +59,13 @@ one R1 payload P1 corrected2RED→21GREEN.96 geometry exactcurrent3 fits313750
 carrier. Softwareforward137265152<138412032 with old32MiB/352256 and remaining
 new3637248 retained. Next current preflight/real gates, not a software-success
 or registration-only runtime GO.
+
+Actual once-only action closed20261108T025242Z: SDK0 current preflight1.022s,
+actual carrier313659B, genuine physical→INTENT0.365705863s<5 and independent
+issued210s pass. Actual1766B/7a9f4449 has INIT-1/queryTIMEOUT before own close,
+later notificationDISCONNECT, workercomplete; no State method/send. Honest SDK
+CLOSE_UNKNOWN after30s but callback/socket/worker/log and all owned outer close
+proved. SDK0 public readback7100B/775546c1 confirms exact3 pins/newunitgone and
+unchanged original provider. Closeout5770B/1f8f9836, checkpoint156786B/340c11e5;
+purpose STOP/SPENT/no retry. Return finite result to Planner, no new purpose or
+provider recovery claim. Whole goal ACTIVE; original login preserved.
