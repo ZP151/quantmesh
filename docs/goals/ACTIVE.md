@@ -1,5 +1,38 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Authenticated replacement preparation — issue301, 2026-11-08
+
+The credential-free branch is closed. Its support draft is cancelled: do not
+send it, wait for a reply or add pre-login research. The selected next route is
+one same-build replacement of current33f after qualified preparation and one
+new explicit interruption decision. Current ordinary login remains preserved.
+The user's browser preference is extension-only; the existing Edge Tailscale
+page was read through its extension and showed Authorization successful. That
+is browser authorization, not new OpenD authentication or SDK evidence.
+
+Planner's tracked spec/plan are
+`docs/superpowers/specs/2026-11-08-opend-normal-login-comparison.md` and
+`docs/superpowers/plans/2026-11-08-opend-normal-login-comparison.md`.
+No real host, credential metadata/material, login, SDK or service action occurs
+in preparation. Quant scope is zero research/data/financial qualification.
+
+Central receipt4017B/83ec6616 registers software8MiB plus conditional runtime
+local16/remote32MiB once (net56MiB). It is capacity, not interruption authority.
+All prior holds, UNKNOWNs, SPENT attempts and full futures remain retained.
+Software cap146800640, complete forward145653760; global12GiB/parent6GiB and
+free50GiB floors remain. Sole prospective successor6b4ad17d130c45e583005670612eca52
+is preparation data only; no real claim or provider was created.
+
+Implementer checkpoints: Task1 reduced normal-login adapter70 targeted passes,
+fresh Spec/Standards review in progress. Task2 current service-only maintenance
+21 fake-composition passes and an owned-only WSL pidfd signal/wait/cleanup seam;
+systemd/cgroup/network predicates remain synthetic in that seam. No historical
+STOP-CLOSED is repaired. Task3 unchanged actor7eea0b0e and six sensitive parent
+functions are retained;15 inert source-binding tests pass, including default
+refusal before read/decode/transport and incomplete closure/login attestations.
+Final source integration, whole review and executable decision freeze remain.
+No current runtime GO or final user interruption question has been issued.
+
 ## Selected-instance recovery preparation — issue301
 
 Orthogonal control SDK0 preparation completed — 2026-11-08:

@@ -1,5 +1,44 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Authenticated replacement preparation — issue301, 2026-11-08
+
+Planner closed the credential-free branch and cancelled the unsent support
+draft below. The selected route is one exact33f maintenance replacement with
+normal safe-store login, prepared entirely SDK0. Same-build/binary/home/config
+and original service caps are reused; no overlapping second provider or new
+namespace platform. Current login stays online throughout preparation. Only a
+final new interruption decision may authorize its loss; old consumed approval
+is not reused. Ordinary credential reuse/counts/capacity need no repeated ask.
+
+Quant Researcher: zero new market/account/trade requests, research repair,
+capture, trial, report or financial qualification. All old STOP/SPENT/UNKNOWN
+and quotas remain. A successful input receipt still means PENDING_SDK.
+
+Implementer/Verifier checkpoint: normal-login source70 focused GREEN with actual
+constructor/serve RED retained; its fresh Spec/Standards review is in progress.
+Current service-only binding21 fake-composition GREEN, core536dc unchanged;
+owned-only synthetic pidfd seam passes with no provider and explicitly fake
+systemd/cgroup/network predicates.15 new source-binding tests preserve exact
+actor7eea0b0e, sensitive parent functions and disabled-before-read/transport.
+The new status template does not borrow current33f's origin for its successor.
+Final composition/review/freeze are outstanding, not an execution release.
+
+Central4017B/83ec6616 registers the complete56MiB once: software8/runtimeL16/R32.
+It grants no interruption. All original futures stay; softwareforward145653760
+under cap146800640, guardG12384825434/P6346753038, all-parent stress6403376142
+under existing12GiB/6GiB limits, free50GiB unchanged. Prospective sole successor
+6b4ad17d130c45e583005670612eca52 has no actual claim/start/login. Tracked spec
+and plan: `2026-11-08-opend-normal-login-comparison.md` under their respective
+`docs/superpowers/` directories. Local evidence is in
+`.superpowers/sdd/opend-authenticated-control-20261108/` and private output
+`opend-authenticated-control-preparation-01/`; full final evidence is pending.
+
+Browser correction: user says already logged in and requests browser extension
+only. Existing Edge Tailscale page read through extension shows Authorization
+successful; no global desktop interaction, re-login or OpenD action was used.
+This does not establish SDK authentication. Role outputs above remain separate
+from user-confirmed ordinary login and from any future runtime evidence.
+
 ## Selected-instance maintenance preparation — issue301, 2026-11-07
 
 ### Orthogonal provider control feasibility prepared — 2026-11-08
