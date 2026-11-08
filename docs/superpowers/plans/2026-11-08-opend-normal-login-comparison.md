@@ -102,8 +102,32 @@ the approved control and actual new origin, not a preparer-invented live proof.
 **Files:** P/{EXECUTION-PACKET.md,USER-DECISION.zh-CN.md,FROZEN-PINS.json,
 COMPLETE-FORECAST.json}, H/progress.md, ACTIVE/iteration evidence.
 
+Concrete integration files, made explicit at the implementation checkpoint:
+P/status-check/{build_status_package.py,build_status_caller.py,status_entry.py,
+status_packet.py,operator_status.py,status_caller.py,test_status_caller.py},
+H/test_status_binding.py and P/procedure/{build_procedure.py,test_procedure.py,
+QUALIFICATION.md}. The procedure is the existing-channel implementation of
+this task's selected sequence, not another provider, SDK or research track.
+Independent file ownership permits the narrow procedure and caller recipes to
+proceed while current maintenance review completes.
+
 - [ ] Integrate Task1 only after its bounded review. Exact release/current data
   binding, fresh source/ordinary claims and actual successor origin/bind seams.
+- [ ] Concrete procedure RED/default actual old caller reaches file access;
+  implement default refusal before OS/store/transport. Reuse qualified owned
+  transport for metadata-only PRESENT, create-only source staging, exact current
+  retire/start, ordinary private input, finite login receipt, service bind and
+  readonly nine-original export. Source-only fake phase failures must stop
+  subsequent steps and never replay credentials. No new custody platform.
+- [ ] Preserve mature stage transport327680/raw700000 bounds; qualify complete
+  actual payload geometry. If the old inner262144 cannot fit the concrete
+  package, align that inner bound to the already qualified transport limit,
+  preserving decompression, packet, reply and owned cleanup guards.
+- [ ] Reuse current pre-stop resource formulas from exact restore_runtime:
+  MemAvailable≥2147483648 and free≥53687091200+438304768 plus the registered
+  remote33554432 hold. This is a later native gate, not a prep host observation.
+  Actual new-origin/binding/control/decision data remain unknown until execution;
+  use a source-pinned pure late-binding recipe, not an invented future proof.
 - [ ] Reuse actor7eea0b0e exact, strict consumer and all native/resource/once/5s/
   210s/120s/close gates; fresh changed-provider purpose only, State≤1 conditional
   on Init0. No current-client code changes or SDK wire replay.

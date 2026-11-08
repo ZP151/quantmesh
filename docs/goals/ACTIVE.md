@@ -17,20 +17,33 @@ No real host, credential metadata/material, login, SDK or service action occurs
 in preparation. Quant scope is zero research/data/financial qualification.
 
 Central receipt4017B/83ec6616 registers software8MiB plus conditional runtime
-local16/remote32MiB once (net56MiB). It is capacity, not interruption authority.
+local16/remote32MiB once (net56MiB). One software-only2MiB augmentation2449B/
+0d7cec8b retains the complete static package and failed/review evidence: same
+purpose total58MiB, software10/runtime16+32. It is capacity, not interruption authority.
 All prior holds, UNKNOWNs, SPENT attempts and full futures remain retained.
-Software cap146800640, complete forward145653760; global12GiB/parent6GiB and
+Software cap148897792, complete forward147750912; global12GiB/parent6GiB and
 free50GiB floors remain. Sole prospective successor6b4ad17d130c45e583005670612eca52
 is preparation data only; no real claim or provider was created.
 
-Implementer checkpoints: Task1 reduced normal-login adapter70 targeted passes,
-fresh Spec/Standards review in progress. Task2 current service-only maintenance
-21 fake-composition passes and an owned-only WSL pidfd signal/wait/cleanup seam;
+Implementer checkpoints: Task1 reduced normal-login adapter74 targeted passes
+and independent R1 READY. Task2 current service-only maintenance41 targeted
+passes and independent R2 READY after deterministic source-map and postprepare
+manifest-use corrections. An owned-only WSL pidfd signal/wait/cleanup seam passed;
 systemd/cgroup/network predicates remain synthetic in that seam. No historical
 STOP-CLOSED is repaired. Task3 unchanged actor7eea0b0e and six sensitive parent
-functions are retained;15 inert source-binding tests pass, including default
-refusal before read/decode/transport and incomplete closure/login attestations.
-Final source integration, whole review and executable decision freeze remain.
+functions are retained;15 inert source-binding tests and independent R1 pass,
+including default refusal before read/decode/transport and incomplete closure/
+login attestations. Concrete ordinary procedure38 targeted/independent passes;
+static package1073650B/71701615 and stage263643wire/625724raw fit the original
+transport327680/raw700000 bounds after aligning the old inner262144 read.
+
+Whole R1 is NOT READY: successful outer-caller SystemExit skips end-custody
+validation, and the main-owned73-case combined run has72PASS/1FAIL at Windows
+seal held/named metadata equality. One consolidated correction is in progress;
+whole R2 is the last permitted review round. Do not create a third structural
+patch loop or request interruption before a complete qualified freeze. Source
+candidate01/46dc948a, reviewinput01/39702a18 and forecast6fcfda62 are explicitly
+not runtime releases. New actual host/store/material/provider/SDK actions0.
 No current runtime GO or final user interruption question has been issued.
 
 ## Selected-instance recovery preparation — issue301

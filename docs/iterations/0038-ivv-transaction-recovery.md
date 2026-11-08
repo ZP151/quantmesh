@@ -2,6 +2,31 @@
 
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
+Latest independent integration checkpoint: Task1 R1 READY/74 passes, service-only
+Task2 R2 READY/41 passes, status-binding R1 READY/15 passes, and the concrete
+ordinary procedure38 independent passes. Static package1073650B/71701615,
+stage263643wire/625724raw fit the existing327680/700000 transport/decompression
+bounds; only the earlier inner262144 read is aligned. Source7/actor7eea and
+maintenance core536 remain exact. None establishes actual provider/login/SDK GO.
+
+Whole R1 NOT READY: actual successful caller SystemExit bypasses final source
+custody checks; main's combined run72PASS/1FAIL records an actual Windows seal
+held/named stat predicate refusal. Cause of the individual changed stat field
+remains UNKNOWN after a small synthetic diagnostic; do not invent a cache cause
+or relax guards. One bounded consolidated correction and whole R2 are allowed.
+Any residual structural failure then returns to Planner; no third patch round.
+All rejected candidates, retained fixtures, snapshots and reports remain.
+
+Unique software-only augmentation2449B/0d7cec8b adds2MiB to the original56MiB
+purpose once, with runtime net0. Current registered preparation10/runtimeL16/R32
+MiB (total58), softwarecap148897792/completeforward147750912, all-parent
+stress6405473294 under the unchanged6GiB cap. Old32MiB/new4remaining3178496/
+352256closeout futures and all UNKNOWN/unused holds remain, free50GiB unchanged.
+ReviewInput01 13257B/39702a18, localoperatorcandidate9569B/46dc948a, complete
+forecast21473B/6fcfda62 are review candidates only. SDK publication remains the
+unchanged Source7 anchor9870; local operator candidate claims no remote publish
+or new CI. Actual AUTHORITY/CONTROL remain absent; new provider/store/SDK calls0.
+
 Planner closed the credential-free branch and cancelled the unsent support
 draft below. The selected route is one exact33f maintenance replacement with
 normal safe-store login, prepared entirely SDK0. Same-build/binary/home/config
