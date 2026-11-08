@@ -2,6 +2,31 @@
 
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
+FINAL SDK0 SOFTWARE CHECKPOINT: whole R2 READY, report0ab308a4; main's fresh
+integrated79 tests pass, independent caller26 pass, unchanged procedure38 and
+accepted login74/service41/status15 evidence retained. Final caller20320B/
+d9a53411 fixes actual successful-exit custody publication and Windows named/
+held timestamp domains without dropping either full-domain guard. Source7,
+actor7eea and core536 remain byte exact. No third review/patch round occurred.
+
+Frozen index14884B/1f6dd217, accepted reviewinput13903B/c821d39c, local operator
+source9569B/0080c04d and final forecast21474B/d6c6965a are under the retained
+`opend-authenticated-control-preparation-01` output. Source publication is local
+software only; SDK/Source7 publication anchor9870 stays unchanged, no new app CI
+or remote publication is claimed. SDK geometry only: actual10 frozen sources,
+packet216563/carrier314223 fit327680 with16384 synthetic varying-hash margin;
+no packet was staged or executed and no old SPENT control was remapped.
+
+Durable checkpoint162662B/5994fb3b, phase
+ISSUE301_AUTHENTICATED_SOFTWARE_FROZEN_PENDING_PARENT_SINGLE_INTERRUPT_DECISION.
+Actual authority/control, host/store/material/provider/SDK actions remain absent.
+All default entries refuse. Whole objective remains ACTIVE/unachieved; Parent
+receives the concrete frozen packet for the sole new current33f interruption
+decision, never another ordinary account/count/capacity question. No execution
+or user interruption approval is implied by this software checkpoint.
+
+Earlier preparation checkpoints below remain historical evidence.
+
 The credential-free branch is closed. Its support draft is cancelled: do not
 send it, wait for a reply or add pre-login research. The selected next route is
 one same-build replacement of current33f after qualified preparation and one

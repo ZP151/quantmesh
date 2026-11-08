@@ -2,6 +2,53 @@
 
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
+### Final software freeze; no runtime authority
+
+Planner/Implementer/Reviewer/Verifier close this SDK0 preparation slice. One
+consolidated whole-R1 correction passes main's fresh79-case integrated suite
+(12.07s); independent whole R2 passes26 caller cases (4.57s), verifies46 actual
+file pins and18 external references, and reports0 remaining Spec/Standards
+findings. Existing login74/service41/status15/procedure38 evidence remains.
+No broad old application/SDK-wire suite, SDK import or actual host/vault/login
+operation was used to obtain these software results.
+
+Successful preflight/consume now publish CLOSED proof/stdout only after final
+custody checks and handle closure; consume cannot advance from raw preflight
+READY without its matching closed proof. Actual Windows diagnostic observed
+named ctime equal birthtime and held ctime equal write time. The correction
+retains full named and full held timestamp checks within their own API domains,
+an independent named-FD comparison, and shared identity/mode/nlink/size/mtime/
+attributes/required birthtime. It does not invent a cache cause, drop metadata
+guards, weaken hashes or alter SDK/native timing. Exact actor7eea/Source7/core536
+and accepted Task1/Task2/procedure sources are unchanged.
+
+Final caller20320B/d9a53411; whole R2 report0ab308a4. Source candidate final
+9569B/0080c04d and accepted reviewinput13903B/c821d39c retain earlier candidates
+and failed fixtures. Frozen index14884B/1f6dd217 and checkpoint162662B/5994fb3b
+are concrete, runtime-disabled source/data recipes. Conditional actual provider
+origin/control/approval remain unknown; all default mains refuse. Local operator
+source publication does not claim a new CI or remote deployment; unchanged
+SDK/Source7 publication9870 is a separate anchor.
+
+Additional size-only qualification uses all10 actual frozen SDK-source bodies
+and16384 synthetic varying-hash bytes: packet216563/carrier314223 are below
+327680, and build/decode roundtrip succeeds. No packet executes, no SDK/native
+or credential API runs, no old SPENT is retried, remapped or promoted. Procedure
+stage geometry remains263643wire/625724raw under327680/700000.
+
+Registered total58MiB remains software10/runtimeL16/R32, cap148897792 and full
+softwareforward147750912; every old UNKNOWN/unused/future hold remains. Postfreeze
+census still reserves more than512KiB for final metadata/docs/Git closeout, with
+oldnew4remaining3178496/32MiBfuture/352256closeout intact. Free50GiB and parent6GiB/
+global12GiB do not change; actual later host admission is still required.
+
+Current ordinary login is not modified. Parent gets one completed reviewable
+software packet, estimated actual procedure5–15min excluding real challenge,
+for the sole new interruption of exact current33f and loss of its in-memory
+login. Account/count/reasonable disk grants are retained. No actual interruption,
+provider/authentication/capture/input/trial/report/financial qualification follows
+from this freeze; whole objective ACTIVE. Earlier progress below is historical.
+
 Latest independent integration checkpoint: Task1 R1 READY/74 passes, service-only
 Task2 R2 READY/41 passes, status-binding R1 READY/15 passes, and the concrete
 ordinary procedure38 independent passes. Static package1073650B/71701615,

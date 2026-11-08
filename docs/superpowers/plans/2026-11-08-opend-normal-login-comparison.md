@@ -54,21 +54,21 @@ private serve/restore route, using the existing source-defined signatures where
 necessary. Final interface and exact argument types must be documented in
 QUALIFICATION.md before main integrates; no invented caller-supplied operations.
 
-- [ ] Write actual-constructor/serve seam RED: UNKNOWN/LOGIN_TEXT/OTP/DEVICE
+- [x] Write actual-constructor/serve seam RED: UNKNOWN/LOGIN_TEXT/OTP/DEVICE
   initially then ACCOUNT never reaches material/load/paste/Enter.
-- [ ] Add RED actual material boundary: missing/wrong Journal and changed named/
+- [x] Add RED actual material boundary: missing/wrong Journal and changed named/
   held socket/parent/cohort refuse before every buffer/paste/Enter operation.
-- [ ] Add RED:0600 accepted with correct ownership;0700/wrong inode/group fail;
+- [x] Add RED:0600 accepted with correct ownership;0700/wrong inode/group fail;
   occupied ordinary intent, source drift and terminal-persist/cleanup failures
   do not consume another material use or emit success.
-- [ ] Implement only fresh ordinary entry barrier/socket/identity deltas, plus
+- [x] Implement only fresh ordinary entry barrier/socket/identity deltas, plus
   complete pin builder. Keep original vault/frame/input sequence and owned cleanup;
   no recovery/contender/resume logic or new secrets implementation.
-- [ ] Run fake-store/source-composition focused tests with
+- [x] Run fake-store/source-composition focused tests with
   `.venv/python -I -B -m pytest P/fresh-login/test_fresh_login.py -q -p no:cacheprovider`.
   Preserve real RED/GREEN logs, source pins and failure semantics. No SDK import,
   vault API, remote SSH or provider/console interaction. No whole old suites.
-- [ ] Fresh bounded Spec/Standards reviewer checks exact assembled primitive;
+- [x] Fresh bounded Spec/Standards reviewer checks exact assembled primitive;
   one consolidated correction/R2 max. Main records role result and checkpoint.
 
 ## Task2 — current33f service-only maintenance wiring (main)
@@ -83,18 +83,18 @@ package. Reuse core deploy/aws/opend/selected_maintenance.py byte-for-byte.
 current interruption authority. Runtime binding fields are strictly derived from
 the approved control and actual new origin, not a preparer-invented live proof.
 
-- [ ] RED current bindingbdbd/manifest651 accepted as prepared subject; old18/437
+- [x] RED current bindingbdbd/manifest651 accepted as prepared subject; old18/437
   and installer old5fb refuse; source/pidfd/control/once/cleanup need predicates
   remain. Preserve legacy code and old EXEC3 missing closure.
-- [ ] RED no authority, incomplete login qualification or absent current PRESENT
+- [x] RED no authority, incomplete login qualification or absent current PRESENT
   metadata stops before signal. Wrong/UNKNOWN closure cannot start. Crash after
   STOP-INTENT/successor claim never retries or changes nonce.
-- [ ] Wire mature core/native hold/revalidate/SIGTERM/wait30/cleanup and sole
+- [x] Wire mature core/native hold/revalidate/SIGTERM/wait30/cleanup and sole
   start. Specialize fixed current identity and installer previous pin356; no raw
   service-name stop/restart/numeric PID KILL. Do not fake repair_ref for research.
-- [ ] Remove research-reference12 coupling from this separate service entry,
+- [x] Remove research-reference12 coupling from this separate service entry,
   retaining all actual stop/start/binding/secret custody gates. Scope0 research.
-- [ ] Verify real isolated synthetic process closure seams locally (no OpenD,
+- [x] Verify real isolated synthetic process closure seams locally (no OpenD,
   SDK, host service or credentials) only where necessary, and preserve evidence.
 
 ## Task3 — complete operator decision/final disabled package (main)
@@ -111,37 +111,37 @@ this task's selected sequence, not another provider, SDK or research track.
 Independent file ownership permits the narrow procedure and caller recipes to
 proceed while current maintenance review completes.
 
-- [ ] Integrate Task1 only after its bounded review. Exact release/current data
+- [x] Integrate Task1 only after its bounded review. Exact release/current data
   binding, fresh source/ordinary claims and actual successor origin/bind seams.
-- [ ] Concrete procedure RED/default actual old caller reaches file access;
+- [x] Concrete procedure RED/default actual old caller reaches file access;
   implement default refusal before OS/store/transport. Reuse qualified owned
   transport for metadata-only PRESENT, create-only source staging, exact current
   retire/start, ordinary private input, finite login receipt, service bind and
   readonly nine-original export. Source-only fake phase failures must stop
   subsequent steps and never replay credentials. No new custody platform.
-- [ ] Preserve mature stage transport327680/raw700000 bounds; qualify complete
+- [x] Preserve mature stage transport327680/raw700000 bounds; qualify complete
   actual payload geometry. If the old inner262144 cannot fit the concrete
   package, align that inner bound to the already qualified transport limit,
   preserving decompression, packet, reply and owned cleanup guards.
-- [ ] Reuse current pre-stop resource formulas from exact restore_runtime:
+- [x] Reuse current pre-stop resource formulas from exact restore_runtime:
   MemAvailable≥2147483648 and free≥53687091200+438304768 plus the registered
   remote33554432 hold. This is a later native gate, not a prep host observation.
   Actual new-origin/binding/control/decision data remain unknown until execution;
   use a source-pinned pure late-binding recipe, not an invented future proof.
-- [ ] Reuse actor7eea0b0e exact, strict consumer and all native/resource/once/5s/
+- [x] Reuse actor7eea0b0e exact, strict consumer and all native/resource/once/5s/
   210s/120s/close gates; fresh changed-provider purpose only, State≤1 conditional
   on Init0. No current-client code changes or SDK wire replay.
-- [ ] Full packet source/size geometry as applicable; complete retained census,
+- [x] Full packet source/size geometry as applicable; complete retained census,
   all old futures plus additional software8MiB/runtime48MiB proposal, not repeated
   charge. No runtime registration is user interruption authority.
-- [ ] Whole assembled independent Spec/Standards review, at most R1+oneR2;
+- [x] Whole assembled independent Spec/Standards review, at most R1+oneR2;
   appropriate private publication/final pins. Core/Source7 unchanged means no
   broad old app CI; a required tracked runtime change stops for a concrete diff.
-- [ ] Complete one final user action draft: interrupt exact33f once, admit login
+- [x] Complete one final user action draft: interrupt exact33f once, admit login
   loss/no original-memory rollback, start one same-build successor with ordinary
   safe-store login, real challenge handoff only, one API check and persistent
   successor. No actual permission question or execution until package is frozen.
-- [ ] Update ACTIVE/iteration, targeted Ruff/format/whitespace and normal docs
+- [x] Update ACTIVE/iteration, targeted Ruff/format/whitespace and normal docs
   commit. Deliver actual complete readiness or precise bounded structural failure,
   never stop at a generic need-login question or support-response dependency.
 
