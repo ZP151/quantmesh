@@ -1,5 +1,76 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Necessary private-entry repair — issue301, 2026-11-09
+
+Planner: resume the proven local refusal only, with no new browser/login/Init or
+remote maintenance attempt. The observed predicate is the unchanged private ACL
+gate: original owned directory foreign allows2/protected=false. Its original
+STOP/SPENT record stays immutable. Provider interruption allowance remains unused.
+
+Quant researcher: no dataset, clock, cost, SDK, input or financial qualification
+changes. No inference about current OpenD authentication follows from these tests.
+
+Implementer: added the bounded source-delivery recipe and actual bootstrap/caller
+finite stages. Candidate HERE derives from its source and is restricted to three
+literal absolute owned paths; the bootstrap separately binds its target parent.
+All original runtime function predicates and ordering remain AST-identical after
+removing observations and the one added path predicate. Candidate's pure binder
+generates exactly the same finite bootstrap as the delivery recipe. Default
+caller stays disabled. Only original source/index pin changes are intentional;
+authority316ac5b0/package71701615 and all original46 frozen files stay byte exact.
+
+Verifier: actual original isolated-entry RED remains in
+`RED-actual-first-guard.log`. New `RED-finite-recipe.log` failed before the recipe
+existed. Final main4 source/default/path/binder/predicate checks pass; actual
+Python313 -I -S -B guarded-entry24 cases pass. Two are real saved-input Windows
+cases: the inherited negative emits LOCAL_PRIVATE_ACL; the private fixture uses
+the original owner+SYSTEM/protected creator and same checker, then reaches the
+claim-before-effect sentinel with effects_may_have_started=false. The other22
+cases inject exceptions to verify finite catch attribution/privacy, not all
+integrity-predicate negative branches. Actual ACL seam records original and new
+negative owner=true/foreign2/protected=false/reparse=false, versus private
+fixture owner=true/foreign0/protected=true/reparse=false. No checker was relaxed.
+
+Reviewer: one new narrow independent agent review READY,7704B/995b6504,
+independently reran4+24. This is not human approval or runtime GO. It explicitly
+covers the owned-path/ACL seam, actual bound bootstrap and future private source
+delivery step. No broad old app/wire/SDK suite was rerun. Initial fixture source
+variants, temporary harness errors and old review/failed evidence remain.
+
+Final candidate source42595B/98672bc20d042e713b8726345e7f8b1da87ceb32c1b3bfeed847a97dfdf4dfaa;
+private fixture bootstrap2866B/c5201ebffccd2a418d5ad86c40d9ca5dda501f521371c8408b50757634c298ed;
+index463B/512918e8508169e259bdad003aac1c4fce3cef2197ed4928bf67a03c5956fbd6.
+New evidence is under E3/opend-entry-firstguard-fix-01; helpers/review under
+`.superpowers/sdd/opend-entry-firstguard-20261108/`. The new tracked plan names
+the actual commands and release boundary. This is local operational source
+publication, not new CI/merge/SDK/Source7 publication.
+
+Capacity: unique software-only4MiB registration2894B/59df6ed7, imported once and
+linked net0. Softwarecap153092096/fullforward151945216, global12GiB/parent6GiB
+and free50GiB guard unchanged. Forecast01 current112824320/remaining2035712
+includes future private source delivery1138688 and final evidence524288; final
+census will include review/docs/checkpoint. Old new4 remaining3178496,
+fullfuture33554432, closeout352256 and conditional runtimeL16/R32 stay held.
+
+Original runtime and both fixture runtime directories remain absent; prospective
+private-execution is uncreated. Actual intent/status/material/SSH/signal/stop/
+start/SDK/business are0 in this repair, and original current33f was untouched.
+Only Parent may decide necessary private delivery and a once-only continuation
+from the reviewed delta and genuine sideeffects0. No user stop question repeats,
+no original approval is rewritten, and no old consumed capture/SDK opportunity
+is remapped. Whole user objective remains ACTIVE/unachieved.
+
+Final retained publication9693B/1b4e02f09fe096404fa853cf19b05b95e53971024ae8c9cbb4311213eeb40d41
+pins actual recipe/source/binder/tests/review and the Parent-only necessary
+continuation delta. Complete forecast27154B/2619e057b1a1b13950f2315874d19dd046e55baeeeb665411eace8c208da3266
+has current112893952/remaining1966080, including future source delivery1138688
+and final evidence524288; forward/caps and all old holds are unchanged above.
+Checkpoint165975B/eaefeab604318853d03ce105f5d288ab5f11682ab921677426d1f90e483e8de3,
+20261109T001505Z-opend-private-entry-offline-repair-ready.json, is the new
+current pointer. Original actual technical stop remains in its history and
+unchanged nested attempt. Prospective execution bootstrap2868B/796a1943e52d7bfd9a03414bb25073dec4c883ecc6a7d1e56674ae00511269cc
+is pure prepared data only; no actual delivery or invocation occurred.
+
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
 ### Actual real-approved local entry stop — 2026-11-08

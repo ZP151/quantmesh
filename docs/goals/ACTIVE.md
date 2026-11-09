@@ -1,5 +1,51 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Local private-entry necessary repair — issue301, 2026-11-09
+
+The actual pre-claim cause is now established: the original procedure directory
+has inherited ACLs (owner=true, foreign allows2, protected=false, reparse=false).
+The strict original checker correctly refuses it. This supersedes the UNKNOWN
+cause below; the historical actual invocation remains STOP/SPENT, unchanged.
+
+Original Server completed the Parent-authorized offline repair. A new owned
+private fixture created by the pinned owner+SYSTEM/protected directory primitive
+passes the same NativeContext checker (foreign0/protected=true); a separate new
+inherited negative returns finite LOCAL_PRIVATE_ACL. The final actual saved
+bootstrap under Python -I -S -B reaches CLAIM_EFFECT_BOUNDARY under a sentinel
+before the first directory/intent effect. Four source/default/path/predicate
+checks and24 guarded-bootstrap cases pass; one narrow independent agent review
+is READY, report7704B/995b6504. No human-review fact is asserted.
+
+Candidate source42595B/98672bc2 preserves all original runtime predicates and
+call order, adds a three-owned-path delivery restriction and finite bootstrap /
+caller stage reporting. It uses actual unchanged authority316ac5b0 and static
+package71701615. The original46 frozen pins and original saved bootstrap remain
+unchanged; initial fixture source variants and every failed probe are retained.
+
+Evidence is in the new `opend-entry-firstguard-fix-01` sibling of frozen
+preparation. Recipe/probes/review are under
+`.superpowers/sdd/opend-entry-firstguard-20261108/`; tracked plan is
+`docs/superpowers/plans/2026-11-09-opend-private-entry-fix.md`.
+Central4MiB software registration2894B/59df6ed7 is linked with net0, no runtime
+increase: softwarecap153092096, completeforward151945216; all old future,
+failed/UNKNOWN/SPENT and conditional runtimeL16/R32 holds remain intact.
+
+The prospective private-execution directory is NOT created. No real sequence
+claim, credential status/material, SSH, signal, provider stop/start or SDK call
+occurred. The original current33f stop allowance remains unused; the immutable
+7dc6f84d human decision and historical technical STOP are preserved separately.
+Parent must explicitly decide the necessary private-delivery/once-continuation
+delta from this reviewed evidence. No automatic maintenance re-entry or repeated
+same interruption approval question. Whole objective remains ACTIVE/unachieved.
+
+Final local publication9693B/1b4e02f0 and complete forecast27154B/2619e057
+are saved in the new evidence directory. Final forecast current112893952 with
+1966080 remaining includes1138688 prospective private delivery and524288 final
+evidence; no old hold is borrowed. Resumable checkpoint165975B/eaefeab6 at
+20261109T001505Z records OFFLINE_REPAIR_READY_PARENT_DECISION_PENDING while
+retaining the complete original technical stop. Prospective execution bootstrap
+is only generated data2868B/796a1943; it has not been delivered or invoked.
+
 ## Authenticated replacement preparation — issue301, 2026-11-08
 
 ACTUAL APPROVED ATTEMPT — 2026-11-08: the real human approval2735B/7dc6f84d
