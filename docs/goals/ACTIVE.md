@@ -1,5 +1,50 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Stage observation repair and spent current read — issue301, 2026-11-09
+
+Original stage failure remains historically UNKNOWN. Exact saved-bootstrap
+effect-denied reproduction can build the original263712B packet/4787-char
+command and reach the real transport entry with saved claim/metadata read-only.
+It does not prove that the earlier real call reached that boundary.
+
+The reproducible local defect is now repaired in a source-only candidate:
+returned transport metadata was discarded by guard/parse failure before any
+journal, leaving only PROCEDURE_AFTER_CLAIM. Candidate adds fixed stage/first
+cause labels, private safe-result journaling before validation/parse and bounded
+stderr classification without messages, payload or URLs. No-result stays UNKNOWN;
+exact-owner recovery/retention and all original guards/once/freshness remain.
+Seven full-caller models first failed, then16 targeted cases passed; one narrow
+independent agent review READY,8430B/1c847cbd, freshly confirms16, inert original
+entry and published candidate/binder byte equality. No human approval is claimed.
+
+One authorized exact-target current read-only reconcile was actually attempted
+and closed. Direct safe transport facts: WAIT/timeout=true, localreturn57346,
+input1280 complete, stdout0/stderr119, all local job/process/drain/EOF completion
+flags true, cleanup0 and retryfalse. No remote file/unit observation exists;
+both current remote stage and historical remote effects remain UNKNOWN.
+That call discarded raw stderr; its error class is unrecoverable UNKNOWN. It
+does not confirm authentication or trigger conditional AUTH300/second read.
+No old URL or Authorization-successful page is reused.
+
+Source candidate52489B/0c28afc2, binder4026B/58063dcd and pins4022B/2a899146
+live under E3/opend-stage-boundary-repair-01. Actual private-execution source
+98672bc2 and bootstrap796a1943 remain unchanged; no deployment, new claim,
+credential status/material, service action or SDK request occurred in this slice.
+New current read transport1 is separate from prior maintenance counts/UNKNOWN.
+Whole goal remains ACTIVE/unachieved; Parent alone selects any further route.
+
+Unique software2MiB receipt3154B/f1d50349 is linked net0; cap155189248 and
+fullforward154042368, no runtime increase. All old failures/UNKNOWN/unused holds,
+old new4 remaining3178496/fullfuture33554432/closeout352256 and conditional
+runtimeL16/R32 remain held. See the new stage-boundary plan and iteration.
+
+Final source publication5457B/4526709b, closeout7002B/c59eca9c and forecast
+25526B/a96e88e2 are saved. Current checkpoint169824B/fa55567e at
+20261109T005439Z is STAGE_OBSERVABILITY_REPAIR_READY_READONLY_WAIT_CLOSED.
+Its complete retained forecast before final publication/checkpoint has
+current115335168/preparationremaining1622016, including future delivery1138688
+and final evidence262144. These are software reservations, not runtime GO.
+
 ## Actual necessary-fix continuation stopped — issue301, 2026-11-09
 
 Planner's immutable5445B/db20abcf authorized actual private delivery then one

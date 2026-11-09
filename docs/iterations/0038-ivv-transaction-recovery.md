@@ -1,5 +1,100 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Stage-boundary observation repair — issue301, 2026-11-09
+
+Planner: diagnose the exact saved stage, not another maintenance. Parent permits
+offline effect-denied reproduction and at most one fixed same-target current
+read-only reconcile. No new claim/status/Vault/material/service/SDK action, new
+remote nonce/root, vendor contact, deletion or stage replay. Quant researcher:
+no research/data/financial conclusion; current/historical facts stay separate.
+
+Actual saved-bootstrap reproduction substitutes only read-only saved claim and
+metadata in the deny-effects harness. Original stage builder/profile can reach
+the real transport boundary: command4787 chars, packet263712B, timeout90/output
+8192 remain under unchanged caps. This is present inert reachability, not a
+historical call witness. The actual original3 local records remain unchanged.
+
+Implementer reproduced a concrete output-loss defect: seven inert full-stage
+caller cases failed because even a returned reply was discarded before guard/
+parse and later failures became coarse PROCEDURE_AFTER_CLAIM. The source-only
+candidate journals a typed safe projection BEFORE validation/parsing, then keeps
+all original guard expressions and call order. Fixed finite stage/first-cause
+codes separate build, call arguments, transport bind/call/return, metadata write,
+validation, parse, result binding and success persistence. NO_RESULT stays
+UNKNOWN. Existing diagnostics refuse before transport. OwnedCleanupError first
+uses original exact recovery/retention; unresolved owner never yields a fake
+journal/close result. Other runtime methods and authority/source/once/freshness
+gates remain intact. Actual live source/entry are not modified or executed.
+
+Transport error classification is bounded to current stderr callback data.
+Only the mature explicit official Tailscale login-URL recognition establishes
+AUTH_CHALLENGE; explicit connection/remote-exit markers provide finite classes,
+otherwise UNKNOWN. Categories are observations, not remote-execution proof.
+No message, exception payload, account or URL is persisted. Tail is cleared and
+disabled at snapshot; overflow yields UNKNOWN without raising into transport.
+Classifier RED first failed3 missing-feature cases, then all16 targeted complete
+caller cases passed. Tests include generated bootstrap v2, metadata-before-parse,
+privacy, pre-call failure and exact-owned cleanup refusal/recovery. Journals are
+memory models; the actual Windows private writer is separately exercised below.
+
+Verifier executed the ONE authorized read-only reconcile through original pinned
+transport to original stage target
+/var/lib/quantmesh-opend-maintenance/6c6d4e4347994d4eb810a7cc5be3c388,
+same old33f binding and machine; only fixed public file/hash/unit reads in its
+command, not stage or service operations. New own local directory used the
+original owner+SYSTEM/protected creator and checker; NativeContext.new persisted
+safe transport facts BEFORE parse. The call returned finite
+TRANSPORT_REFUSED_CURRENT_STAGE_UNKNOWN / TRANSPORT_TIMEOUT: WAIT,timeout=true,
+local return57346,input1280 complete,stdout0,stderr119,job_closed/active_zero/
+process_terminal/drain/EOF flags alltrue,cleanup count0,retryfalse. These are
+direct LOCAL transport facts, not wire delivery or remote command execution.
+No current remote file/unit view was returned. Remote stage/files/effects stay
+UNKNOWN, including history; do not backfill the old90s refusal as timeout/auth.
+
+The current read's private stderr callback was discard-only; raw119B never
+persisted and cannot be recovered from counts. Actual error class is UNKNOWN,
+not inferred authentication. Conditional independent AUTH300+read is not
+triggered: no second read, auth call or browser/login test was made. No old
+authorization URL or logged-in page was used. Read-only source was formatted
+after that single execution; its current source pin is not claimed as exact
+pre-format executed byte hash. Saved public expectations1280B/1bd689ee and
+intent443B/3adcfc5c bind the old stage source/packet and same exact target.
+Safe metadata695B/c756f0c9 and finite outcome968B/ed1f7378 are retained privately.
+
+Reviewer: one new independent narrow agent review READY,8430B/1c847cbd,
+fresh16 tests, inert original entry and exact candidate/binder equality. No
+human review or runtime GO is asserted. Candidate source52489B/
+0c28afc238f48f2cbe12ce36980e1eaf470fef2d734733c7e9f627cebc5a7d96;
+binder4026B/58063dcdfd75d5c91695b47034cf6b299a31ea683fc5fae72960948eb39c4989;
+index463B/226b5d54f60fdc3c3979f4ac5a62ebc22cc02ccf387221188e249f94a7a606d1;
+prospective pins4022B/2a89914619bf328b1c9df03ddfdc12672182790b6ee944a9686ae3791079af78.
+Artifacts are E3/opend-stage-boundary-repair-01 and helper/review H3
+`.superpowers/sdd/opend-stage-boundary-20261109/`. No old app/wire suite rerun.
+
+Capacity: one software2MiB registration3154B/f1d50349, linked net0, runtime0.
+Softwarecap155189248/fullforward154042368; G12GiB/P6GiB/free50GiB unchanged.
+Forecast01 current115261440/remaining1695744 includes prospective delivery
+1138688 and final evidence262144; final census/checkpoint follows. Every old
+new4 remaining3178496/fullfuture33554432/closeout352256, conditional L16/R32,
+failed/SPENT/UNKNOWN/unused hold remains. No paid resource change or refund.
+
+This slice's actual new stage/claim/status/material/service/SDK counts are0;
+only one bounded read-only transport was attempted and closed. Prior actual
+maintenance claim1/status1 and stop/start/material/SDK0 remain historical.
+Whole fixed-IVV/provider objective remains ACTIVE/unachieved. Parent selects
+any next runtime route from reviewed source and actual current WAIT/UNKNOWN,
+without treating this repair as remote stage success or replay permission.
+
+Final publication5457B/4526709b4f57bff816d55fd6aa6963c77022defdb09ffad96a94d83ff0f9d009;
+closeout7002B/c59eca9c669ff116b0f13f546a91699cbc6014b1dcb1fd5a1e7afdd11353559f;
+forecast25526B/a96e88e275e5e7435f5840f254e994679f0e6108edb9b2bd6833e6edd95525e4.
+Forecast current115335168/preparationremaining1622016 before final publication/
+checkpoint includes future private delivery1138688/final evidence262144;
+fullforward154042368<cap155189248 and all old holds remain. New current
+checkpoint169824B/fa55567e33b23c4ad90cb49df5f3e4dd41a9e70c7b4957cbfa1888da2f4a45c7,
+20261109T005439Z-opend-stage-boundary-repair-readonly-wait-closed.json, preserves
+all historical actual stops, the source-only review and the spent current read.
+
 ## Actual repaired-entry continuation STOP — issue301, 2026-11-09
 
 Planner issued immutable necessary-fix continuation5445B/db20abcf, separately
