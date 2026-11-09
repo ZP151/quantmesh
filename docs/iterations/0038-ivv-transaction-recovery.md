@@ -1,6 +1,40 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
-## Confirmed-stopped recovery and spent SDK check — issue301, 2026-11-09
+## No-input public-template and readiness conclusion — issue301, 2026-11-09
+
+Planner chose finite prompt-only observation after SDK check01 was SPENT. Quant:
+no authentication/financial inference from Tailscale or SDK timeout. Implementer
+reused qualified BoundPane/source/native/socket/terminal guards and exact prompt
+parser, with fixed read-only tmux/lower-command whitelist, denied Journal/input/
+Vault/Enter/SDK and mandatory pre-Journal exit. Raw stays inside helper and is
+wiped by the unchanged prompt finally. Reviewer READY;4 targeted boundary/leak/
+effect-denial tests pass. Verifier actual first observation closed rc0,input7055,
+stdout466/stderr0: UNKNOWN,24B/2rows,input false, own-effects directory absent.
+
+Pure public account/password/>>> grammar already works with explicit CRLF/colon/
+space variants. The independent first-prompt condition is exactly one blocked
+read(fd0) thread in the fixed vendor process. A single additional projection binds
+public literal template IDs and same-sample readiness bucket/bool/timing. R1 review
+found all tasks disappearing could mislabel an unavailable observation ZERO;
+genuine RED then R2 guard/GREEN3 and same-reader READY resolve it, preserving R1
+unused sources/publication and every old failure. No ordinary parser/input gate
+was relaxed. Fixed invalid/private/mixed/console templates remain rejected.
+
+Actual R2 projection rc0,input15651/stdout560/stderr0, all owned/native closure true:
+template ACCOUNT/state UNKNOWN/reason INPUT_NOT_ADMITTED, bucketZERO/input false,
+24B/2rows, readiness3ms/prompt573ms. No raw text/hash, material, Vault, Journal write,
+keyboard, Enter, SDK or service action. This is a current public account prompt
+whose independent readiness is refused. It is not login GO or diagnosis of the
+reader. Source has only post-own-Enter fallbacks for PASSWORD/REMEMBER, none for
+first ACCOUNT. Existing stage launcher exposes no attach-existing mode.
+
+Whole goal ACTIVE; material0, spent check01 remains ctx1/Init1/State0. Parent chooses
+a positive first-account readiness proof or controlled Operator entry. No third
+prompt poll or automatic input/SDK/start/retire. H7 holds immutable role sources,
+publications/reviews, pure evidence and actual D observation originals. All prior
+histories/futures remain, within existing software scope and conditionalL16/R32.
+
+## Prior confirmed-stopped recovery and spent SDK check — issue301, 2026-11-09
 
 Planner selected sole6b4 confirmed-stopped recovery under original7dc authority,
 without replaying retire or reconstructing STOP-CLOSED. Quant: operational facts

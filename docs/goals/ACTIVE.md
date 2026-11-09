@@ -1,6 +1,37 @@
 # Active Goal — iteration0038 local workstation product loop
 
-## Service recovered; one SDK Init timed out — issue301, 2026-11-09
+## Public account prompt; independent input readiness false — issue301, 2026-11-09
+
+No new SDK, login material or service action followed the spent check below.
+Parent selected one reviewed prompt-only observation, then one separately bounded
+public-template/readiness observation. Both actually closed with strict source,
+native/socket/terminal guards and all owned/native transport cleanup proved.
+No raw vendor text/hash escaped or was saved; Vault/Journal write/keyboard/Enter/
+material/SDK/start/retire were hard-denied. Ordinary login was not repeated.
+
+The first current result was UNKNOWN,24B/2rows,input_admitted=false; the original
+coarse reason did not distinguish grammar from readiness. Pure public literals
+prove existing grammar already supports account/password plus >>>, CRLF/colon/
+edge-space variants. At the first constructor prompt the independent condition
+requires exactly one fixed-vendor thread blocked in read(fd0); no journal fallback
+exists yet. No ordinary grammar was widened.
+
+The second exact current result is template ACCOUNT, state UNKNOWN, reason
+INPUT_NOT_ADMITTED, stdin-read count bucket ZERO, input_admitted=false,24B/2rows;
+same readiness sample3ms/prompt573ms. The old own-effects directory is absent.
+R1 observer's all-task-disappeared edge was rejected before actual use, fixed to
+UNAVAILABLE_READ, then R2 tests/review READY preceded this one observation. Thus
+ZERO is an observed valid sample, not an unreadable sample collapsed to zero.
+This proves a public account prompt and a refused independent input permission,
+not permission to paste credentials or an explanation of why no reader is ready.
+
+Material remains0, check01 remains SPENT/ctx1/Init1/State0. Parent must define a
+positive first-ACCOUNT readiness proof or an explicit controlled Operator route.
+No third prompt poll, input, SDK, start or retire is automatic. Existing launcher
+CLI has no attach-existing mode; a plan reference is not a runnable private attach.
+Whole goal ACTIVE/unachieved; all old histories and holds retained.
+
+## Prior service recovery and SDK timeout — issue301, 2026-11-09
 
 Parent selected confirmed-stopped restoration, preserving missing historical
 STOP-CLOSED as UNKNOWN. A reviewed fixed current-closure check found original

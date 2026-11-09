@@ -90,3 +90,30 @@ Final closeout19352B/6ab090ab, forecast15009B/6ab211a0 and publication1877B/
 869f247a are saved in D as CONTINUATION-01 records. Current checkpoint173937B/
 423debc6 at20261109T025045Z records RECOVERED_BOUND_SDK_INIT_TIMEOUT_CLOSE_UNKNOWN.
 All historical controls and parent-selected follow-up remain independently scoped.
+
+## Bounded no-input follow-up
+
+Parent selected prompt-only, then one explicit template/readiness projection.
+H7 `.superpowers/sdd/opend-prompt-only-20261109/` holds sources, tests and reviews.
+First actual observation rc0/closed: UNKNOWN,24B/2rows/input false; no raw text/hash
+returned. Pure public literals show grammar compatibility is already present.
+The first-prompt readiness condition independently requires exactly one vendor
+thread blocked in read(fd0). No grammar or input gate was widened.
+
+R1 additional projection was rejected before runtime for all-samples-disappeared
+being labeled ZERO. R2 preserves unavailable explicitly, with RED/GREEN3 and narrow
+READY. Its single actual result is fixed public ACCOUNT template, UNKNOWN state,
+INPUT_NOT_ADMITTED, ZERO/input false,24B/2rows,3ms readiness/573ms total. All native,
+source/socket/terminal and owned FD close gates passed; no material/Vault/Journal
+write/keyboard/Enter/SDK/start/retire. Existing helpers remain unchanged. No raw
+vendor bytes, addresses, account information or raw hash were exported/saved.
+
+This establishes a current account prompt with refused independent input readiness.
+It does not authorize credential input or explain the reader. Parent selects a
+positive first-account readiness proof or controlled Operator route; no third
+prompt poll/input/SDK/service action is automatic. Existing launcher has no
+attach-existing mode; an old plan mention is not an operational entrypoint.
+
+Prompt closeout7949B/83565f89, forecast16614B/91d1fd5e and final publication1493B/
+923765c8 are saved in D. Current checkpoint175334B/57377302 at20261109T032324Z
+records PUBLIC_ACCOUNT_PROMPT_INPUT_READINESS_ZERO_CLOSED. This does not grant input.
