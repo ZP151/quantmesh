@@ -1,5 +1,16 @@
 # QuantMesh Domain Context
 
+## Current protected first-account preparation — issue301,2026-11-09
+
+The restored6b4 provider's actual private destination/foreground/echo protection
+passed one SDK0 metadata observation; no vendor read/readv was observed. Default
+read(fd0) permission remains false. A full explicitly versioned first-account
+destination -> native editor acknowledgement -> separate Enter candidate has
+independent R2 source review and14 targeted tests; password/remember/default
+helpers remain unchanged. It is disabled preparation, not actual input or login
+GO. Fixed private carrier qualification and Parent actual assurance ruling remain.
+Existing SDK check01 is SPENT; historical UNKNOWN and financial gates stay intact.
+
 ## Current passive same-connection slice — issue299, 2026-11-07
 
 PR298 software/release and actual reference11 are complete engineering facts:

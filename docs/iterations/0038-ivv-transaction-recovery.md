@@ -1,5 +1,41 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Input destination diagnosis and first-account editor candidate — issue301,2026-11-09
+
+Planner authorized one fixed metadata sample, then a complete disabled two-stage
+first-account candidate, retaining default readiness. Quant: destination/editor
+evidence is operational only, not authentication, SDK or financial acceptance.
+Implementer verified current stage35631085 direct inherited stdio, not a Python
+relay. Actual metadata rc0/input24257/stdout3108/stderr0, owned/native close true,
+1102ms: same private997:0600 TTY/foreground/session/echo off;57 task classes
+EPOLL4/FUTEX47/OTHER6 and no READ/READV. No equivalent active-reader proof exists.
+No raw terminal bytes, material, third prompt poll, input, SDK or service effect.
+
+The exact current6b4 candidate holds destination identity, requires an empty
+public ACCOUNT editor, performs one username-only paste under original Journal,
+then requires real internal edited_matches native rendered ACK before a separate
+one Enter. Fresh ACK follows durable Enter intent; unchanged ordinary serve and
+PASSWORD/REMEMBER gates follow on the same pane/journal. New Windows accessor
+uses fixed-target/Type1/SID CredEnumerate UserName, no CredRead/blob-content
+access; OS allocation may contain blob bytes and OS zeroization is not claimed.
+No ACK/partial/changed identity means stop, no clearing/re-paste/extra Enter.
+
+Reviewer R1 found transient UNKNOWN prematurely ended post-Enter wait. Genuine
+RED reproduces UNKNOWN!=OTP; the only core R2 correction retains UNKNOWN in
+the original bounded wait. Independent R2 READY; Verifier14 targeted tests and
+5 kernel/4 readonly/3 readiness regressions pass; changed-source Ruff passes.
+Candidatec6757290 contains26files/295742B, preserving R1pub2f44 and all failures.
+Default helper bytes unchanged. Public main remains inert and draft decision0.
+
+Central512KiB receipt796f and new1MiB6fdb are imported net0 into complete retained
+forecast: scope121413632, forward158498816<cap159645696; old holds/143360 final
+reserve, L16/R32, no paid/refund unchanged. Actual finite originals are under
+D/kernel-input-path-observation-01, candidate/reviews under H8/first-account-01.
+Spec/plan2026-11-09-opend-first-account-editor and its HANDOFF disclose remaining
+fixed source-publication/caller carrier engineering; actual input requires that
+qualification and Parent assurance ruling. No credential/SDK/service action is
+released by this checkpoint. Whole goal ACTIVE, spent check01 untouched.
+
 ## No-input public-template and readiness conclusion — issue301, 2026-11-09
 
 Planner chose finite prompt-only observation after SDK check01 was SPENT. Quant:

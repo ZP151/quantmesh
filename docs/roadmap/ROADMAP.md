@@ -1,5 +1,13 @@
 # QuantMesh Product Roadmap
 
+Current issue301 input-path observation proves the correct private destination,
+but no active reader; default permission remains false. A reviewed disabled
+first-account destination/editor-ACK/Enter candidate is prepared with delayed
+password material,14 tests and12 bounded regressions. Actual input remains
+unreleased pending fixed carrier qualification and Parent ruling. This is not
+OpenD authentication or SDK/data/research acceptance. See active iteration and
+spec2026-11-09-opend-first-account-editor.
+
 ## Independent operator status — issue301
 
 The single actual official-class comparison is now complete and STOP/SPENT.

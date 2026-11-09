@@ -1,5 +1,25 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current input path and reviewed first-account candidate — issue301,2026-11-09
+
+One bounded SDK0 metadata observation closed normally: guard/vendor direct
+private TTY, foreground/session,997:0600 and echo-off proved;57 tasks show
+EPOLL4/FUTEX47/OTHER6, READ/READV0. Epoll is not a TTY watch/reader proof.
+Default read(fd0) permission remains false. No third prompt poll or real input.
+
+Planner selected explicit destination -> native editor ACK -> separate first
+ACCOUNT Enter preparation for current6b4 only. Full disabled candidatec6757290
+is26files/295742B; original helpers/default/password/remember gates stay intact.
+UserName-only exact-target/SID metadata accessor never reads blob content or
+calls CredRead; password material waits for own ACCOUNT_ENTER_SUBMITTED and
+original PASSWORD gate. R1 transient-UNKNOWN wait issue had genuine RED then
+R2 correction; independent R2 READY,14 tests plus12 bounded regressions pass.
+Draft decision0/public main inert. This is source readiness, not runtime GO.
+See the new spec/plan2026-11-09-opend-first-account-editor and H8 HANDOFF for the
+remaining fixed private source publisher/caller carrier qualification and one
+Parent actual assurance decision. No new SDK/input/service action occurred;
+check01 SPENT and all historical UNKNOWN/holds remain. Whole goal ACTIVE.
+
 ## Public account prompt; independent input readiness false — issue301, 2026-11-09
 
 No new SDK, login material or service action followed the spent check below.

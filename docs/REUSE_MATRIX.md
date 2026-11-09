@@ -1,3 +1,12 @@
+## First-account editor preparation — issue301,2026-11-09
+
+Reuse immutable BoundPane/source/native/socket/terminal custody, original pure
+grammar/edited_matches, create-only effect Journal, framing, ordinary serve and
+password/remember gates. Add only current-instance destination/editor phases and
+fixed-target Windows CredEnumerate UserName accessor; Microsoft ABI documentation
+guides declarations, no upstream implementation or dependency is copied. Original
+default read(fd0) remains. Actual input and fixed carrier qualification are separate.
+
 ## Independent operator status — issue301
 
 Reuse the authenticated SourceM protected SDK loader, numeric log sink, SDK
