@@ -1,5 +1,15 @@
 # QuantMesh Product Roadmap
 
+Current issue301: reviewed minimal ENOTTY fix fully published once as source03.
+Original login01 obtained real editor ACK and submitted password Enter, then
+returned BRIDGE_REFUSED with channel cleanup proved. Authentication UNKNOWN;
+all source/input opportunities SPENT. One separately authorized and reviewed
+read-only public classifier then closed normally: UNKNOWN/NO_PUBLIC_MATCH,
+current native/source/socket/heldTTY proof passed. It confirms the same provider
+was running, not final authentication. No more read/input/SDK/service action is
+automatic. Historical source02 first cause stays UNKNOWN.
+Older pending-approval wording below is historical. See the active iteration.
+
 Current issue301 input-path observation proves the correct private destination,
 but no active reader; default permission remains false. A reviewed disabled
 first-account destination/editor-ACK/Enter candidate is prepared with delayed

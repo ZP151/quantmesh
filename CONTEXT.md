@@ -1,5 +1,45 @@
 # QuantMesh Domain Context
 
+## Actual source03 and original login01 — issue301, 2026-11-10
+
+Integrated index4f4481d8/publicatione07e88b1 passed fresh agent R1989be60a,
+13 tests and real owned native positive/negative cases. Under technicalc19,
+auth02 closed and source03 fully succeeded under fresh native/source/heldTTY/
+all3absence/O_EXCL/post-proof. Original manifest/helpers/alias stay unchanged.
+Original unused login01 ran once: real native editor ACK and all nine effects
+through PASSWORD_ENTER_SUBMITTED, then BRIDGE_REFUSED/rc2 with channel close
+proved. Username/material intents exist. Final OpenD authentication UNKNOWN,
+not a confirmed wrong password or unauthenticated state. All source/login
+opportunities are SPENT; no retry, clear, restart, SDK/context or service action.
+
+Parent330dc81a's one separately reviewed read-only public-state observation is
+now also closed at rc0: UNKNOWN/UNMATCHED_FIXED_GRAMMAR/NO_PUBLIC_MATCH, current
+native/source/socket/heldTTY proof and owned close true. The same provider was
+running at that observation; final authentication remains UNKNOWN, with no
+actual OTP/device state. H13 scope is SPENT, no polling or grammar expansion.
+H12 closeout99478952/H13 closeout95530542 preserve originals. Whole goal ACTIVE.
+
+## Earlier first-account delivery and diagnosis — issue301, 2026-11-10
+
+Actual Operator approval0bf supersedes earlier pending-assurance wording below.
+Complete carrier9a74 and auth continuation8cbc have independent agent R2 reviews.
+One AUTH300 returned0 with owned/native/bridge closure; Edge extension also shows
+Authorization successful. This proves Tailscale SSH authentication, not OpenD
+authentication. No global computer UI is required for that browser check.
+Source02 returned2/SOURCE_PRECHECK with normal transport closure. Ordinary login
+was never called; account/password/SDK/service effects0. Source1/2 stay SPENT
+with their recorded uncertainties; no automatic source3 or ordinary login retry.
+
+H11 isolated owned-PTY RED confirms a separate caller-only tcgetpgrp/ENOTTY defect.
+Minimal candidate601d5b passes actual valid/wrong-controlling-TTY fixtures,
+retaining held destination/group/session/foreground/echo checks. This does not
+establish source02's historical first failure. Reviewed finite read-only
+diagnosis subsequently returned0 and proved current first refusal
+HELPER_FOREGROUND_QUERY/ENOTTY, native snapshot passed and all three targets
+currently absent. Owned transport/directory closure passed, no input authority.
+The one diagnostic control is SPENT; candidate601d5b remains undeployed. See
+the active iteration and continuation plan for actual originals and next gates.
+
 ## Current protected first-account preparation — issue301,2026-11-09
 
 The restored6b4 provider's actual private destination/foreground/echo protection

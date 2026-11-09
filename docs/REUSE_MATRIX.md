@@ -1,3 +1,23 @@
+## Current post-password public status — issue301, 2026-11-10
+
+Reuse unchanged observer182c7327 and exact prior bodybab7d96a/source/native/
+DenyJournal/constructor-stop/wipe/read-command guards. Add only current601 held
+destination pre/post and deployed-source pins, then retain only qualified public
+state/reason/template enums. Drop all terminal counts/lengths/timing/private
+extras; no credential/input/SDK/service path. Mature private ACL/native transport/
+owned close remains. No new framework, observer platform, grammar or dependency.
+
+## First-account precheck diagnosis — issue301, 2026-11-10
+
+Reuse the exact pinned publisher's read-only native/source/TTY precheck, original
+788 guard, mature fixed-peer private context/ACL/native transport and owned close.
+Remove publisher/writer entry points from a hash-pinned AST for finite diagnosis;
+do not install remote sources. The separate minimal guard candidate corroborates
+proc controlling-terminal device encoding against the held character FD using
+Linux UAPI representation; no upstream implementation/dependency is copied.
+Real owned-PTY fixtures establish narrow positive/negative behavior, not current
+OpenD login, historical source02 cause or permission to send input.
+
 ## First-account editor preparation — issue301,2026-11-09
 
 Reuse immutable BoundPane/source/native/socket/terminal custody, original pure

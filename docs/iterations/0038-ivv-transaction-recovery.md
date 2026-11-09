@@ -1,5 +1,130 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Approved input route; actual SSH/source/diagnosis boundary — issue301, 2026-11-10
+
+Issue [301](https://github.com/ZP151/quantmesh/issues/301);
+[integrated repair plan](../superpowers/plans/2026-11-10-opend-proven-guard-fix.md),
+[one public status plan](../superpowers/plans/2026-11-10-opend-post-password-status.md).
+
+Planner: actual Operator0bf approved one current6b4 ordinary login under the
+destination -> native editor ACK -> separate Enter condition. It supersedes the
+old pending9643 question; no new two-person/human review fact is invented. Complete
+carrier9a74/R2fe0103 and auth continuation8cbc/R270bfa89 qualified first. Source1
+stopped at AUTH_CHALLENGE with owned close; remote effects UNKNOWN/SPENT. One
+separate AUTH300 then actually returned0 with native/job/process/drain/bridge
+closure. Edge extension read-only inspection confirms Authorization successful;
+no global computer UI was used. This establishes SSH authentication, not OpenD.
+
+Implementer/Verifier: source02 returned2, SOURCE_PRECHECK, stdin56958 complete,
+stdout135/stderr0, no timeout, native job134217728/8 active0closed, process
+terminal/drain/EOF true, cleanup0. Ordinary login was never invoked. No source
+success receipt exists; source1/2 are SPENT. The exact packet validates offline.
+An owned Ubuntu PTY reproduction of actual frozen788 has valid private997:0600
+paired stdio/foreground/session/echo-off but its separate helper receives ENOTTY
+from caller-only tcgetpgrp. Minimal601d5b corroborates subject proc controlling
+TTY device against the held character FD while retaining all original other
+guards. Actual valid native fixture ACCEPTED; separate controlling TTY REFUSED;
+owned children/FDs closed. This independently confirmed defect does not trace
+source02's historical first failed predicate, which remains UNKNOWN.
+
+Reviewer: H11 source index60347dec, package2dadca5e and fresh independent agent
+R1 report38042215 are READY for preparation only. Six qualification tests pass;
+diagnostic tests are not misreported as test-first. Parent issued exact one-call
+read-only control7a8ddfb9. Actual diagnosis then returned0/stdin88901/stdout459/
+stderr0 with normal owned close: current first refusal
+HELPER_FOREGROUND_QUERY/ENOTTY, native_snapshot_passed=true, targets ALL_ABSENT,
+helper directory closed and input authority false. No terminal bytes, source
+write, credential access/input, SDK or service effects. Control SPENT, no replay.
+Originals: D/first-account-carrier-01/precheck-stage-diagnostic-01; H11
+ACTUAL-STATUS3918B/SHA73fe751f684796b1b4d78c87520271171b706003de69fa5ab0a74cfbe65694f9.
+
+Planner selected the exact minimal integrated repair path in c19adc0e receipt,
+preserving actual0bf and original unused login01. H12 source index4f4481d8 and
+complete publicatione07e88b1 are frozen for fresh integrated review:327082B,
+all old members retained; only core/two hard core-pin entrances and dependent
+channel/CODE-PINS/release change. Thirteen integrated tests pass; removing the
+new core predicates is killed by the actual gate test. Valid/wrong-controlling-
+TTY fixtures pass again on the precise integrated core. Eight maintained source/
+test/wrapper files pass Ruff/format. The exact generated publisher retains the
+original one-line dict E501/format; the failed broader selection is preserved
+and disclosed, not called a passing whole-tree check. All generated Python
+compile and packet/body/command geometry checks pass. Fresh integrated agent R1
+is READY4861B/SHA989be60a0d51ff002f17762ceb7870592dc6f59f01dceebacf1910f0bfe783df.
+
+Actual H12: auth02 closed, then source03 returned0/stdin57626/stdout632/stderr0,
+original job134217728/8 active0closed/process/drain/EOF true, cleanup0. All three
+published hashes and source/native/socket/heldTTY before/after proof pass;
+original manifest/helpers/alias unchanged. Original unused private-login-01 then
+ran once: real editor ACK, nine effect states through PASSWORD_ENTER_SUBMITTED,
+username/material intents present. Final BRIDGE_REFUSED/rc2, secret_output=false,
+transport cleanup proved. That channel flag requires subprocess terminal/rc0 and
+reader join; neither closure nor submitted effects proves authentication. Final
+OpenD state UNKNOWN, not a confirmed password error; no actual OTP/device result.
+All source/input opportunities SPENT, no retry/clear/restart/SDK/context action.
+The existing25s event wait versus guarded remote wait is only an offline timing
+candidate; actual failure stage is unavailable. H12 ACTUAL-CLOSEOUT6827B/SHA
+994789529259f9dc01aeef87ea1e42a8a743d41ff77ea81b9da0dc14d605784e.
+
+Parent330dc81a separately selected one current public-state read-only check,
+zero credentials/input/SDK/service. H13 reuses observer182c7327/bodybab7d96a,
+adds held601 pre/post and deployed-source pins, projects only existing public
+state/reason/template enums. Raw text/hash and terminal counts/lengths/timing/
+private extras cannot escape. Three new plus4 denial/wipe and3 readiness cases
+pass; all four H13 sources/generated body pass Ruff/format/compile. Pre-review
+formatting-only R1 source archive retained; indexc124986b has fresh independent
+agent R1 READY3694B/SHA7ac38722e9e1e08e1e9a80c8d2fe8686c5ea51c13badb8f54cda70971a90675f.
+
+H13 actual one read returned0/stdin15651/stdout540/stderr0, no timeout, all original
+job/process/drain/EOF closure true/cleanup0. Observation is exactly UNKNOWN /
+UNMATCHED_FIXED_GRAMMAR / NO_PUBLIC_MATCH. Same current provider native/source/
+socket and heldTTY before/after proof pass; owned prompt FDs closed, original
+Journal directory metadata safe. Zero credentials/input/Enter/clear/SDK/context/
+service effects, no raw text/hash/lengths/counts returned. No actual OTP/device
+was observed; no human action required. This proves that the current provider
+was running, not authentication or why the earlier client refused. Observer
+scope is SPENT; existing classifier has no current public match, no expansion,
+repeat observation or login follows. H13 ACTUAL-CLOSEOUT3976B/SHA
+95530542149ed6f50e1ff701b1095e3bcb7a139257147a0deafe916441efda2f.
+
+Capacity: H11 directory+capacity receipt4K+real control4K+tracked delta8K consumes
+exactly131072/131072, no spare or borrowing. New c19 software1MiB is independently
+registered, runtime-new0. Complete H12 forecast includes full checkpoint229376,
+docs/Git131072 and additional records65536; software whole160989184<162136064.
+Central commitment guards G12416938074/P6378865678/stress6435488782 are not fresh
+host physical samples. All H10 future229376/private409600/remote65536/old143360/
+L16/R32, prior failures and UNKNOWN remain, with no refunds or paid resources.
+
+Quant researcher: destination/editor/SSH evidence is operational only; no SDK
+context, input dataset, financial/OOS/Paper/live acceptance follows. Spent SDK
+check01 stays Init-timeout/State0/SDK-closeUNKNOWN with earlier outer cleanup.
+Whole task ACTIVE/unachieved. Current source/login/status opportunities are all
+SPENT; the remaining gap is final provider authentication evidence. No automatic
+input/publication/SDK/observer continuation follows. Preserve the running instance.
+
+Durable closeout: full inherited checkpoint
+`20261109T182825Z-opend-proven-guard-fix-actual-login-and-public-status-unknown.json`
+180254B/SHAa7469fe33b2590da3af68ae6dab5f76bae81a75f09e25bb73909bc3fddca076a
+retains every legacy role/context/UNKNOWN and atomically replaces the Server
+pointer after comparing its original bytes. H12 final publicationa6e43a03 links
+H12 closeout99478952/H13 closeout95530542 and forecasts. H12 fullforward1015808/
+1048576, remaining32768 before final Git receipt, checkpoint actual188416 and
+unused checkpoint future40960 retained; old H10 future229376 untouched. H13
+fullforward122880/131072, remaining8192. Whole software161120256<162267136;
+all old holds/futures and private unused software tail20480 remain, no refunds.
+
+The bounded successor judgment is in the integrated repair plan. Frozen code
+and current safe events cannot identify the exact BRIDGE_REFUSED return point
+or establish a25s event timeout; historical stage/cause stay UNKNOWN. No known
+qualified path inside zero-new-context/input/raw-observation boundaries currently
+distinguishes authentication. The only concrete alternative proposed is a new
+independently budgeted official Operator Status purpose: one new guarded context/
+Init, optional one GetGlobalState after successful Init, normal close, no market
+data/input/service action. It needs an explicit new SDK/context ruling, complete
+forecast/source qualification and fresh review; old check01 is never reused.
+Original Server owns implementation, Parent authority/accounting; preparation
+estimate45–90min plus any required release, no authentication-result promise.
+This is a proposal only; no new source/host/SDK call or registration follows.
+
 ## Input destination diagnosis and first-account editor candidate — issue301,2026-11-09
 
 Planner authorized one fixed metadata sample, then a complete disabled two-stage

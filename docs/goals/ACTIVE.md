@@ -1,5 +1,39 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Actual credential submission; terminal status unresolved — issue301, 2026-11-10
+
+H12 complete327082B publicatione07e88b1/index4f4481d8 has fresh agent R1989be60a
+and13 tests. Under c19, auth02 closed and source03 fully succeeded under fresh
+native/source/heldTTY/absence/O_EXCL gates. Original login01 then ran once:
+real editor ACK and progress through PASSWORD_ENTER_SUBMITTED, followed by
+BRIDGE_REFUSED/rc2 and proved channel close. Username/material intents exist.
+Authentication remains UNKNOWN; no password error is established. All source/
+input opportunities SPENT; no retry, clear, restart, SDK/context/capture follows.
+
+Parent330's one separately reviewed existing-classifier read-only observation
+closed normally at rc0: UNKNOWN/UNMATCHED_FIXED_GRAMMAR/NO_PUBLIC_MATCH. Fresh
+same-provider native/source/socket/heldTTY proof passed; authentication remains
+UNKNOWN, no real OTP/device result. Observer scope SPENT, no automatic next read
+or input. H11/H12/H13 and old futures/UNKNOWN remain. Whole goal ACTIVE/unachieved.
+
+## Actual SSH authentication; source precheck blocked — issue301, 2026-11-10
+
+Actual Operator event0bf approved current6b4 first-account destination/editor ACK.
+Qualified carrier9a74 and continuation8cbc passed bounded agent R2 review.
+AUTH300 closed at rc0; Edge extension confirms Tailscale Authorization successful.
+Source02 closed normally at rc2/SOURCE_PRECHECK. Ordinary login was never called;
+account/password/SDK/service effects0. This supersedes older pending-approval
+wording, not historical UNKNOWN. Source1/2 are SPENT; no automatic source3 retry.
+
+H11 dedicated128KiB preparation has an actual isolated-PTY ENOTTY regression and
+a minimal601d5b candidate passing valid/wrong-controlling-TTY native fixtures.
+Historical source02 first cause remains UNKNOWN. One reviewed, Parent-released
+read-only diagnosis then closed at rc0: current HELPER_FOREGROUND_QUERY/ENOTTY,
+native snapshot passed, all three targets currently absent, no input authority.
+Its one control is SPENT. Candidate601d5b is not deployed; any source3/login/SDK/
+service action needs its distinct exact path. Whole provider/research goal stays
+ACTIVE/unachieved; spent SDK check01 remains spent.
+
 ## Current input path and reviewed first-account candidate — issue301,2026-11-09
 
 One bounded SDK0 metadata observation closed normally: guard/vendor direct
