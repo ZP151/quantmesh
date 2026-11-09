@@ -102,3 +102,30 @@ slice. Preparation estimate45–90min using existing fixtures, with actual quali
 release time additional; Init may time out again and yield UNKNOWN. No SDK repair
 or authentication-result deadline is promised. No new source, runtime call,
 context or resource registration is made during this bounded judgment.
+
+## Post-commit Git capacity correction — retained actual FAIL
+
+Commit de684f95 pushed the coherent actual evidence. Its17 new reachable loose
+Git objects occupy368640B rounded to4KiB each, exceeding the prior131072 Git
+allowance by237568. Therefore the original H12 one-MiB post-commit envelope is
+FAILED, despite its earlier partial-directory/future calculation. Preserve that
+forecast, measurement and failure; do not backfill a passing original result.
+Actual receipt: H12/GIT-CAPACITY-OVERRUN.json1658B/SHA
+b6e4e9db4b3bb409f42d26836e78e7d4fbb60c1cf53870858384ef1c64094343.
+
+Central necessary-growth receipt
+`opend-H12-post-Git-384KiB-capacity-correction-20261110.json`2591B/SHA
+6a423bad1fbf90b32785fed0bc6d5e2a426bf6b94d7de72f5215569e57030207
+adds393216 software/runtime0: measured excess237568, one small correction Git
+bound65536, compact records32768 and margin57344. H12 corrected cap1441792;
+all H11/H12/H13/old holds/futures/failures remain, no refund or old-remainder
+borrowing. This linked small plan is the only corrective tracked edit; the large
+historical documents and180254B/a7469fe3 checkpoint stay unchanged.
+
+Final cumulative object measurement and corrected capacity live in H12
+GIT-RECEIPT.json and CAPACITY-RECONCILED.json. The Server current pointer's
+post-Git correction refs explicitly supersede the old capacity forecast while
+retaining the original full checkpoint and publication references. Exact new
+Git actual replaces the old131072 allowance, with the unused correction Git
+tail retained inside65536. All new compact artifacts and the central receipt
+are charged. No provider/SDK/input/status/service or new source action occurs.
