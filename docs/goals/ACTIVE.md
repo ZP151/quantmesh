@@ -1,6 +1,71 @@
 # Active Goal — iteration0038 local workstation product loop
 
-## Current authenticated public read completed — issue301, 2026-11-09
+## Service recovered; one SDK Init timed out — issue301, 2026-11-09
+
+Parent selected confirmed-stopped restoration, preserving missing historical
+STOP-CLOSED as UNKNOWN. A reviewed fixed current-closure check found original
+three PIDs/cgroup absent, manager stopped,11112 closed and namespaces correct.
+Sole approved6b4 start1 through unchanged mature installer/runtime succeeded:
+fresh control67f98441, origin6d58ecc4, invocation60efdab58d804da3a19bf8b90faba91f,
+PIDs1039584/1039589/1039595. Strict current attributed proof passed. No further
+start/retire was performed. A first template-pin source refusal is retained;
+actual readonly source preflight preceded the successful reviewed recovery.
+
+Ordinary login source had a genuine v2-origin top-level nonce defect at both
+release entrances, proved before Vault/SSH. Strict existing origin validation
+repairs those accesses. A reviewed fixed versioned entry alias56e17024/channel
+b143e23a was actually published create-only; original manifest5693b886 and ten
+helpers including9e7a08ff were preserved and reverified. Ordinary login returned
+UNKNOWN/cleanup proved/material0, no OTP/device or repeated input. Edge plugin
+separately confirmed the existing Tailscale login; this is not OpenD login proof.
+
+Original standalone --bind produced genuine provider-binding.v2 c424e097 and
+strict native proof. A separately typed recovery status producer uses actual
+closure/authority/origin/binding, never fake selected9 history. Review READY;
+actor7ee/Source7/native/SDK wire unchanged, three status data leaves late-bound.
+Actual unused check01 root/unit preflight passed once. One SDK context/Init was
+then consumed with original fresh210s capsule and actual5s physical gate.
+Init returned-1/TIMEOUT/requestDISCONNECT, no receive/response/unpack. State
+skipped after Init non-OK (State0), other business0. SDK normal close remains
+UNKNOWN at30000ms/context_closed=false; worker joined/callbacks stopped/socket
+and log closed, independent manager/parent cgroup/channel/child/resources and
+transport cleanup all proved. These do not prove SDK normal close or login.
+
+Whole goal ACTIVE/unachieved: no login flags, complete SDK health, real input or
+financial qualification. check01 SPENT, ctx1/Init1/State0, material0; no automatic
+retry/context/login/start. Parent chooses any next separate bounded task. All
+old failures/UNKNOWNs and holds remain. New software256KiB+2MiB receipts link
+net0 once, cap158072832/fullforward156925952, conditionalL16/R32 unchanged.
+The plan and final closeout/checkpoint link exact originals, publications/reviews
+and capacity. H6 is `.superpowers/sdd/opend-recovered-status-20261109/`.
+
+## Prior observable continuation stopped after stop intent — issue301, 2026-11-09
+
+The new d41b2581 necessary continuation and explicit475bc066 path-data binding
+were actually consumed once. Five private files delivered, sole new bootstrap
+invoked once after an ordinary auth prelude which needed no browser challenge.
+Reviewed stage succeeded: rc0/input263717/stdout226/stderr0, safe metadata saved
+before validation, native caps and all job/process/drain/EOF flags true.
+Bootstrap then exited2 during retire-start; historical first cause and returned
+retire transport facts remain UNKNOWN. No material/login/export/SDK followed.
+
+Parent's one fixed readonly WAL/status read completed rc0/input734/stdout1594/
+stderr0, local45s/remote25s, all native caps/closure flags true, no auth test or
+mutation. At2026-11-09T01:58:07.445317Z, verified machine has this exact CONTROL
+and STOP-INTENT. STOP-CLOSED and all successor/login/service intents/results are
+absent; successor restore root is absent. Old33f and sole6b4 units are both
+loaded/inactive/dead/MainPID0. Returned cgroups did not match the expected paths;
+own cgroup closure stays UNKNOWN. Old manager is stopped, but successful original
+cleanup is unproven. Frozen required-intent order shows new start was not reached.
+
+Edge extension confirms the existing Tailscale console is signed in. No global
+computer use or repeated browser login. Do not replay maintenance: Parent selects
+a bounded fault-specific recovery route. Whole objective ACTIVE/unachieved.
+All prior STOP/SPENT/UNKNOWNs and unused holds remain. See tracked plan
+`docs/superpowers/plans/2026-11-09-opend-observable-continuation.md` and E3/
+opend-stage-boundary-repair-01 actual continuation closeout/checkpoint.
+
+## Prior authenticated public read completed — issue301, 2026-11-09
 
 Parent selected a new current observation and clarified actual count AUTH1 plus
 fixed readonly PAYLOAD1, at most2 SSH lifecycles. Original Server performed both

@@ -1,6 +1,85 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
-## New current AUTH plus public read completed — issue301, 2026-11-09
+## Confirmed-stopped recovery and spent SDK check — issue301, 2026-11-09
+
+Planner selected sole6b4 confirmed-stopped recovery under original7dc authority,
+without replaying retire or reconstructing STOP-CLOSED. Quant: operational facts
+only. Implementer reused mature installer/runtime. First source refusal before
+effects used a template entry pin; exact actual bound6f pin was reproduced and
+actual readonly source assembly passed. Reviewer READY for body2697f5a8/wrapper
+ec509a96;3 closure models passed. Verifier actual closure found old3 PIDs/cgroup
+absent, manager stopped,11112 closed and namespaces correct. Sole start1 succeeded:
+origin6d58ecc4/control67f98441/invocation60efdab5, PIDs1039584/1039589/1039595,
+strict attributed live proof. Historical failed records remain unchanged.
+
+Qualified login source falsely indexed top-level nonce on genuine v2 origin;
+exact-held replay proved KeyError before Vault/material/SSH. Two strict validator
+repairs plus one fixed versioned entry role retain original manifest5693 and ten
+helpers including9e. Real-origin RED2/GREEN2/eight schema/nonce negatives and four
+channel/publication checks passed; narrow review READY. Actual source-only alias
+publication rc0/input14744/stdout431/stderr0, protected root0444/nlink1/hash and
+original helpers reverified. Ordinary login result UNKNOWN/material0/cleanup true,
+no OTP/device or retry. Edge plugin confirms existing Tailscale login separately;
+no global computer use or repeated browser login.
+
+Original --bind produced c424e097 provider-binding.v2 with actual native proof.
+Selected9 history remains unavailable. A distinct recovery input producer checks
+actual7dc/current closure/recovery intent/start/origin/binding/manifest and native
+transport. Four targeted tests include false approval/origin/binding/manifest/
+closure and consumed namespace. Narrow review independently rebuilt caller54e69467
+(143550B)/publication5687c718 READY. Actor7ee/Source7/native/SDK wire, FD custody,
+resource/once/close paths remain; only three status data leaves vary.
+
+Verifier actual current check01 preflight passed0, then sole SDK caller exited2.
+ctx1/Init1/State0, other0. Init-1/queryTIMEOUT/requestDISCONNECT, first failure
+INIT/SDK_NON_OK/no exception, no receive/response/unpack. State skipped after Init
+non-OK. SDK close30000ms/context_closed=false gives CLOSE_UNKNOWN. Callbacks
+stopped/data socket and log closed/Init worker joined; independent manager/parent
+cgroup/channel/child/resources/transport cleanup all true. Fresh210s issuance and
+actual5s physical gate executed. No login flags, SDK/data/financial qualification.
+check01 SPENT; material0, no automatic context/login/start/retire. Whole goal ACTIVE.
+
+256KiB+2MiB standing software receipts link net0 once, cap158072832/forward156925952;
+all old holds and conditionalL16/R32 remain. H5/H6 originals, source pins, reviews,
+final closeout, forecast and checkpoint are linked in the updated tracked plan.
+
+## Prior observable continuation and post-stop WAL read — issue301, 2026-11-09
+
+Planner d41b2581 authorized one private delivery/one invocation; clarification
+475bc066 permits one private-target literal binding, with full normalized AST
+equality to reviewed0c28afc2. Quant: operational facts only; no research claim.
+Implementer delivered five files once, bound source52506B/fbf68b8c/index463B/
+67b6e461/bootstrap4043B/c20b0cfb. Reviewer: unchanged logic retains prior narrow
+READY review; exact data-binding RED3 then GREEN3, inert saved entry and wrong-root
+rejection pass. No independent human implementation review is fabricated.
+
+Verifier actual bootstrap exited2 once. Auth prelude rc0 without challenge;
+claim/status/stage each1. Stage safe metadata persisted before parsing: rc0,
+input263717/stdout226/stderr0, native memory134217728/process8, cleanup0 and all
+job/process/drain/EOF flags true. Local CONTROL578B exists. Subsequent retire-start
+failed before its local result; first cause and returned transport facts UNKNOWN.
+Material/login/export/SDK0 by frozen controller order. No maintenance replay.
+
+Parent's newly authorized fixed WAL/status read ran once, with no auth test,
+mutation, Vault or SDK. Actual rc0/input734/stdout1594/stderr0 at local45s/remote25s,
+all native caps/closure flags true. Current machine verified at01:58:07.445317Z:
+CONTROL578B/9655825d and STOP-INTENT512B/8167d175 exact. STOP-CLOSED, successor-start
+intent, retire/login/service results absent; sole6b4 restore root/fixed files absent.
+Both exact units loaded/inactive/dead/MainPID0/empty InvocationID. Their returned
+cgroups differ from expected, so cgroup closure remains UNKNOWN without scanning.
+Old manager is stopped; complete original cleanup is unproven. Frozen required
+intent order supports successor start not reached, rather than a successful retire.
+
+User's existing login was checked through Edge extension: Tailscale console signed
+in. No global computer use, repeated browser login, historical auth URL or device
+handoff. Whole goal ACTIVE/unachieved. Next host action must be fault-specific and
+bounded. All failed/UNKNOWN/SPENT histories and old/future holds remain. Helpers:
+H5 `.superpowers/sdd/opend-observable-continuation-20261109/`; actual originals:
+E3/opend-stage-boundary-repair-01 delivery and continuation-01-auth / wal-readback.
+Tracked plan records source pins and gates; final local closeout/census/checkpoint
+are generated from actual originals, with no broader test or runtime expansion.
+
+## Prior current AUTH plus public read completed — issue301, 2026-11-09
 
 Planner explicitly selected one NEW current classified observation; the first
 read stays SPENT/UNKNOWN. The actual mature mechanism is two SSH lifecycles:
