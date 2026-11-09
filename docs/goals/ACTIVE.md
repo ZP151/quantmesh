@@ -1,5 +1,37 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Actual necessary-fix continuation stopped — issue301, 2026-11-09
+
+Planner's immutable5445B/db20abcf authorized actual private delivery then one
+new private-execution bootstrap invocation, preserving the original human7dc
+and prior technical STOP. Both authorized actions were carried out once.
+Real delivery verified all5 file pins and owner=true/foreign0/protected=true/
+reparse=false through the original checker. No original source/ACL was changed.
+
+Actual Python313 -I -S -B then exited2, finite PROCEDURE_AFTER_CLAIM with
+effects_may_have_started=true. Exactly sequence intent, metadata intent and
+PRESENT/no-material credential metadata exist. No stage success original,
+retirement CONTROL, retire-start result, ordinary-login or SDK output exists.
+Local claim1/status1; material0/old33f-stop0/successor-start0/login0/SDK0/State0/
+business0/retry0. Actual stage transport/remote staging effects are UNKNOWN,
+at most one call; no durable reply exists. Do not infer timeout or logout.
+
+Local Python exited/reaped and output closed. Pinned local transport control
+flow cannot return with an unresolved retained owner, but actual reply closure
+metadata and remote staging cleanup are unavailable; those limits remain.
+The original33f was not stopped by this invocation. No OTP/device human step
+was reached. This technical continuation is STOP/SPENT/NO_RETRY; do not replay
+or automatically patch/rerun. Whole goal remains ACTIVE/unachieved.
+
+Actual closeout8256B/db250742 and capacity3685B/039b9b6c live under the new
+private-entry evidence directory. Current checkpoint167847B/df345c64 at
+20261109T002502Z preserves both historical stops and all old UNKNOWN/futures.
+Capacity is net0, fullforward151945216<cap153092096; before final checkpoint,
+current114356224/remaining503808 includes262144 final evidence. The actual
+private delivery consumed its held1138688; conditional runtimeL16/R32 and all
+old holds remain without refund. Next action is Planner-only route selection
+from this finite refusal, not a repeated interruption question or user login.
+
 ## Local private-entry necessary repair — issue301, 2026-11-09
 
 The actual pre-claim cause is now established: the original procedure directory

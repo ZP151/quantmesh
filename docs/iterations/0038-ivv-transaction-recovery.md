@@ -1,5 +1,58 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Actual repaired-entry continuation STOP — issue301, 2026-11-09
+
+Planner issued immutable necessary-fix continuation5445B/db20abcf, separately
+authorizing actual reviewed private source delivery and one bootstrap invocation.
+It is not a new human approval and does not erase prior technical STOP/SPENT.
+Original Server verified that original plus human7dc/source publication1b4e/
+future-delivery1d5d, then called reviewed deliver_execution_source() exactly once.
+Actual protected owner+SYSTEM directory and all5 source/index/authority/package/
+bootstrap file pins passed the original checker. Delivery CLOSED is retained.
+
+The new actual private-execution bootstrap2868B/796a1943 ran once with original
+Python313 -I -S -B, after durable separate once-submission intent. It exited2;
+local Python was reaped and output closed. Finite result is
+PROCEDURE_AFTER_CLAIM, effects_may_have_started=true. Actual local originals
+are sequence intent253B, metadata intent48B and credential metadata370B.
+No stage-success result, retirement CONTROL, retire/start result, ordinary-login
+directory or service/bound-source/SDK output namespace exists.
+
+Exact ordered-flow accounting: local sequence claim1 and credential status1
+PRESENT; material0, old33f stop0, successor6b4 start0, ordinary login0,
+SDK context/connect/Init0, GlobalState0, business0, automatic retry0. Stage
+transport actual count is UNKNOWN, bounded at one, because no durable call/reply
+projection was retained. Remote staging files/effects and remote staging cleanup
+are UNKNOWN and held. Elapsed time is not proof of timeout. The finite family
+does not identify the precise inner predicate, and no logout cause is inferred.
+
+Local transport closure is limited to pinned source-flow evidence: normal return
+requires terminal/job closure; failed exact recovery retains an owner in a
+nonreturning loop. Actual Python exit excludes that unresolved retention branch.
+No actual reply metadata or fresh remote terminal observation exists. No provider
+or SDK helper can have been created by this flow before retirement CONTROL.
+Original33f was not stopped/changed by this invocation. No OTP/device human
+step was reached. This new technical opportunity is STOP/SPENT/NO_RETRY; no
+patch-and-rerun, host/store/SDK probe or old opportunity remapping follows.
+
+Closeout8256B/db250742fbcad94fa9a40f5c2f62ea74819be821b4b136af887a8fc75164bf0b;
+capacity3685B/039b9b6c6fb32dbb4803008df32ec024377aa3cf43b285b7d691addfe6bbb407.
+Current checkpoint167847B/df345c6440e018b67827817dcabb29dd1a4852bd32f64a78b256b8d4b6c7aa5b,
+20261109T002502Z-opend-private-entry-actual-continuation-stop.json, preserves
+the original actual stop and offline qualification as historical nested facts.
+Net0 capacity: softwarecurrent114356224/preparationremaining503808 before this
+final checkpoint, with262144 held for checkpoint/report; forward151945216 below
+cap153092096. Private source future1138688 became actual, no refund. Actual
+small runtime evidence is conservatively counted in software too; conditional
+runtimeL16/R32, old new4 remaining3178496, fullfuture33554432, closeout352256,
+all failed/UNKNOWN/unused holds stay intact. No new registration/paid resource.
+No tests were repeated for execution; only exact original hashes, actual ACL,
+ordered local evidence and finite terminal/closure records were checked.
+
+Whole objective remains ACTIVE/unachieved. Return this result to Planner for
+the next bounded route; no new ordinary approval or user interaction is needed
+for this closed attempt. Browser preference remains Edge extension only.
+
 ## Necessary private-entry repair — issue301, 2026-11-09
 
 Planner: resume the proven local refusal only, with no new browser/login/Init or
