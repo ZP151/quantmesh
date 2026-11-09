@@ -1,5 +1,46 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current authenticated public read completed — issue301, 2026-11-09
+
+Parent selected a new current observation and clarified actual count AUTH1 plus
+fixed readonly PAYLOAD1, at most2 SSH lifecycles. Original Server performed both
+once, no retry/third connection. All old stage/read STOP/SPENT/UNKNOWNs remain.
+
+The actual AUTH emitted a fresh official Tailscale challenge. An owner-private
+RAM-only one-use redirect handed it to the Edge extension; the specified Google
+account completed this live authorization. AUTH transport then genuinely returned0
+with input1/stdout0, native caps/drain and all job/process/stream closure flags.
+The live RAM server closed, its thread joined and URI buffers cleared. Actual
+safe classification AUTH_CHALLENGE was retained without raw URI or messages.
+
+Only then did the fixed readonly45 payload run once: return0,input1280,
+stdout1011,stderr0, no timeout/refusal/retry, all job/process/drain/EOF flags true,
+cleanup0. Safe metadata was privately persisted before parsing. Machine identity
+check passed. At this current observation, the exact stage root and all10 fixed
+public files are absent; this does not backfill old transport/stage history.
+
+Old33f public binding file currently matches its original hash/size/root-owner/
+0444/nlink1 contract. Related unit is loaded/active/running, MainPID1031737 and
+InvocationIDb0b6b64f555543608a6c1825af43d8bb match the original public binding.
+No provider authentication, SDK/API health, data or financial qualification is
+inferred. New stage/claim/status/material/service/SDK/business actions are0.
+Current facts now support Parent's next bounded route; no maintenance follows
+automatically, and the existing source candidate remains undeployed.
+
+Actual originals are E3/opend-current-classified-read-01; helpers and applicable
+checks are under `.superpowers/sdd/opend-current-classified-read-20261109/`.
+The new tracked plan records the exact scope, closure and limits. One software
+512KiB receipt2933B/f1c99377 is net0-linked, runtime0; cap155713536 and complete
+forward154566656. Prior delivery1138688 and all old holds/futures remain, plus
+the receipt's conservative unclassified100KiB. Whole objective ACTIVE/unachieved.
+
+Final closeout4885B/88b82359 and evidence publication3915B/c549eb5c are saved.
+Complete forecast7240B/629bafdc has current115687424/preparationremaining1794048
+before final publication/checkpoint. Delivery1138688, prior final40960, extra
+unclassified102400 and new final262144 stay held. Current checkpoint171426B/
+a88d2348 at20261109T011925Z is CURRENT_AUTH_PUBLIC_READ_CLOSED_STAGE_ABSENT_OLD_UNIT_MATCH;
+it is a current public read, not deployment, provider authentication or runtime GO.
+
 ## Stage observation repair and spent current read — issue301, 2026-11-09
 
 Original stage failure remains historically UNKNOWN. Exact saved-bootstrap

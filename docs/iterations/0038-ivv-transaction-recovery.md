@@ -1,5 +1,76 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## New current AUTH plus public read completed — issue301, 2026-11-09
+
+Planner explicitly selected one NEW current classified observation; the first
+read stays SPENT/UNKNOWN. The actual mature mechanism is two SSH lifecycles:
+AUTH `/usr/bin/true` at most300s, then one fixed readonly payload at most45s.
+Parent clarified this count before dispatch; no new one-process transport was
+invented and no user approval repeated. Quant: current operational facts only,
+no historical cause, provider authentication/API health, data or financial claim.
+
+Implementer reused exact OPS3ae7/profile/native transport/client pins and the
+reviewed safe classifier87c246c4. The fixed remote source6083B/adbec02c and
+public expectation1280B/1bd689ee are byte-pinned; actual full command/body SHA
+and local source/callback pins were written before dispatch. No private vendor
+pane/XML/log/env/argv is read, and remote code permits only original stage's10
+fixed public file/hash facts and old33f unit properties. Remote root/nonce stays
+exactly original6c6; no stage, claim, signal, deletion, provider or SDK action.
+
+Small local glue replaces the old automatic browser open with a current-session
+RAM-only loopback redirect for the Edge extension. It accepts only the mature
+official login host pattern, is one-use/current-lifetime/bounded, erases URI/tail
+and closes server/thread. No raw URL or stderr is persisted. Applicable loopback
+checks3 passed (synthetic only). Native memory/process/drain contract negative
+RED then2 pure admission checks passed. Existing transport ownership/recovery/
+retention and safe-meta-before-validation semantics remain; no broad CI/review
+restart or generic transport platform was needed.
+
+Verifier actually ran original Server session85885 once to exit0. AUTH produced
+a real current AUTH_CHALLENGE; RAM handed the live link to Edge extension
+(current ID1, old ID3 unavailable). Correct specified Google account selected;
+current page showed Authorization successful. Executor still waited for actual
+AUTH rc0/input1/stdout0 and all job/process/drain/EOF flags, native limits and
+cleanup0/retryfalse. Auth stderr166 was classified/count-only, not raw-persisted.
+RAM redirect served once, server closed, thread joined and raw buffers cleared.
+
+Then PAYLOAD ran once with local45s/remote25s (original fixed read body), actual
+rc0/input1280/stdout1011/stderr0, all closure/EOF flags true,cleanup0/retryfalse.
+Safe metadata was written through original private writer BEFORE parse. The
+actual current observation at2026-11-09T01:11:44.284552Z verifies the machine,
+finds original stage root absent and all10 fixed public names absent. Original
+old33f binding file is present, safe root-owned0444/nlink1/size/hash matching.
+Related old unit loaded/active/running, MainPID1031737 and InvocationID
+b0b6b64f555543608a6c1825af43d8bb match the original public binding. This proves
+the current public-unit identity, not OpenD login or complete SDK health.
+
+Actual action accounting: newAUTH1/newREAD1, max2 SSH, no third/retry, new
+stage/claim/status/Vault/material/service/signal/SDK/business0. No genuine OTP
+or device handoff was required. Old stage/first-read UNKNOWNs are not overwritten
+by present absence, and all consumed controls/failed histories remain. Stage
+repair source candidate is still undeployed; no maintenance was authorized by
+this readback. Whole user objective remains ACTIVE/unachieved.
+
+Private originals are E3/opend-current-classified-read-01; helper/check sources
+H4 `.superpowers/sdd/opend-current-classified-read-20261109/`. One new software
+512KiB registration2933B/f1c99377, net0 linked, runtime0, cap155713536 and
+completeforward154566656. Its itemization476KiB plus additional100KiB conservative
+unclassified margin is preserved. Prospective source delivery1138688 and every
+old new4 remaining3178496/fullfuture33554432/closeout352256/conditionalL16R32/
+failed/UNKNOWN/unused hold remain. No paid resource change or ordinary new user
+approval. Final source/command/body/closure pins and current checkpoint follow.
+
+Final closeout4885B/88b82359ed429bb09d6d0f0e231e275767d1b1f44ddf03bcdad9d8f8375277c9;
+evidence publication3915B/c549eb5ca534b6c2ef7c43ea4cfd422e86889e033655177ea6724a3c267a1ff6;
+complete forecast7240B/629bafdca548961215707b2f073f9a932619c239cc090f355ba9060049cb65ae.
+Before final publication/checkpoint, conservative current115687424 and preparation
+remaining1794048 retain delivery1138688/prior final40960/extra margin102400/new
+final262144; fullforward154566656<cap155713536. New current checkpoint171426B/
+a88d2348b3b639f2a05e2e966e68eb9358320a066d89c1191d0fa5a8d061134a,
+20261109T011925Z-opend-current-read-closed-stage-absent-old-unit-match.json,
+preserves all historical failed/UNKNOWN/STOP states while adding this actual
+current AUTH/read result. No stage/provider/SDK release or retry follows.
+
 ## Stage-boundary observation repair — issue301, 2026-11-09
 
 Planner: diagnose the exact saved stage, not another maintenance. Parent permits
