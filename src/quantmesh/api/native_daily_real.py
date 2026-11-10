@@ -6,6 +6,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Header, HTTPException, Request, Response
+from pydantic import Field
 
 from quantmesh.api.research_jobs import _SafeRoute
 from quantmesh.research.native_daily_real import (
@@ -69,6 +70,22 @@ class NativeJobView(Contract):
     live_allowed: Literal[False]
 
 
+class NativeRecoveryStatus(Contract):
+    business_key: Digest
+    experiment_id: str = Field(pattern=r"^[a-z0-9][a-z0-9-]{0,95}$")
+    registered_attempts: int = Field(strict=True, gt=0)
+    last_attempt_state: Literal["running", "failed", "interrupted", "prepared", "committed"]
+    request_digest_history: list[Digest]
+
+
+class NativeRecoveryJobView(NativeJobView):
+    recovery_status: NativeRecoveryStatus
+
+
+# A union retains the original legacy shape: no synthetic recovery_status=null.
+NativeJobResponse = NativeJobView | NativeRecoveryJobView
+
+
 def create_native_daily_router():
     router = APIRouter(prefix="/research/native-daily", route_class=_NativeRoute)
 
@@ -115,7 +132,7 @@ def create_native_daily_router():
             }
         return call(service.options)
 
-    @router.post("/jobs", response_model=NativeJobView, status_code=201)
+    @router.post("/jobs", response_model=NativeJobResponse, status_code=201)
     def submit(
         body: NativeRequest, request: Request, response: Response, idempotency_key: UUID = Header()
     ):
@@ -123,7 +140,7 @@ def create_native_daily_router():
         response.status_code = 201 if fresh else 200
         return job
 
-    @router.get("/jobs/{job_id}", response_model=NativeJobView)
+    @router.get("/jobs/{job_id}", response_model=NativeJobResponse)
     def read(job_id: UUID, request: Request):
         return call(authority(request).read, str(job_id))
 
@@ -140,7 +157,7 @@ def create_native_daily_router():
             },
         )
 
-    @router.post("/jobs/{job_id}/decision", response_model=NativeJobView, status_code=201)
+    @router.post("/jobs/{job_id}/decision", response_model=NativeJobResponse, status_code=201)
     def decide(
         job_id: UUID,
         body: NativeDecisionRequest,
