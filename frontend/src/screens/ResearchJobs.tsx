@@ -79,8 +79,10 @@ const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3
 export function ResearchJobsScreen() {
   const [engine, setEngine] = useState(() => {
     const query = new URLSearchParams(globalThis.location?.search)
-    if (query.get('engine') === 'native-daily-v2' || query.has('native_job')) return 'native-daily-v2'
-    return query.get('engine') === 'spy-replay' || query.has('spy_job') ? 'spy-replay' : 'baseline'
+    const selected = query.get('engine')
+    if (selected && ['baseline', 'vnpy', 'spy-replay', 'native-daily-v2'].includes(selected)) return selected
+    if (query.has('native_job')) return 'native-daily-v2'
+    return query.has('spy_job') ? 'spy-replay' : 'baseline'
   })
   const snapshotId = new URLSearchParams(globalThis.location?.search).get('snapshot')
   if (snapshotId !== null) return <LocalCsvPlanning snapshotId={snapshotId} />
@@ -90,7 +92,13 @@ export function ResearchJobsScreen() {
     <div className="mb-4 flex flex-wrap items-center gap-3 px-1 text-sm">
       <label htmlFor="research-engine">Research engine</label>
       <select id="research-engine" className="h-9 rounded-md border border-input bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring"
-        value={engine} onChange={event => setEngine(event.target.value)}>
+        value={engine} onChange={event => {
+          const selected = event.target.value
+          const url = new URL(globalThis.location.href)
+          url.searchParams.set('engine', selected)
+          globalThis.history.replaceState(globalThis.history.state, '', url)
+          setEngine(selected)
+        }}>
         <option value="baseline">QuantMesh registered baselines</option>
         <option value="vnpy">vn.py official strategies · fixture experiment</option>
         <option value="spy-replay">SPY · SMA100 historical replay</option>

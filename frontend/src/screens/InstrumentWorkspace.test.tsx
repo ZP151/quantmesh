@@ -1132,3 +1132,36 @@ describe('live Hyperliquid completion-based refresh', () => {
     }
   })
 })
+
+
+describe('compact saved packet navigation', () => {
+  it('links the exact saved packet to its existing decision and evidence without submitting', async () => {
+    const packet = exactPacket('packet-cccccccccccccccccccccccc')
+    mockedDecisionPacket.mockResolvedValue(packet)
+    renderWorkspace(`/instruments/moomoo/NVDA?packet=${packet.packet_id}`)
+    const navigation = await screen.findByRole('navigation', { name: 'Saved decision navigation' })
+    expect(navigation).toHaveTextContent(packet.packet_id)
+    expect(navigation).toHaveTextContent('Watching')
+    const header = screen.getByTestId('workspace-grid').parentElement!.querySelector('header')!
+    header.style.top = '56px'
+    vi.spyOn(header, 'getBoundingClientRect').mockReturnValue({
+      x: 0, y: 56, width: 375, height: 244, top: 56, right: 375, bottom: 300, left: 0, toJSON: () => ({}),
+    })
+    for (const name of ['Decision rail', 'Evidence']) {
+      const link = within(navigation).getByRole('link', { name })
+      const target = document.querySelector(link.getAttribute('href')!)
+      expect(target).toHaveAttribute('aria-label', name)
+      expect(target).toHaveAttribute('tabindex', '-1')
+      fireEvent.click(link)
+      expect(target).toHaveStyle({ scrollMarginTop: '316px' })
+    }
+    expect(mockedSaveDecisionPacket).not.toHaveBeenCalled()
+    expect(mockedApplyDecisionPacketAction).not.toHaveBeenCalled()
+  })
+
+  it('does not present an unsaved draft as a saved decision', async () => {
+    renderWorkspace()
+    await screen.findByTestId('workspace-grid')
+    expect(screen.queryByRole('navigation', { name: 'Saved decision navigation' })).not.toBeInTheDocument()
+  })
+})
