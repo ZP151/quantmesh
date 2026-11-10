@@ -1,5 +1,18 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Independent official SDK check completed; response unresolved — issue301, 2026-11-10
+
+New actual3529 independently authorized one context/Init, conditional State and
+normal close. H14 final54ec7523/R2report33dc6ed3 and20 focused tests qualified;
+dedicated56MiB/new8MiB software +L16/R32, all old allocations retained. Browser
+Tailscale login was directly verified via Edge extension; no global desktop.
+AUTH300/preflight closed0; actual SDK context/Init1, Init-1/TIMEOUT, State0.
+SDK CLOSE_UNKNOWN (context_closed=false); outer manager/cgroup/child/channel/
+transport/resource/local-holder cleanup proved. Purpose SPENT, no retry/input/
+restart, no OTP/device, authentication UNKNOWN and whole goal ACTIVE.
+See [actual record](../iterations/0038-opend-official-status.md). Preserve the
+existing provider and old SPENT/UNKNOWN histories; no new SDK request follows.
+
 ## Actual credential submission; terminal status unresolved — issue301, 2026-11-10
 
 H12 complete327082B publicatione07e88b1/index4f4481d8 has fresh agent R1989be60a

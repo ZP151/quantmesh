@@ -1,5 +1,23 @@
 # Iteration0038 â€” recover the fixed IVV user loop
 
+## Independent official SDK check completed; Init timeout — issue301, 2026-11-10
+
+Actual new Operator3529 approved one independent context/Init and conditional
+one State, normal close. Dedicated56MiB receiptddb/net0 split699 and final
+index54ec7523 qualified under fresh agent R2 report33dc6ed3. Root/reviewer20
+focused tests and scoped quality checks pass. Current Tailscale login was
+confirmed via Edge extension, no global desktop; AUTH300/preflight closed0.
+
+Actual SDK caller returned2: one attributed context/Init, Init-1/TIMEOUT and no
+response/socket callback; State0. SDK CLOSE_UNKNOWN after30s, internal context
+closed=false; callbacks/socket/worker closed=true. Outer manager/cgroup/child/
+channel/transport/resource cleanup and local holders closed. Purpose SPENT,
+no retry/relogin/service action, no OTP/device and no financial qualification.
+This preserves the user's current-login observation; browser login and an SDK
+Init response are distinct evidence. Whole goal ACTIVE. See the complete
+[official-status record](0038-opend-official-status.md) and
+[plan](../superpowers/plans/2026-11-10-opend-official-status.md).
+
 ## Approved input route; actual SSH/source/diagnosis boundary — issue301, 2026-11-10
 
 Issue [301](https://github.com/ZP151/quantmesh/issues/301);
