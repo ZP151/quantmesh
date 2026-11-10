@@ -94,6 +94,7 @@ export function InstrumentWorkspaceScreen() {
 }
 
 function LegacyInstrumentWorkspaceScreen() {
+  const workspaceRef = useRef<HTMLDivElement>(null)
   const { locale, t } = usePreferences()
   const { symbol = '', venue = '' } = useParams<{ symbol: string; venue: string }>()
   const [search, setSearch] = useSearchParams()
@@ -351,8 +352,19 @@ function LegacyInstrumentWorkspaceScreen() {
     setSearch(next)
   }
 
+  // The source header wraps taller on narrow screens. Measure it at activation
+  // so native anchors keep the section title visible below both sticky headers.
+  const prepareSectionAnchor = (id: string) => {
+    const target = document.getElementById(id)
+    const header = workspaceRef.current?.querySelector('header')
+    if (target && header) {
+      const inset = Number.parseFloat(getComputedStyle(header).top) || 0
+      target.style.scrollMarginTop = `${header.getBoundingClientRect().height + inset + 16}px`
+    }
+  }
+
   return (
-    <div className="space-y-4">
+    <div ref={workspaceRef} className="space-y-4">
       <WorkspaceHeader stream={stream} workspace={workspace} />
       {query.isRefetchError && <WorkspaceRefreshWarning error={query.error} />}
       {query.isPlaceholderData && (
@@ -378,6 +390,25 @@ function LegacyInstrumentWorkspaceScreen() {
             {qualityWarnings.map((warning) => <li key={warning}>{warning}</li>)}
           </ul>
         </section>
+      )}
+      {packetSource === 'persisted' && (
+        <nav
+          aria-label={locale === 'zh-CN' ? '已保存决策导航' : 'Saved decision navigation'}
+          className="space-y-2 rounded-md border border-border px-3 py-3 xl:hidden"
+        >
+          <p className="text-sm font-medium">
+            {locale === 'zh-CN' ? '已保存决策' : 'Saved decision'}
+            {' · '}{t(displayedPacket.disposition === 'watch' ? 'screen.workspace.phase.watching'
+              : displayedPacket.disposition === 'paper_proposal' ? 'screen.workspace.phase.paperProposed'
+                : displayedPacket.disposition === 'reject' ? 'screen.workspace.phase.rejected'
+                  : displayedPacket.paper_capability.allowed ? 'screen.workspace.phase.ready' : 'screen.workspace.phase.blocked')}
+          </p>
+          <p className="break-all font-mono text-xs text-muted-foreground">Packet · {displayedPacket.packet_id}</p>
+          <div className="flex flex-wrap gap-x-5">
+            <a href="#workspace-decision" onClick={() => prepareSectionAnchor('workspace-decision')} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{t('screen.workspace.decision')}</a>
+            <a href="#workspace-evidence" onClick={() => prepareSectionAnchor('workspace-evidence')} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{t('screen.workspace.evidence')}</a>
+          </div>
+        </nav>
       )}
       <div
         className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem_22rem]"
@@ -407,7 +438,7 @@ function LegacyInstrumentWorkspaceScreen() {
           />
         </section>
 
-        <section className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.evidence')}>
+        <section id="workspace-evidence" tabIndex={-1} className="scroll-mt-20 space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.evidence')}>
           {packetSource === 'persisted' ? (
             <PacketEvidenceSummary packet={displayedPacket} />
           ) : (
@@ -477,7 +508,7 @@ function LegacyInstrumentWorkspaceScreen() {
           )}
         </section>
 
-        <aside className="space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
+        <aside id="workspace-decision" tabIndex={-1} className="scroll-mt-20 space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
           <DecisionRail
             contextKey={decisionContextKey}
             evidenceUpdating={evidenceUpdating}

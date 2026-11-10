@@ -4097,6 +4097,67 @@ export interface components {
             /** Trial Consumed */
             trial_consumed: boolean;
         };
+        /** NativeRecoveryJobView */
+        NativeRecoveryJobView: {
+            admission: components["schemas"]["ObjectRef"];
+            /** Admission Reasons */
+            admission_reasons: string[];
+            /**
+             * Admission Status
+             * @enum {string}
+             */
+            admission_status: "INSUFFICIENT" | "REJECT" | "ACCEPTED_ENGINEERING" | "ACCEPTED_DECLARED_RESEARCH";
+            /** Completed At */
+            completed_at: string | null;
+            /** Created At */
+            created_at: string;
+            decision: components["schemas"]["ObjectRef"] | null;
+            /**
+             * Financial Qualification
+             * @constant
+             */
+            financial_qualification: "INSUFFICIENT";
+            /** Job Id */
+            job_id: string;
+            /**
+             * Live Allowed
+             * @constant
+             */
+            live_allowed: false;
+            /**
+             * Paper Allowed
+             * @constant
+             */
+            paper_allowed: false;
+            recovery_status: components["schemas"]["NativeRecoveryStatus"];
+            report: components["schemas"]["ObjectRef"] | null;
+            request: components["schemas"]["NativeRequest"];
+            /** Request Digest */
+            request_digest: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "not_run" | "running" | "succeeded" | "failed" | "interrupted";
+            /** Trial Consumed */
+            trial_consumed: boolean;
+        };
+        /** NativeRecoveryStatus */
+        NativeRecoveryStatus: {
+            /** Business Key */
+            business_key: string;
+            /** Experiment Id */
+            experiment_id: string;
+            /**
+             * Last Attempt State
+             * @enum {string}
+             */
+            last_attempt_state: "running" | "failed" | "interrupted" | "prepared" | "committed";
+            /** Registered Attempts */
+            registered_attempts: number;
+            /** Request Digest History */
+            request_digest_history: string[];
+        };
         /** NativeRequest */
         NativeRequest: {
             approved_scope_ref?: components["schemas"]["ObjectRef"] | null;
@@ -7404,7 +7465,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NativeJobView"];
+                    "application/json": components["schemas"]["NativeJobView"] | components["schemas"]["NativeRecoveryJobView"];
                 };
             };
             /** @description Validation Error */
@@ -7435,7 +7496,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NativeJobView"];
+                    "application/json": components["schemas"]["NativeJobView"] | components["schemas"]["NativeRecoveryJobView"];
                 };
             };
             /** @description Validation Error */
@@ -7505,7 +7566,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["NativeJobView"];
+                    "application/json": components["schemas"]["NativeJobView"] | components["schemas"]["NativeRecoveryJobView"];
                 };
             };
             /** @description Validation Error */

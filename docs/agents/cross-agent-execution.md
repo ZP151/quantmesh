@@ -4,14 +4,35 @@ Status: canonical execution handoff for Codex and Claude Code
 
 ## Single source of truth
 
-Codex and Claude Code must reconstruct work from the repository, not from chat
-memory. The durable order is:
+Codex and Claude Code reconstruct code contracts from the repository and current
+dispatch from the registered main coordinator worktree, not from chat memory or
+the age of a local Git checkout. The durable order is:
 
 1. `AGENTS.md` and the platform entry file (`CLAUDE.md` or `.codex/` prompt);
-2. `CONTEXT.md`, `PRODUCT.md` and `docs/product-strategy.md`;
-3. `docs/goals/ACTIVE.md` and the active iteration;
+2. the registered main coordinator worktree's
+   `output/0038-orchestration/current-status.json`, followed only by the current
+   assignment and immutable evidence references it names;
+3. `CONTEXT.md`, `PRODUCT.md`, `docs/product-strategy.md`, the applicable iteration
+   and `docs/goals/ACTIVE.md` as code/design and historical context;
 4. the active tracked specification and implementation plan;
 5. relevant ADRs, Git history, open PRs and CI evidence.
+
+Resolve that one relative status path against the coordinator worktree explicitly
+registered by the main chat, even when working in a different feature worktree.
+Do not substitute the current directory, a local Git root, another worktree's
+ignored snapshot, the old board/task register, or nested historical records.
+If the registered worktree location is unknown or the file is missing, request
+the exact current location from the main coordinator before dispatching work;
+do not recreate status, recover a task from old `ACTIVE.md`, or start a host/job
+action as a lookup fallback. There is no new state registry or status service.
+
+Code branches and ignored operational state have separate owners and update
+paths. A fetch/pull or branch switch updates tracked code, not this ignored
+status file; a current status does not prove a checkout or deployed runtime is
+current. Keep existing branch/base hygiene and verify the assigned source and
+runtime separately. Do not reset or pull a preserved coordinator checkout merely
+to synchronize operational status. Only the main coordinator updates the shared
+status; contributors return immutable leaf evidence for it to reference.
 
 Tracked specifications live in `docs/superpowers/specs/` and executable plans
 live in `docs/superpowers/plans/`. The directory name describes the planning
@@ -59,7 +80,7 @@ not ready.
    branch after each durable phase so either agent can resume remotely.
 7. Use one integration branch and one final PR for the solo-developer fast
    lane. Resolve review findings, wait for required CI, then squash-merge under
-   the standing authority in `docs/goals/ACTIVE.md`.
+   the current operator authority referenced by the canonical status.
 8. Before any completion claim, run fresh verification and record commands,
    exit codes and counts. Agent reports are not verification evidence.
 9. Cut a release candidate only from the merged tree after the clean-checkout
@@ -86,7 +107,9 @@ not ready.
   coherent slice commit and the final PR boundary. Progress records the user
   loop completed, not test count, code volume or ledger length.
 
-If execution is interrupted, the next agent starts with `git status`, fetches
-remote state, reads the tracked plan checkboxes and iteration checkpoints, and
-resumes the first incomplete task. It must not redispatch work whose commit and
-verification evidence already exist.
+After interruption, read the canonical status from the registered coordinator
+worktree first and confirm the current owner, scope and evidence. Then inspect
+`git status` and the assigned branch/base, and read only the applicable plan and
+iteration checkpoints. Fetch code when needed for that assignment; it is not a
+status synchronization step. Resume only the currently assigned unfinished work,
+without redispatching completed tasks from stale plans or historical entries.
