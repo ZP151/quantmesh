@@ -105,3 +105,28 @@ the original runtime owner to serve the reviewed merged-equivalent tree preservi
 stored state. Final usable Web verification follows that handoff. Engineering checks
 do not establish real-data, research, OOS, Paper or live qualification. Port8878 and
 all foreign service lifecycle ownership remain untouched.
+
+## Publisher CI infrastructure checkpoint — 2026-11-12
+
+Publisher PR [307](https://github.com/ZP151/quantmesh/pull/307) packages the
+reviewed desktop source and exact-lock generated assets. The first CI head failed
+five stale display-string assertions; the original UI owner corrected only those
+expectations. On the corrected head, classify, research-service and fast passed;
+fast ran all 835 frontend tests and confirmed the committed bundle is current.
+The release job failed twice before checkout certification because the hosted
+Ubuntu runner could not resolve any of its three archive hosts while Playwright
+installed nine missing font packages. The two failures and their logs remain in
+the Publisher's publication evidence; neither was treated as a source failure or
+a successful release.
+
+One bounded release-environment repair replaces only that job's ephemeral APT
+mirror list with the Linux Kernel Archives' HTTPS Ubuntu mirror. The runner's
+existing Ubuntu archive signing key, signed index, package-hash verification,
+all nine exact package versions, complete Playwright `--with-deps` install and
+unchanged release certification remain mandatory. APT update fails on any fetch
+error; both candidate and installed versions must match the failed run's versions.
+The mirror's Resolute signed metadata path and all nine exact package paths were
+readable locally; only matching-head CI can establish runner reachability and
+signature acceptance. An independent two-round workflow review found one gap in
+the initial version (no post-install version check); the corrected diff has no
+actionable findings. PR merge and runtime publication remain gated on new CI.
