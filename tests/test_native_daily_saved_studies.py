@@ -267,6 +267,27 @@ def test_existing_capacity_limit_is_neither_expanded_nor_silently_truncated(tmp_
         service.close()
 
 
+def test_incomplete_admission_projection_is_an_integrity_error_not_not_found(tmp_path, monkeypatch):
+    service = daily.NativeDailyService(tmp_path / "study")
+    try:
+        service.submit(daily.NativeRequest(), str(uuid4()))
+        public, _ = service.submit(daily.NativeRequest(), str(uuid4()))
+        admission = daily._loads(service.artifact(public["job_id"], "admission"))
+        del admission["reasons"]
+        damaged = service.objects.put_bytes("application/json", daily.canonical(admission))
+        records = service._store.read()
+        service._store.write([records[0], records[1].model_copy(update={"admission": damaged})])
+        before = snapshot(service.root)
+        forbid_effects(service, monkeypatch)
+        with client(service) as http:
+            response = http.get(PREFIX)
+        assert response.status_code == 409, response.text
+        assert response.json() == {"detail": "artifact_invalid"}
+        assert snapshot(service.root) == before
+    finally:
+        service.close()
+
+
 @pytest.mark.parametrize("damage", ["private", "invalid_recovery", "over_capacity"])
 def test_collection_response_validation_does_not_filter_invalid_public_records(
     tmp_path, monkeypatch, damage

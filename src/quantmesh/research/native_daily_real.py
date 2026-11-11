@@ -1711,7 +1711,11 @@ class NativeDailyService:
         with self._condition:
             jobs = sorted(self._records(), key=lambda job: job.job_id)
             jobs.sort(key=lambda job: job.created_at, reverse=True)
-            return {"jobs": [self._public(job) for job in jobs]}
+            try:
+                return {"jobs": [self._public(job) for job in jobs]}
+            except KeyError:
+                # An incomplete original is not an unknown study UUID.
+                raise NativeError("artifact_invalid") from None
 
     def read(self, key):
         with self._condition:
