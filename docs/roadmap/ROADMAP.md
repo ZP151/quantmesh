@@ -956,6 +956,20 @@ Outcome: turn the trusted-data and Instrument Workspace foundations into a
 short, evidence-backed decision loop that an individual active trader can use,
 monitor and learn from without surrendering risk or execution authority.
 
+**2026-11-11 user-function checkpoint (before this integration slice):**
+
+| User action | Current evidence boundary |
+| --- | --- |
+| Open markets, watchlists and instrument charts | Interactive workstation is merged; AAPL/NVDA history and limited BTC observations are retained, without claiming complete market coverage. |
+| Import or review research and saved decisions | CSV quality/reopen, evidence-backed packets, scenarios, outcome review and local saved decisions are available. Synthetic software acceptance does not qualify a real strategy. |
+| Rehearse paper controls and recover a fixed task | Paper remains the default; local recovery and PR #303's Watch/navigation flow are available, while the fixed IVV task still lacks independently accepted real input. |
+
+The vn.py bilingual controls and Native saved-study archive are separate scoped
+successors to this checkpoint. Read their live owner/effect status through the
+[single current-status contract](../agents/cross-agent-execution.md#single-source-of-truth),
+not from the historical wording below. M14 stays ACTIVE; real-input acceptance,
+out-of-sample and paper evidence remain separate gates.
+
 Sequence for operator review:
 
 1. **Done as iteration 0021 (merged PR #120):** trusted data fabric: provider
@@ -1007,7 +1021,7 @@ Sequence for operator review:
    revisions/appends, reload retention and 296 completed workspace requests,
    with no timeouts/failures. Other market feeds remain a separate frontier.
    See the [0035 ledger](../iterations/0035-live-instrument-charts.md).
-   **Current capacity gate (iteration 0036 / PR #159):** the new 8 GB private
+   **2026-09 capacity checkpoint (iteration 0036 / PR #159):** the new 8 GB private
    Tailscale origin migrated at `33aa0521`; archive/WAL/JSON restore,
    13-check smoke, real BTC/ETH/SOL chart paths and a controlled restart pass.
    A 24-hour capacity/freshness observation, an operator-approved rollback
@@ -1041,6 +1055,11 @@ Sequence for operator review:
    DecisionPacket slice demonstrates a missing capability. Framework count and
    model ranking are not product milestones.
 9. Guarded broker/testnet execution only after a separate authorization.
+
+The following 2026-10-20 through 2026-11-01 maintenance paragraphs are dated
+checkpoints. Their pending actions describe those dates; current dispatch and
+acceptance status use the single current-status contract linked above.
+
 # Worker recovery evidence checkpoint —2026-10-20
 
 Issue198 keeps actual two-job restart recovery open. Its first bounded repair

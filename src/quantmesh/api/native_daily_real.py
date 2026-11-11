@@ -10,6 +10,7 @@ from pydantic import Field
 
 from quantmesh.api.research_jobs import _SafeRoute
 from quantmesh.research.native_daily_real import (
+    MAX_JOBS,
     Contract,
     Digest,
     NativeDailyService,
@@ -86,6 +87,10 @@ class NativeRecoveryJobView(NativeJobView):
 NativeJobResponse = NativeJobView | NativeRecoveryJobView
 
 
+class NativeJobCollection(Contract):
+    jobs: list[NativeJobResponse] = Field(max_length=MAX_JOBS)
+
+
 def create_native_daily_router():
     router = APIRouter(prefix="/research/native-daily", route_class=_NativeRoute)
 
@@ -139,6 +144,11 @@ def create_native_daily_router():
         job, fresh = call(authority(request).submit, body, str(idempotency_key))
         response.status_code = 201 if fresh else 200
         return job
+
+    @router.get("/jobs", response_model=NativeJobCollection)
+    def list_jobs(request: Request, response: Response):
+        response.headers["Cache-Control"] = "private, no-store"
+        return call(authority(request).list_jobs)
 
     @router.get("/jobs/{job_id}", response_model=NativeJobResponse)
     def read(job_id: UUID, request: Request):

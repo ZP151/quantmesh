@@ -54,6 +54,12 @@ const copy = {
     recovery: 'Recoverable IVV study', recoveryAttempts: 'Registered attempts', recoveryTrial: 'Logical study registered', resume: 'Resume registered study',
     recoveryReal: 'Declared retrospective research with recorded recovery. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
     recoveryHelp: 'No report is available. Resume explicitly with the current registered input and policy. Previous attempts remain recorded; committed reports are reopened without calculation.',
+    archive: 'Saved studies', archiveRefresh: 'Refresh saved studies', archiveLoading: 'Reading saved studies…',
+    archiveHelp: 'Existing records in this configured store, up to 32. Listing does not describe capture or research-trial usage.',
+    archiveEmpty: 'No saved studies in this configured store.', archiveUnavailable: 'Saved studies are unavailable.',
+    archiveIntegrity: 'Saved study originals could not be verified.', archiveInvalid: 'The saved study listing did not match the expected contract.',
+    archiveFailed: 'Saved studies could not be read. Refresh the list to try again.', archiveOpen: 'Open saved study',
+    archiveReport: 'Report recorded', archiveDecision: 'Decision recorded',
     observed: 'Observed',
     trustedLimits: 'External environment and channels are unverified (UNVERIFIED_TRUSTED_EXTERNAL). Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Monitoring is not a hard limit.',
     devLimits: 'Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Full read-only/six-writable enforcement and legacy loaded-guard provenance are unproved. Monitoring is not a hard limit.',
@@ -88,6 +94,12 @@ const copy = {
     recovery: '可恢复的 IVV 研究', recoveryAttempts: '已登记尝试', recoveryTrial: '已登记逻辑研究', resume: '恢复已注册研究',
     recoveryReal: '已登记恢复尝试的回顾性研究。金融证据仍为 INSUFFICIENT，Paper 和实盘不可用。',
     recoveryHelp: '当前无报告。可使用当前注册输入和策略显式恢复；既有尝试保留，已提交报告按原件重开而不重算。',
+    archive: '已保存研究', archiveRefresh: '刷新研究档案', archiveLoading: '正在读取研究档案…',
+    archiveHelp: '此处仅列出当前配置存储中的已有记录，最多 32 条。列表不表示采集或研究计算试验额度的使用情况。',
+    archiveEmpty: '当前配置的存储中没有已保存研究。', archiveUnavailable: '研究档案当前不可用。',
+    archiveIntegrity: '无法校验研究档案原件。', archiveInvalid: '研究档案列表不符合既有契约。',
+    archiveFailed: '未能读取研究档案，可刷新列表重试。', archiveOpen: '打开已保存研究',
+    archiveReport: '已保存报告', archiveDecision: '已保存决定',
     observed: '实际观察',
     trustedLimits: '外部环境及通道未核验（UNVERIFIED_TRUSTED_EXTERNAL）。未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。监测不等于硬上限。',
     devLimits: '未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。完整只读/六个可写路径约束与旧版已加载防护的来源仍未证明。监测不等于硬上限。',
@@ -117,6 +129,12 @@ const reasons: Record<string, [string, string]> = {
 export function NativeDailyPanel() {
   const { locale } = usePreferences(); const w = copy[locale]; const zh = locale === 'zh-CN'
   const [options, setOptions] = useState<NativeOptions | null>(null)
+  const [savedStudies, setSavedStudies] = useState<NativeJob[] | null>(null)
+  const [archiveLoading, setArchiveLoading] = useState(false)
+  const [archiveError, setArchiveError] = useState<'archiveUnavailable' | 'archiveIntegrity' | 'archiveInvalid' | 'archiveFailed' | null>(null)
+  const archiveRead = useRef(0)
+  const revealStudy = useRef<string | null>(null)
+  const evidenceSection = useRef<HTMLElement>(null)
   const [packageId, setPackageId] = useState(''); const [grantId, setGrantId] = useState('')
   const [intent, setIntent] = useState<Intent | null>(() => { const id = initialId(); return id ? retained(id) : null })
   const [openId, setOpenId] = useState(initialId)
@@ -149,6 +167,23 @@ export function NativeDailyPanel() {
     currentJob.current = value; setJob(value); setOpenId(value.job_id); identify(value.job_id); setError(null)
   }
   async function loadOptions() { try { const value = await nativeDailyApi.options(); if (alive.current) setOptions(value) } catch (cause) { if (alive.current) issue(cause) } }
+  async function loadSavedStudies() {
+    const sequence = ++archiveRead.current
+    setArchiveLoading(true); setArchiveError(null); setSavedStudies(null)
+    try {
+      const records = await nativeDailyApi.savedStudies()
+      if (alive.current && sequence === archiveRead.current) setSavedStudies(records)
+    } catch (cause) {
+      if (alive.current && sequence === archiveRead.current) {
+        const code = cause instanceof NativeDailyError ? cause.code : ''
+        setArchiveError(code === 'artifact_invalid' ? 'archiveIntegrity'
+          : code === 'service_unavailable' || code === 'service_closed' ? 'archiveUnavailable'
+            : code === 'invalid_response' ? 'archiveInvalid' : 'archiveFailed')
+      }
+    } finally {
+      if (alive.current && sequence === archiveRead.current) setArchiveLoading(false)
+    }
+  }
   async function read(id: string, expected?: NativeRequest) {
     if (!nativeUuid(id)) { setError('invalidId'); return }
     const token = generation.current; setReading(true)
@@ -156,7 +191,7 @@ export function NativeDailyPanel() {
     finally { if (alive.current && token === generation.current) setReading(false) }
   }
   useEffect(() => {
-    alive.current = true; void loadOptions()
+    alive.current = true; void loadOptions(); void loadSavedStudies()
     const id = initialId()
     if (id) void read(id, currentIntent.current?.key === id ? currentIntent.current.request : undefined)
     const lifetime = generation
@@ -188,6 +223,12 @@ export function NativeDailyPanel() {
     // The artifact refs are immutable; polling unchanged metadata does not reread bytes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [job?.job_id, job?.admission.digest, job?.report?.digest, job?.decision?.digest])
+  useEffect(() => {
+    if (!job || revealStudy.current !== job.job_id) return
+    revealStudy.current = null
+    evidenceSection.current?.focus()
+    evidenceSection.current?.scrollIntoView?.({ block: 'start' })
+  }, [job])
   async function submit(existing?: Intent, recovery = false) {
     if (posting.current || (job && !recovery)) return
     const pack = options?.packages.find(p => p.package_ref.digest === packageId)
@@ -221,13 +262,15 @@ export function NativeDailyPanel() {
     try { accept(await nativeDailyApi.decide(job, pending.body, pending.key), token) } catch (cause) { if (alive.current && token === generation.current) issue(cause) }
     finally { deciding.current = false; if (alive.current && token === generation.current) setSaving(false) }
   }
-  function reopen() {
-    if (!nativeUuid(openId)) { setError('invalidId'); return }
+  function reopen(id = openId) {
+    if (!nativeUuid(id)) { setError('invalidId'); return }
+    setOpenId(id); revealStudy.current = id
     generation.current++; setJob(null); currentJob.current = null; setEvidence(null); setError(null); setSubmitting(false); setSaving(false); setReading(false); setPaused(false)
-    const old = retained(openId); currentIntent.current = old; setIntent(old); identify(openId)
-    void read(openId, old?.request)
+    const old = retained(id); currentIntent.current = old; setIntent(old); identify(id)
+    void read(id, old?.request)
   }
   function startAnother() {
+    revealStudy.current = null
     generation.current++; currentIntent.current = null; currentJob.current = null; setIntent(null); setJob(null); setEvidence(null); setError(null); setOpenId(''); setReason(''); setSubmitting(false); setSaving(false); setReading(false)
     const url = new URL(location.href); url.searchParams.delete('native_job'); history.replaceState(null, '', url)
   }
@@ -277,7 +320,7 @@ export function NativeDailyPanel() {
         {submitting && !job && <p role="status" className="text-sm">{w.waiting}</p>}
         {paused && <p className="text-sm text-muted-foreground">{w.paused}</p>}
       </div>}
-      {job && <section aria-labelledby="native-evidence" className="min-w-0 space-y-3 border-t pt-4">
+      {job && <section ref={evidenceSection} tabIndex={-1} aria-labelledby="native-evidence" className="min-w-0 scroll-mt-20 space-y-3 border-t pt-4">
         <h3 id="native-evidence" className="font-medium">{w.status}</h3>
         <p role="status" className="text-sm">{state}</p>
         <p className="text-xs text-muted-foreground">{job.recovery_status ? w.recoveryTrial : w.trial}: {job.trial_consumed ? w.yes : w.no}</p>
@@ -322,10 +365,31 @@ export function NativeDailyPanel() {
           {pendingDecision ? <><p className="text-sm text-muted-foreground">{w.pendingDecision}</p><Button className="min-h-11" disabled={saving} onClick={() => void decide(pendingDecision)}>{w.retryDecision}</Button></> : <Button className="min-h-11" disabled={!reason.trim() || saving} onClick={() => void decide()}>{w.saveDecision}</Button>}
         </>}
       </section>}
+      <section aria-labelledby="native-saved-studies" aria-busy={archiveLoading} className="min-w-0 space-y-3 border-t pt-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 id="native-saved-studies" className="font-medium">{w.archive}</h3>
+          <Button className="min-h-11" variant="outline" disabled={archiveLoading} onClick={() => void loadSavedStudies()}>{w.archiveRefresh}</Button>
+        </div>
+        <p className="text-xs text-muted-foreground">{w.archiveHelp}</p>
+        {archiveLoading && <p role="status" className="text-sm">{w.archiveLoading}</p>}
+        {archiveError && <p role="status" className="text-sm text-destructive">{w[archiveError]}</p>}
+        {savedStudies?.length === 0 && <p className="text-sm">{w.archiveEmpty}</p>}
+        {savedStudies && savedStudies.length > 0 && <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
+          {savedStudies.map(saved => <li key={saved.job_id} aria-current={job?.job_id === saved.job_id ? 'true' : undefined} className="min-w-0 space-y-2 rounded-md border border-border p-3">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <code className="min-w-0 break-all text-xs">{saved.job_id}</code>
+              <Button className="min-h-11" variant="outline" aria-label={`${w.archiveOpen} ${saved.job_id}`} disabled={reading || submitting || saving} onClick={() => reopen(saved.job_id)}>{w.open}</Button>
+            </div>
+            <p className="break-words text-xs">{w.created}: <time dateTime={saved.created_at}>{saved.created_at}</time></p>
+            <p className="break-words font-mono text-xs">{saved.state} · {saved.admission_status}</p>
+            <p className="text-xs text-muted-foreground">{w.archiveReport}: {saved.report ? w.yes : w.no} · {w.archiveDecision}: {saved.decision ? w.yes : w.no}</p>
+          </li>)}
+        </ul>}
+      </section>
       <section aria-labelledby="native-reopen" className="space-y-3 border-t pt-4">
         <h3 id="native-reopen" className="font-medium">{w.reopen}</h3>
         <label className="block space-y-1 text-sm"><span>{w.id}</span><input className={`${control} font-mono`} value={openId} spellCheck={false} autoCapitalize="none" onChange={event => setOpenId(event.target.value)} /></label>
-        <div className="flex flex-wrap gap-2"><Button className="min-h-11" variant="outline" disabled={!openId || reading} onClick={reopen}>{w.open}</Button>{job && job.state !== 'running' && !submitting && <Button className="min-h-11" variant="ghost" onClick={startAnother}>{w.newStudy}</Button>}</div>
+        <div className="flex flex-wrap gap-2"><Button className="min-h-11" variant="outline" disabled={!openId || reading} onClick={() => reopen()}>{w.open}</Button>{job && job.state !== 'running' && !submitting && <Button className="min-h-11" variant="ghost" onClick={startAnother}>{w.newStudy}</Button>}</div>
       </section>
     </div>
   </Page>

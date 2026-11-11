@@ -3,6 +3,15 @@ import { createHash, webcrypto } from 'node:crypto'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { VnpyFixturePanel } from './VnpyFixturePanel'
+import { PreferencesProvider, usePreferences } from '@/lib/preferences'
+
+function LocaleControls() {
+  const { setLocale } = usePreferences()
+  return <><button onClick={() => setLocale('zh-CN')}>Use Chinese</button><button onClick={() => setLocale('en')}>Use English</button></>
+}
+function renderPanel() {
+  return render(<PreferencesProvider><LocaleControls /><VnpyFixturePanel /></PreferencesProvider>)
+}
 
 const mocks = vi.hoisted(() => ({ options: vi.fn(), submit: vi.fn(), get: vi.fn(), cancel: vi.fn(), report: vi.fn() }))
 vi.mock('@/lib/vnpy-fixture-api', () => ({ vnpyFixtureApi: mocks }))
@@ -34,7 +43,7 @@ beforeEach(() => {
 
 it('configures native costs, submits, observes progress and verifies a report', async () => {
   const user = userEvent.setup()
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await screen.findByRole('option', { name: 'AtrRsiStrategy' })
   expect(screen.getByLabelText('Half spread (USD/unit/fill)')).toHaveValue(0.005)
   await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
@@ -52,7 +61,7 @@ it('refuses corrupt report bytes', async () => {
   const user = userEvent.setup()
   mocks.submit.mockResolvedValue({ ...job, report_sha256: sha })
   mocks.report.mockResolvedValue({ schema_version: 1, sha256: sha, request_digest: digest, text: text + ' ' })
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await screen.findByRole('option', { name: 'AtrRsiStrategy' })
   await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
   await user.click(await screen.findByRole('button', { name: 'Open verified report' }))
@@ -62,7 +71,7 @@ it('refuses corrupt report bytes', async () => {
 
 it('shows unavailable runtime without enabling submission', async () => {
   mocks.options.mockRejectedValue(new Error('503'))
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await screen.findByText(/vn.py fixture runtime unavailable/)
   expect(screen.getByRole('button', { name: 'Run vn.py backtest' })).toBeDisabled()
 })
@@ -70,7 +79,7 @@ it('shows unavailable runtime without enabling submission', async () => {
 it('preserves pending identity on transport failure for explicit retry', async () => {
   const user = userEvent.setup()
   mocks.submit.mockRejectedValueOnce(new Error('offline'))
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await screen.findByRole('option', { name: 'AtrRsiStrategy' })
   await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
   await screen.findByRole('alert')
@@ -82,7 +91,7 @@ it('preserves pending identity on transport failure for explicit retry', async (
 it('restores the exact submitted parameters and costs in disabled fields', async () => {
   localStorage.setItem('quantmesh.vnpy-fixture.v1', JSON.stringify({ key: 'retained',
     request: { ...request, parameters: { fast_window: 8, slow_window: 18 }, costs: { ...request.costs, fee_bps: 6 } } }))
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await screen.findByRole('option', { name: 'AtrRsiStrategy' })
   expect(screen.getByLabelText('fast_window')).toHaveValue(8)
   expect(screen.getByLabelText('Fee (bps)')).toHaveValue(6)
@@ -92,7 +101,7 @@ it('restores the exact submitted parameters and costs in disabled fields', async
 it('refuses running to queued status regression', async () => {
   const user = userEvent.setup()
   mocks.get.mockResolvedValue({ ...job, state: 'queued', stage: 'queued', completed_bars: 100 })
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await screen.findByRole('option', { name: 'AtrRsiStrategy' })
   await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
   await screen.findByText('running')
@@ -106,7 +115,7 @@ it('allows a new fixture after restart makes a retained active job unknown', asy
   const running = { ...job, state: 'running', stage: 'loading_data', completed_bars: 0 }
   localStorage.setItem('quantmesh.vnpy-fixture.v1', JSON.stringify({ key: 'retained', request, job: running }))
   mocks.get.mockRejectedValue(Object.assign(new Error('Request failed (404)'), { status: 404 }))
-  render(<VnpyFixturePanel />)
+  renderPanel()
   await user.click(screen.getByRole('button', { name: 'Refresh status' }))
   await screen.findByRole('alert')
   await user.click(screen.getByRole('button', { name: 'New fixture job' }))
@@ -149,7 +158,7 @@ it('keeps verified report A through a new job and downloads the exact A and B co
     filenames.push(this.download)
   })
   try {
-    render(<VnpyFixturePanel />)
+    renderPanel()
     await screen.findByRole('option', { name: 'AtrRsiStrategy' })
     await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
     await user.click(await screen.findByRole('button', { name: 'Open verified report' }))
@@ -177,4 +186,86 @@ it('keeps verified report A through a new job and downloads the exact A and B co
     vi.stubGlobal('Blob', originalBlob)
     vi.unstubAllGlobals()
   }
+})
+
+
+it('localizes stored Chinese configuration and safety while keeping source keys and units raw', async () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN', theme: 'dark' }))
+  renderPanel()
+  await screen.findByRole('option', { name: 'AtrRsiStrategy' })
+  expect(screen.getByRole('heading', { name: 'vn.py 研究' })).toBeInTheDocument()
+  expect(screen.getByText('仅工程样本 · 实验用途')).toBeVisible()
+  expect(screen.getByText(/不代表投资表现，也不授予交易权限/)).toBeVisible()
+  expect(screen.getByLabelText('官方策略')).toHaveValue('DoubleMaStrategy')
+  expect(screen.getByLabelText('半价差（USD/unit/fill）')).toHaveValue(0.005)
+  expect(screen.getByLabelText('fast_window')).toHaveValue(10)
+  expect(screen.getByText('Synthetic SPY · 1950 bars')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '运行 vn.py 回测' })).toBeEnabled()
+  expect(mocks.submit).not.toHaveBeenCalled()
+  expect(mocks.cancel).not.toHaveBeenCalled()
+})
+
+it('localizes the unavailable runtime without enabling a submission', async () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN' }))
+  mocks.options.mockRejectedValue(new Error('503'))
+  renderPanel()
+  expect(await screen.findByRole('status')).toHaveTextContent('vn.py 工程样本运行时不可用')
+  expect(screen.getByRole('button', { name: '运行 vn.py 回测' })).toBeDisabled()
+  expect(mocks.submit).not.toHaveBeenCalled()
+})
+
+it('switches locale without losing edited costs or the pending exact submission', async () => {
+  const user = userEvent.setup()
+  mocks.submit.mockRejectedValueOnce(new Error('OFFLINE_RAW_CODE'))
+  renderPanel()
+  await screen.findByRole('option', { name: 'AtrRsiStrategy' })
+  fireEvent.change(screen.getByLabelText('fast_window'), { target: { value: '8' } })
+  fireEvent.change(screen.getByLabelText('Fee (bps)'), { target: { value: '6' } })
+  await user.click(screen.getByRole('button', { name: 'Use Chinese' }))
+  expect(screen.getByLabelText('fast_window')).toHaveValue(8)
+  expect(screen.getByLabelText('费用（bps）')).toHaveValue(6)
+  expect(mocks.submit).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: '运行 vn.py 回测' }))
+  expect(await screen.findByRole('alert')).toHaveTextContent('OFFLINE_RAW_CODE')
+  const [body, key] = mocks.submit.mock.calls[0]
+  await user.click(screen.getByRole('button', { name: 'Use English' }))
+  expect(screen.getByLabelText('Fee (bps)')).toHaveValue(6)
+  expect(screen.getByRole('button', { name: 'Retry same submission' })).toBeEnabled()
+  expect(mocks.submit).toHaveBeenCalledTimes(1)
+  expect(mocks.cancel).not.toHaveBeenCalled()
+  await user.click(screen.getByRole('button', { name: 'Retry same submission' }))
+  expect(mocks.submit.mock.calls[1]).toEqual([body, key])
+})
+
+it('preserves a loaded report and comparison reference when changing locale', async () => {
+  const user = userEvent.setup()
+  mocks.submit.mockResolvedValue({ ...job, report_sha256: sha })
+  renderPanel()
+  await screen.findByRole('option', { name: 'AtrRsiStrategy' })
+  await user.click(screen.getByRole('button', { name: 'Run vn.py backtest' }))
+  await user.click(await screen.findByRole('button', { name: 'Open verified report' }))
+  await user.click(await screen.findByRole('button', { name: 'Keep as comparison reference' }))
+  await user.click(screen.getByRole('button', { name: 'Use Chinese' }))
+  expect(screen.getByRole('region', { name: '原生报告比较' })).toHaveTextContent(sha)
+  expect(screen.getByRole('button', { name: '已保留为比较参考' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: '下载参考 JSON' })).toBeEnabled()
+  expect(screen.getByText(`SHA256 ${sha}`)).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Use English' }))
+  expect(screen.getByRole('region', { name: 'Native report comparison' })).toHaveTextContent(sha)
+  expect(mocks.submit).toHaveBeenCalledTimes(1)
+  expect(mocks.report).toHaveBeenCalledTimes(1)
+  expect(mocks.cancel).not.toHaveBeenCalled()
+})
+
+it('localizes recorded failure context while retaining the exact status stage and error code', async () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN' }))
+  localStorage.setItem('quantmesh.vnpy-fixture.v1', JSON.stringify({ key: 'retained', request,
+    job: { ...job, state: 'failed', stage: 'runner_failed', error_code: 'SYNTHETIC_FAILURE' } }))
+  renderPanel()
+  await screen.findByRole('option', { name: 'AtrRsiStrategy' })
+  expect(screen.getByText('failed')).toBeInTheDocument()
+  expect(screen.getByRole('status')).toHaveTextContent('runner_failed')
+  expect(screen.getByText(/记录的失败/)).toHaveTextContent('SYNTHETIC_FAILURE')
+  expect(mocks.submit).not.toHaveBeenCalled()
+  expect(mocks.cancel).not.toHaveBeenCalled()
 })
