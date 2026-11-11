@@ -83,8 +83,19 @@ no new motion, mobile run or browser zoom certification is claimed.
 Fresh code review found only two P2s (usage precision and time template). Fresh
 Impeccable finish review requested four bounded corrections (template, original
 reason introduction, matching layout documentation, ordinary venue/type metadata).
-One correction batch implemented these; reviewer re-verification and final capture
-remain pending at this checkpoint. No new identity, dependency or paid library adopted.
+One correction batch implemented these. Code reviewer approved the focused fixes.
+Impeccable's verdict was `ship` with all four listed fixes resolved; this is a
+fix-list verdict, not whole-surface recertification. All five corrected desktop
+captures were inspected and valid: Chinese workspace2235px, English2254px, native
+result1485px, without horizontal overflow. Last20 captured warning/error console
+entries were empty; the preview does not validate a WebSocket/update channel.
+`REVIEW-FIX-LINT-01.log` exits0 with the same five FastRefresh warnings.
+No new identity, dependency or paid library adopted. Existing DESIGN.md identity
+and tokens remain; section4 records the operator-delegated layout refinement.
+
+Own preview-02 was closed normally through its exact STOP sentinel. Its browser
+tab was closed and temporary desktop viewport override reset. This preview is
+not a published user entry; final runtime evidence is still a separate release gate.
 
 ## Publication gate
 
