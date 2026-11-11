@@ -1075,7 +1075,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Jobs */
+        get: operations["list_jobs_api_research_native_daily_jobs_get"];
         put?: never;
         /** Submit */
         post: operations["submit_api_research_native_daily_jobs_post"];
@@ -4052,6 +4053,11 @@ export interface components {
             report_digest?: string | null;
             /** Request Digest */
             request_digest: string;
+        };
+        /** NativeJobCollection */
+        NativeJobCollection: {
+            /** Jobs */
+            jobs: (components["schemas"]["NativeJobView"] | components["schemas"]["NativeRecoveryJobView"])[];
         };
         /** NativeJobView */
         NativeJobView: {
@@ -7440,6 +7446,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_jobs_api_research_native_daily_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeJobCollection"];
                 };
             };
         };
