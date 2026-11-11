@@ -66,6 +66,8 @@ export const NAV_GROUPS = ['Overview', 'Markets', 'Research', 'Trading', 'Risk &
 /** Longest-prefix match: /markets stops highlighting when the user is
  * on /markets/watchlist, and the home item never matches anything else. */
 export function isNavActive(pathname: string, item: NavItem): boolean {
+  if (pathname.startsWith('/instruments/')) pathname = '/markets'
+  if (pathname === '/research/trend-overlay') pathname = '/research/jobs'
   if (item.path === '/') return pathname === '/'
   if (pathname === item.path) return true
   if (!pathname.startsWith(`${item.path}/`)) return false

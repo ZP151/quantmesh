@@ -172,7 +172,7 @@ export function WatchlistScreen() {
                             {entry.venue ?? '—'}
                           </td>
                           <td className="block px-4 py-1 font-mono tabular-nums sm:table-cell sm:py-2.5 sm:text-right">
-                            {money(entry.mark_context.value)}
+                            {money(entry.mark_context.value, locale)}
                             <span className="ml-2 text-[10px] text-muted-foreground">
                               {markStatus(entry.mark_context.status, t)}
                             </span>

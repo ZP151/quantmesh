@@ -1,3 +1,5 @@
+import { EvidenceDisclosure } from '@/components/evidence-disclosure'
+import { uiText } from '@/lib/presentation-copy'
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -11,6 +13,7 @@ import { usePreferences } from '@/lib/preferences'
 interface PacketMonitoringProps {
   contextKey: string
   packetId: string | null
+  compact?: boolean
 }
 
 const FIXED_CONDITIONS: readonly WatchConditionKind[] = [
@@ -29,8 +32,8 @@ const labelKey: Record<WatchConditionKind, 'screen.workspace.monitoringEntry' | 
   invalidation: 'screen.workspace.monitoringInvalidation',
 }
 
-export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps) {
-  const { t } = usePreferences()
+export function PacketMonitoring({ contextKey, packetId, compact = false }: PacketMonitoringProps) {
+  const { t, locale } = usePreferences()
   const queryClient = useQueryClient()
   const currentRequestContext = useRef({ contextKey, packetId })
   const [selectedKinds, setSelectedKinds] = useState<readonly WatchConditionKind[]>(FIXED_CONDITIONS)
@@ -87,11 +90,8 @@ export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps
   }
 
   return (
-    <details className="min-w-0 border-y border-border py-3" data-testid="packet-monitoring" open>
-      <summary className="mx-3 cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {t('screen.workspace.monitoring')}
-      </summary>
-      <div className="min-w-0 space-y-3 px-3 pt-3">
+    <EvidenceDisclosure title={t('screen.workspace.monitoring')} defaultOpen={!compact} testId="packet-monitoring" summary={compact ? (loading ? uiText('Loading', locale) : unavailable ? uiText('Unavailable', locale) : registered ? uiText('Registered', locale) : uiText('Not registered', locale)) : undefined}>
+      <div className="min-w-0 space-y-3">
         <p className="text-xs leading-relaxed text-muted-foreground">
           {t('screen.workspace.monitoringAdvisory')}
         </p>
@@ -143,7 +143,7 @@ export function PacketMonitoring({ contextKey, packetId }: PacketMonitoringProps
           </fieldset>
         )}
       </div>
-    </details>
+    </EvidenceDisclosure>
   )
 }
 

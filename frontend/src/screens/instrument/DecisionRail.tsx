@@ -13,6 +13,7 @@ import {
 import { money, moneyPrecise, number, quantity } from '@/lib/format'
 import type { MessageKey } from '@/lib/messages'
 import { usePreferences } from '@/lib/preferences'
+import { uiText } from '@/lib/presentation-copy'
 import { ProposalConfirmation } from './ProposalConfirmation'
 import { evidenceText } from './evidence-copy'
 
@@ -352,7 +353,7 @@ const blockerCopyKeys = {
 } satisfies Record<DecisionBlocker['code'], MessageKey>
 
 function BlockerCopy({ blocker }: { blocker: DecisionBlocker }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const localizedKey = blockerCopyKeys[blocker.code as DecisionBlocker['code']] as MessageKey | undefined
   if (localizedKey === undefined) {
     return <p className="mt-1 text-foreground">{blocker.message}</p>
@@ -360,9 +361,10 @@ function BlockerCopy({ blocker }: { blocker: DecisionBlocker }) {
   return (
     <div className="mt-1 space-y-1">
       <p className="text-foreground">{t(localizedKey)}</p>
-      <p className="text-[10px] leading-relaxed text-muted-foreground">
-        {t('screen.workspace.blocker.originalEvidence', { message: blocker.message })}
-      </p>
+      <details className="text-xs leading-relaxed text-muted-foreground">
+        <summary className="cursor-pointer py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{uiText('Original evidence', locale)}</summary>
+        <p>{t('screen.workspace.blocker.originalEvidence', { message: blocker.message })}</p>
+      </details>
     </div>
   )
 }

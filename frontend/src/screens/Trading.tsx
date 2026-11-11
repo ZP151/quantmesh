@@ -24,7 +24,7 @@ function OrderAction() {
 export function PositionsScreen() {
   const query = useSurface(['positions'], api.positions)
   const marks = useSurface(['pnl'], api.pnl)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   return (
     <Page
@@ -75,11 +75,11 @@ export function PositionsScreen() {
                             </Link>
                             <p className="font-mono text-[10px] text-muted-foreground">{position.key}</p>
                           </td>
-                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">{quantity(position.quantity)}</td>
-                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">{moneyPrecise(position.average_cost)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">{quantity(position.quantity, locale)}</td>
+                          <td className="px-4 py-2.5 text-right font-mono tabular-nums">{moneyPrecise(position.average_cost, locale)}</td>
                           <td className="px-4 py-2.5 text-right">
                             <div className="flex flex-col items-end gap-1">
-                              <span className="font-mono tabular-nums">{mark === null ? '—' : money(mark)}</span>
+                              <span className="font-mono tabular-nums">{mark === null ? '—' : money(mark, locale)}</span>
                               <Badge
                                 variant={status === 'available' ? 'outline' : 'destructive'}
                                 className="font-mono text-[10px]"
@@ -94,10 +94,10 @@ export function PositionsScreen() {
                             </div>
                           </td>
                           <td className={`px-4 py-2.5 text-right font-mono tabular-nums ${pnlClass(unrealized)}`}>
-                            {money(unrealized)}
+                            {money(unrealized, locale)}
                           </td>
                           <td className={`px-4 py-2.5 text-right font-mono tabular-nums ${pnlClass(position.realized_pnl)}`}>
-                            {money(position.realized_pnl)}
+                            {money(position.realized_pnl, locale)}
                           </td>
                         </tr>
                       )
@@ -124,11 +124,12 @@ const STATUS_VARIANT: Record<string, 'default' | 'outline' | 'destructive' | 'se
 }
 
 function OrderRow({ order }: { order: OrderSummary }) {
+  const { locale } = usePreferences()
   return (
     <tr className="border-b border-border/60 last:border-0">
       <td className="px-4 py-2.5">
         <p className="font-mono font-medium">{order.order_id}</p>
-        <p className="font-mono text-[10px] text-muted-foreground">{dateTime(order.created_at)}</p>
+        <p className="font-mono text-[10px] text-muted-foreground">{dateTime(order.created_at, locale)}</p>
       </td>
       <td className="px-4 py-2.5">
         <p className="font-mono font-medium">{order.instrument.symbol}</p>
@@ -138,10 +139,10 @@ function OrderRow({ order }: { order: OrderSummary }) {
         <span className={order.side === 'buy' ? 'text-emerald-500' : 'text-destructive'}>
           {order.side.toUpperCase()}
         </span>{' '}
-        <span className="font-mono tabular-nums">{quantity(order.quantity)}</span>
+        <span className="font-mono tabular-nums">{quantity(order.quantity, locale)}</span>
       </td>
       <td className="px-4 py-2.5 font-mono text-xs">{order.order_type}</td>
-      <td className="px-4 py-2.5 text-right font-mono tabular-nums">{moneyPrecise(order.average_fill_price)}</td>
+      <td className="px-4 py-2.5 text-right font-mono tabular-nums">{moneyPrecise(order.average_fill_price, locale)}</td>
       <td className="px-4 py-2.5 text-right">
         <Badge variant={STATUS_VARIANT[order.status] ?? 'outline'} className="font-mono text-[10px]">
           {order.status}
@@ -197,7 +198,7 @@ export function OrdersScreen() {
 export function PnLScreen() {
   const query = useSurface(['pnl'], api.pnl)
   const positions = useSurface(['positions'], api.positions)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   return (
     <Page
@@ -257,7 +258,7 @@ export function PnLScreen() {
                 </CardHeader>
                 <CardContent className="font-mono text-lg tabular-nums">
                   {valuationComplete && pnl.equity !== null
-                    ? money(pnl.equity)
+                    ? money(pnl.equity, locale)
                     : t('screen.workspace.valueUnavailable')}
                 </CardContent>
               </Card>
@@ -267,7 +268,7 @@ export function PnLScreen() {
                 </CardHeader>
                 <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(valuationComplete ? pnl.total_pnl : null)}`}>
                   {valuationComplete && pnl.total_pnl !== null
-                    ? money(pnl.total_pnl)
+                    ? money(pnl.total_pnl, locale)
                     : t('screen.workspace.valueUnavailable')}
                 </CardContent>
               </Card>
@@ -276,7 +277,7 @@ export function PnLScreen() {
                   <CardTitle className="text-xs font-medium text-muted-foreground">{t('screen.pnl.realized')}</CardTitle>
                 </CardHeader>
                 <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(pnl.realized_pnl)}`}>
-                  {money(pnl.realized_pnl)}
+                  {money(pnl.realized_pnl, locale)}
                 </CardContent>
               </Card>
               <Card>
@@ -285,7 +286,7 @@ export function PnLScreen() {
                 </CardHeader>
                 <CardContent className={`font-mono text-lg tabular-nums ${pnlClass(valuationComplete ? pnl.unrealized_pnl : null)}`}>
                   {valuationComplete && pnl.unrealized_pnl !== null
-                    ? money(pnl.unrealized_pnl)
+                    ? money(pnl.unrealized_pnl, locale)
                     : t('screen.workspace.valueUnavailable')}
                 </CardContent>
               </Card>
@@ -313,7 +314,7 @@ export function PnLScreen() {
                     >
                       <span className="font-mono">{key}</span>
                       <span className="font-mono text-muted-foreground">
-                        {displayMark === undefined ? '—' : money(displayMark)}
+                        {displayMark === undefined ? '—' : money(displayMark, locale)}
                       </span>
                       {evidence && (
                         <Badge

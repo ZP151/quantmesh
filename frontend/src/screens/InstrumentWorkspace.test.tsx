@@ -541,23 +541,25 @@ describe('InstrumentWorkspaceScreen', () => {
     renderWorkspace()
 
     const evidence = await screen.findByRole('region', { name: 'Evidence' })
+    const originals = within(evidence).getByText('Provenance and chronology').closest('details')!
+    fireEvent.click(within(evidence).getByText('Provenance and chronology'))
     expect(within(evidence).getByText('Archived DecisionPacket evidence')).toBeInTheDocument()
-    expect(within(evidence).getByText(archivedDataset)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
-    expect(within(evidence).getByText(archivedModel)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
-    expect(within(evidence).queryByText('current-workspace-dataset')).not.toBeInTheDocument()
-    expect(within(evidence).getByText('forecast-dataset-archived-0123456789')).toBeInTheDocument()
-    expect(within(evidence).getByText(/Not eligible/)).toBeInTheDocument()
-    expect(within(evidence).getByText('Synthetic')).toBeInTheDocument()
-    expect(within(evidence).getByText('Rolling validation window').closest('div')).toHaveTextContent('May')
-    expect(within(evidence).getByText('Rolling test window').closest('div')).toHaveTextContent('Jun')
-    expect(within(evidence).getByText(/30-session forecast path/).closest('details')).toHaveTextContent('185')
-    expect(within(evidence).getByText('History gaps').closest('details')).toHaveTextContent(
+    expect(within(originals).getByText(archivedDataset)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
+    expect(within(originals).getByText(archivedModel)).toHaveClass('break-all', '[overflow-wrap:anywhere]')
+    expect(within(originals).queryByText('current-workspace-dataset')).not.toBeInTheDocument()
+    expect(within(originals).getByText('forecast-dataset-archived-0123456789')).toBeInTheDocument()
+    expect(within(originals).getByText(/Not eligible/)).toBeInTheDocument()
+    expect(within(originals).getByText('Synthetic')).toBeInTheDocument()
+    expect(within(originals).getByText('Rolling validation window').closest('div')).toHaveTextContent('May')
+    expect(within(originals).getByText('Rolling test window').closest('div')).toHaveTextContent('Jun')
+    expect(within(originals).getByText(/30-session forecast path/).closest('details')).toHaveTextContent('185')
+    expect(within(originals).getByText('History gaps').closest('details')).toHaveTextContent(
       dateTime('2026-06-03T20:00:00Z', 'en'),
     )
-    expect(within(evidence).getByText('History duplicates').closest('details')).toHaveTextContent(
+    expect(within(originals).getByText('History duplicates').closest('details')).toHaveTextContent(
       dateTime('2026-06-02T20:00:00Z', 'en'),
     )
-    expect(within(evidence).getByText(/Coverage 50\/80\/95/).closest('div')).toHaveTextContent('51%')
+    expect(within(originals).getByText(/Coverage 50\/80\/95/).closest('div')).toHaveTextContent('51%')
     expect(screen.getByText('Current chart only — not archived packet evidence')).toBeInTheDocument()
     expect(screen.getByText(/Archived packet levels as of/)).toHaveTextContent('Aug 8')
   })
@@ -699,7 +701,7 @@ describe('InstrumentWorkspaceScreen', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'NVDA' })).toBeInTheDocument())
     expect(mockedWorkspace).toHaveBeenCalledWith('moomoo', 'NVDA', '6m', [])
     expect(mockedLiveConnection).toHaveBeenLastCalledWith(expect.any(Function), false)
-    expect(screen.getByTestId('workspace-grid')).toHaveClass('xl:grid-cols-[minmax(0,1fr)_18rem_22rem]')
+    expect(screen.getByRole('region', { name: 'Observed market canvas' })).toContainElement(screen.getByTestId('instrument-chart'))
     expect(screen.getByTestId('instrument-chart')).toHaveTextContent('NVDA chart')
     expect(screen.getByTestId('app-main').querySelector('main')).not.toBeInTheDocument()
     expect(screen.getByText('Historical source').closest('div')).toHaveTextContent('demo-synthetic')

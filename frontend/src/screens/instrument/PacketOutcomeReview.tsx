@@ -1,3 +1,7 @@
+import { dateTime } from '@/lib/format'
+import { evidenceText } from './evidence-copy'
+import { EvidenceDisclosure } from '@/components/evidence-disclosure'
+import { uiText } from '@/lib/presentation-copy'
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -7,12 +11,13 @@ import {
   type DecisionOutcomeReviewInput,
   type DecisionOutcomeReviewState,
 } from '@/lib/api'
-import { usePreferences } from '@/lib/preferences'
+import { usePreferences, type Locale } from '@/lib/preferences'
 import { ForecastOutcomeComparison } from './ForecastOutcomeComparison'
 
 interface PacketOutcomeReviewProps {
   contextKey: string
   packetId: string | null
+  compact?: boolean
 }
 
 type Classification = DecisionOutcomeReviewInput['classification']
@@ -72,7 +77,7 @@ const orderingKeys = {
   unavailable: 'screen.workspace.reviewOrdering.unavailable',
 } as const
 
-export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeReviewProps) {
+export function PacketOutcomeReview({ contextKey, packetId, compact = false }: PacketOutcomeReviewProps) {
   const { locale, t } = usePreferences()
   const queryClient = useQueryClient()
   const currentContext = useRef<{ contextKey: string, outcomeId: string | null, packetId: string | null }>({
@@ -161,15 +166,8 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
   }
 
   return (
-    <details
-      className="min-w-0 border-y border-border py-3"
-      data-testid="packet-outcome-review"
-      open
-    >
-      <summary className="mx-3 cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {t('screen.workspace.review')}
-      </summary>
-      <div className="min-w-0 space-y-3 px-3 pt-3">
+    <EvidenceDisclosure title={t('screen.workspace.review')} defaultOpen={!compact} testId="packet-outcome-review" summary={compact ? (outcome ? t(statusKeys[outcome.evidence_status]) : loading ? uiText('Loading', locale) : uiText('Unavailable', locale)) : undefined}>
+      <div className="min-w-0 space-y-3">
         <p className="text-xs leading-relaxed text-muted-foreground">
           {t('screen.workspace.reviewAdvisory')}
         </p>
@@ -239,14 +237,14 @@ export function PacketOutcomeReview({ contextKey, packetId }: PacketOutcomeRevie
           </>
         ) : null}
       </div>
-    </details>
+    </EvidenceDisclosure>
   )
 }
 
-function OutcomeEvidence({ locale, outcome }: { locale: string, outcome: Outcome }) {
+function OutcomeEvidence({ locale, outcome }: { locale: Locale, outcome: Outcome }) {
   const { t } = usePreferences()
   const formatTime = (value: string | null | undefined) => value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
+    ? dateTime(value, locale)
     : t('screen.workspace.reviewUnavailableValue')
   const observation = (state: 'observed' | 'not_observed' | 'unavailable') => ({
     not_observed: t('screen.workspace.reviewNotObserved'),
@@ -263,11 +261,11 @@ function OutcomeEvidence({ locale, outcome }: { locale: string, outcome: Outcome
         <Fact label={t('screen.workspace.reviewPolicy')} value={outcome.attribution_policy_version} mono />
         <Fact
           label={t('screen.workspace.reviewBasis')}
-          value={`${outcome.attribution_basis} · ${t('screen.workspace.reviewBasisValue')}`}
+          value={outcome.attribution_basis === 'completed_daily_close' ? t('screen.workspace.reviewBasisValue') : outcome.attribution_basis}
         />
         <Fact
           label={t('screen.workspace.reviewEquality')}
-          value={`${outcome.attribution_equality} · ${t('screen.workspace.reviewEqualityValue')}`}
+          value={outcome.attribution_equality === 'equality_does_not_cross' ? t('screen.workspace.reviewEqualityValue') : outcome.attribution_equality}
         />
         <Fact label={t('screen.workspace.reviewPathSource')} value={outcome.path.source ?? t('screen.workspace.reviewUnavailableValue')} />
         <Fact
@@ -318,6 +316,9 @@ function OutcomeEvidence({ locale, outcome }: { locale: string, outcome: Outcome
         <Fact label={t('screen.workspace.reviewMonitoring')} value={t(monitoringKeys[outcome.monitoring.status])} />
         <Fact label={t('screen.workspace.reviewOrdering')} value={t(orderingKeys[outcome.target_stop_ordering])} />
       </dl>
+      <EvidenceDisclosure title={uiText('Original evidence', locale)}>
+        <div className="space-y-2 break-all font-mono text-xs"><p>{outcome.attribution_basis}</p><p>{outcome.attribution_equality}</p><p>{outcome.horizon_target_at}</p><p>{outcome.evaluated_at}</p></div>
+      </EvidenceDisclosure>
       <EvidenceTimeline formatTime={formatTime} outcome={outcome} />
       <dl className="min-w-0 divide-y divide-border border-y border-border text-xs">
         <Metric label={t('screen.workspace.reviewPlannedR')} value={outcome.planned_reward_to_risk} />
@@ -350,7 +351,7 @@ function Metric({
   metric?: Outcome['gross_path_r']
   value?: number
 }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const available = value ?? (metric?.status === 'available' ? metric.value : null)
   return (
     <div className="flex min-w-0 flex-wrap justify-between gap-x-3 gap-y-1 py-2">
@@ -364,9 +365,10 @@ function Metric({
           : `${available.toFixed(2)} R`}
       </dd>
       {metric?.status === 'unavailable' && (
-        <p className="w-full text-right text-[10px] leading-relaxed text-muted-foreground">
-          {metric.reason}
-        </p>
+        <div className="w-full text-right text-xs leading-relaxed text-muted-foreground">
+          {evidenceText(metric.reason ?? '', locale, t)}
+          {evidenceText(metric.reason ?? '', locale, t) !== metric.reason && <details className="mt-1 text-xs"><summary className="cursor-pointer py-1 focus-visible:ring-2 focus-visible:ring-ring">{uiText('Original evidence', locale)}</summary><span>{metric.reason}</span></details>}
+        </div>
       )}
     </div>
   )

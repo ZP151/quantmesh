@@ -27,6 +27,18 @@ function SidebarContent({
   t: ReturnType<typeof usePreferences>['t']
 }) {
   const location = useLocation()
+  const renderList = (items: typeof NAV_ITEMS) => <ul className="space-y-0.5">
+    {items.map(item => {
+      const Icon = item.icon
+      const active = isNavActive(location.pathname, item)
+      return <li key={item.path}><NavLink to={item.path} onClick={onNavigate}
+        className={cn('flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring',
+          active ? 'bg-accent font-medium text-accent-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}
+        aria-current={active ? 'page' : undefined}>
+        <Icon className="size-4 shrink-0" aria-hidden />{t(item.labelKey)}
+      </NavLink></li>
+    })}
+  </ul>
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center gap-2 px-4">
@@ -36,39 +48,22 @@ function SidebarContent({
         </Badge>
       </div>
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2" aria-label={t('shell.nav.screens')}>
-        {marketDataOnly ? <NavLink to="/instruments/hyperliquid/BTC?range=1d&mode=line" onClick={onNavigate} className="block rounded-lg px-2 py-3 text-sm focus-visible:ring-2 focus-visible:ring-ring">{t('marketData.chart')}</NavLink> : NAV_GROUPS.map((group) => (
-          <div key={group}>
-            <p className="px-2 pb-1 text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-              {t(NAV_ITEMS.find((item) => item.group === group)?.groupKey ?? 'group.ops')}
-            </p>
-            <ul className="space-y-0.5">
-              {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
-                const Icon = item.icon
-                const active = isNavActive(location.pathname, item)
-                return (
-                  <li key={item.path}>
-                    <NavLink
-                      to={item.path}
-                      onClick={onNavigate}
-                      className={cn(
-                        'flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm outline-none transition-colors',
-                        'focus-visible:ring-2 focus-visible:ring-ring',
-                        active
-                          ? 'bg-accent font-medium text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                      )}
-                      aria-current={active ? 'page' : undefined}
-                    >
-                      <Icon className="size-4 shrink-0" aria-hidden />
-                      {t(item.labelKey)}
-                    </NavLink>
-                  </li>
-                )
-              })}
-            </ul>
+        {marketDataOnly ? <NavLink to="/instruments/hyperliquid/BTC?range=1d&mode=line" onClick={onNavigate} className="block rounded-lg px-2 py-3 text-sm focus-visible:ring-2 focus-visible:ring-ring">{t('marketData.chart')}</NavLink>  : NAV_GROUPS.map(group => {
+          const items = NAV_ITEMS.filter(item => item.group === group)
+          const primary = group === 'Risk & ops' ? items.filter(item => ['/risk', '/ops/kill-switch'].includes(item.path))
+            : group === 'Research' ? items.filter(item => ['/research/jobs', '/research/data-readiness'].includes(item.path)) : items
+          const secondary = items.filter(item => !primary.includes(item))
+          return <div key={group}>
+            <p className="px-2 pb-1 text-[11px] font-medium tracking-wide text-muted-foreground">{t(items[0]?.groupKey ?? 'group.ops')}</p>
+            {renderList(primary)}
+            {secondary.length > 0 && <details open={secondary.some(item => isNavActive(location.pathname, item))}>
+              <summary className="cursor-pointer rounded-md px-2 py-2 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring">
+                {t(group === 'Research' ? 'shell.moreResearchTools' : 'shell.moreOperationalTools')}
+              </summary>
+              {renderList(secondary)}
+            </details>}
           </div>
-        ))}
-      </nav>
+        })}      </nav>
       <p className="border-t border-border px-4 py-3 text-[10px] leading-relaxed text-muted-foreground">
         {t('shell.loopback')}{' '}
         {marketDataOnly ? t('marketData.mode') : runtimeMode === 'demo'
@@ -95,7 +90,7 @@ export function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   const health = useQuery({ queryKey: ['health'], queryFn: api.health,
     refetchInterval: query => query.state.data?.market_data_only === true ? 5_000 : false })
@@ -210,7 +205,7 @@ export function AppShell() {
                 variant="outline"
                 title={t('shell.demoTitle', {
                   root: demoStatus.data.root,
-                  anchor: dateTime(demoStatus.data.scenario.anchor),
+                  anchor: dateTime(demoStatus.data.scenario.anchor, locale),
                 })}
                 className="hidden font-mono text-[10px] md:inline-flex"
               >
@@ -287,7 +282,7 @@ export function AppShell() {
             >
               <Search className="size-3.5" aria-hidden />
               <span className="text-[11px]">{t('shell.search')}</span>
-              <kbd className="rounded border border-border bg-muted px-1 font-sans text-[10px]">⌘K</kbd>
+              <kbd className="rounded border border-border bg-muted px-1 font-sans text-[10px]">{/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K'}</kbd>
             </Button>
             <Button
               variant="ghost"
@@ -309,7 +304,7 @@ export function AppShell() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-[100rem] px-4 py-5 sm:px-6 lg:px-8">
           <div className="mb-4 flex items-center gap-2 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5" aria-hidden />
             <span>

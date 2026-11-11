@@ -1,28 +1,9 @@
+import { vnpyComparisonChinese as chinese } from '@/lib/messages/research'
 import { usePreferences, type Locale } from '@/lib/preferences'
 import { Button } from '@/components/ui/button'
 import { compareFixtureReports, type VerifiedFixtureReport } from '@/lib/vnpy-report-comparison'
 
-const chinese = {
-  "Reference": "参考",
-  "Candidate": "候选",
-  "Change": "变化",
-  "Fee": "费用",
-  "Half spread": "半价差",
-  "Slippage": "滑点",
-  "Artifact SHA256": "原件 SHA256",
-  "Download reference JSON": "下载参考 JSON",
-  "Download candidate JSON": "下载候选 JSON",
-  "Native report comparison": "原生报告比较",
-  "Report comparison": "报告比较",
-  "Clear comparison reference": "清除比较参考",
-  "Reference retained for this browser session. Download the original JSON to keep it after leaving. Synthetic workflow evidence only.": "参考报告仅在当前页面会话内保留。离开前请下载原始 JSON。仅为合成样本流程证据。",
-  "Run a new fixture job and open its verified report to compare.": "请运行新的工程样本任务，并打开其已校验报告以进行比较。",
-  "Candidate − reference. Changes reflect the displayed parameters and costs under matching fixture and engine provenance.": "候选 − 参考。变化反映所示参数与成本的差异，工程样本与引擎来源保持一致。",
-  "Measured native results": "原生结果指标",
-  "Daily equity comparison": "每日权益比较",
-  "Metric": "指标",
-  "Session / balance (USD)": "交易日 / 余额（USD）"
-} as const
+
 function useCopy() {
   const { locale } = usePreferences()
   return { locale, text: (value: keyof typeof chinese) => locale === 'zh-CN' ? chinese[value] : value }

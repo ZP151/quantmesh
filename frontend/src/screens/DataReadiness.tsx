@@ -1,3 +1,4 @@
+import { readinessDetailCopy as detailCopy, readinessEvidenceTerms as evidenceTerms } from '@/lib/messages/research'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { LocalCsvImport } from './LocalCsvImport'
 import { Download, RefreshCw, Upload } from 'lucide-react'
@@ -10,31 +11,10 @@ import { realdataApi, MAX_SNAPSHOT_BYTES, type SnapshotCheck, type SnapshotError
 // Operate within the incumbent workstation: import and qualification first,
 // original downloads beside allowed use, then non-passing checks before optional
 // passing detail. The approved hierarchy never changes evidence or qualification.
-const detailCopy = {
-  en: { passed: 'Passed technical checks', allPassed: 'All reported technical checks passed. Research qualification above still applies.' },
-  'zh-CN': { passed: '已通过的技术检查', allPassed: '报告中的技术检查均已通过，研究用途仍受上方资格结论限制。' },
-}
+
 // Page-local explanations preserve server codes in visible use labels or title
 // metadata. Unknown codes remain verbatim; this is not a qualification adapter.
-const evidenceTerms: Record<string, { en: string; 'zh-CN': string }> = {
-  inspect_evidence_only: { en: 'Inspect evidence only', 'zh-CN': '仅可检查证据' },
-  local_research_unverified: { en: 'Local research rights unverified', 'zh-CN': '本地研究使用权限未经核实' },
-  historical_available_at_and_revision_history_unverified: { en: 'Historical availability and revisions unverified', 'zh-CN': '历史可获得时间与修订记录未经核实' },
-  bar_values: { en: 'Price and volume bounds', 'zh-CN': '价格与成交量范围' },
-  bar_time: { en: 'Session timestamps', 'zh-CN': '交易时段时间戳' },
-  bar_order: { en: 'Unique chronological rows', 'zh-CN': '数据行去重与时间顺序' },
-  session_coverage: { en: 'Daily session coverage', 'zh-CN': '日线交易时段覆盖' },
-  unfinished_session: { en: 'Completed sessions only', 'zh-CN': '仅包含已结束的交易时段' },
-  calendar_alignment: { en: 'Pinned calendar alignment', 'zh-CN': '固定交易日历对齐' },
-  yahoo_alignment: { en: 'Retained Yahoo price alignment', 'zh-CN': '留存 Yahoo 价格对齐' },
-  issuer_alignment: { en: 'Issuer-derived dividend alignment', 'zh-CN': '发行方派生分红数据对齐' },
-  units: { en: 'Price and volume units', 'zh-CN': '价格与成交量单位' },
-  corporate_actions: { en: 'Dividend source comparison', 'zh-CN': '分红来源比较' },
-  source_rights: { en: 'Source usage rights', 'zh-CN': '数据来源使用权限' },
-  point_in_time: { en: 'Historical availability and revisions', 'zh-CN': '历史可获得时间与修订记录' },
-  source_session: { en: 'Vendor daily-session semantics', 'zh-CN': '供应商日线时段定义' },
-  issuer_lineage: { en: 'Raw issuer lineage', 'zh-CN': '发行方原始文件来源链' },
-}
+
 type Busy = 'loading' | 'importing' | 'opening' | 'downloading' | null
 const safeCodes: SnapshotErrorCode[] = ['unavailable', 'too_large', 'invalid_archive', 'not_found', 'request_failed', 'invalid_response', 'integrity']
 function errorCode(error: unknown): SnapshotErrorCode {

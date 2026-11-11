@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 
 import type { DecisionPacket } from '@/lib/api'
@@ -116,6 +116,20 @@ const packetWithMetricWindows = {
 } as unknown as DecisionPacket
 
 describe('ScenarioEvidence', () => {
+  it('keeps qualification and blockers visible while complete original evidence is disclosed', () => {
+    const selected = { ...packetWithMetricWindows, evidence: { ...packetWithMetricWindows.evidence,
+      forecast_eligible: false, forecast_config_digest: 'exact-original-digest-no-rewrite',
+      forecast_blockers: ['unknown-authoritative-blocker-stays-verbatim'],
+    } }
+    render(<PacketEvidenceSummary packet={selected} />, { wrapper: PreferencesProvider })
+    expect(screen.getByText('unknown-authoritative-blocker-stays-verbatim')).toBeVisible()
+    const raw = screen.getByText('exact-original-digest-no-rewrite')
+    expect(raw).not.toBeVisible()
+    expect(screen.getByRole('group', { name: '7-session metrics', hidden: true })).not.toBeVisible()
+    fireEvent.click(screen.getByText('Provenance and chronology'))
+    expect(raw).toBeVisible()
+    expect(screen.getByRole('group', { name: '7-session metrics' })).toBeVisible()
+  })
   it('renders the exact Bull, Base and Bear facts without inventing probabilities', () => {
     render(<ScenarioEvidence packet={packet} />, { wrapper: PreferencesProvider })
 

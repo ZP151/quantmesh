@@ -1,3 +1,4 @@
+import { vnpyChinese as chinese } from '@/lib/messages/research'
 import { useEffect, useRef, useState } from 'react'
 import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
@@ -8,61 +9,7 @@ import type { VerifiedFixtureReport } from '@/lib/vnpy-report-comparison'
 import { vnpyFixtureApi as api, type FixtureJob, type FixtureOptions,
   type FixtureReport, type FixtureRequest } from '@/lib/vnpy-fixture-api'
 
-const chinese = {
-  "vn.py research": "vn.py 研究",
-  "Run an official strategy on the pinned small fixture, then inspect its native report.": "在固定的小型工程样本上运行官方策略，再查看原生报告。",
-  "FIXTURE ONLY · experimental": "仅工程样本 · 实验用途",
-  "Synthetic workflow evidence. No investment performance or trading authority.": "仅为合成样本流程证据。不代表投资表现，也不授予交易权限。",
-  "Strategy and costs": "策略与成本",
-  "vn.py fixture runtime unavailable. Start the optional local fixture app, then reload.": "vn.py 工程样本运行时不可用。请启动可选的本地工程样本应用后刷新页面。",
-  "Loading official strategies…": "正在读取官方策略…",
-  "Official strategy": "官方策略",
-  "Strategy parameters": "策略参数",
-  "Execution costs": "执行成本",
-  "Fee (bps)": "费用（bps）",
-  "Half spread (USD/unit/fill)": "半价差（USD/unit/fill）",
-  "Slippage (USD/unit/fill)": "滑点（USD/unit/fill）",
-  "Half spread + slippage are charged per unit per fill by the native engine. Starting capital: 100,000 USD.": "原生引擎按每单位、每次成交收取半价差与滑点。初始资金：100,000 USD。",
-  "Retry same submission": "重试同一提交",
-  "Run vn.py backtest": "运行 vn.py 回测",
-  "Submission identity retained. Retry uses the same configuration and key.": "提交标识已保留。重试沿用相同配置与键。",
-  "Pinned fixture and source": "固定工程样本与来源",
-  "Fixture SHA256": "工程样本 SHA256",
-  "Strategy SHA256": "策略 SHA256",
-  "Native backtest result": "原生回测结果",
-  "Backtest progress": "回测进度",
-  "Choose a strategy and submit the fixture to begin.": "请选择策略并提交工程样本以开始。",
-  "Replayed bars": "已回放 bars",
-  "Request SHA256": "请求 SHA256",
-  "Recorded failure:": "记录的失败：",
-  "Create a new fixture job after reviewing the local attempt log.": "查看本地尝试日志后再创建新的工程样本任务。",
-  "Refresh status": "刷新状态",
-  "Cancel backtest": "取消回测",
-  "Open verified report": "打开已校验报告",
-  "Automatic polling paused. Refresh status to retry. Jobs interrupted by an app restart cannot resume.": "自动查询已暂停。可刷新状态重试；因应用重启而中断的任务无法恢复。",
-  "Local experimental runtime; active jobs do not recover after restart. Download completed reports to retain them.": "本地实验运行时；活动任务在重启后无法恢复。请下载已完成的报告以保留原件。",
-  "New fixture job": "新建工程样本任务",
-  "Submitted parameters and costs": "已提交的参数与成本",
-  "Verified native report": "已校验原生报告",
-  "Native vn.py report": "vn.py 原生报告",
-  "Kept as comparison reference": "已保留为比较参考",
-  "Keep as comparison reference": "保留为比较参考",
-  "Download report JSON": "下载报告 JSON",
-  "End balance (USD)": "期末余额（USD）",
-  "Fills": "成交次数",
-  "Fees (USD)": "费用（USD）",
-  "Spread + slippage (USD)": "价差 + 滑点（USD）",
-  "Daily equity": "每日权益",
-  "Session": "交易日",
-  "Balance (USD)": "余额（USD）",
-  "Net P&L": "净盈亏",
-  "Inspect fills": "查看成交",
-  "Time": "时间",
-  "Direction": "方向",
-  "Price": "价格",
-  "Units": "数量",
-  "Inspect report and lineage JSON": "查看报告与来源链 JSON"
-} as const
+
 
 const STORAGE = 'quantmesh.vnpy-fixture.v1'
 const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'

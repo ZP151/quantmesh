@@ -394,7 +394,7 @@ function LegacyInstrumentWorkspaceScreen() {
       {packetSource === 'persisted' && (
         <nav
           aria-label={locale === 'zh-CN' ? '已保存决策导航' : 'Saved decision navigation'}
-          className="space-y-2 rounded-md border border-border px-3 py-3 xl:hidden"
+          className="workspace-navigation flex flex-wrap items-center justify-between gap-3 border-y border-border py-2"
         >
           <p className="text-sm font-medium">
             {locale === 'zh-CN' ? '已保存决策' : 'Saved decision'}
@@ -403,7 +403,7 @@ function LegacyInstrumentWorkspaceScreen() {
                 : displayedPacket.disposition === 'reject' ? 'screen.workspace.phase.rejected'
                   : displayedPacket.paper_capability.allowed ? 'screen.workspace.phase.ready' : 'screen.workspace.phase.blocked')}
           </p>
-          <p className="break-all font-mono text-xs text-muted-foreground">Packet · {displayedPacket.packet_id}</p>
+          <span className="break-all font-mono text-xs text-muted-foreground">DecisionPacket · {displayedPacket.packet_id}</span>
           <div className="flex flex-wrap gap-x-5">
             <a href="#workspace-decision" onClick={() => prepareSectionAnchor('workspace-decision')} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{t('screen.workspace.decision')}</a>
             <a href="#workspace-evidence" onClick={() => prepareSectionAnchor('workspace-evidence')} className="inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{t('screen.workspace.evidence')}</a>
@@ -411,12 +411,13 @@ function LegacyInstrumentWorkspaceScreen() {
         </nav>
       )}
       <div
-        className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem_22rem]"
+        className="workspace-layout gap-5"
         data-testid="workspace-grid"
       >
         <section
           aria-label={t('screen.workspace.marketCanvas')}
-          className="min-w-0 border-y border-border py-3"
+          id="workspace-market"
+          className="workspace-market min-w-0 border-y border-border py-3"
         >
           <MarketCanvas
             archivedPacket={packetSource === 'persisted'}
@@ -438,7 +439,7 @@ function LegacyInstrumentWorkspaceScreen() {
           />
         </section>
 
-        <section id="workspace-evidence" tabIndex={-1} className="scroll-mt-20 space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.evidence')}>
+        <section id="workspace-evidence" tabIndex={-1} className="workspace-evidence min-w-0 scroll-mt-20 space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.evidence')}>
           {packetSource === 'persisted' ? (
             <PacketEvidenceSummary packet={displayedPacket} />
           ) : (
@@ -481,18 +482,21 @@ function LegacyInstrumentWorkspaceScreen() {
           <ScenarioEvidence packet={displayedPacket} />
           {copilotContextReady && (
             <PacketCopilot
+              compact
               contextKey={decisionContextKey}
               packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
             />
           )}
           {copilotContextReady && (
             <PacketMonitoring
+              compact
               contextKey={decisionContextKey}
               packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
             />
           )}
           {copilotContextReady && (
             <PacketOutcomeReview
+              compact
               contextKey={decisionContextKey}
               packetId={packetSource === 'persisted' ? activeSelection.packetId : null}
             />
@@ -508,7 +512,7 @@ function LegacyInstrumentWorkspaceScreen() {
           )}
         </section>
 
-        <aside id="workspace-decision" tabIndex={-1} className="scroll-mt-20 space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
+        <aside id="workspace-decision" tabIndex={-1} className="workspace-decision min-w-0 scroll-mt-20 space-y-5 border-y border-border py-4" aria-label={t('screen.workspace.decision')}>
           <DecisionRail
             contextKey={decisionContextKey}
             evidenceUpdating={evidenceUpdating}

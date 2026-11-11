@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { messages, type MessageKey } from './messages'
+import { translate, type MessageKey } from './messages'
 
 export type Locale = 'en' | 'zh-CN'
 export type ThemeMode = 'system' | 'light' | 'dark'
@@ -68,13 +68,7 @@ export function PreferencesProvider({ children }: { children: ReactNode }) {
     resolvedTheme,
     setLocale: (locale) => setPreferences((current) => ({ ...current, locale })),
     setTheme: (theme) => setPreferences((current) => ({ ...current, theme })),
-    t: (key, vars) => {
-      let text: string = messages[preferences.locale][key] ?? messages.en[key]
-      for (const [name, replacement] of Object.entries(vars ?? {})) {
-        text = text.replaceAll(`{{${name}}}`, replacement)
-      }
-      return text
-    },
+    t: (key, vars) => translate(preferences.locale, key, vars),
   }), [preferences, resolvedTheme])
 
   return <PreferencesContext.Provider value={value}>{children}</PreferencesContext.Provider>

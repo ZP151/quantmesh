@@ -125,7 +125,7 @@ function payloadSummary(update: ReplayWindow['updates'][number]): string {
  * clear it again — a read-only display that never folds into the live
  * cache or the paper surface. */
 function ReplayPanel() {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const [replay, setReplay] = useState<ReplayWindow | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -174,8 +174,8 @@ function ReplayPanel() {
               <p className="text-xs text-muted-foreground">
                 {t('screen.cockpit.replayExtent', {
                   count: String(extentBody.count),
-                  earliest: dateTime(extentBody.earliest ?? ''),
-                  latest: dateTime(extentBody.latest ?? ''),
+                  earliest: dateTime(extentBody.earliest ?? '', locale),
+                  latest: dateTime(extentBody.latest ?? '', locale),
                   venues: extentBody.venues.join(', '),
                 })}
               </p>
@@ -234,8 +234,8 @@ function ReplayPanel() {
                   </Badge>
                   <span className="text-xs text-muted-foreground">
                     {t('screen.cockpit.replayBanner', {
-                      start: dateTime(replay.window.start ?? ''),
-                      end: dateTime(replay.window.end ?? ''),
+                      start: dateTime(replay.window.start ?? '', locale),
+                      end: dateTime(replay.window.end ?? '', locale),
                       count: String(replay.window.count),
                     })}
                   </span>
@@ -326,7 +326,7 @@ function SparklineCell({ closes }: { closes: number[] }) {
 }
 
 export function CockpitScreen() {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const snapshot = useQuery({
     queryKey: ['live', 'state'],
     queryFn: api.liveState,
@@ -496,20 +496,20 @@ export function CockpitScreen() {
                         <LiveDataBadge session={instrument.session_freshness} fallback={label} realEvidence={realEvidence} />
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                        {quote.bid !== undefined ? money(quote.bid) : '—'}
+                        {quote.bid !== undefined ? money(quote.bid, locale) : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                        {quote.ask !== undefined ? money(quote.ask) : '—'}
+                        {quote.ask !== undefined ? money(quote.ask, locale) : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
-                        {mid !== undefined ? money(mid) : '—'}
+                        {mid !== undefined ? money(mid, locale) : '—'}
                       </td>
                       <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                         {spread !== undefined ? spread.toFixed(1) : '—'}
                       </td>
                         <td className="px-4 py-2.5 text-right font-mono tabular-nums">
                           {trade && typeof trade.payload.price === 'number'
-                            ? money(trade.payload.price)
+                            ? money(trade.payload.price, locale)
                             : '—'}
                         </td>
                         <td className="px-2 py-2.5">

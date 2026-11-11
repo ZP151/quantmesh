@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dateTime, money, moneyPrecise, number, pnlClass, quantity, shortHash, venueLabel } from './format'
+import { dateTime, exactNumber, money, moneyPrecise, number, pnlClass, quantity, shortHash, venueLabel } from './format'
 
 describe('money', () => {
   it('formats with USD currency and no decimals', () => {
@@ -29,6 +29,13 @@ describe('quantity', () => {
 describe('number', () => {
   it('caps at four decimals', () => {
     expect(number(3.14159265)).toBe('3.1416')
+  })
+})
+
+describe('exactNumber', () => {
+  it.each(['en', 'zh-CN'] as const)('keeps nonzero small usage exact in %s', locale => {
+    expect(exactNumber(0.00001234, locale)).toBe('0.00001234')
+    expect(exactNumber(1e-12, locale)).toBe('0.000000000001')
   })
 })
 

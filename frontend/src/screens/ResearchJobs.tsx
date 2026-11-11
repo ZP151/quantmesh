@@ -1,3 +1,6 @@
+import { usePreferences } from '@/lib/preferences'
+import { uiText, evidenceLabel } from '@/lib/presentation-copy'
+import { dateTime, exactNumber } from '@/lib/format'
 import { useEffect, useRef, useState } from 'react'
 import { Download, RefreshCw, X } from 'lucide-react'
 import { Page } from '@/components/page'
@@ -70,13 +73,15 @@ function active(job: ResearchJobRecord | null): boolean {
       && (job.analysis_state === 'pending' || job.analysis_state === 'running')))
 }
 
-function unavailable(value: number | null | undefined): string {
-  return value == null ? 'unavailable' : String(value)
+function unavailable(value: number | null | undefined, locale: 'en' | 'zh-CN'): string {
+  return value == null ? uiText('unavailable', locale) : exactNumber(value, locale)
 }
 
 const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
 
 export function ResearchJobsScreen() {
+  const { locale } = usePreferences()
+  const c = (value: string) => uiText(value, locale)
   const [engine, setEngine] = useState(() => {
     const query = new URLSearchParams(globalThis.location?.search)
     const selected = query.get('engine')
@@ -87,10 +92,10 @@ export function ResearchJobsScreen() {
   const snapshotId = new URLSearchParams(globalThis.location?.search).get('snapshot')
   if (snapshotId !== null) return <LocalCsvPlanning snapshotId={snapshotId} />
   return <>
-    <a href="/app/research/trend-overlay" className="mb-3 mr-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">Trend rule experiment · 趋势规则实验</a>
-    <a href="/app/research/data-readiness?format=csv" className="mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">Import daily CSV for protocol planning</a>
+    <a href="/app/research/trend-overlay" className="mb-3 mr-4 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{c('Trend rule experiment')}</a>
+    <a href="/app/research/data-readiness?format=csv" className="mb-3 inline-flex min-h-11 items-center text-sm underline underline-offset-4 focus-visible:ring-2 focus-visible:ring-ring">{c("Import daily CSV for protocol planning")}</a>
     <div className="mb-4 flex flex-wrap items-center gap-3 px-1 text-sm">
-      <label htmlFor="research-engine">Research engine</label>
+      <label htmlFor="research-engine">{c("Research engine")}</label>
       <select id="research-engine" className="h-9 rounded-md border border-input bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring"
         value={engine} onChange={event => {
           const selected = event.target.value
@@ -99,10 +104,10 @@ export function ResearchJobsScreen() {
           globalThis.history.replaceState(globalThis.history.state, '', url)
           setEngine(selected)
         }}>
-        <option value="baseline">QuantMesh registered baselines</option>
-        <option value="vnpy">vn.py official strategies · fixture experiment</option>
-        <option value="spy-replay">SPY · SMA100 historical replay</option>
-        <option value="native-daily-v2">Native daily · fixed DoubleMA research</option>
+        <option value="baseline">{c("QuantMesh registered baselines")}</option>
+        <option value="vnpy">{c("vn.py official strategies · fixture experiment")}</option>
+        <option value="spy-replay">{c("SPY · SMA100 historical replay")}</option>
+        <option value="native-daily-v2">{c("Native daily · fixed DoubleMA research")}</option>
       </select>
     </div>
     {engine === 'native-daily-v2' ? <NativeDailyPanel /> : engine === 'spy-replay' ? <SpyReplayPanel /> : engine === 'vnpy' ? <VnpyFixturePanel /> : <BaselineResearchJobsScreen />}
@@ -110,6 +115,8 @@ export function ResearchJobsScreen() {
 }
 
 function BaselineResearchJobsScreen() {
+  const { locale } = usePreferences()
+  const c = (value: string) => uiText(value, locale)
   const retainedRequest = useRef(readSaved()?.submission.request).current
   const [saved, setSaved] = useState<Saved | null>(readSaved)
   const [job, setJob] = useState<ResearchJobRecord | null>(() => readSaved()?.job ?? null)
@@ -316,106 +323,110 @@ function BaselineResearchJobsScreen() {
 
   const pinnedRequest = job?.request ?? saved?.submission.request
   const fields = [
-    { label: 'Train bars', value: train, change: setTrain, minimum: 2 },
-    { label: 'Test bars', value: test, change: setTest, minimum: 1 },
-    { label: 'Step bars', value: step, change: setStep, minimum: 1 },
-    { label: 'Fee (bps)', value: fee, change: setFee, minimum: 0.01 },
-    { label: 'Half spread (bps)', value: spread, change: setSpread, minimum: 0.01 },
-    { label: 'Slippage (bps)', value: slippage, change: setSlippage, minimum: 0.01 },
+    { label: c('Train bars'), value: train, change: setTrain, minimum: 2 },
+    { label: c('Test bars'), value: test, change: setTest, minimum: 1 },
+    { label: c('Step bars'), value: step, change: setStep, minimum: 1 },
+    { label: c('Fee (bps)'), value: fee, change: setFee, minimum: 0.01 },
+    { label: c('Half spread (bps)'), value: spread, change: setSpread, minimum: 0.01 },
+    { label: c('Slippage (bps)'), value: slippage, change: setSlippage, minimum: 0.01 },
   ]
 
-  return <Page title="Research jobs" description="Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.">
-    <p className="text-sm text-muted-foreground"><Badge variant="outline">FIXTURE_ONLY / v1 research</Badge>{' '}
-      Workflow evidence only. Synthetic results do not establish investment performance.</p>
-    {error && <p role="alert" className="rounded-md border border-border p-3 text-sm">{error}</p>}
+  return <Page title={c("Research jobs")} description={c("Run a registered baseline on pinned fixture inputs. Inspect durable status and retain its immutable report.")}>
+    <p className="text-sm text-muted-foreground"><Badge variant="outline">{c("FIXTURE_ONLY / v1 research")}</Badge>{' '}
+      {' '}{c("Workflow evidence only. Synthetic results do not establish investment performance.")}</p>
+    {error && <p role="alert" className="rounded-md border border-border p-3 text-sm">{c(error)}</p>}
     <div className="grid gap-6 lg:grid-cols-[minmax(260px,0.85fr)_minmax(0,1.4fr)]">
       <section aria-labelledby="research-setup" className="space-y-4 rounded-lg border border-border bg-card p-4">
-        <h3 id="research-setup" className="font-semibold">Fixture configuration</h3>
-        {optionsError ? <p role="status" className="text-sm">Research service unavailable. No new submission is enabled.</p>
-          : !options ? <p role="status" className="text-sm text-muted-foreground">Loading qualified choices…</p>
-          : options.status !== 'configured' ? <p role="status" className="text-sm">No qualified fixture inputs. Configure the authoritative Worker input root.</p> : null}
-        <label className="block space-y-1 text-sm">Registered baseline
-          <select aria-label="Registered baseline" className={inputClass} disabled={!!saved || busy}
+        <h3 id="research-setup" className="font-semibold">{c("Fixture configuration")}</h3>
+        {optionsError ? <p role="status" className="text-sm">{c("Research service unavailable. No new submission is enabled.")}</p>
+          : !options ? <p role="status" className="text-sm text-muted-foreground">{c("Loading qualified choices…")}</p>
+          : options.status !== 'configured' ? <p role="status" className="text-sm">{c("No qualified fixture inputs. Configure the authoritative Worker input root.")}</p> : null}
+        <label className="block space-y-1 text-sm">{c("Registered baseline")}{' '}<select aria-label={c("Registered baseline")} className={inputClass} disabled={!!saved || busy}
             value={strategy} onChange={event => setStrategy(event.target.value)}>
             {pinnedRequest ? <option value={pinnedRequest.strategy_id}>{pinnedRequest.strategy_id} · v{pinnedRequest.strategy_version}</option>
               : options?.strategies.map(item => <option key={item.strategy_id} value={item.strategy_id}>{item.strategy_id} · v{item.version}</option>)}
           </select>
         </label>
-        <label className="block space-y-1 text-sm">Pinned fixture
-          <select aria-label="Pinned fixture" className={inputClass} disabled={!!saved || busy}
+        <label className="block space-y-1 text-sm">{c("Pinned fixture")}{' '}<select aria-label={c("Pinned fixture")} className={inputClass} disabled={!!saved || busy}
             value={datasetIndex} onChange={event => setDatasetIndex(Number(event.target.value))}>
             {pinnedRequest ? <option value={datasetIndex}>{pinnedRequest.dataset.dataset_id} · r{pinnedRequest.dataset.revision} · {pinnedRequest.interval}</option>
               : options?.datasets.map((item, index) => <option key={`${item.dataset.dataset_id}:${item.interval}`} value={index}>
                 {item.dataset.dataset_id} · r{item.dataset.revision} · {item.interval}</option>)}
           </select>
         </label>
-        {pinnedRequest ? <p className="text-xs text-muted-foreground">Saved fixture/test inputs · {pinnedRequest.universe.map(item => `${item.venue}:${item.symbol}`).join(', ')}</p>
-          : selected && <p className="text-xs text-muted-foreground">{selected.minimum_available_bars} aligned bars · {selected.universe.map(item => `${item.venue}:${item.symbol}`).join(', ')} · fixture/test rights</p>}
+        {pinnedRequest ? <p className="text-xs text-muted-foreground">{c("Saved fixture/test inputs ·")}{' '}{pinnedRequest.universe.map(item => `${item.venue}:${item.symbol}`).join(', ')}</p>
+          : selected && <p className="text-xs text-muted-foreground">{selected.minimum_available_bars} {' '}{c("aligned bars ·")}{' '}{selected.universe.map(item => `${item.venue}:${item.symbol}`).join(', ')} {' '}{c("· fixture/test rights")}</p>}
         <div className="grid grid-cols-2 gap-3">{fields.map(field => <label key={field.label} className="space-y-1 text-sm">{field.label}
           <input aria-label={field.label} type="number" min={field.minimum} step={field.minimum < 1 ? 'any' : 1}
             className={inputClass} disabled={!!saved || busy} value={field.value}
             onChange={event => field.change(Number(event.target.value))} />
         </label>)}</div>
-        {!validWindow && selected && !saved && <p className="text-xs">Use train ≥ 2, test ≥ 1, step ≥ test, and train + test within available bars.</p>}
+        {!validWindow && selected && !saved && <p className="text-xs">{c("Use train ≥ 2, test ≥ 1, step ≥ test, and train + test within available bars.")}</p>}
         <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1 accent-primary"
           checked={analysis} disabled={!!saved || busy} onChange={event => setAnalysis(event.target.checked)} />
-          Request optional advisory analysis. Provider may be unavailable.</label>
-        <Button disabled={!canSubmit} onClick={() => void submit()}>Submit fixture job</Button>
-        <p className="text-xs text-muted-foreground">Fees, half spread and slippage must each be positive. Evaluation windows do not overlap. No automatic resubmission after reload.</p>
+          {' '}{c("Request optional advisory analysis. Provider may be unavailable.")}</label>
+        <Button disabled={!canSubmit} onClick={() => void submit()}>{c("Submit fixture job")}</Button>
+        <p className="text-xs text-muted-foreground">{c("Fees, half spread and slippage must each be positive. Evaluation windows do not overlap. No automatic resubmission after reload.")}</p>
       </section>
       <section aria-labelledby="research-status" className="min-w-0 space-y-4">
-        <h3 id="research-status" className="font-semibold">Durable job</h3>
-        {!saved && <p className="text-sm text-muted-foreground">Choose qualified inputs and submit once. The saved job and report reopen here.</p>}
+        <h3 id="research-status" className="font-semibold">{c("Durable job")}</h3>
+        {!saved && <p className="text-sm text-muted-foreground">{c("Choose qualified inputs and submit once. The saved job and report reopen here.")}</p>}
         {saved && !job && <div className="space-y-3 rounded-lg border border-border p-4">
-          <p className="text-sm">{refusedStatus ? `Submission refused (${refusedStatus}). The original key and payload are retained.`
-            : 'Submission not confirmed. The original key and payload are retained.'}</p>
-          <p className="break-all font-mono text-xs">Key {saved.submission.key}</p>
-          <Button disabled={busy} onClick={() => void submit(saved.submission)}>Retry saved submission</Button>
-          {refusedStatus && <Button variant="outline" disabled={busy} onClick={reconfigure}>Reconfigure refused request</Button>}
+          <p className="text-sm">{refusedStatus ? uiText('Submission refused ({{status}}). The original key and payload are retained.', locale, { status: String(refusedStatus) })
+            : c('Submission not confirmed. The original key and payload are retained.')}</p>
+          <p className="break-all font-mono text-xs">{c("Key")}{' '}{saved.submission.key}</p>
+          <Button disabled={busy} onClick={() => void submit(saved.submission)}>{c("Retry saved submission")}</Button>
+          {refusedStatus && <Button variant="outline" disabled={busy} onClick={reconfigure}>{c("Reconfigure refused request")}</Button>}
         </div>}
         {job && <>
-          <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{job.state}</Badge>
+          <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{evidenceLabel(job.state, locale)}</Badge>
             <span className="break-all font-mono text-xs">{job.job_id}</span>
-            {job.cancel_requested && <span className="text-xs">Cancellation requested</span>}
+            {job.cancel_requested && <span className="text-xs">{c("Cancellation requested")}</span>}
           </div>
-          <p className="text-sm">{job.analysis_state === 'unavailable' ? 'Agent unavailable'
-            : job.analysis_state === 'not_requested' ? 'Agent not requested'
-              : `Advisory Agent: ${job.analysis_state}`} · Deterministic backtest: {job.state}</p>
-          <p className="text-xs text-muted-foreground">{statusSource === 'retained' ? 'Retained browser status' : 'Authoritative research status'} · Job updated {job.updated_at}</p>
-          {job.error_code && <p className="text-sm">Recorded failure: {job.error_code}</p>}
+          <details className="text-xs">
+            <summary className="cursor-pointer py-2 focus-visible:ring-2 focus-visible:ring-ring">{c('Original evidence')}</summary>
+            <p className="break-all font-mono">{job.state} · {job.analysis_state}</p>
+            <time dateTime={job.updated_at}>{job.updated_at}</time>
+            <pre className="whitespace-pre-wrap break-all">{JSON.stringify({ usage: job.usage, analysis_usage: job.analysis?.usage ?? null }, null, 2)}</pre>
+          </details>
+          <p className="text-sm">{job.analysis_state === 'unavailable' ? c('Agent unavailable')
+            : job.analysis_state === 'not_requested' ? c('Agent not requested')
+              : `${c('Advisory analysis')}: ${evidenceLabel(job.analysis_state, locale)}`} {' '}{c("· Deterministic backtest:")}{' '}{evidenceLabel(job.state, locale)}</p>
+          <p className="text-xs text-muted-foreground">{statusSource === 'retained' ? c('Retained browser status') : c('Authoritative research status')} {' '}{c("· Job updated")}{' '}<time dateTime={job.updated_at} title={job.updated_at}>{dateTime(job.updated_at, locale)}</time></p>
+          {job.error_code && <p className="text-sm">{c("Recorded failure:")}{' '}{job.error_code}</p>}
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-            <dt className="text-muted-foreground">Model calls</dt><dd>{unavailable(job.analysis?.usage?.model_calls ?? job.usage.model_calls)}</dd>
-            <dt className="text-muted-foreground">Estimated model cost (USD)</dt><dd>{unavailable(job.analysis?.usage?.estimated_model_usd ?? job.usage.estimated_model_usd)}</dd>
-            <dt className="text-muted-foreground">Input / output tokens</dt><dd>{unavailable(job.analysis?.usage?.input_tokens ?? job.usage.input_tokens)} / {unavailable(job.analysis?.usage?.output_tokens ?? job.usage.output_tokens)}</dd>
-            <dt className="text-muted-foreground">Attempt</dt><dd>{job.attempt}</dd>
+            <dt className="text-muted-foreground">{c("Model calls")}</dt><dd>{unavailable(job.analysis?.usage?.model_calls ?? job.usage.model_calls, locale)}</dd>
+            <dt className="text-muted-foreground">{c("Estimated model cost (USD)")}</dt><dd>{unavailable(job.analysis?.usage?.estimated_model_usd ?? job.usage.estimated_model_usd, locale)}</dd>
+            <dt className="text-muted-foreground">{c("Input / output tokens")}</dt><dd>{unavailable(job.analysis?.usage?.input_tokens ?? job.usage.input_tokens, locale)} / {unavailable(job.analysis?.usage?.output_tokens ?? job.usage.output_tokens, locale)}</dd>
+            <dt className="text-muted-foreground">{c("Attempt")}</dt><dd>{job.attempt}</dd>
           </dl>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" disabled={busy} onClick={() => { pollCount.current = 0; setPollStopped(false); void refresh() }}><RefreshCw className="size-4" />Refresh status</Button>
-            {(job.state === 'queued' || job.state === 'running') && <Button variant="outline" disabled={busy || job.cancel_requested} onClick={() => void cancel()}><X className="size-4" />Cancel job</Button>}
-            {job.state === 'succeeded' && <Button disabled={busy} onClick={() => void openReport()}>Open immutable report</Button>}
-            {!active(job) && <Button variant="ghost" disabled={busy} onClick={newJob}>New fixture job</Button>}
+            <Button variant="outline" disabled={busy} onClick={() => { pollCount.current = 0; setPollStopped(false); void refresh() }}><RefreshCw className="size-4" />{c("Refresh status")}</Button>
+            {(job.state === 'queued' || job.state === 'running') && <Button variant="outline" disabled={busy || job.cancel_requested} onClick={() => void cancel()}><X className="size-4" />{c("Cancel job")}</Button>}
+            {job.state === 'succeeded' && <Button disabled={busy} onClick={() => void openReport()}>{c("Open immutable report")}</Button>}
+            {!active(job) && <Button variant="ghost" disabled={busy} onClick={newJob}>{c("New fixture job")}</Button>}
           </div>
-          {pollStopped && active(job) && <p className="text-xs">Automatic checks paused. Refresh status to resume bounded polling.</p>}
-          {job.analysis && <p className="text-xs text-muted-foreground">Advisory verdict: {job.analysis.verdict}. Citations: {job.analysis.citations.map(ref => ref.sha256).join(', ') || 'unavailable'}. AI has no order or execution authority.</p>}
+          {pollStopped && active(job) && <p className="text-xs">{c("Automatic checks paused. Refresh status to resume bounded polling.")}</p>}
+          {job.analysis && <p className="text-xs text-muted-foreground">{c("Advisory verdict:")}{' '}{job.analysis.verdict}{c(". Citations:")}{' '}{job.analysis.citations.map(ref => ref.sha256).join(', ') || c('unavailable')}{c(". AI has no order or execution authority.")}</p>}
         </>}
         {pinnedRequest && <details className="rounded-lg border border-border p-3" open>
-          <summary className="cursor-pointer text-sm font-medium">Pinned setup and lineage</summary>
+          <summary className="cursor-pointer text-sm font-medium">{c("Pinned setup and lineage")}</summary>
           <dl className="mt-3 space-y-2 break-all text-xs">
-            <div><dt className="text-muted-foreground">Baseline / dataset</dt><dd>{pinnedRequest.strategy_id} v{pinnedRequest.strategy_version} · {pinnedRequest.dataset.dataset_id} r{pinnedRequest.dataset.revision} · {pinnedRequest.interval}</dd></div>
-            <div><dt className="text-muted-foreground">Costs (bps): fee / half spread / slippage</dt><dd>{pinnedRequest.costs.fee_bps} / {pinnedRequest.costs.half_spread_bps} / {pinnedRequest.costs.slippage_bps}</dd></div>
-            <div><dt className="text-muted-foreground">Walk-forward: train / test / step</dt><dd>{pinnedRequest.window_spec.train_bars} / {pinnedRequest.window_spec.test_bars} / {pinnedRequest.window_spec.step_bars}</dd></div>
-            <div><dt className="text-muted-foreground">Manifest SHA256</dt><dd className="font-mono">{pinnedRequest.dataset.manifest_digest}</dd></div>
-            <div><dt className="text-muted-foreground">Fixture content SHA256</dt><dd className="font-mono">{pinnedRequest.dataset.export_digest}</dd></div>
-            {job && <><div><dt className="text-muted-foreground">Request/config SHA256</dt><dd className="font-mono">{job.request_digest}</dd></div>
-              <div><dt className="text-muted-foreground">Baseline engine SHA256</dt><dd className="font-mono">{job.implementation_digest}</dd></div></>}
+            <div><dt className="text-muted-foreground">{c("Baseline / dataset")}</dt><dd>{pinnedRequest.strategy_id} v{pinnedRequest.strategy_version} · {pinnedRequest.dataset.dataset_id} r{pinnedRequest.dataset.revision} · {pinnedRequest.interval}</dd></div>
+            <div><dt className="text-muted-foreground">{c("Costs (bps): fee / half spread / slippage")}</dt><dd>{pinnedRequest.costs.fee_bps} / {pinnedRequest.costs.half_spread_bps} / {pinnedRequest.costs.slippage_bps}</dd></div>
+            <div><dt className="text-muted-foreground">{c("Walk-forward: train / test / step")}</dt><dd>{pinnedRequest.window_spec.train_bars} / {pinnedRequest.window_spec.test_bars} / {pinnedRequest.window_spec.step_bars}</dd></div>
+            <div><dt className="text-muted-foreground">{c("Manifest SHA256")}</dt><dd className="font-mono">{pinnedRequest.dataset.manifest_digest}</dd></div>
+            <div><dt className="text-muted-foreground">{c("Fixture content SHA256")}</dt><dd className="font-mono">{pinnedRequest.dataset.export_digest}</dd></div>
+            {job && <><div><dt className="text-muted-foreground">{c("Request/config SHA256")}</dt><dd className="font-mono">{job.request_digest}</dd></div>
+              <div><dt className="text-muted-foreground">{c("Baseline engine SHA256")}</dt><dd className="font-mono">{job.implementation_digest}</dd></div></>}
           </dl>
         </details>}
         {report && <section aria-labelledby="canonical-report" className="space-y-3 rounded-lg border border-border p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2"><h3 id="canonical-report" className="font-semibold">Canonical report</h3>
-            <Button variant="outline" onClick={download}><Download className="size-4" />Download report JSON</Button></div>
-          <p className="text-xs text-muted-foreground">Retained immutable fixture report. Includes measured numerical windows, costs and source/config/code lineage; workflow proof only.</p>
-          <p className="break-all font-mono text-xs">Artifact SHA256 {report.artifactId}</p>
-          <details><summary className="cursor-pointer text-sm">Inspect canonical JSON</summary>
+          <div className="flex flex-wrap items-center justify-between gap-2"><h3 id="canonical-report" className="font-semibold">{c("Canonical report")}</h3>
+            <Button variant="outline" onClick={download}><Download className="size-4" />{c("Download report JSON")}</Button></div>
+          <p className="text-xs text-muted-foreground">{c("Retained immutable fixture report. Includes measured numerical windows, costs and source/config/code lineage; workflow proof only.")}</p>
+          <p className="break-all font-mono text-xs">{c("Artifact SHA256")}{' '}{report.artifactId}</p>
+          <details><summary className="cursor-pointer text-sm">{c("Inspect canonical JSON")}</summary>
             <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap break-all rounded-md bg-muted/30 p-3 font-mono text-xs">{report.text}</pre></details>
         </section>}
       </section>

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { ResearchJobsScreen } from './ResearchJobs'
+import { api } from '@/lib/api'
 import { SpyReplayPanel } from './SpyReplayPanel'
 import { spyReplayApi, SpyReplayError, type ReplayJob, type ReplayOptions, type ReplayReport } from '@/lib/spy-replay-api'
 vi.mock('@/lib/api', () => ({ api: { researchJobOptions: vi.fn().mockResolvedValue({ status: 'unavailable', datasets: [], strategies: [] }) } }))
@@ -19,6 +20,7 @@ function retain() { localStorage.setItem(storage, JSON.stringify({ key: id, requ
 async function decisionStep() { const step = await screen.findByRole('button', { name: 'Decision' }); await waitFor(() => expect(step).toBeEnabled()); fireEvent.click(step) }
 beforeEach(() => {
   vi.restoreAllMocks(); vi.clearAllMocks(); localStorage.clear(); history.replaceState(null, '', '/app/research/jobs'); preferences.locale = 'en'
+  vi.mocked(api.researchJobOptions).mockResolvedValue({ status: 'unavailable', datasets: [], strategies: [] } as never)
   vi.mocked(spyReplayApi.options).mockResolvedValue(options()); vi.mocked(spyReplayApi.get).mockResolvedValue(job())
   vi.mocked(spyReplayApi.submit).mockImplementation(async key => ({ ...job(), job_id: key }))
   vi.mocked(spyReplayApi.artifact).mockResolvedValue({ bytes: new Uint8Array(10), digest: 'd'.repeat(64), value: report() as unknown as Record<string, unknown> })

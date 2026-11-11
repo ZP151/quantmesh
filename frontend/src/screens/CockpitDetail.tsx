@@ -1,3 +1,4 @@
+import { uiText } from '@/lib/presentation-copy'
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useParams } from 'react-router-dom'
@@ -246,7 +247,7 @@ export function CockpitDetailScreen({
   showWorkspaceLink?: boolean
 } = {}) {
   const { venue = '', symbol = '' } = useParams<{ venue: string; symbol: string }>()
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const [updates, setUpdates] = useState<MarketUpdate[]>([])
   const [instruments, setInstruments] = useState<Record<string, LiveInstrumentState>>({})
   const snapshot = useQuery({
@@ -384,12 +385,12 @@ export function CockpitDetailScreen({
           realEvidence={instrument !== undefined && dataViews(instrument).some(view => isSourceBacked(view.provenance))} />
         <span className="text-xs text-muted-foreground">
           {newest
-            ? t('screen.cockpitDetail.lastUpdate', { time: dateTime(newest.received_at) })
+            ? t('screen.cockpitDetail.lastUpdate', { time: dateTime(newest.received_at, locale) })
             : t('screen.cockpitDetail.noUpdate')}
           {newest?.sequence_gap ? ` — ${t('screen.cockpitDetail.sequenceGap')}` : ''}
         </span>
         <span className="text-xs text-muted-foreground">
-          {mid !== undefined ? t('screen.cockpitDetail.mid', { value: money(mid) }) : ''}
+          {mid !== undefined ? t('screen.cockpitDetail.mid', { value: money(mid, locale) }) : ''}
           {spread !== undefined
             ? ` · ${t('screen.cockpitDetail.spreadBps', { value: spread.toFixed(1) })}`
             : ''}
@@ -468,11 +469,11 @@ export function CockpitDetailScreen({
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.eventTime')}</dt>
-                  <dd className="mt-0.5 font-mono text-xs">{dateTime(evidence.data_time)}</dd>
+                  <dd className="mt-0.5 font-mono text-xs">{dateTime(evidence.data_time, locale)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.receivedAt')}</dt>
-                  <dd className="mt-0.5 font-mono text-xs">{dateTime(evidence.received_at)}</dd>
+                  <dd className="mt-0.5 font-mono text-xs">{dateTime(evidence.received_at, locale)}</dd>
                 </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">{t('screen.cockpitDetail.evidence.sequence')}</dt>
@@ -516,8 +517,8 @@ export function CockpitDetailScreen({
                   <ul className="space-y-0.5 font-mono text-xs">
                     {bids.map((level, index) => (
                       <li key={index} className="flex justify-between tabular-nums">
-                        <span>{money(level.price)}</span>
-                        <span className="text-muted-foreground">{quantity(level.size)}</span>
+                        <span>{money(level.price, locale)}</span>
+                        <span className="text-muted-foreground">{quantity(level.size, locale)}</span>
                       </li>
                     ))}
                   </ul>
@@ -527,8 +528,8 @@ export function CockpitDetailScreen({
                   <ul className="space-y-0.5 font-mono text-xs">
                     {asks.map((level, index) => (
                       <li key={index} className="flex justify-between tabular-nums">
-                        <span>{money(level.price)}</span>
-                        <span className="text-muted-foreground">{quantity(level.size)}</span>
+                        <span>{money(level.price, locale)}</span>
+                        <span className="text-muted-foreground">{quantity(level.size, locale)}</span>
                       </li>
                     ))}
                   </ul>
@@ -563,19 +564,19 @@ export function CockpitDetailScreen({
                     {tape.map((update, index) => (
                       <tr key={update.sequence ?? `${update.received_at}-${index}`} className="border-b border-border/60 last:border-0">
                         <td className="px-4 py-1.5 font-mono text-xs text-muted-foreground">
-                          {dateTime(update.received_at)}
+                          {dateTime(update.received_at, locale)}
                         </td>
                         <td className="px-4 py-1.5 text-right font-mono tabular-nums">
-                          {typeof update.payload.price === 'number' ? money(update.payload.price) : '—'}
+                          {typeof update.payload.price === 'number' ? money(update.payload.price, locale) : '—'}
                         </td>
                         <td className="px-4 py-1.5 text-right font-mono tabular-nums">
-                          {typeof update.payload.size === 'number' ? quantity(update.payload.size) : '—'}
+                          {typeof update.payload.size === 'number' ? quantity(update.payload.size, locale) : '—'}
                         </td>
                         <td className="px-4 py-1.5 text-right">
                           {update.payload.side === 'buy' ? (
-                            <span className="text-emerald-600 dark:text-emerald-400">buy</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">{uiText('buy', locale)}</span>
                           ) : update.payload.side === 'sell' ? (
-                            <span className="text-destructive">sell</span>
+                            <span className="text-destructive">{uiText('sell', locale)}</span>
                           ) : (
                             <span className="text-muted-foreground">—</span>
                           )}

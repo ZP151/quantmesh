@@ -92,7 +92,7 @@ export function ConnectorsScreen() {
 }
 
 function ConnectorCard({ connector }: { connector: ConnectorState }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const badge = (
     <Badge variant={STATE_VARIANT[connector.state] ?? 'outline'} className="font-mono text-[10px]">
       {connector.state}
@@ -123,7 +123,7 @@ function ConnectorCard({ connector }: { connector: ConnectorState }) {
           </dd>
           <dt>{t('screen.connectors.dl.lastProbe')}</dt>
           <dd className="text-right">
-            {connector.last_checked_at ? dateTime(connector.last_checked_at) : t('screen.connectors.dl.never')}
+            {connector.last_checked_at ? dateTime(connector.last_checked_at, locale) : t('screen.connectors.dl.never')}
           </dd>
           {connector.latency_ms !== null && (
             <>
@@ -144,7 +144,7 @@ function PublicFetchCard({
   symbols: string[]
   onFetched: () => void
 }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const [selection, setSelection] = useState<string[]>([])
   const [report, setReport] = useState<FetchReport | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -237,8 +237,8 @@ function PublicFetchCard({
                 {report.rows.map((row) => (
                   <tr key={row.symbol} className="border-b border-border/60">
                     <td className="py-2 pr-3 font-mono">{row.symbol}</td>
-                    <td className="py-2 pr-3 font-mono tabular-nums">{moneyPrecise(row.best_bid)}</td>
-                    <td className="py-2 pr-3 font-mono tabular-nums">{moneyPrecise(row.best_ask)}</td>
+                    <td className="py-2 pr-3 font-mono tabular-nums">{moneyPrecise(row.best_bid, locale)}</td>
+                    <td className="py-2 pr-3 font-mono tabular-nums">{moneyPrecise(row.best_ask, locale)}</td>
                     <td className="py-2 pr-3 font-mono tabular-nums">{row.levels}</td>
                     <td className="py-2 pr-3">
                       <Badge
@@ -255,8 +255,8 @@ function PublicFetchCard({
                         </span>
                       ) : (
                         <>
-                          {dateTime(row.fetched_at)} ·{' '}
-                          {t('screen.connectors.levelsCount', { count: quantity(row.levels) })}
+                          {dateTime(row.fetched_at, locale)} ·{' '}
+                          {t('screen.connectors.levelsCount', { count: quantity(row.levels, locale) })}
                           {row.cache && <> · <code>{row.cache}</code></>}
                         </>
                       )}

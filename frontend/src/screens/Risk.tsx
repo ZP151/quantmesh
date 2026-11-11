@@ -22,7 +22,7 @@ const KIND_VARIANT: Record<string, 'default' | 'outline' | 'destructive' | 'seco
  * same account object this screen mirrors. */
 export function RiskScreen() {
   const query = useSurface(['risk'], api.risk)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   return (
     <Page
@@ -61,7 +61,7 @@ export function RiskScreen() {
                   ).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground">{t(key)}</span>
-                      <span className="font-mono tabular-nums">{value === null ? t('screen.risk.unset') : quantity(value)}</span>
+                      <span className="font-mono tabular-nums">{value === null ? t('screen.risk.unset') : quantity(value, locale)}</span>
                     </div>
                   ))}
                 </CardContent>
@@ -101,7 +101,7 @@ export function RiskScreen() {
                     <div className="min-w-0">
                       <p className="text-sm">{alert.message}</p>
                       <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                        {alert.source} · {dateTime(alert.detected_at)}
+                        {alert.source} · {dateTime(alert.detected_at, locale)}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">

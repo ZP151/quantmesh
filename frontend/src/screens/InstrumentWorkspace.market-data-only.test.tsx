@@ -87,7 +87,7 @@ it.each(['capacity_stopped','stopped','failed'])('keeps last real bars while %s 
   expect(screen.getByTestId('observed-bars').textContent).toBe(before)
   await waitFor(() => expect(screen.queryByText('Acquiring observations')).not.toBeInTheDocument())
   expect(screen.getByText(/Last observations remain readable/)).toBeInTheDocument()
-  expect(screen.getByText(/2026.*16:31/)).toBeInTheDocument()
+  expect(screen.getByText('2026-10-25T16:31:00Z', { selector: 'time' })).toHaveAttribute('dateTime', '2026-10-25T16:31:00Z')
 })
 it('ages the original observed minute rather than renewing it from health or workspace read time', async () => {
   const clock = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-10-25T16:32:00Z'))

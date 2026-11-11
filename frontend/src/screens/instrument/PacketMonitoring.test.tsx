@@ -71,6 +71,24 @@ beforeEach(() => {
 })
 
 describe('PacketMonitoring', () => {
+  it('keeps compact tools mounted and preserves selections when collapsed without a mutation', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(<QueryClientProvider client={client}><PreferencesProvider>
+      <PacketMonitoring contextKey="retained-context" packetId="packet-000000000001" compact />
+    </PreferencesProvider></QueryClientProvider>)
+    await waitFor(() => expect(mockedPacketMonitoring).toHaveBeenCalled())
+    const details = screen.getByTestId('packet-monitoring')
+    expect(details).not.toHaveAttribute('open')
+    fireEvent.click(details.querySelector('summary')!)
+    const selected = (await screen.findAllByRole('checkbox'))[0]
+    fireEvent.click(selected)
+    const checked = (selected as HTMLInputElement).checked
+    fireEvent.click(details.querySelector('summary')!)
+    expect(selected).toBeInTheDocument()
+    fireEvent.click(details.querySelector('summary')!)
+    expect(selected).toHaveProperty('checked', checked)
+    expect(mockedCheckPacketMonitoring).not.toHaveBeenCalled()
+  })
   it('keeps a fresh workspace save-first and does not issue a monitoring request', () => {
     renderMonitoring(null)
 
