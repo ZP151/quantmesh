@@ -278,6 +278,17 @@ async function artifact(saved: NativeJob, kind: 'admission' | 'report' | 'decisi
 }
 export const nativeDailyApi = {
   options: async () => options(await json(await request('/options'))),
+  savedStudies: async (): Promise<NativeJob[]> => {
+    const value = await json(await request('/jobs'))
+    if (!object(value) || Object.keys(value).length !== 1 || !Array.isArray(value.jobs) || value.jobs.length > 32) return invalid()
+    const saved: NativeJob[] = [], ids = new Set<string>()
+    for (const record of value.jobs) {
+      if (!object(record) || !nativeUuid(record.job_id) || ids.has(record.job_id)) return invalid()
+      ids.add(record.job_id)
+      saved.push(await job(record, record.job_id))
+    }
+    return saved
+  },
   get: async (id: string, expected?: NativeRequest) => { requireId(id); return job(await json(await request(`/jobs/${id}`)), id, expected) },
   submit: async (body: NativeRequest, key: string) => { if (!nativeRequest(body)) return invalid(); return job(await json(await request('/jobs', post(body, key))), key, body) },
   decide: async (saved: NativeJob, body: NativeDecisionRequest, key: string) => job(await json(await request(`/jobs/${saved.job_id}/decision`, post(body, key))), saved.job_id, saved.request),
