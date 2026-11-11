@@ -1,7 +1,18 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { afterEach, expect, it, vi } from 'vitest'
+import { beforeEach, afterEach, expect, it, vi } from 'vitest'
 import { VnpyReportComparison } from './VnpyReportComparison'
 import type { VerifiedFixtureReport } from '@/lib/vnpy-report-comparison'
+import type { ReactNode } from 'react'
+import { PreferencesProvider, usePreferences } from '@/lib/preferences'
+
+function LocaleControls() {
+  const { setLocale } = usePreferences()
+  return <button onClick={() => setLocale('zh-CN')}>Use Chinese</button>
+}
+function renderComparison(element: ReactNode) {
+  return render(<PreferencesProvider><LocaleControls />{element}</PreferencesProvider>)
+}
+beforeEach(() => { localStorage.clear() })
 
 function report(sha: string, endBalance = 100010): VerifiedFixtureReport {
   const value = { schema_version: 1 as const, request_digest: 'c'.repeat(64),
@@ -22,7 +33,7 @@ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(
 
 it('retains the reference with a clear action while another report is pending', () => {
   const clear = vi.fn()
-  render(<VnpyReportComparison reference={report('a')} candidate={null} onClearReference={clear} />)
+  renderComparison(<VnpyReportComparison reference={report('a')} candidate={null} onClearReference={clear} />)
   expect(screen.getByRole('region', { name: 'Native report comparison' })).toHaveTextContent(/this browser session/i)
   expect(screen.getByText('a'.repeat(64))).toBeVisible()
   expect(screen.getByRole('button', { name: 'Download reference JSON' })).toBeEnabled()
@@ -35,7 +46,7 @@ it('shows settings and candidate minus reference deltas without inventing unavai
   const candidate = report('b', 100025)
   candidate.value.statistics.total_commission = null as unknown as number
   candidate.value.request.parameters.fast_window = 12
-  render(<VnpyReportComparison reference={report('a')} candidate={candidate} onClearReference={() => {}} />)
+  renderComparison(<VnpyReportComparison reference={report('a')} candidate={candidate} onClearReference={() => {}} />)
   const summary = screen.getByRole('table', { name: 'Measured native results' })
   const balance = within(summary).getByRole('row', { name: /End balance/ })
   expect(within(balance).getAllByRole('cell').map(cell => cell.textContent)).toEqual(['100,010', '100,025', '+15'])
@@ -49,7 +60,7 @@ it('shows settings and candidate minus reference deltas without inventing unavai
 it('refuses incompatible reports while retaining both original downloads', () => {
   const candidate = report('b')
   candidate.value.identity.capital_usd = 200000
-  render(<VnpyReportComparison reference={report('a')} candidate={candidate} onClearReference={() => {}} />)
+  renderComparison(<VnpyReportComparison reference={report('a')} candidate={candidate} onClearReference={() => {}} />)
   expect(screen.getByRole('status')).toHaveTextContent(/provenance/i)
   expect(screen.queryByRole('table', { name: 'Measured native results' })).toBeNull()
   expect(screen.getByRole('button', { name: 'Download candidate JSON' })).toBeEnabled()
@@ -63,7 +74,7 @@ it('downloads each original UTF-8 artifact with its hash filename and revokes it
     clicked.push({ href: this.href, filename: this.download })
   })
   const reference = report('a'), candidate = report('b', 100025)
-  render(<VnpyReportComparison reference={reference} candidate={candidate} onClearReference={() => {}} />)
+  renderComparison(<VnpyReportComparison reference={reference} candidate={candidate} onClearReference={() => {}} />)
   fireEvent.click(screen.getByRole('button', { name: 'Download reference JSON' }))
   fireEvent.click(screen.getByRole('button', { name: 'Download candidate JSON' }))
   const read = (blob: Blob) => new Promise<string>((resolve, reject) => {
@@ -77,4 +88,49 @@ it('downloads each original UTF-8 artifact with its hash filename and revokes it
   vi.advanceTimersByTime(1000)
   expect(URL.revokeObjectURL).toHaveBeenNthCalledWith(1, 'blob:report-1')
   expect(URL.revokeObjectURL).toHaveBeenNthCalledWith(2, 'blob:report-2')
+})
+
+
+it('localizes comparison labels and null values while retaining source keys and units', () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN' }))
+  const candidate = report('b', 100025)
+  candidate.value.statistics.total_commission = null as unknown as number
+  renderComparison(<VnpyReportComparison reference={report('a')} candidate={candidate} onClearReference={() => {}} />)
+  expect(screen.getByRole('region', { name: '原生报告比较' })).toHaveTextContent('仅为合成样本流程证据')
+  const table = screen.getByRole('table', { name: '原生结果指标' })
+  const fees = within(table).getByRole('row', { name: /费用（USD）/ })
+  expect(within(fees).getAllByRole('cell').map(e => e.textContent)).toEqual(['3', '不可用', '不可用'])
+  const balance = within(table).getByRole('row', { name: /期末余额（USD）/ })
+  expect(within(balance).getAllByRole('cell').map(e => e.textContent)).toEqual(['100,010', '100,025', '+15'])
+  expect(screen.getAllByText(/fast_window: 10/)).toHaveLength(2)
+  expect(screen.getAllByText(/USD\/unit\/fill/)).toHaveLength(2)
+  expect(screen.getByRole('button', { name: '下载参考 JSON' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: '下载候选 JSON' })).toBeEnabled()
+})
+
+it('switches comparison language without clearing the reference or changing original UTF-8 downloads', async () => {
+  const clear = vi.fn(), blobs: Blob[] = []
+  vi.stubGlobal('URL', { createObjectURL: (blob: Blob) => { blobs.push(blob); return 'blob:original' }, revokeObjectURL: vi.fn() })
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  const reference = report('a'), candidate = report('b')
+  renderComparison(<VnpyReportComparison reference={reference} candidate={candidate} onClearReference={clear} />)
+  fireEvent.click(screen.getByRole('button', { name: 'Use Chinese' }))
+  expect(screen.getByRole('region', { name: '原生报告比较' })).toHaveTextContent(reference.envelope.sha256)
+  fireEvent.click(screen.getByRole('button', { name: '下载参考 JSON' }))
+  fireEvent.click(screen.getByRole('button', { name: '下载候选 JSON' }))
+  const read = (blob: Blob) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.onerror = reject; reader.readAsText(blob)
+  })
+  expect(await Promise.all(blobs.map(read))).toEqual([reference.envelope.text, candidate.envelope.text])
+  expect(clear).not.toHaveBeenCalled()
+})
+
+it('localizes refusal context without rewriting the original incompatibility reason', () => {
+  localStorage.setItem('quantmesh.preferences', JSON.stringify({ locale: 'zh-CN' }))
+  const candidate = report('b'); candidate.value.identity.capital_usd = 200000
+  renderComparison(<VnpyReportComparison reference={report('a')} candidate={candidate} onClearReference={() => {}} />)
+  expect(screen.getByRole('status')).toHaveTextContent('无法比较')
+  expect(screen.getByRole('status')).toHaveTextContent('Report provenance is missing or differs.')
+  expect(screen.queryByRole('table', { name: '原生结果指标' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '下载候选 JSON' })).toBeEnabled()
 })

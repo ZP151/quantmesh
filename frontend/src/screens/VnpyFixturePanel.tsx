@@ -3,9 +3,66 @@ import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { VnpyReportComparison } from './VnpyReportComparison'
+import { usePreferences, type Locale } from '@/lib/preferences'
 import type { VerifiedFixtureReport } from '@/lib/vnpy-report-comparison'
 import { vnpyFixtureApi as api, type FixtureJob, type FixtureOptions,
   type FixtureReport, type FixtureRequest } from '@/lib/vnpy-fixture-api'
+
+const chinese = {
+  "vn.py research": "vn.py 研究",
+  "Run an official strategy on the pinned small fixture, then inspect its native report.": "在固定的小型工程样本上运行官方策略，再查看原生报告。",
+  "FIXTURE ONLY · experimental": "仅工程样本 · 实验用途",
+  "Synthetic workflow evidence. No investment performance or trading authority.": "仅为合成样本流程证据。不代表投资表现，也不授予交易权限。",
+  "Strategy and costs": "策略与成本",
+  "vn.py fixture runtime unavailable. Start the optional local fixture app, then reload.": "vn.py 工程样本运行时不可用。请启动可选的本地工程样本应用后刷新页面。",
+  "Loading official strategies…": "正在读取官方策略…",
+  "Official strategy": "官方策略",
+  "Strategy parameters": "策略参数",
+  "Execution costs": "执行成本",
+  "Fee (bps)": "费用（bps）",
+  "Half spread (USD/unit/fill)": "半价差（USD/unit/fill）",
+  "Slippage (USD/unit/fill)": "滑点（USD/unit/fill）",
+  "Half spread + slippage are charged per unit per fill by the native engine. Starting capital: 100,000 USD.": "原生引擎按每单位、每次成交收取半价差与滑点。初始资金：100,000 USD。",
+  "Retry same submission": "重试同一提交",
+  "Run vn.py backtest": "运行 vn.py 回测",
+  "Submission identity retained. Retry uses the same configuration and key.": "提交标识已保留。重试沿用相同配置与键。",
+  "Pinned fixture and source": "固定工程样本与来源",
+  "Fixture SHA256": "工程样本 SHA256",
+  "Strategy SHA256": "策略 SHA256",
+  "Native backtest result": "原生回测结果",
+  "Backtest progress": "回测进度",
+  "Choose a strategy and submit the fixture to begin.": "请选择策略并提交工程样本以开始。",
+  "Replayed bars": "已回放 bars",
+  "Request SHA256": "请求 SHA256",
+  "Recorded failure:": "记录的失败：",
+  "Create a new fixture job after reviewing the local attempt log.": "查看本地尝试日志后再创建新的工程样本任务。",
+  "Refresh status": "刷新状态",
+  "Cancel backtest": "取消回测",
+  "Open verified report": "打开已校验报告",
+  "Automatic polling paused. Refresh status to retry. Jobs interrupted by an app restart cannot resume.": "自动查询已暂停。可刷新状态重试；因应用重启而中断的任务无法恢复。",
+  "Local experimental runtime; active jobs do not recover after restart. Download completed reports to retain them.": "本地实验运行时；活动任务在重启后无法恢复。请下载已完成的报告以保留原件。",
+  "New fixture job": "新建工程样本任务",
+  "Submitted parameters and costs": "已提交的参数与成本",
+  "Verified native report": "已校验原生报告",
+  "Native vn.py report": "vn.py 原生报告",
+  "Kept as comparison reference": "已保留为比较参考",
+  "Keep as comparison reference": "保留为比较参考",
+  "Download report JSON": "下载报告 JSON",
+  "End balance (USD)": "期末余额（USD）",
+  "Fills": "成交次数",
+  "Fees (USD)": "费用（USD）",
+  "Spread + slippage (USD)": "价差 + 滑点（USD）",
+  "Daily equity": "每日权益",
+  "Session": "交易日",
+  "Balance (USD)": "余额（USD）",
+  "Net P&L": "净盈亏",
+  "Inspect fills": "查看成交",
+  "Time": "时间",
+  "Direction": "方向",
+  "Price": "价格",
+  "Units": "数量",
+  "Inspect report and lineage JSON": "查看报告与来源链 JSON"
+} as const
 
 const STORAGE = 'quantmesh.vnpy-fixture.v1'
 const inputClass = 'h-9 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
@@ -21,12 +78,15 @@ function stable(value: unknown): string {
   return JSON.stringify(value, (_key, item) => item && typeof item === 'object' && !Array.isArray(item)
     ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b))) : item)
 }
-function number(value: unknown): string {
+function number(value: unknown, locale: Locale): string {
   return typeof value === 'number' && Number.isFinite(value)
-    ? value.toLocaleString('en-US', { maximumFractionDigits: 5 }) : 'Unavailable'
+    ? value.toLocaleString(locale === 'en' ? 'en-US' : locale, { maximumFractionDigits: 5 })
+    : locale === 'zh-CN' ? '不可用' : 'Unavailable'
 }
 
 export function VnpyFixturePanel() {
+  const { locale } = usePreferences()
+  const text = (value: keyof typeof chinese) => locale === 'zh-CN' ? chinese[value] : value
   const [options, setOptions] = useState<FixtureOptions | null>(null)
   const [unavailable, setUnavailable] = useState(false)
   const [strategy, setStrategy] = useState(() => restore()?.request.strategy_id ?? 'DoubleMaStrategy')
@@ -150,28 +210,28 @@ export function VnpyFixturePanel() {
   }
   const selected = options?.strategies.find(item => item.strategy_id === strategy)
   const fields = [
-    { key: 'fee_bps', label: 'Fee (bps)', step: 0.1, max: 100 },
-    { key: 'half_spread_price', label: 'Half spread (USD/unit/fill)', step: 0.001, max: 1 },
-    { key: 'slippage_price', label: 'Slippage (USD/unit/fill)', step: 0.001, max: 1 },
+    { key: 'fee_bps', label: text('Fee (bps)'), step: 0.1, max: 100 },
+    { key: 'half_spread_price', label: text('Half spread (USD/unit/fill)'), step: 0.001, max: 1 },
+    { key: 'slippage_price', label: text('Slippage (USD/unit/fill)'), step: 0.001, max: 1 },
   ] as const
-  return <Page title="vn.py research" description="Run an official strategy on the pinned small fixture, then inspect its native report.">
-    <p className="text-sm text-muted-foreground"><Badge variant="outline">FIXTURE ONLY · experimental</Badge>{' '}
-      Synthetic workflow evidence. No investment performance or trading authority.</p>
-    {error && <p role="alert" className="rounded-md border border-border p-3 text-sm">{error}</p>}
+  return <Page title={text("vn.py research")} description={text("Run an official strategy on the pinned small fixture, then inspect its native report.")}>
+    <p className="text-sm text-muted-foreground"><Badge variant="outline">{text("FIXTURE ONLY · experimental")}</Badge>{' '}
+      {text("Synthetic workflow evidence. No investment performance or trading authority.")}</p>
+    {error && <p role="alert" className="rounded-md border border-border p-3 text-sm">{locale === 'zh-CN' && '操作未确认。原始诊断：'}{error}</p>}
     <div className="grid gap-6 lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.4fr)]">
       <form onSubmit={submit} className="space-y-4 rounded-lg border border-border bg-card p-4">
-        <h3 className="font-semibold">Strategy and costs</h3>
-        {unavailable ? <p role="status" className="text-sm">vn.py fixture runtime unavailable. Start the optional local fixture app, then reload.</p>
-          : !options ? <p role="status" className="text-sm text-muted-foreground">Loading official strategies…</p> : null}
-        <label className="block space-y-1 text-sm">Official strategy
-          <select aria-label="Official strategy" className={inputClass} value={strategy} disabled={!!saved || busy || !options}
+        <h3 className="font-semibold">{text("Strategy and costs")}</h3>
+        {unavailable ? <p role="status" className="text-sm">{text("vn.py fixture runtime unavailable. Start the optional local fixture app, then reload.")}</p>
+          : !options ? <p role="status" className="text-sm text-muted-foreground">{text("Loading official strategies…")}</p> : null}
+        <label className="block space-y-1 text-sm">{text("Official strategy")}
+          <select aria-label={text("Official strategy")} className={inputClass} value={strategy} disabled={!!saved || busy || !options}
             onChange={event => { const choice = options?.strategies.find(s => s.strategy_id === event.target.value)
               if (choice) { setStrategy(choice.strategy_id); setParameters(Object.fromEntries(choice.parameters.map(p => [p.name, p.default]))) } }}>
             {(options?.strategies ?? []).map(item => <option key={item.strategy_id}>{item.strategy_id}</option>)}
           </select>
         </label>
         <fieldset disabled={!!saved || busy} className="grid grid-cols-2 gap-3">
-          <legend className="mb-2 text-sm font-medium">Strategy parameters</legend>
+          <legend className="mb-2 text-sm font-medium">{text("Strategy parameters")}</legend>
           {selected?.parameters.map(param => <label key={param.name} className="space-y-1 text-xs">{param.name}
             <input aria-label={param.name} required className={inputClass} type="number" min={param.minimum} max={param.maximum}
               step={param.integer ? 1 : 0.01} value={parameters[param.name] ?? param.default}
@@ -179,70 +239,70 @@ export function VnpyFixturePanel() {
           </label>)}
         </fieldset>
         <fieldset disabled={!!saved || busy} className="space-y-3">
-          <legend className="mb-2 text-sm font-medium">Execution costs</legend>
+          <legend className="mb-2 text-sm font-medium">{text("Execution costs")}</legend>
           {fields.map(field => <label key={field.key} className="block space-y-1 text-sm">{field.label}
             <input aria-label={field.label} required className={inputClass} type="number" min={field.step} max={field.max}
               step={field.step} value={costs[field.key]} onChange={event => setCosts({ ...costs, [field.key]: event.target.valueAsNumber })} />
           </label>)}
         </fieldset>
-        <p className="text-xs text-muted-foreground">Half spread + slippage are charged per unit per fill by the native engine. Starting capital: 100,000 USD.</p>
-        <Button type="submit" disabled={!options || busy || !!job}>{saved && !job ? 'Retry same submission' : 'Run vn.py backtest'}</Button>
-        {saved && !job && <p className="text-xs">Submission identity retained. Retry uses the same configuration and key.</p>}
-        {options && <details className="text-xs"><summary className="cursor-pointer">Pinned fixture and source</summary>
+        <p className="text-xs text-muted-foreground">{text("Half spread + slippage are charged per unit per fill by the native engine. Starting capital: 100,000 USD.")}</p>
+        <Button type="submit" disabled={!options || busy || !!job}>{saved && !job ? text('Retry same submission') : text('Run vn.py backtest')}</Button>
+        {saved && !job && <p className="text-xs">{text("Submission identity retained. Retry uses the same configuration and key.")}</p>}
+        {options && <details className="text-xs"><summary className="cursor-pointer">{text("Pinned fixture and source")}</summary>
           <p className="mt-2">{options.fixture_label}</p>
-          <p className="mt-2 break-all font-mono">Fixture SHA256 {options.fixture_sha256}</p>
+          <p className="mt-2 break-all font-mono">{text("Fixture SHA256")} {options.fixture_sha256}</p>
           <p className="mt-2">{Object.entries(options.engine_versions).map(([name, version]) => `${name} ${version}`).join(' · ')}</p>
-          <p className="mt-2 break-all font-mono">Strategy SHA256 {selected?.source_sha256}</p>
+          <p className="mt-2 break-all font-mono">{text("Strategy SHA256")} {selected?.source_sha256}</p>
         </details>}
       </form>
-      <section aria-label="Native backtest result" className="min-w-0 space-y-4">
+      <section aria-label={text("Native backtest result")} className="min-w-0 space-y-4">
         <section className="space-y-3 rounded-lg border border-border p-4">
-          <h3 className="font-semibold">Backtest progress</h3>
-          {!job ? <p className="text-sm text-muted-foreground">Choose a strategy and submit the fixture to begin.</p> : <>
+          <h3 className="font-semibold">{text("Backtest progress")}</h3>
+          {!job ? <p className="text-sm text-muted-foreground">{text("Choose a strategy and submit the fixture to begin.")}</p> : <>
             <Badge variant="outline">{job.state}</Badge>
             <p role="status" className="text-sm">{job.stage} · {job.completed_bars} / {job.total_bars} bars</p>
-            <progress aria-label="Replayed bars" max={job.total_bars} value={job.completed_bars} className="h-2 w-full accent-primary" />
-            <p className="break-all font-mono text-xs">Request SHA256 {job.request_digest}</p>
-            {job.error_code && <p className="text-sm">Recorded failure: {job.error_code}. Create a new fixture job after reviewing the local attempt log.</p>}
+            <progress aria-label={text("Replayed bars")} max={job.total_bars} value={job.completed_bars} className="h-2 w-full accent-primary" />
+            <p className="break-all font-mono text-xs">{text("Request SHA256")} {job.request_digest}</p>
+            {job.error_code && <p className="text-sm">{text("Recorded failure:")} {job.error_code}. {text("Create a new fixture job after reviewing the local attempt log.")}</p>}
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" disabled={busy} onClick={() => { setError(null); polls.current = 0; setPollStopped(false); void refresh() }}>Refresh status</Button>
-              {active(job) && !jobUnknown && <Button variant="outline" disabled={busy} onClick={() => void cancel()}>Cancel backtest</Button>}
-              {job.state === 'succeeded' && <Button disabled={busy} onClick={() => void openReport()}>Open verified report</Button>}
+              <Button variant="outline" disabled={busy} onClick={() => { setError(null); polls.current = 0; setPollStopped(false); void refresh() }}>{text("Refresh status")}</Button>
+              {active(job) && !jobUnknown && <Button variant="outline" disabled={busy} onClick={() => void cancel()}>{text("Cancel backtest")}</Button>}
+              {job.state === 'succeeded' && <Button disabled={busy} onClick={() => void openReport()}>{text("Open verified report")}</Button>}
             </div>
           </>}
-          {pollStopped && <p className="text-xs">Automatic polling paused. Refresh status to retry. Jobs interrupted by an app restart cannot resume.</p>}
-          <p className="text-xs text-muted-foreground">Local experimental runtime; active jobs do not recover after restart. Download completed reports to retain them.</p>
-          {saved && (!active(job) || jobUnknown) && <Button variant="ghost" disabled={busy} onClick={reset}>New fixture job</Button>}
-          {saved && <details className="text-xs"><summary className="cursor-pointer">Submitted parameters and costs</summary>
+          {pollStopped && <p className="text-xs">{text("Automatic polling paused. Refresh status to retry. Jobs interrupted by an app restart cannot resume.")}</p>}
+          <p className="text-xs text-muted-foreground">{text("Local experimental runtime; active jobs do not recover after restart. Download completed reports to retain them.")}</p>
+          {saved && (!active(job) || jobUnknown) && <Button variant="ghost" disabled={busy} onClick={reset}>{text("New fixture job")}</Button>}
+          {saved && <details className="text-xs"><summary className="cursor-pointer">{text("Submitted parameters and costs")}</summary>
             <pre className="mt-2 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(saved.request, null, 2)}</pre></details>}
         </section>
-        {report && <section className="space-y-4 rounded-lg border border-border p-4" aria-label="Verified native report">
-          <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">Native vn.py report</h3>
+        {report && <section className="space-y-4 rounded-lg border border-border p-4" aria-label={text("Verified native report")}>
+          <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-semibold">{text("Native vn.py report")}</h3>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setReference(report)}
                 disabled={reference?.envelope.sha256 === report.envelope.sha256}>
-                {reference?.envelope.sha256 === report.envelope.sha256 ? 'Kept as comparison reference' : 'Keep as comparison reference'}
+                {reference?.envelope.sha256 === report.envelope.sha256 ? text('Kept as comparison reference') : text('Keep as comparison reference')}
               </Button>
-              <Button variant="outline" onClick={download}>Download report JSON</Button>
+              <Button variant="outline" onClick={download}>{text("Download report JSON")}</Button>
             </div></div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             {([['End balance (USD)', 'end_balance'], ['Fills', 'total_trade_count'], ['Fees (USD)', 'total_commission'],
               ['Spread + slippage (USD)', 'total_slippage']] as const).map(([label, key]) => <div key={key}>
-                <dt className="text-xs text-muted-foreground">{label}</dt><dd className="font-mono tabular-nums">{number(report.value.statistics[key])}</dd></div>)}
+                <dt className="text-xs text-muted-foreground">{text(label)}</dt><dd className="font-mono tabular-nums">{number(report.value.statistics[key], locale)}</dd></div>)}
           </dl>
           <p className="text-xs text-muted-foreground">{report.value.semantics}</p>
-          <div className="overflow-x-auto"><table className="w-full text-left text-xs"><caption className="mb-2 text-left font-medium">Daily equity</caption>
-            <thead><tr><th scope="col">Session</th><th scope="col" className="text-right">Balance (USD)</th><th scope="col" className="text-right">Net P&amp;L</th></tr></thead>
+          <div className="overflow-x-auto"><table className="w-full text-left text-xs"><caption className="mb-2 text-left font-medium">{text("Daily equity")}</caption>
+            <thead><tr><th scope="col">{text("Session")}</th><th scope="col" className="text-right">{text("Balance (USD)")}</th><th scope="col" className="text-right">{text("Net P&L")}</th></tr></thead>
             <tbody>{report.value.daily.map(day => <tr key={day.date} className="border-t border-border">
-              <th scope="row" className="py-2 font-normal">{day.date}</th><td className="text-right font-mono tabular-nums">{number(day.balance)}</td><td className="text-right font-mono tabular-nums">{number(day.net_pnl)}</td></tr>)}</tbody>
+              <th scope="row" className="py-2 font-normal">{day.date}</th><td className="text-right font-mono tabular-nums">{number(day.balance, locale)}</td><td className="text-right font-mono tabular-nums">{number(day.net_pnl, locale)}</td></tr>)}</tbody>
           </table></div>
-          <details className="text-xs"><summary className="cursor-pointer">Inspect fills ({report.value.trades.length})</summary>
-            <div className="mt-2 max-h-64 overflow-auto"><table className="w-full text-left"><thead><tr><th scope="col">Time</th><th scope="col">Direction</th><th scope="col">Price</th><th scope="col">Units</th></tr></thead>
+          <details className="text-xs"><summary className="cursor-pointer">{text("Inspect fills")} ({report.value.trades.length})</summary>
+            <div className="mt-2 max-h-64 overflow-auto"><table className="w-full text-left"><thead><tr><th scope="col">{text("Time")}</th><th scope="col">{text("Direction")}</th><th scope="col">{text("Price")}</th><th scope="col">{text("Units")}</th></tr></thead>
               <tbody>{report.value.trades.map((trade, index) => <tr key={index} className="border-t border-border"><td className="whitespace-nowrap py-2">{trade.datetime}</td>
-                <td>{trade.direction} / {trade.offset}</td><td>{number(trade.price)}</td><td>{number(trade.volume)}</td></tr>)}</tbody></table></div>
+                <td>{trade.direction} / {trade.offset}</td><td>{number(trade.price, locale)}</td><td>{number(trade.volume, locale)}</td></tr>)}</tbody></table></div>
           </details>
           <p className="break-all font-mono text-xs">SHA256 {report.envelope.sha256}</p>
-          <details className="text-xs"><summary className="cursor-pointer">Inspect report and lineage JSON</summary>
+          <details className="text-xs"><summary className="cursor-pointer">{text("Inspect report and lineage JSON")}</summary>
             <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap break-all">{JSON.stringify(report.value, null, 2)}</pre></details>
         </section>}
         {reference && <VnpyReportComparison reference={reference}
