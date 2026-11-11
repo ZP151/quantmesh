@@ -1706,6 +1706,13 @@ class NativeDailyService:
         finally:
             self._finish_runtime(registration)
 
+    def list_jobs(self):
+        """Discover verified originals without executing or changing saved studies."""
+        with self._condition:
+            jobs = sorted(self._records(), key=lambda job: job.job_id)
+            jobs.sort(key=lambda job: job.created_at, reverse=True)
+            return {"jobs": [self._public(job) for job in jobs]}
+
     def read(self, key):
         with self._condition:
             return self._public(self._find(key))
