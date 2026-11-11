@@ -35,7 +35,7 @@ function diffTone(diff: number | null): string {
 }
 
 function VenueBlock({ row }: { row: PredictionVenueRow }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   return (
     <div className="rounded-lg border border-border p-4">
       <div className="flex items-center justify-between gap-2">
@@ -50,7 +50,7 @@ function VenueBlock({ row }: { row: PredictionVenueRow }) {
         <dt>{t('screen.prediction.bidAsk')}</dt>
           <dd className="font-mono tabular-nums text-foreground">
             {row.bid !== null && row.ask !== null
-              ? `${money(row.bid)} / ${money(row.ask)}`
+              ? `${money(row.bid, locale)} / ${money(row.ask, locale)}`
               : '—'}
           </dd>
         </div>

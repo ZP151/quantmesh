@@ -22,7 +22,7 @@ function PaperOrderAction() {
 
 export function ExperimentsScreen() {
   const query = useSurface(['experiments'], api.experiments)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   return (
     <Page
@@ -54,7 +54,7 @@ export function ExperimentsScreen() {
                     <td className="py-2 pr-4 text-right font-mono tabular-nums">{experiment.revision}</td>
                     <td className="py-2 pr-4 text-right font-mono tabular-nums">{experiment.metrics['oos_rmse'] ?? '—'}</td>
                     <td className="py-2 pr-4 text-right font-mono tabular-nums">{experiment.metrics['oos_mae'] ?? '—'}</td>
-                    <td className="py-2 text-right text-xs text-muted-foreground">{dateTime(experiment.created_at)}</td>
+                    <td className="py-2 text-right text-xs text-muted-foreground">{dateTime(experiment.created_at, locale)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -110,7 +110,7 @@ function EvaluationTable({ rows, title }: { rows: EvaluationRow[]; title: string
  * paper-order loop reads before submitting. */
 export function PromotionsScreen() {
   const query = useSurface(['promotions'], api.promotions)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   return (
     <Page
@@ -136,7 +136,7 @@ export function PromotionsScreen() {
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription>{t('screen.promotions.promoted', { time: dateTime(promotion.promoted_at) })}</CardDescription>
+                  <CardDescription>{t('screen.promotions.promoted', { time: dateTime(promotion.promoted_at, locale) })}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <EvaluationTable rows={promotion.benchmarks} title={t('screen.promotions.eval.benchmarks')} />
@@ -155,7 +155,7 @@ export function PromotionsScreen() {
 // --- Forecasts -----------------------------------------------------------
 
 function ReportCard({ report }: { report: ForecastReport }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const calibrationSummary = (market: ForecastReport['markets'][number]) => {
     if (market.n_evaluated_windows > 0) {
       return market.n_evaluated_windows === 1
@@ -183,7 +183,7 @@ function ReportCard({ report }: { report: ForecastReport }) {
         </CardTitle>
         <CardDescription>
           {t('screen.forecasts.meta', {
-            time: dateTime(report.created_at),
+            time: dateTime(report.created_at, locale),
             hash: shortHash(report.commit),
             train: String(report.window_spec.train),
             test: String(report.window_spec.test),
@@ -223,19 +223,19 @@ function ReportCard({ report }: { report: ForecastReport }) {
                 <div>
                   <p className="text-muted-foreground">{t('screen.forecasts.market.probability')}</p>
                   <p className="font-mono text-base font-semibold tabular-nums">
-                    {percent(market.latest_probability)}
+                    {percent(market.latest_probability, locale)}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">{t('screen.forecasts.market.observed')}</p>
                   <p className="font-mono tabular-nums">
-                    {market.latest_probability_at ? dateTime(market.latest_probability_at) : '—'}
+                    {market.latest_probability_at ? dateTime(market.latest_probability_at, locale) : '—'}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">{t('screen.forecasts.market.liquidity')}</p>
                   <p className="font-mono tabular-nums">
-                    {percent(market.latest_liquidity_confidence)}
+                    {percent(market.latest_liquidity_confidence, locale)}
                   </p>
                 </div>
               </div>
@@ -244,7 +244,7 @@ function ReportCard({ report }: { report: ForecastReport }) {
                 {calibrationSummary(market)}
               </p>
               <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-                {market.market_id} · {venueLabel(market.venue)} · {t('screen.forecasts.expires', { date: dateTime(market.expiry_at) })}
+                {market.market_id} · {venueLabel(market.venue)} · {t('screen.forecasts.expires', { date: dateTime(market.expiry_at, locale) })}
               </p>
               <p className="mt-1 text-[10px] text-muted-foreground">
                 {t('screen.forecasts.source', { venue: venueLabel(market.venue) })}

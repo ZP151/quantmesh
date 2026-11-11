@@ -1,3 +1,5 @@
+import { EvidenceDisclosure } from '@/components/evidence-disclosure'
+import { uiText } from '@/lib/presentation-copy'
 import { useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
@@ -11,10 +13,11 @@ type CopilotItem = CopilotRecord['report']['base_explanation']
 interface PacketCopilotProps {
   contextKey: string
   packetId: string | null
+  compact?: boolean
 }
 
-export function PacketCopilot({ contextKey, packetId }: PacketCopilotProps) {
-  const { t } = usePreferences()
+export function PacketCopilot({ contextKey, packetId, compact = false }: PacketCopilotProps) {
+  const { t, locale } = usePreferences()
   const queryClient = useQueryClient()
   const currentRequestContext = useRef({ contextKey, packetId })
   currentRequestContext.current = { contextKey, packetId }
@@ -56,15 +59,8 @@ export function PacketCopilot({ contextKey, packetId }: PacketCopilotProps) {
   }
 
   return (
-    <details
-      className="min-w-0 border-y border-border py-3"
-      data-testid="packet-copilot"
-      open
-    >
-      <summary className="mx-3 cursor-pointer text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        {t('screen.workspace.copilot')}
-      </summary>
-      <div className="min-w-0 space-y-3 px-3 pt-3">
+    <EvidenceDisclosure title={t('screen.workspace.copilot')} defaultOpen={!compact} testId="packet-copilot" summary={compact ? (loading ? uiText('Loading', locale) : degraded ? uiText('Unavailable', locale) : report ? uiText('Ready', locale) : uiText('Not requested', locale)) : undefined}>
+      <div className="min-w-0 space-y-3">
         <p className="text-xs leading-relaxed text-muted-foreground">
           {t('screen.workspace.copilotAdvisory')}
         </p>
@@ -104,7 +100,7 @@ export function PacketCopilot({ contextKey, packetId }: PacketCopilotProps) {
           </Button>
         )}
       </div>
-    </details>
+    </EvidenceDisclosure>
   )
 }
 

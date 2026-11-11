@@ -343,7 +343,7 @@ export function ImportsScreen() {
               <CardDescription>
                 {t('screen.imports.meta.source')} <code className="font-mono">{lastCommit.source}</code> ·{' '}
                 {t('screen.imports.meta.license')} <code className="font-mono">{lastCommit.license}</code> ·{' '}
-                {t('screen.imports.meta.revision')} {lastCommit.revision} · {dateTime(lastCommit.generated_at)}
+                {t('screen.imports.meta.revision')} {lastCommit.revision} · {dateTime(lastCommit.generated_at, locale)}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
@@ -382,8 +382,8 @@ export function ImportsScreen() {
                     venue: entry.venue,
                     symbol: entry.symbol,
                     count: String(entry.rows),
-                    start: dateTime(entry.start),
-                    end: dateTime(entry.end),
+                    start: dateTime(entry.start, locale),
+                    end: dateTime(entry.end, locale),
                   })}
                 </p>
               ))}

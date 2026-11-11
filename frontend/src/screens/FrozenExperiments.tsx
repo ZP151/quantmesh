@@ -1,3 +1,4 @@
+import { uiText } from '@/lib/presentation-copy'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Download, RefreshCw, Upload } from 'lucide-react'
@@ -129,7 +130,7 @@ export function FrozenExperimentsScreen() {
     {record && primary && <>
       <div className="grid min-w-0 gap-x-8 lg:grid-cols-2">
         <Section title={c.protocol}><dl className="grid gap-4 sm:grid-cols-2">
-          <Datum label={c.strategy}>SMA100 / SPY · long / cash</Datum><Datum label={c.window} mono>{record.protocol.final_window.join(' → ')}</Datum>
+          <Datum label={c.strategy}>{uiText('SMA100 / SPY · long / cash', locale)}</Datum><Datum label={c.window} mono>{record.protocol.final_window.join(' → ')}</Datum>
           <Datum label={c.capital}>USD {numeric(record.protocol.capital_usd)}</Datum><Datum label={c.cost}>5 bps</Datum>
           <Datum label={c.stress}>10 bps</Datum><Datum label={c.gross}>0 bps</Datum><Datum label={c.delay}>+1 {c.session}</Datum>
         </dl><p className="text-xs text-muted-foreground">{c.costUnknown}</p>

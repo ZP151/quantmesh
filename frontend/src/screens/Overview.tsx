@@ -25,7 +25,7 @@ export function OverviewScreen() {
   const query = useSurface(['overview'], api.overview)
   const health = useSurface(['health'], api.health)
   const liveMode = health.data?.runtime_mode === 'live'
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   return (
     <Page
@@ -68,11 +68,11 @@ export function OverviewScreen() {
                 <CardDescription>{t('screen.overview.account.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
-                <StatRow label={t('screen.overview.account.cash')}>{money(overview.account.cash)}</StatRow>
-                <StatRow label={t('screen.overview.account.startingCash')}>{money(overview.account.starting_cash)}</StatRow>
+                <StatRow label={t('screen.overview.account.cash')}>{money(overview.account.cash, locale)}</StatRow>
+                <StatRow label={t('screen.overview.account.startingCash')}>{money(overview.account.starting_cash, locale)}</StatRow>
                 <StatRow label={t('screen.overview.account.equity')}>
                   {equityAvailable
-                    ? money(overview.account.equity)
+                    ? money(overview.account.equity, locale)
                     : t('screen.workspace.valueUnavailable')}
                 </StatRow>
                 {!equityAvailable && overview.valuation_reason && (
@@ -111,7 +111,7 @@ export function OverviewScreen() {
                           className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1.5 text-xs hover:bg-muted"
                         >
                           <span className="font-mono font-medium">{instrument.symbol}</span>
-                          <span className="font-mono text-muted-foreground">{money(instrument.mark)}</span>
+                          <span className="font-mono text-muted-foreground">{money(instrument.mark, locale)}</span>
                         </Link>
                       ))}
                     </div>
@@ -147,7 +147,7 @@ export function OverviewScreen() {
                       className="flex items-center gap-2 rounded-lg border border-border px-2.5 py-1.5 text-xs"
                     >
                       <span className="font-mono font-medium">{entry.symbol}</span>
-                      <span className="font-mono text-muted-foreground">{money(entry.mark)}</span>
+                      <span className="font-mono text-muted-foreground">{money(entry.mark, locale)}</span>
                     </span>
                   ))}
                   {overview.watchlist.length === 0 && (

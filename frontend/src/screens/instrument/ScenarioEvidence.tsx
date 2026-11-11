@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { EvidenceDisclosure } from '@/components/evidence-disclosure'
+import { evidenceLabel, uiText } from '@/lib/presentation-copy'
 import type { DecisionPacket } from '@/lib/api'
 import { dateTime, moneyPrecise, number, percent } from '@/lib/format'
 import { type Locale, usePreferences } from '@/lib/preferences'
@@ -7,9 +10,11 @@ const scenarioOrder = ['bull', 'base', 'bear'] as const
 
 export function PacketEvidenceSummary({ packet, archived = true }: { packet: DecisionPacket; archived?: boolean }) {
   const { locale, t } = usePreferences()
+  const [selectedHorizon, setSelectedHorizon] = useState(30)
   const evidence = packet.evidence
   const chronology = evidence.forecast_chronology
   const forecastMetrics = evidence.forecast_metrics ?? []
+  const selectedMetric = forecastMetrics.find(metric => metric.sessions === selectedHorizon) ?? forecastMetrics[0]
   const forecastPaths = evidence.forecast_paths ?? []
   const historyGaps = evidence.history_gaps ?? []
   const historyDuplicates = evidence.history_duplicates ?? []
@@ -27,6 +32,29 @@ export function PacketEvidenceSummary({ packet, archived = true }: { packet: Dec
         </h2>
         {archived && <p className="mt-1 text-xs text-muted-foreground">{t('screen.workspace.archivedEvidenceNote')}</p>}
       </div>
+      <dl className="grid min-w-0 gap-x-6 gap-y-2 border-y border-border py-3 text-sm sm:grid-cols-2 xl:grid-cols-3">
+        <EvidenceFact label={t('screen.workspace.source')} value={evidenceLabel(evidence.history_source ?? '—', locale)} />
+        <EvidenceFact label={t('screen.workspace.forecastEligibility')} value={evidence.forecast_eligible == null ? '—' : t(evidence.forecast_eligible ? 'screen.workspace.eligible' : 'screen.workspace.notEligible')} />
+        <EvidenceFact label={t('screen.workspace.syntheticEvidence')} value={evidence.forecast_synthetic == null ? '—' : t(evidence.forecast_synthetic ? 'screen.workspace.synthetic' : 'screen.workspace.nonSynthetic')} />
+        <EvidenceFact label={t('screen.workspace.benchmark')} value={evidence.forecast_benchmark_name} />
+        <EvidenceFact label={t('screen.workspace.fees')} value={`${number(evidence.costs.fee_bps, locale)} bps`} />
+        <EvidenceFact label={t('screen.workspace.slippage')} value={`${number(evidence.costs.slippage_bps, locale)} bps`} />
+        <EvidenceFact label={t('screen.workspace.halfSpread')} value={evidence.costs.half_spread_bps == null ? t('screen.workspace.spreadAtConfirmation') : `${number(evidence.costs.half_spread_bps, locale)} bps`} />
+        <EvidenceFact label={t('screen.workspace.forecastVintage')} value={evidence.forecast_generated_at ? dateTime(evidence.forecast_generated_at, locale) : null} />
+      </dl>
+      {selectedMetric && <section className="space-y-3" aria-label={uiText('Forecast metrics', locale)}>
+        <div className="flex flex-wrap gap-2" aria-label={t('screen.workspace.forecastHorizon')}>
+          {forecastMetrics.map(metric => <button type="button" key={metric.sessions} aria-pressed={selectedMetric.sessions === metric.sessions}
+            className="rounded-md border border-border px-3 py-2 text-xs aria-pressed:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => setSelectedHorizon(metric.sessions)}>{t('screen.workspace.sessions', { count: String(metric.sessions) })}</button>)}
+        </div>
+        <dl className="grid gap-x-6 gap-y-2 text-xs sm:grid-cols-2 xl:grid-cols-3">
+          <EvidenceFact label={t('screen.workspace.oosMae')} value={selectedMetric.residual_count > 0 ? number(selectedMetric.mae, locale) : null} />
+          <EvidenceFact label={t('screen.workspace.benchmarkMae')} value={selectedMetric.residual_count > 0 ? number(selectedMetric.benchmark_mae, locale) : null} />
+          <EvidenceFact label={t('screen.workspace.coverage')} value={selectedMetric.interval_test_count > 0 ? `${percent(selectedMetric.coverage_50, locale)} / ${percent(selectedMetric.coverage_80, locale)} / ${percent(selectedMetric.coverage_95, locale)}` : null} />
+        </dl>
+      </section>}
+      <EvidenceDisclosure title={uiText('Provenance and chronology', locale)}>
       <dl className="space-y-1 border-y border-border py-3 text-xs">
         <EvidenceFact label={t('screen.workspace.historyDataset')} value={evidence.history_dataset_id} />
         <EvidenceFact label={t('screen.workspace.historyDatasetRevision')} value={String(evidence.history_dataset_revision)} />
@@ -154,10 +182,12 @@ export function PacketEvidenceSummary({ packet, archived = true }: { packet: Dec
       ))}
       <EvidenceTimes details={historyGaps} label={t('screen.workspace.historyGapsLabel')} locale={locale} />
       <EvidenceTimes details={historyDuplicates} label={t('screen.workspace.historyDuplicatesLabel')} locale={locale} />
+        {limitations.some(item => evidenceText(item, locale, t) !== item) && <ul className="space-y-1 break-words text-xs">{limitations.filter(item => evidenceText(item, locale, t) !== item).map(item => <li key={item}>{item}</li>)}</ul>}
+      </EvidenceDisclosure>
       {limitations.length > 0 && (
-        <ul className="space-y-1 text-[10px] leading-relaxed text-muted-foreground">
+        <ul className="space-y-1 text-xs leading-relaxed text-muted-foreground">
           {limitations.map((item) => (
-            <li className="break-words" key={item}>{item}</li>
+            <li className="break-words" key={item}>{evidenceText(item, locale, t)}</li>
           ))}
         </ul>
       )}
@@ -203,7 +233,7 @@ export function ScenarioEvidence({ packet }: { packet: DecisionPacket }) {
           {t('screen.workspace.scenarioAuthority')}
         </p>
       </div>
-      <div className="divide-y divide-border border-y border-border">
+      <div className="grid gap-5 border-y border-border lg:grid-cols-3">
         {scenarios.map((scenario) => (
           <article className="min-w-0 space-y-2 py-3" key={scenario.kind}>
             <div className="flex items-baseline justify-between gap-3">
@@ -220,9 +250,18 @@ export function ScenarioEvidence({ packet }: { packet: DecisionPacket }) {
               <ScenarioFact label={t('screen.workspace.invalidation')} value={moneyPrecise(scenario.invalidation, locale)} />
               <ScenarioFact label={t('screen.workspace.target')} value={moneyPrecise(scenario.target, locale)} />
             </dl>
-            <p className="text-[10px] leading-relaxed text-muted-foreground">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               {evidenceText(scenario.confidence_reason, locale, t)}
             </p>
+            <details className="text-xs">
+              <summary className="cursor-pointer py-2 text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">{uiText('Original evidence', locale)}</summary>
+              <div className="space-y-2 break-words pt-2">
+                {evidenceText(scenario.thesis, locale, t) !== scenario.thesis && <p>{scenario.thesis}</p>}
+                {evidenceText(scenario.trigger, locale, t) !== scenario.trigger && <p>{scenario.trigger}</p>}
+                {evidenceText(scenario.confidence_reason, locale, t) !== scenario.confidence_reason && <p>{scenario.confidence_reason}</p>}
+                <dl className="space-y-1"><ScenarioFact label={t('screen.workspace.invalidation')} value={String(scenario.invalidation)} /><ScenarioFact label={t('screen.workspace.target')} value={String(scenario.target)} /></dl>
+              </div>
+            </details>
           </article>
         ))}
       </div>

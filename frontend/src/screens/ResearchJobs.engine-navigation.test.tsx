@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react'
+import { PreferencesProvider } from '@/lib/preferences'
+import { render as baseRender, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, expect, it, vi } from 'vitest'
 import { ResearchJobsScreen } from './ResearchJobs'
@@ -41,3 +42,4 @@ it.each([['native_job', 'native-daily-v2'], ['spy_job', 'spy-replay']])('retains
   render(<ResearchJobsScreen />)
   expect(screen.getByLabelText('Research engine')).toHaveValue(engine)
 })
+function render(ui: Parameters<typeof baseRender>[0]) { return baseRender(<PreferencesProvider>{ui}</PreferencesProvider>) }

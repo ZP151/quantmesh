@@ -26,6 +26,11 @@ describe('isNavActive', () => {
 })
 
 describe('navLabel', () => {
+  it('keeps instrument and trend workflows attached to a meaningful current navigation item', () => {
+    expect(navLabel('/instruments/moomoo/NVDA')).toBe('Markets')
+    expect(navLabel('/research/trend-overlay')).toBe('Research jobs')
+    expect(NAV_ITEMS.filter(item => isNavActive('/instruments/moomoo/NVDA', item)).map(item => item.path)).toEqual(['/markets'])
+  })
   it('resolves the current screen label from the pathname', () => {
     expect(navLabel('/ops/connectors')).toBe('Connectors')
     expect(navLabel('/ops/imports')).toBe('Data imports')

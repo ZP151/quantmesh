@@ -28,21 +28,24 @@ material evidence such as licenses, blockers or limitations.
 
 ## 4. Layout and density
 
-The desktop workspace is a separator-first three-column grid: market canvas,
-evidence rail and decision rail. Avoid nested decorative cards. Use a 10 px
+The desktop workspace uses a separator-first market canvas and decision rail
+in the first row, with full-width evidence below. Avoid nested decorative cards. Use a 10 px
 base radius only for interactive controls and status pills. At compact widths,
 sections become one ordered column: context, market evidence, forecast
 evidence, then paper action. No control or evidence may create horizontal
 document overflow at 390 px.
 
 Instrument Workspace is the complete DecisionPacket surface. The market canvas
-shows as-of price structure and key levels; the evidence rail shows
+shows as-of price structure and key levels; the evidence area shows
 Bull/Base/Bear scenarios, freshness, model/dataset/benchmark/cost evidence and
 AI citations; the decision rail shows invalidation, entry zone, stop, target,
 R multiple, proposed paper size, blockers and Reject/Watch/Paper actions. The
 primary loop must not route the operator to Forecasts, Risk or Audit pages.
 Details may open in-place through disclosures, drawers or linked evidence
 previews while preserving ticker, time range and draft decision context.
+Source, qualification, costs, material limitations and scenario summaries remain
+visible. Provenance and chronology, complete paths, Copilot, monitoring and outcome
+review have independent disclosures; closing them preserves mounted draft state.
 
 ## 5. Components and motion
 

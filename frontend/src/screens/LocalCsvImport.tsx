@@ -1,3 +1,4 @@
+import { uiText } from '@/lib/presentation-copy'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, RefreshCw, Upload } from 'lucide-react'
 import { Page } from '@/components/page'
@@ -106,7 +107,7 @@ export function LocalCsvImport() {
       </div>
       <div className="grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {field('label', c.label)}{field('symbol', c.symbol, 'text', 32)}
-        <label className="space-y-1.5 text-sm" htmlFor="csv-market">{c.venue}<select id="csv-market" className={control} value={market} disabled={busy !== null} onChange={event => { changed(); setMarket(event.target.value as typeof market) }}><option value="moomoo">Equities · XNYS</option><option value="hyperliquid">Crypto · 24/7</option></select></label>
+        <label className="space-y-1.5 text-sm" htmlFor="csv-market">{c.venue}<select id="csv-market" className={control} value={market} disabled={busy !== null} onChange={event => { changed(); setMarket(event.target.value as typeof market) }}><option value="moomoo">{uiText('Equities · XNYS', locale)}</option><option value="hyperliquid">{uiText('Crypto · 24/7', locale)}</option></select></label>
         {field('start', c.start, 'date')}{field('end', c.end, 'date')}{field('provider', c.provider)}
       </div>
       {form.symbol && !/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(form.symbol.trim()) && <p className="text-sm text-destructive">{locale === 'zh-CN' ? '代码仅支持字母、数字、点、下划线和连字符，且必须以字母或数字开头。' : 'Use letters, numbers, dots, underscores or hyphens; start the symbol with a letter or number.'}</p>}

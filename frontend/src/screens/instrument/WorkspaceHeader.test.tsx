@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { InstrumentWorkspace } from '@/lib/api'
@@ -36,6 +36,17 @@ function field(label: string) {
 }
 
 describe('WorkspaceHeader cached freshness', () => {
+  it('summarizes a missing live feed without hiding any known quote time or source', () => {
+    render(header(observed({ status: 'unavailable', source: null, data_time: null, received_at: null, last: null, bid: null, ask: null })))
+    expect(screen.getByText('Live unavailable')).toBeVisible()
+    expect(screen.queryByText(/\{\{time\}\}/)).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'NVDA' })).toBeVisible()
+    const metadata = screen.getByText('Connection and source details').closest('details')!
+    expect(metadata).not.toHaveAttribute('open')
+    expect(screen.getByText('Data time')).not.toBeVisible()
+    fireEvent.click(screen.getByText('Connection and source details'))
+    expect(screen.getByText('Data time')).toBeVisible()
+  })
   beforeEach(() => {
     vi.useFakeTimers()
     localStorage.clear()
@@ -119,7 +130,7 @@ describe('WorkspaceHeader cached freshness', () => {
     expect(field('Live classification')).toHaveTextContent('stale')
     // The same source instant is Oct 9 in UTC and Oct 10 in Singapore.
     const displayedSourceDay = new Intl.DateTimeFormat('en-US', {
-      month: 'short', day: 'numeric',
+      month: 'short', day: 'numeric', timeZone: 'UTC',
     }).format(new Date(coverage.last_source_at))
     expect(field('Data time')).toHaveTextContent(displayedSourceDay)
     expect(field('Age')).not.toHaveTextContent('0 ms')

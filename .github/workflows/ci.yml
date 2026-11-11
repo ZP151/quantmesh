@@ -251,8 +251,47 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22.12.0"
+      - name: Route Ubuntu archive through signed mirror
+        run: |
+          set -euo pipefail
+          source /etc/os-release
+          test "$ID" = ubuntu && test "$VERSION_ID" = 26.04
+          sources=/etc/apt/sources.list.d/ubuntu.sources
+          grep -Fq 'URIs: mirror+file:/etc/apt/apt-mirrors.txt' "$sources"
+          grep -Fq 'Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg' "$sources"
+          test -r /usr/share/keyrings/ubuntu-archive-keyring.gpg
+          printf '%s\n' 'https://mirrors.edge.kernel.org/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+          sudo apt-get update -o APT::Update::Error-Mode=any
+          cat > "$RUNNER_TEMP/ubuntu-playwright-packages.txt" <<'PACKAGES'
+          fonts-ipafont-gothic 00303-23ubuntu1
+          fonts-freefont-ttf 20211204+svn4273-4build1
+          fonts-tlwg-loma-otf 1:0.7.3-1build1
+          fonts-unifont 1:16.0.04-1build1
+          fonts-wqy-zenhei 0.9.45-8build1
+          xfonts-encodings 1:1.0.5-0ubuntu3
+          xfonts-utils 1:7.7+7build1
+          xfonts-cyrillic 1:1.0.5+nmu1build1
+          xfonts-scalable 1:1.0.3-1.3build1
+          PACKAGES
+          while read -r package expected; do
+            actual="$(apt-cache policy "$package" | awk '/Candidate:/{print $2}')"
+            if [ "$actual" != "$expected" ]; then
+              echo "Unexpected Ubuntu package candidate for $package: $actual (expected $expected)" >&2
+              exit 1
+            fi
+          done < "$RUNNER_TEMP/ubuntu-playwright-packages.txt"
       - name: Install Chromium
         run: python -m playwright install --with-deps chromium
+      - name: Verify Ubuntu package versions
+        run: |
+          set -euo pipefail
+          while read -r package expected; do
+            actual="$(dpkg-query -W -f='${Version}' "$package")"
+            if [ "$actual" != "$expected" ]; then
+              echo "Unexpected installed Ubuntu package version for $package: $actual (expected $expected)" >&2
+              exit 1
+            fi
+          done < "$RUNNER_TEMP/ubuntu-playwright-packages.txt"
       - name: Certify exact checkout
         run: python tools/release_gate.py
       - name: Retain release diagnostics

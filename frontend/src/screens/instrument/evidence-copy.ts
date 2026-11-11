@@ -4,6 +4,11 @@ import type { Locale } from '@/lib/preferences'
 type Translate = (key: MessageKey, vars?: Record<string, string>) => string
 
 const EXACT: Record<string, MessageKey> = {
+  'no valid terminal close is available': 'evidence.noTerminalClose',
+  'no exact proposal-bound entry fill is available': 'evidence.noEntryFill',
+  'mark-to-market R requires an exact entry fill and mark': 'evidence.noMark',
+  'proposal-bound exit fills, attributable quantity, and complete fees are unavailable': 'evidence.noExitCosts',
+  'Forecast quantiles are not calibrated probabilities.': 'lab.reason.qualitative',
   'paper valuation or mark is incomplete': 'lab.reason.valuation',
   'a paper kill switch is enabled': 'lab.reason.kill',
   'no live feed is attached; kill switch enabled': 'lab.reason.noFeedKill',
@@ -47,6 +52,8 @@ const EXACT: Record<string, MessageKey> = {
 }
 
 function localizedSegment(value: string, t: Translate): string {
+  const calendar = value.match(/^Equity dates use (exchange[-_]calendars:[^,]+), regular sessions and New York midnight daily bars\.$/)
+  if (calendar) return t('evidence.calendar', { calendar: calendar[1] })
   const exact = EXACT[value]
   if (exact !== undefined) return t(exact)
   if (value.startsWith('quote provenance is ')) {

@@ -31,6 +31,12 @@ export function number(value: number | null | undefined, locale: DisplayLocale =
   return new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 4 }).format(value)
 }
 
+/** Usage and other exact small amounts must not be rounded down to zero. */
+export function exactNumber(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return '—'
+  return new Intl.NumberFormat(intlLocale(locale), { maximumSignificantDigits: 21 }).format(value)
+}
+
 export function quantity(value: number | null | undefined, locale: DisplayLocale = 'en'): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—'
   return new Intl.NumberFormat(intlLocale(locale), { maximumFractionDigits: 6 }).format(value)
@@ -56,10 +62,14 @@ export function shortHash(value: string): string {
 export function dateTime(value: string, locale: DisplayLocale = 'en'): string {
   const parsed = new Date(value)
   return Number.isNaN(parsed.getTime()) ? value : new Intl.DateTimeFormat(intlLocale(locale), {
+    year: 'numeric',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     month: 'short',
+    timeZone: 'UTC',
+    timeZoneName: 'short',
+    hour12: false,
   }).format(parsed)
 }
 

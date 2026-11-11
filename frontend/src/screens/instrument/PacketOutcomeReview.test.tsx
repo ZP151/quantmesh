@@ -211,6 +211,8 @@ describe('PacketOutcomeReview', () => {
     expect(screen.getByText('aaaaaaaaaaaa…')).toBeVisible()
     expect(screen.getByText('One expected 30-session timestamp is missing.')).toBeVisible()
     expect(screen.getByText('strict-close-v1')).toBeVisible()
+    expect(screen.getByText(/completed_daily_close/)).not.toBeVisible()
+    fireEvent.click(screen.getByText('Original evidence'))
     expect(screen.getByText(/completed_daily_close/)).toBeVisible()
     expect(screen.getByText(/equality_does_not_cross/)).toBeVisible()
     expect(screen.getByText(/Equality does not cross a level\./)).toBeVisible()

@@ -1,8 +1,11 @@
+import { nativeDailyCopy as copy, nativeAdmissionReasons as reasons } from '@/lib/messages/research'
 import { useEffect, useRef, useState } from 'react'
 import { Page } from '@/components/page'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { usePreferences } from '@/lib/preferences'
+import { dateTime } from '@/lib/format'
+import { evidenceLabel, uiText } from '@/lib/presentation-copy'
 import { NATIVE_CANDIDATE, NativeDailyError, nativeArms, nativeDailyApi, nativeRequest, nativeUuid, sameNativeUseBasis, type NativeArtifact, type NativeDecisionRequest, type NativeJob, type NativeOptions, type NativeReport, type NativeRequest } from '@/lib/native-daily-api'
 
 const STORAGE = 'quantmesh.native-daily.v1'
@@ -38,93 +41,8 @@ function download(value: NativeArtifact, jobId: string, kind: string) {
   const link = document.createElement('a'); link.href = url; link.download = `native-daily-${jobId}-${kind}.json`; link.click()
   setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
-const copy = {
-  en: {
-    title: 'Fixed native daily study', description: 'Select the fixed candidate and registered evidence, inspect the original result, then save Reject or Watch.',
-    input: 'Study input', candidate: 'Candidate', candidateLabel: 'DoubleMA daily overlay · candidate v1', package: 'Registered package', noPackage: 'No package selected', grant: 'Candidate grant', noGrant: 'No grant selected',
-    fixed: 'native-daily-v2 · Quantity A · T / TO / B50 / B100 / C · 5 and 10 bps one way', safety: 'INSUFFICIENT financial evidence · Paper and live unavailable',
-    engineering: 'Engineering fixture only. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
-    real: 'Declared retrospective research. Private diagnostic once; external API retention applicability UNKNOWN. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
-    realRunning: 'Running · retrospective research', realSucceeded: 'Report ready · retrospective research',
-    dev: 'DEV_DIAGNOSTIC · capture policy exception',
-    trustedDev: 'DEV_TRUSTED_ENVIRONMENT · unverified external environment',
-    additional: 'Additional IVV task · unverified external environment',
-    additionalLegacy: 'Old task: UNKNOWN_LOCKED; nominal allowance consumed (1 context / 7 business requests). Historical actual cumulative usage: UNKNOWN.',
-    additionalLimits: 'This task limits: 1 carrier, 1 context, 7 business requests; InitConnect ≤1 and KeepAlive ≤96 counted separately. Capture submission is SPENT; returning to input restores no authority.',
-    recovery: 'Recoverable IVV study', recoveryAttempts: 'Registered attempts', recoveryTrial: 'Logical study registered', resume: 'Resume registered study',
-    recoveryReal: 'Declared retrospective research with recorded recovery. Financial evidence remains INSUFFICIENT; Paper and live trading are unavailable.',
-    recoveryHelp: 'No report is available. Resume explicitly with the current registered input and policy. Previous attempts remain recorded; committed reports are reopened without calculation.',
-    archive: 'Saved studies', archiveRefresh: 'Refresh saved studies', archiveLoading: 'Reading saved studies…',
-    archiveHelp: 'Existing records in this configured store, up to 32. Listing does not describe capture or research-trial usage.',
-    archiveEmpty: 'No saved studies in this configured store.', archiveUnavailable: 'Saved studies are unavailable.',
-    archiveIntegrity: 'Saved study originals could not be verified.', archiveInvalid: 'The saved study listing did not match the expected contract.',
-    archiveFailed: 'Saved studies could not be read. Refresh the list to try again.', archiveOpen: 'Open saved study',
-    archiveReport: 'Report recorded', archiveDecision: 'Decision recorded',
-    observed: 'Observed',
-    trustedLimits: 'External environment and channels are unverified (UNVERIFIED_TRUSTED_EXTERNAL). Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Monitoring is not a hard limit.',
-    devLimits: 'Provider storage hard limit not enforced; provider tail maximum UNKNOWN. Full read-only/six-writable enforcement and legacy loaded-guard provenance are unproved. Monitoring is not a hard limit.',
-    devQualification: 'Diagnostic capture alone is unreviewed. Only independently accepted input and a registered grant allow this fixed study; neither the capture exception nor a report proves profitability, out-of-sample validity, or Paper/live eligibility.',
-    captureAuthority: 'Capture-once usage: UNKNOWN on this page. Research-trial status is separate; an uncomputed result or returning to input does not restore capture authority.',
-    captureStatus: 'DEV capture and review status: UNKNOWN in this input list. Empty options do not prove unused capture authority; only registered study inputs are listed.',
-    devBinding: 'Capture policy and authorization originals', devPolicy: 'Capture policy SHA-256', devAuthorization: 'Capture authorization SHA-256',
-    missing: 'No registered package and candidate grant are selected. Save the admission reasons without calculating a report.',
-    inputReview: 'Captured originals remain unreviewed until independent input acceptance. This page cannot qualify data or grant authority; select only a registered package and its matching grant to submit the fixed study.',
-    unavailable: 'Durable research storage is unavailable. Existing IDs can still be reopened.', loading: 'Reading registered configuration…', retryOptions: 'Read configuration again',
-    submit: 'Submit fixed study', insufficient: 'Save insufficient evidence', waiting: 'Waiting for acknowledgement…', retry: 'Retry saved submission', read: 'Read saved study', retained: 'The ID and exact request were saved before submission. Read this ID after an uncertain response.',
-    status: 'Study evidence', notRun: 'Not run · evidence insufficient', rejected: 'Not run · admission rejected', running: 'Running · engineering calculation', succeeded: 'Report ready · engineering evidence', failed: 'Calculation failed', interrupted: 'Interrupted · no automatic rerun',
-    noReport: 'No report was calculated. No research trial was consumed.', noResult: 'No report is available. The reserved research trial remains consumed; read this ID instead of rerunning it.', trial: 'Research trial consumed', yes: 'Yes', no: 'No', verify: 'Verifying original evidence…', paused: 'Automatic status checks paused. Read this ID to continue.',
-    decision: 'Research decision', decisionHelp: 'Save one immutable Reject or Watch decision bound to the original admission and report, if present.', reject: 'Reject', watch: 'Watch', reason: 'Reason', saveDecision: 'Save research decision', retryDecision: 'Retry saved decision', pendingDecision: 'Decision acknowledgement is uncertain. Read this ID or retry the saved decision key.',
-    admissionDownload: 'Download admission', reportDownload: 'Download report', decisionDownload: 'Download decision',
-    reopen: 'Reopen an existing study', id: 'Saved study ID', open: 'Open study', newStudy: 'Return to study input', identity: 'Original identity and timestamps', created: 'Created', completed: 'Completed', request: 'Request SHA-256', protocol: 'Protocol SHA-256', packageHash: 'Package SHA-256', grantHash: 'Grant SHA-256',
-    artifact: 'Original evidence could not be verified. Reopen this ID to try again.', error: 'The operation could not be confirmed. Your saved ID and request are retained.', notAdmitted: 'Study was not admitted. No research trial was consumed; resolve admission checks and retry this saved request.', invalid: 'The server response did not match the fixed study contract. Reopen the saved ID.', invalidId: 'Enter a canonical UUID study ID.', storage: 'The browser could not retain this request. No submission was sent.', conflict: 'The saved request or decision conflicts with the server record. Reopen this ID to inspect the original.', notFound: 'This ID is not recorded by the service. No new study was submitted.',
-    comparison: 'Same-cost comparison', base: '5 bps · base', stress: '10 bps · stress', arm: 'Arm', net: 'Net return', equity: 'Terminal equity', drawdown: 'Max drawdown', friction: 'Friction', fills: 'Fills', costs: 'Uncalibrated combined cost proxy. Fee, spread and slippage components are unknown. Fills are not independent opportunities.', arms: 'T: trend · TO: trend with overlay · B50/B100: 50%/100% buy-and-hold · C: cash, 0% interest.',
-  },
-  'zh-CN': {
-    title: '固定原生日线研究', description: '选择固定候选与已注册证据，核验原始结果，再保存拒绝或观察决定。',
-    input: '研究输入', candidate: '候选', candidateLabel: 'DoubleMA 日线叠加 · 候选 v1', package: '已注册输入包', noPackage: '未选择输入包', grant: '候选授权', noGrant: '未选择授权',
-    fixed: 'native-daily-v2 · 数量方案 A · T / TO / B50 / B100 / C · 单边 5 和 10 bps', safety: '金融证据 INSUFFICIENT · Paper 与实盘不可用',
-    engineering: '仅工程样本。金融证据仍为 INSUFFICIENT，不能授权 Paper 或实盘交易。',
-    real: '已声明的真实回溯研究，仅一次私人开发诊断；外部 API 留存适用性 UNKNOWN。金融证据仍为 INSUFFICIENT，Paper 与实盘不可用。',
-    realRunning: '运行中 · 回溯研究', realSucceeded: '报告就绪 · 回溯研究',
-    dev: 'DEV_DIAGNOSTIC · 采集政策例外',
-    trustedDev: 'DEV_TRUSTED_ENVIRONMENT · 外部环境未核验',
-    additional: '新增 IVV 任务 · 外部环境未核验',
-    additionalLegacy: '旧任务：UNKNOWN_LOCKED；名义额度已消费（1 个 context / 7 次业务请求）。历史实际累计使用量：UNKNOWN。',
-    additionalLimits: '本次上限：1 次 carrier 提交、1 个 context、7 次业务请求；InitConnect ≤1、KeepAlive ≤96 另计。采集提交权已消费；返回输入不恢复权限。',
-    recovery: '可恢复的 IVV 研究', recoveryAttempts: '已登记尝试', recoveryTrial: '已登记逻辑研究', resume: '恢复已注册研究',
-    recoveryReal: '已登记恢复尝试的回顾性研究。金融证据仍为 INSUFFICIENT，Paper 和实盘不可用。',
-    recoveryHelp: '当前无报告。可使用当前注册输入和策略显式恢复；既有尝试保留，已提交报告按原件重开而不重算。',
-    archive: '已保存研究', archiveRefresh: '刷新研究档案', archiveLoading: '正在读取研究档案…',
-    archiveHelp: '此处仅列出当前配置存储中的已有记录，最多 32 条。列表不表示采集或研究计算试验额度的使用情况。',
-    archiveEmpty: '当前配置的存储中没有已保存研究。', archiveUnavailable: '研究档案当前不可用。',
-    archiveIntegrity: '无法校验研究档案原件。', archiveInvalid: '研究档案列表不符合既有契约。',
-    archiveFailed: '未能读取研究档案，可刷新列表重试。', archiveOpen: '打开已保存研究',
-    archiveReport: '已保存报告', archiveDecision: '已保存决定',
-    observed: '实际观察',
-    trustedLimits: '外部环境及通道未核验（UNVERIFIED_TRUSTED_EXTERNAL）。未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。监测不等于硬上限。',
-    devLimits: '未强制实施供应商存储硬上限；供应商尾部写入上限 UNKNOWN。完整只读/六个可写路径约束与旧版已加载防护的来源仍未证明。监测不等于硬上限。',
-    devQualification: '诊断采集原件本身仍未审核。只有独立验收的输入与已注册授权才允许本次固定研究；采集例外或报告均不能证明盈利、样本外有效性，也不授予 Paper 或实盘资格。',
-    captureAuthority: '本页未提供采集 once 使用状态，仍为 UNKNOWN。研究计算试验是另一项状态；未计算或返回输入均不恢复采集权限。',
-    captureStatus: '此输入列表未提供 DEV 采集与审核进度，仍为 UNKNOWN。列表为空不能证明采集权限尚未消耗；这里只列出已注册研究输入。',
-    devBinding: '采集政策与授权原件', devPolicy: '采集政策 SHA-256', devAuthorization: '采集授权 SHA-256',
-    missing: '未同时选择已注册输入包与候选授权。可保存准入不足原因，不计算报告。',
-    inputReview: '采集原件须经独立输入验收，此前仍未审核。本页面不能认定数据合格或授予权限；只有选择已注册输入包及其匹配授权，才能提交固定研究。',
-    unavailable: '持久化研究存储未配置，仍可重开已有 ID。', loading: '正在读取已注册配置…', retryOptions: '重新读取配置',
-    submit: '提交固定研究', insufficient: '保存证据不足记录', waiting: '等待服务端确认…', retry: '重试已保存提交', read: '读取已保存研究', retained: '提交前已保存 ID 与完整请求。响应不确定时请读取原 ID。',
-    status: '研究证据', notRun: '未运行 · 证据不足', rejected: '未运行 · 准入被拒绝', running: '运行中 · 工程计算', succeeded: '报告就绪 · 工程证据', failed: '计算失败', interrupted: '已中断 · 不自动重跑',
-    noReport: '未计算报告，未消耗研究计算试验额度。', noResult: '无可用报告，本次研究计算试验已消耗；请按原 ID 查看记录，不会自动重算。', trial: '已消耗研究计算试验', yes: '是', no: '否', verify: '正在校验原始证据…', paused: '自动状态查询已暂停，可按原 ID 继续读取。',
-    decision: '研究决定', decisionHelp: '保存一条不可编辑的拒绝或观察决定，绑定原始准入记录与报告（如有）。', reject: '拒绝', watch: '观察', reason: '理由', saveDecision: '保存研究决定', retryDecision: '重试已保存决定', pendingDecision: '决定尚未确认，请读取原 ID 或按原决定键重试。',
-    admissionDownload: '下载准入原件', reportDownload: '下载报告原件', decisionDownload: '下载决定原件',
-    reopen: '重开已有研究', id: '已保存研究 ID', open: '打开研究', newStudy: '返回研究输入', identity: '原始标识与时间', created: '创建时间', completed: '完成时间', request: '请求 SHA-256', protocol: '协议 SHA-256', packageHash: '输入包 SHA-256', grantHash: '授权 SHA-256',
-    artifact: '原始证据校验失败，请按原 ID 重开后重试。', error: '尚无法确认操作结果，已保存的 ID 与请求仍被保留。', notAdmitted: '研究尚未获准，未消耗研究计算试验额度。请处理准入检查后重试已保存请求。', invalid: '服务端响应与固定研究契约不符，请重开原 ID。', invalidId: '请输入规范 UUID 研究 ID。', storage: '浏览器无法保留请求，未发送提交。', conflict: '已保存请求或决定与服务端冲突，请重开原 ID 查看原记录。', notFound: '服务端未记录该 ID，未提交新研究。',
-    comparison: '同成本基准比较', base: '5 bps · 基准', stress: '10 bps · 压力', arm: '比较臂', net: '净收益率', equity: '期末资金', drawdown: '最大回撤', friction: '综合摩擦', fills: '成交笔数', costs: '未校准综合成本代理。费用、价差与滑点拆分未知，成交笔数不代表独立机会数。', arms: 'T：趋势 · TO：趋势叠加 · B50/B100：50%/100% 买入持有 · C：现金，利息 0%。',
-  },
-}
-const reasons: Record<string, [string, string]> = {
-  package_missing: ['Package missing', '缺少输入包'], candidate_grant_missing: ['Candidate grant missing', '缺少候选授权'],
-  package_not_registered: ['Package is not registered', '输入包未注册'], candidate_grant_not_qualified: ['Candidate grant is not qualified', '候选授权不合格'],
-  engineering_fixture_only: ['Engineering fixture only', '仅工程样本'], grant_already_consumed: ['Grant trial already consumed', '授权试验额度已消耗'],
-}
+
+
 
 export function NativeDailyPanel() {
   const { locale } = usePreferences(); const w = copy[locale]; const zh = locale === 'zh-CN'
@@ -313,13 +231,13 @@ export function NativeDailyPanel() {
           <Button className="min-h-11" onClick={() => void submit()}>{complete ? w.submit : w.insufficient}</Button>
         </>}
       </section>}
-      {intent && <div className="space-y-2 border-t pt-3">
+      {intent && <details open={!job || submitting || paused} className="space-y-2 border-t pt-3"><summary className="cursor-pointer py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring">{uiText('Input and recovery tools', locale)}</summary>
         <p className="text-xs text-muted-foreground">{w.retained}</p>
         <p className="break-all font-mono text-xs">{intent.key}</p>
         <div className="flex flex-wrap gap-2"><Button className="min-h-11" variant="outline" disabled={reading} onClick={() => { setPaused(false); void read(intent.key, intent.request) }}>{w.read}</Button>{!job && !submitting && <Button className="min-h-11" variant="outline" onClick={() => void submit(intent)}>{w.retry}</Button>}</div>
         {submitting && !job && <p role="status" className="text-sm">{w.waiting}</p>}
         {paused && <p className="text-sm text-muted-foreground">{w.paused}</p>}
-      </div>}
+      </details>}
       {job && <section ref={evidenceSection} tabIndex={-1} aria-labelledby="native-evidence" className="min-w-0 scroll-mt-20 space-y-3 border-t pt-4">
         <h3 id="native-evidence" className="font-medium">{w.status}</h3>
         <p role="status" className="text-sm">{state}</p>
@@ -354,11 +272,11 @@ export function NativeDailyPanel() {
           </>}
           <div className="flex flex-wrap gap-2"><Button className="min-h-11" variant="outline" onClick={() => download(verified.admission, job.job_id, 'admission')}>{w.admissionDownload}</Button>{verified.report && <Button className="min-h-11" variant="outline" onClick={() => download(verified.report!, job.job_id, 'report')}>{w.reportDownload}</Button>}{verified.decision && <Button className="min-h-11" variant="outline" onClick={() => download(verified.decision!, job.job_id, 'decision')}>{w.decisionDownload}</Button>}</div>
         </>}
-        <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{w.identity}</summary><dl className="grid min-w-0 gap-2 sm:grid-cols-2">{[[w.id, job.job_id], [w.request, job.request_digest], [w.protocol, job.request.protocol_ref?.digest ?? '—'], [w.packageHash, job.request.package_ref?.digest ?? '—'], [w.grantHash, job.request.grant_ref?.digest ?? '—'], [w.created, job.created_at], [w.completed, job.completed_at ?? '—'], ['Admission SHA-256', job.admission.digest], ...(job.report ? [['Report SHA-256', job.report.digest]] : []), ...(job.decision ? [['Decision SHA-256', job.decision.digest]] : [])].map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="break-all font-mono">{value}</dd></div>)}</dl></details>
+        <details className="text-xs"><summary className="min-h-11 cursor-pointer py-3 text-muted-foreground">{w.identity}</summary><dl className="grid min-w-0 gap-2 sm:grid-cols-2">{[[w.id, job.job_id], [w.request, job.request_digest], [w.protocol, job.request.protocol_ref?.digest ?? '—'], [w.packageHash, job.request.package_ref?.digest ?? '—'], [w.grantHash, job.request.grant_ref?.digest ?? '—'], [w.created, job.created_at], [w.completed, job.completed_at ?? '—'], [uiText('Admission SHA-256', locale), job.admission.digest], ...(job.report ? [[uiText('Report SHA-256', locale), job.report.digest]] : []), ...(job.decision ? [[uiText('Decision SHA-256', locale), job.decision.digest]] : [])].map(([label, value]) => <div key={label}><dt className="text-muted-foreground">{label}</dt><dd className="break-all font-mono">{value}</dd></div>)}</dl></details>
       </section>}
       {job && verified && job.state !== 'running' && <section aria-labelledby="native-decision" className="space-y-3 border-t pt-4">
         <h3 id="native-decision" className="font-medium">{w.decision}</h3>
-        {verified.decision ? <p className="break-words text-sm">{verified.decision.value.disposition === 'reject' ? w.reject : w.watch} · {String(verified.decision.value.reason)}</p> : <>
+        {verified.decision ? <p className="break-words text-sm">{verified.decision.value.disposition === 'reject' ? w.reject : w.watch} · {uiText('Original reason', locale)}: {String(verified.decision.value.reason)}</p> : <>
           <p className="text-sm text-muted-foreground">{w.decisionHelp}</p>
           <div className="flex flex-wrap gap-2">{(['reject', 'watch'] as const).map(value => <Button key={value} className="min-h-11" variant={disposition === value ? 'secondary' : 'outline'} aria-pressed={disposition === value} disabled={!!pendingDecision || saving} onClick={() => setDisposition(value)}>{value === 'reject' ? w.reject : w.watch}</Button>)}</div>
           <label className="block space-y-1 text-sm"><span>{w.reason}</span><textarea className={control} maxLength={1000} rows={3} value={pendingDecision?.body.reason ?? reason} disabled={!!pendingDecision || saving} onChange={event => setReason(event.target.value)} /></label>
@@ -377,20 +295,24 @@ export function NativeDailyPanel() {
         {savedStudies && savedStudies.length > 0 && <ul className="max-h-96 space-y-3 overflow-y-auto pr-1">
           {savedStudies.map(saved => <li key={saved.job_id} aria-current={job?.job_id === saved.job_id ? 'true' : undefined} className="min-w-0 space-y-2 rounded-md border border-border p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <code className="min-w-0 break-all text-xs">{saved.job_id}</code>
+              <div className="min-w-0 space-y-1"><p className="text-sm font-medium">{w.candidateLabel}</p><code className="block break-all text-xs text-muted-foreground">{saved.job_id}</code></div>
               <Button className="min-h-11" variant="outline" aria-label={`${w.archiveOpen} ${saved.job_id}`} disabled={reading || submitting || saving} onClick={() => reopen(saved.job_id)}>{w.open}</Button>
             </div>
-            <p className="break-words text-xs">{w.created}: <time dateTime={saved.created_at}>{saved.created_at}</time></p>
-            <p className="break-words font-mono text-xs">{saved.state} · {saved.admission_status}</p>
+            <p className="break-words text-xs">{w.created}: <time dateTime={saved.created_at} title={saved.created_at}>{dateTime(saved.created_at, locale)}</time></p>
+            <p className="break-words text-sm">{evidenceLabel(saved.state, locale)} · {evidenceLabel(saved.admission_status, locale)}</p>
             <p className="text-xs text-muted-foreground">{w.archiveReport}: {saved.report ? w.yes : w.no} · {w.archiveDecision}: {saved.decision ? w.yes : w.no}</p>
+            <details className="text-xs">
+              <summary className="cursor-pointer py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{uiText('Original evidence', locale)}</summary>
+              <div className="space-y-1 break-all font-mono"><p>{saved.state} · {saved.admission_status}</p><p>{saved.created_at}</p></div>
+            </details>
           </li>)}
         </ul>}
       </section>
-      <section aria-labelledby="native-reopen" className="space-y-3 border-t pt-4">
+      <details><summary className="cursor-pointer py-3 text-sm font-medium focus-visible:ring-2 focus-visible:ring-ring">{uiText('Open by ID', locale)}</summary><section aria-labelledby="native-reopen" className="space-y-3 border-t pt-4">
         <h3 id="native-reopen" className="font-medium">{w.reopen}</h3>
         <label className="block space-y-1 text-sm"><span>{w.id}</span><input className={`${control} font-mono`} value={openId} spellCheck={false} autoCapitalize="none" onChange={event => setOpenId(event.target.value)} /></label>
         <div className="flex flex-wrap gap-2"><Button className="min-h-11" variant="outline" disabled={!openId || reading} onClick={() => reopen()}>{w.open}</Button>{job && job.state !== 'running' && !submitting && <Button className="min-h-11" variant="ghost" onClick={startAnother}>{w.newStudy}</Button>}</div>
-      </section>
+      </section></details>
     </div>
   </Page>
 }

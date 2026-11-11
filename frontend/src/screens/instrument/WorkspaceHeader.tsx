@@ -1,3 +1,4 @@
+import { evidenceLabel, uiText } from '@/lib/presentation-copy'
 import { Badge } from '@/components/ui/badge'
 import { LiveDataBadge } from '@/components/live-data-badge'
 import type { InstrumentWorkspace, LiveLabel } from '@/lib/api'
@@ -70,23 +71,8 @@ export function WorkspaceHeader({
   )
   const liveClassification = [displayLabel, live.provenance].filter(Boolean).join(' · ') || '—'
 
-  return (
-    <header className="sticky top-14 z-20 -mx-4 border-y border-border/80 bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {workspace.instrument.venue} / {workspace.instrument.instrument_type}
-            </p>
-            <h1 className="truncate text-2xl font-semibold tracking-tight">
-              {workspace.instrument.symbol}
-            </h1>
-          </div>
-          <Badge className={liveTone(displayStatus)}>{t(LIVE_MESSAGE[displayStatus])}</Badge>
-          {live.session_freshness && <LiveDataBadge session={live.session_freshness}
-            fallback={aged.label} realEvidence={isSourceBacked(live.provenance)
-              || (live.provenance === null && live.session_freshness.last_source_at !== null)} />}
-        </div>
+  const emptyLive = live.status === 'unavailable' && !live.source && !live.data_time && !live.received_at
+  const metadata = (
         <dl className="grid grid-cols-2 gap-x-5 gap-y-2 text-right sm:grid-cols-4 xl:grid-cols-8">
           <div>
             <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -137,6 +123,27 @@ export function WorkspaceHeader({
             <dd className="font-mono text-xs">{t(STREAM_MESSAGE[stream])}</dd>
           </div>
         </dl>
+  )
+  return (
+    <header className="sticky top-14 z-20 -mx-4 border-y border-border/80 bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h1 className="truncate text-2xl font-semibold tracking-tight">{workspace.instrument.symbol}</h1>
+              <p className="font-mono text-xs text-muted-foreground">{workspace.instrument.venue} / {workspace.instrument.instrument_type}</p>
+            </div>
+          </div>
+          <Badge className={liveTone(displayStatus)}>{t(LIVE_MESSAGE[displayStatus])}</Badge>
+          {live.session_freshness && <LiveDataBadge session={live.session_freshness}
+            fallback={aged.label} realEvidence={isSourceBacked(live.provenance)
+              || (live.provenance === null && live.session_freshness.last_source_at !== null)} />}
+        </div>
+        {emptyLive ? <div className="flex min-w-0 flex-wrap items-center gap-5 text-xs">
+          <div><p className="text-muted-foreground">{t('screen.workspace.historySource')}</p><p>{evidenceLabel(workspace.history.source, locale)}</p></div>
+          <div><p className="text-muted-foreground">{t('screen.workspace.asOf', { time: '' }).trim()}</p><time dateTime={workspace.history.as_of} title={workspace.history.as_of}>{dateTime(workspace.history.as_of, locale)}</time></div>
+          <details><summary className="cursor-pointer py-2 text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring">{uiText('Connection and source details', locale)}</summary>{metadata}</details>
+        </div> : metadata}
       </div>
     </header>
   )

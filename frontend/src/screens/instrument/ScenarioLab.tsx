@@ -170,9 +170,9 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 function LabError({ text }: { text: string }) { return <p role="alert" className="border-l-2 border-destructive p-4">{text}</p> }
 function Disclosure({ title, children }: { title: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false)
-  return <details className="min-w-0 border-b border-border py-3" onToggle={(event) => setOpen(event.currentTarget.open)}>
+  const [activated, setActivated] = useState(false)
+  return <details className="min-w-0 border-b border-border py-3" onToggle={(event) => { if (event.currentTarget.open) setActivated(true) }}>
     <summary className="cursor-pointer font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{title}</summary>
-    {open && <div className="mt-4 min-w-0">{children}</div>}
+    {activated && <div className="mt-4 min-w-0">{children}</div>}
   </details>
 }

@@ -14,6 +14,13 @@
  */
 export const messages = {
   en: {
+    'evidence.calendar': 'Equity dates use {{calendar}}, regular sessions and New York midnight daily bars.',
+    'evidence.noTerminalClose': 'No valid terminal close is available.',
+    'evidence.noEntryFill': 'No exact proposal-bound entry fill is available.',
+    'evidence.noMark': 'Mark-to-market R requires an exact entry fill and mark.',
+    'evidence.noExitCosts': 'Proposal-bound exit fills, attributable quantity and complete fees are unavailable.',
+    'shell.moreResearchTools': 'More research tools',
+    'shell.moreOperationalTools': 'More tools and settings',
     'inspection.open': 'View saved history',
     'inspection.title': 'Saved history',
     'inspection.notice': 'Historical observations · not a current quote',
@@ -1318,6 +1325,13 @@ export const messages = {
     'screen.workspace.openAuditLineage': 'Open audit lineage',
   },
   'zh-CN': {
+    'evidence.calendar': '股票日期采用 {{calendar}}，使用常规交易时段和纽约午夜日线。',
+    'evidence.noTerminalClose': '没有可用的有效期末收盘价。',
+    'evidence.noEntryFill': '没有与该提案精确绑定的入场成交。',
+    'evidence.noMark': '逐市计价 R 需要精确的入场成交和标记价格。',
+    'evidence.noExitCosts': '缺少与提案绑定的退出成交、可归属数量或完整费用。',
+    'shell.moreResearchTools': '更多研究工具',
+    'shell.moreOperationalTools': '更多工具与设置',
     'inspection.open': '查看保存的历史',
     'inspection.title': '保存的历史',
     'inspection.notice': '历史观察 · 不是当前报价',
@@ -2619,3 +2633,13 @@ export const messages = {
 } as const
 
 export type MessageKey = keyof typeof messages.en
+
+/** Shared pure formatter also usable by semantic presentation outside React. */
+export function formatMessage(text: string, vars?: Record<string, string>): string {
+  for (const [name, value] of Object.entries(vars ?? {})) text = text.replaceAll(`{{${name}}}`, value)
+  return text
+}
+
+export function translate(locale: 'en' | 'zh-CN', key: MessageKey, vars?: Record<string, string>): string {
+  return formatMessage(messages[locale][key] ?? messages.en[key], vars)
+}

@@ -1,3 +1,4 @@
+import { uiText } from '@/lib/presentation-copy'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -28,7 +29,7 @@ export function OrderScreen() {
   const overview = useSurface(['overview'], api.overview)
   const killSwitch = useSurface(['kill-switch'], api.killSwitch)
 
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
 
   const [venue, setVenue] = useState(params.get('venue') ?? '')
   const [symbol, setSymbol] = useState(params.get('symbol') ?? '')
@@ -254,12 +255,12 @@ export function OrderScreen() {
                 <CardDescription>{t('screen.order.path.description')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-1 text-sm text-muted-foreground">
-                <p><Link className="text-primary hover:underline" to="/markets">{t('screen.order.path.markets')}</Link> → venue + symbol</p>
-                <p><Link className="text-primary hover:underline" to="/research/forecasts">{t('screen.order.path.forecasts')}</Link> → signal context</p>
-                <p><b className="text-foreground">{t('screen.order.path.paper')}</b> → kernel risk gate → fill</p>
-                <p><Link className="text-primary hover:underline" to="/trading/positions">{t('screen.order.path.positions')}</Link> → the fill lands</p>
-                <p><Link className="text-primary hover:underline" to="/ops/audit">{t('screen.order.path.audit')}</Link> → the order is journaled</p>
-                <p><Link className="text-primary hover:underline" to="/risk">{t('screen.order.path.risk')}</Link> → limits and alerts read the same state</p>
+                <p><Link className="text-primary hover:underline" to="/markets">{t('screen.order.path.markets')}</Link> {uiText('→ venue + symbol', locale)}</p>
+                <p><Link className="text-primary hover:underline" to="/research/forecasts">{t('screen.order.path.forecasts')}</Link> {uiText('→ signal context', locale)}</p>
+                <p><b className="text-foreground">{t('screen.order.path.paper')}</b> {uiText('→ kernel risk gate → fill', locale)}</p>
+                <p><Link className="text-primary hover:underline" to="/trading/positions">{t('screen.order.path.positions')}</Link> {uiText('→ the fill lands', locale)}</p>
+                <p><Link className="text-primary hover:underline" to="/ops/audit">{t('screen.order.path.audit')}</Link> {uiText('→ the order is journaled', locale)}</p>
+                <p><Link className="text-primary hover:underline" to="/risk">{t('screen.order.path.risk')}</Link> {uiText('→ limits and alerts read the same state', locale)}</p>
               </CardContent>
             </Card>
           )}
@@ -273,7 +274,7 @@ export function OrderScreen() {
                 </CardTitle>
                 <CardDescription>
                   {result.order.instrument.venue}:{result.order.instrument.symbol} {result.order.side}{' '}
-                  {formatQuantity(result.order.quantity)} · {t('screen.order.created', { timestamp: result.order.created_at })}
+                  {formatQuantity(result.order.quantity, locale)} · {t('screen.order.created', { timestamp: result.order.created_at })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
@@ -282,18 +283,18 @@ export function OrderScreen() {
                   <dd className="text-right font-mono">{result.order.order_type}</dd>
                   <dt className="text-muted-foreground">{t('screen.order.result.filled')}</dt>
                   <dd className="text-right font-mono">
-                    {formatQuantity(result.order.filled_quantity)} @ {moneyPrecise(result.order.average_fill_price)}
+                    {formatQuantity(result.order.filled_quantity, locale)} @ {moneyPrecise(result.order.average_fill_price, locale)}
                   </dd>
                   {result.order.limit_price !== null && (
                     <>
                       <dt className="text-muted-foreground">{t('screen.order.result.limit')}</dt>
-                      <dd className="text-right font-mono">{moneyPrecise(result.order.limit_price)}</dd>
+                      <dd className="text-right font-mono">{moneyPrecise(result.order.limit_price, locale)}</dd>
                     </>
                   )}
                   <dt className="text-muted-foreground">{t('screen.overview.account.cash')}</dt>
-                  <dd className="text-right font-mono">{money(result.account.cash)}</dd>
+                  <dd className="text-right font-mono">{money(result.account.cash, locale)}</dd>
                   <dt className="text-muted-foreground">{t('screen.overview.account.equity')}</dt>
-                  <dd className="text-right font-mono">{money(result.account.equity)}</dd>
+                  <dd className="text-right font-mono">{money(result.account.equity, locale)}</dd>
                 </dl>
                 <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" render={<Link to="/trading/positions" />}>

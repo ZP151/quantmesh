@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils'
 export function MarketsScreen() {
   const query = useSurface(['markets'], api.markets)
   const venues = useSurface(['overview'], api.overview)
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   const health = useSurface(['health'], api.health)
   if (!health.data) return <Page title={t('screen.markets.title')} description="">
     {health.isPending ? <LoadingState /> : <ErrorState title={t('liveMarkets.runtimeUnavailable')} detail={health.error?.message ?? ''} />}
@@ -97,7 +97,7 @@ export function MarketsScreen() {
                                   {instrument.symbol}
                                 </Link>
                               </td>
-                              <td className="py-2 pr-4 text-right font-mono tabular-nums">{money(instrument.mark)}</td>
+                              <td className="py-2 pr-4 text-right font-mono tabular-nums">{money(instrument.mark, locale)}</td>
                               <td className="py-2 pr-4 font-mono text-xs text-muted-foreground">{instrument.venue}</td>
                               <td className="py-2 text-right">
                                 <Button

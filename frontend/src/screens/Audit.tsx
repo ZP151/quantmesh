@@ -14,10 +14,10 @@ const KIND_VARIANT: Record<AuditEntry['kind'], 'default' | 'outline' | 'secondar
 }
 
 function EntryCard({ entry }: { entry: AuditEntry }) {
-  const { t } = usePreferences()
+  const { t, locale } = usePreferences()
   let summary: string
   if (entry.kind === 'order' && entry.order) {
-    summary = `${entry.order.instrument.venue}:${entry.order.instrument.symbol} · ${entry.order.side.toUpperCase()} ${quantity(entry.order.quantity)} · ${entry.order.status}${entry.order.average_fill_price !== null ? ` @ ${moneyPrecise(entry.order.average_fill_price)}` : ''}`
+    summary = `${entry.order.instrument.venue}:${entry.order.instrument.symbol} · ${entry.order.side.toUpperCase()} ${quantity(entry.order.quantity, locale)} · ${entry.order.status}${entry.order.average_fill_price !== null ? ` @ ${moneyPrecise(entry.order.average_fill_price, locale)}` : ''}`
   } else if (entry.kind === 'mapping' && entry.mapping) {
     summary = t('screen.audit.summary.mapping', {
       pair: String(entry.mapping['pair_key'] ?? ''),
@@ -38,7 +38,7 @@ function EntryCard({ entry }: { entry: AuditEntry }) {
         <div className="min-w-0">
           <p className="truncate text-sm">{summary}</p>
           <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">
-            {entry.anchor} · {dateTime(entry.at)}
+            {entry.anchor} · {dateTime(entry.at, locale)}
           </p>
         </div>
         <Badge variant={KIND_VARIANT[entry.kind]} className="shrink-0 font-mono text-[10px]">

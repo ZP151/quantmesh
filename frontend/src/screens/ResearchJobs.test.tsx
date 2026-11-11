@@ -1,8 +1,11 @@
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { PreferencesProvider } from '@/lib/preferences'
+import { act, render as baseRender, screen, waitFor } from '@testing-library/react'
 import { createHash, webcrypto } from 'node:crypto'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResearchJobsScreen } from './ResearchJobs'
+
+function render(ui: Parameters<typeof baseRender>[0]) { return baseRender(<PreferencesProvider>{ui}</PreferencesProvider>) }
 
 const mocks = vi.hoisted(() => ({
   options: vi.fn(), submit: vi.fn(), get: vi.fn(), cancel: vi.fn(), artifact: vi.fn(),
@@ -51,13 +54,22 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); vi.unstubAllGlobals() })
 
 describe('fixture research loop', () => {
+  it('preserves sub-cent model usage in the summary and exact original evidence', async () => {
+    mocks.submit.mockResolvedValue({ ...job(), usage: { estimated_model_usd: 0.00001234 } })
+    render(<ResearchJobsScreen />)
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Submit fixture job' }))
+    await screen.findByText('Queued')
+    expect(screen.getByText('Estimated model cost (USD)').nextElementSibling).toHaveTextContent('0.00001234')
+    await userEvent.setup().click(screen.getByText('Original evidence', { selector: 'summary' }))
+    expect(screen.getByText(/"estimated_model_usd": 0.00001234/)).toBeVisible()
+  })
   it('submits pinned setup, reaches report, reloads and keeps Agent unavailable independent', async () => {
     const user = userEvent.setup()
     const first = render(<ResearchJobsScreen />)
     await user.click(await screen.findByRole('button', { name: 'Submit fixture job' }))
-    await screen.findByText('queued')
+    await screen.findByText('Queued')
     await user.click(screen.getByRole('button', { name: 'Refresh status' }))
-    await screen.findByText('succeeded')
+    await screen.findByText('Report ready')
     await screen.findByText(/Agent unavailable/)
     await user.click(screen.getByRole('button', { name: 'Open immutable report' }))
     await screen.findByText('Canonical report')
@@ -109,7 +121,7 @@ describe('fixture research loop', () => {
       submission: { key: 'saved-key', request }, job: job('failed'),
     }))
     render(<ResearchJobsScreen />)
-    await screen.findByText('failed')
+    await screen.findByText('Failed')
     expect(mocks.submit).not.toHaveBeenCalled()
     expect(mocks.get).not.toHaveBeenCalled()
   })
@@ -120,7 +132,7 @@ describe('fixture research loop', () => {
       submission: { key: 'saved-key', request }, job: job(),
     }))
     render(<ResearchJobsScreen />)
-    await screen.findByText('queued')
+    await screen.findByText('Queued')
     vi.useFakeTimers()
     // The first timer was registered before fake timers; force one state refresh.
     await act(async () => {
@@ -158,7 +170,7 @@ describe('fixture research loop', () => {
       submission: { key: 'saved-key', request: retained }, job: { ...job('failed'), request: retained },
     }))
     render(<ResearchJobsScreen />)
-    await screen.findByText('failed')
+    await screen.findByText('Failed')
     expect(screen.getByLabelText('Registered baseline')).toHaveValue('risk_parity')
     expect(screen.getByLabelText('Fee (bps)')).toHaveValue(7)
     expect(screen.getByLabelText('Train bars')).toHaveValue(20)
@@ -236,7 +248,7 @@ describe('fixture research loop', () => {
     }))
     render(<ResearchJobsScreen />)
     await screen.findByText(/Retained browser status/)
-    expect(screen.getByText(/Job updated.*2026-01-01/)).toBeInTheDocument()
+    expect(screen.getByText(/Retained browser status/).querySelector('time')).toHaveAttribute('dateTime', '2026-01-01T00:00:00Z')
     mocks.get.mockResolvedValue(job('failed'))
     await user.click(screen.getByRole('button', { name: 'Refresh status' }))
     await screen.findByText(/Authoritative research status/)
