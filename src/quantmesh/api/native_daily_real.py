@@ -98,6 +98,11 @@ def create_native_daily_router():
         service = getattr(request.app.state, "native_daily", None)
         if service is None:
             raise HTTPException(503, "service_unavailable")
+        access = getattr(request.app.state, "beta_access", None)
+        if access is not None:
+            from quantmesh.api.beta_access import ScopedNative
+
+            return ScopedNative(access, request.state.beta_principal, service)
         return service
 
     def call(function, *args):
@@ -135,7 +140,7 @@ def create_native_daily_router():
                 "paper_allowed": False,
                 "live_allowed": False,
             }
-        return call(service.options)
+        return call(authority(request).options)
 
     @router.post("/jobs", response_model=NativeJobResponse, status_code=201)
     def submit(

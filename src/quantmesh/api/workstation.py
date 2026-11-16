@@ -1129,6 +1129,7 @@ def create_workstation_app(
     research_jobs_client: LocalResearchClient | ResearchServiceClient | None = None,
     spy_replay_service: ReplayService | None = None,
     native_daily_service=None,
+    beta_access=None,
     research_snapshots_root: Path | None = None,
     frozen_experiments_root: Path | None = None,
     host: str | None = None,
@@ -1171,6 +1172,10 @@ def create_workstation_app(
     """
     if live_feed is not None and live_feed.history_only:
         raise WorkstationConfigError("historical replay feed belongs in history, not live_feed")
+    if beta_access is not None and (market_data_only or native_daily_service is None):
+        raise WorkstationConfigError(
+            "beta access requires the original Native service and full app"
+        )
     if market_data_only:
         from quantmesh.api.market_data_only import build_market_data_app
 
@@ -1509,6 +1514,10 @@ def create_workstation_app(
     if native_daily_service is not None:
         attach_native_daily_runtime(app, native_daily_service)
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    if beta_access is not None:
+        from quantmesh.api.beta_access import attach_beta_access
+
+        attach_beta_access(app, beta_access)
     return app
 
 

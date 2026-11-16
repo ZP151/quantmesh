@@ -1,0 +1,15 @@
+# ADR0044: Opt-in beta research accounts
+
+Status: implemented for backend review, 2026-11-17. Issue [309](https://github.com/ZP151/quantmesh/issues/309). Activation, frontend and publication remain separate.
+
+The desktop has loopback/Origin guards but no individual human accounts. The private research service's fixed Operator Bearer cannot identify several independent testers. Reuse its SecretStr/constant-time comparison pattern, stdlib opaque credentials/SQLite, the existing WriterLease and unchanged NativeDailyService instead of introducing an identity platform.
+
+An explicitly injected BetaAccess enables the boundary on the full workstation. Default personal mode is unchanged. Operator creates one manual single-use invitation; redemption creates an HttpOnly SameSite Strict session. Invitations and sessions are hashed with distinct domains at rest. Account/session limits fail without eviction. Revoked records remain, and a revoked invitation cannot establish another session. No password, recipient, email delivery, public network binding or CLI activation is added.
+
+The server principal selects a separate Native root per tester. The original injected service and all existing unowned archives remain Operator-only. Account creation never registers inputs, copies grants or adopts old archives. Each Native operation revalidates under the registry lock; revocation waits for already guarded operations and denies later ones. This deliberately serializes guarded research across beta accounts and does not cancel or refund an admitted study.
+
+The ASGI boundary covers HTTP and WebSockets. Anonymous access is limited to packaged SPA/static GET/HEAD and session exchange. Testers can use only their own Native API and current-user/logout endpoints. All other registries, aliases, provider/model/trading surfaces and tester WebSockets are denied. Cookie writes and cookie-authenticated Operator WebSockets require exact allowed Origin; invalid explicit Authorization never falls back to a cookie. Identity responses and errors use private/no-store. Authentication waits run outside the application event loop.
+
+This is application access separation, not an OS sandbox or multi-tenant compute platform. Filesystem owners remain trusted; deployment requires a private trusted host/transport and separately reviewed per-user data rights/registrations. Session support does not establish real-data, financial, OOS, Paper or live qualification. The first slice has no account frontend or deployed users; UI and combined publication are currently paused by the human.
+
+Tests use real workstation routes and separate existing Native stores. A retained synthetic archive provides a positive report/decision download control without recomputation; cross-user known-ID reads/downloads/writes fail, and original Operator bytes remain unchanged. The fixture is QuantMesh-produced data, not copied upstream code. See the [iteration](../iterations/0038-beta-research-accounts.md) for actual RED/GREEN, review and resource evidence.
