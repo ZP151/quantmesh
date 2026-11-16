@@ -8,11 +8,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 import pytest
-from fastapi import WebSocket
+from fastapi import FastAPI, WebSocket
+from fastapi.responses import StreamingResponse
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from starlette.websockets import WebSocketDisconnect
 
+from quantmesh.api.beta_access import attach_beta_access
 from quantmesh.api.workstation import create_workstation_app
 from quantmesh.execution.accounting import PaperAccount
 from quantmesh.research.native_daily_real import NativeDailyService
@@ -77,12 +79,14 @@ def test_invite_session_revoke_and_hashed_storage(beta_app):
     assert http.get("/api/beta/me").json()["user"]["user_id"] == invite["user"]["user_id"]
     assert http.get("/api/beta/users").status_code == 403
     assert http.get("/api/beta/me", headers={"Authorization": "Bearer invalid"}).status_code == 401
+    http.cookies.clear()
     repeat = http.post(
         "/api/beta/sessions",
         headers={"Origin": ORIGIN},
         json={"invitation_token": invite["invitation"]["token"]},
     )
     assert repeat.status_code == 409
+    http.cookies.set("qm_beta_session", session)
     records = http.get("/api/beta/users", headers=ADMIN)
     assert records.status_code == 200
     assert "digest" not in records.text and "token" not in records.text
@@ -123,11 +127,28 @@ def test_unauthenticated_and_tester_cannot_fall_through_other_surfaces(beta_app,
 
 def test_websocket_boundary_rejects_testers(beta_app):
     http, _, _ = beta_app
+    entered = []
+
+    @http.app.websocket("/beta-role-proof")
+    async def role_proof(websocket: WebSocket):
+        entered.append(True)
+        await websocket.accept()
+        await websocket.send_text("operator-only")
+        await websocket.close()
+
     login(http, invitation(http))
+    with http.websocket_connect(
+        "ws://localhost:8000/beta-role-proof", headers={**ADMIN, "Origin": ORIGIN}
+    ) as websocket:
+        assert websocket.receive_text() == "operator-only"
+    assert entered == [True]
     with pytest.raises(WebSocketDisconnect) as error:
-        with http.websocket_connect("ws://localhost:8000/ws/quotes"):
+        with http.websocket_connect(
+            "ws://localhost:8000/beta-role-proof", headers={"Origin": ORIGIN}
+        ):
             pytest.fail("tester websocket admitted")
     assert error.value.code == 1008
+    assert entered == [True]
 
 
 def test_cookie_writes_require_exact_origin_and_logout_invalidates_session(beta_app):
@@ -414,3 +435,143 @@ def test_authentication_wait_does_not_block_application_event_loop(beta_app, mon
             return await pending
 
     assert asyncio.run(request_and_release()).status_code == 200
+
+
+@pytest.mark.parametrize("prefix", ["/app", "/private"])
+def test_mounted_boundary_uses_same_relative_path_as_router(beta_app, prefix):
+    http, _, _ = beta_app
+    outer = FastAPI()
+    outer.mount(prefix, http.app)
+    with TestClient(outer, base_url=ORIGIN) as mounted:
+        assert mounted.get(prefix + "/api/markets").status_code == 401
+        assert mounted.get(prefix + "/app/research/jobs").status_code == 200
+        login(http, invitation(http))
+        mounted.cookies.update(http.cookies)
+        result = mounted.get(prefix + "/api/research/native-daily/jobs")
+        assert result.status_code == 200, result.text
+        assert result.json() == {"jobs": []}
+        assert mounted.get(prefix + "/api/markets").status_code == 403
+
+
+def test_exchange_rejects_mixed_cookie_without_consuming_second_invitation(beta_app):
+    http, _, _ = beta_app
+    first, second = invitation(http, "First"), invitation(http, "Second")
+    login(http, first)
+    result = http.post(
+        "/api/beta/sessions",
+        headers={"Origin": ORIGIN},
+        json={"invitation_token": second["invitation"]["token"]},
+    )
+    assert result.status_code == 422
+    assert http.get("/api/beta/me").json()["user"]["user_id"] == first["user"]["user_id"]
+    assert (
+        http.post("/api/beta/sessions", headers={**ADMIN, "Origin": ORIGIN}, json={}).status_code
+        == 422
+    )
+    http.cookies.clear()
+    login(http, second)
+    assert http.get("/api/beta/me").json()["user"]["user_id"] == second["user"]["user_id"]
+
+
+@pytest.mark.parametrize("invalidate", ["expiry", "logout"])
+def test_open_operator_socket_stops_delivering_after_session_invalidation(beta_app, invalidate):
+    http, _, clock = beta_app
+
+    @http.app.websocket("/beta-session-stream")
+    async def stream(websocket: WebSocket):
+        await websocket.accept()
+        await websocket.send_text("before")
+        await websocket.receive_text()
+        await websocket.send_text("after")
+        await websocket.close()
+
+    assert http.post("/api/beta/sessions", headers=ADMIN, json={}).status_code == 201
+    with http.websocket_connect(
+        "ws://localhost:8000/beta-session-stream", headers={"Origin": ORIGIN}
+    ) as websocket:
+        assert websocket.receive_text() == "before"
+        if invalidate == "expiry":
+            clock[0] += 8 * 3600
+        else:
+            assert http.delete("/api/beta/session", headers={"Origin": ORIGIN}).status_code == 204
+        websocket.send_text("continue")
+        with pytest.raises(WebSocketDisconnect) as error:
+            websocket.receive_text()
+        assert error.value.code == 1008
+
+
+def test_streaming_http_stops_delivery_when_session_expires(beta_app):
+    _, access, clock = beta_app
+    closed = []
+    app = FastAPI()
+
+    @app.get("/beta-sse")
+    def stream():
+        async def events():
+            try:
+                yield b"data: before\n\n"
+                clock[0] += 8 * 3600
+                yield b"data: after\n\n"
+            finally:
+                closed.append(True)
+
+        return StreamingResponse(events(), media_type="text/event-stream")
+
+    attach_beta_access(app, access)
+    http = TestClient(app, base_url=ORIGIN)
+    assert http.post("/api/beta/sessions", headers=ADMIN, json={}).status_code == 201
+    result = http.get("/beta-sse")
+    assert result.content == b"data: before\n\n"
+    assert closed == [True]
+
+
+def test_operator_can_reinvite_same_expired_account_without_changing_ownership(beta_app):
+    http, _, clock = beta_app
+    created = invitation(http)
+    login(http, created)
+    user_id = created["user"]["user_id"]
+    job_id = "ea332211-aaaa-4000-8000-123456789abc"
+    assert (
+        http.post(
+            "/api/research/native-daily/jobs",
+            headers={"Origin": ORIGIN, "Idempotency-Key": job_id},
+            json={},
+        ).status_code
+        == 201
+    )
+    assert (
+        http.post(f"/api/beta/users/{user_id}/invitation", headers={"Origin": ORIGIN}).status_code
+        == 403
+    )
+    clock[0] += 8 * 3600
+    http.cookies.clear()
+    fresh = http.post(f"/api/beta/users/{user_id}/invitation", headers=ADMIN)
+    assert fresh.status_code == 201, fresh.text
+    assert fresh.json()["user"]["user_id"] == user_id
+    login(http, fresh.json())
+    assert http.get(f"/api/research/native-daily/jobs/{job_id}").status_code == 200
+    assert http.post(f"/api/beta/users/{user_id}/revoke", headers=ADMIN).status_code == 200
+    assert http.post(f"/api/beta/users/{user_id}/invitation", headers=ADMIN).status_code == 403
+
+
+def test_invitation_cap_is_shared_by_create_and_reinvite_without_consumption(
+    beta_app, beta_module, monkeypatch
+):
+    http, _, _ = beta_app
+    monkeypatch.setattr(beta_module, "MAX_INVITATIONS", 0)
+    assert (
+        http.post(
+            "/api/beta/users", headers=ADMIN, json={"display_name": "No capacity"}
+        ).status_code
+        == 409
+    )
+    assert len(http.get("/api/beta/users", headers=ADMIN).json()["users"]) == 1
+    monkeypatch.setattr(beta_module, "MAX_INVITATIONS", 1)
+    first = invitation(http)
+    assert (
+        http.post(
+            f"/api/beta/users/{first['user']['user_id']}/invitation", headers=ADMIN
+        ).status_code
+        == 409
+    )
+    login(http, first)

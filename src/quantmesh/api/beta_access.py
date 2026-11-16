@@ -9,9 +9,12 @@ from urllib.parse import urlsplit
 from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.routing import APIRoute, request_response
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from starlette._utils import get_route_path
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import Headers
+from starlette.responses import StreamingResponse
 
 from quantmesh.api.research_jobs import _SafeRoute
 from quantmesh.auth.beta import SESSION_SECONDS, BetaError
@@ -139,9 +142,18 @@ def create_beta_router(access):
         except BetaError as error:
             raise refusal(error) from None
 
+    @router.post("/users/{user_id}/invitation", response_model=CreatedUser, status_code=201)
+    def reinvite(user_id: str, request: Request):
+        try:
+            return access.reinvite(request.state.beta_principal, user_id)
+        except BetaError as error:
+            raise refusal(error) from None
+
     @router.post("/sessions", status_code=201, response_model=SessionCreated)
     def exchange(body: ExchangeSession, request: Request, response: Response):
         try:
+            if request.cookies.get(COOKIE) is not None:
+                raise BetaError("invalid_request")
             if body.invitation_token is not None:
                 if request.headers.get("authorization") is not None:
                     raise BetaError("invalid_request")
@@ -215,10 +227,36 @@ class BetaBoundary:
         if scope["type"] not in {"http", "websocket"}:
             return await self.app(scope, receive, send)
         headers = Headers(scope=scope)
-        path, method = scope["path"], scope.get("method", "GET")
+        path, method = get_route_path(scope), scope.get("method", "GET")
+        principal = None
+        response_started = False
 
         async def private_send(message):
+            nonlocal response_started
+            if (
+                principal is not None
+                and principal.session_digest is not None
+                and not (path == "/api/beta/session" and method == "DELETE")
+                and message["type"]
+                in {
+                    "http.response.start",
+                    "http.response.body",
+                    "websocket.accept",
+                    "websocket.send",
+                }
+            ):
+                try:
+                    await run_in_threadpool(self.access.guard, principal, lambda: None)
+                except BetaError:
+                    if scope["type"] == "websocket":
+                        await send({"type": "websocket.close", "code": 1008})
+                    elif response_started:
+                        await send({"type": "http.response.body", "body": b"", "more_body": False})
+                    else:
+                        raise
+                    raise _SessionEnded() from None
             if message["type"] == "http.response.start":
+                response_started = True
                 message["headers"] = [
                     (k, v) for k, v in message.get("headers", []) if k.lower() != b"cache-control"
                 ] + [(b"cache-control", b"private, no-store")]
@@ -263,7 +301,10 @@ class BetaBoundary:
                     ):
                         raise BetaError("forbidden")
             return await self.app(scope, receive, private_send)
+        except _SessionEnded:
+            return
         except BetaError as error:
+            principal = None
             if scope["type"] == "websocket":
                 await send({"type": "websocket.close", "code": 1008})
             else:
@@ -271,6 +312,15 @@ class BetaBoundary:
                 await JSONResponse({"detail": exception.detail}, status_code=exception.status_code)(
                     scope, receive, private_send
                 )
+        finally:
+            for iterator in scope.get("_beta_streams", ()):
+                closer = getattr(iterator, "aclose", None)
+                if closer is not None:
+                    await closer()
+
+
+class _SessionEnded(Exception):
+    """Unwind a subscription after its session ceased to authorize delivery."""
 
 
 class ScopedNative:
@@ -294,6 +344,9 @@ def attach_beta_access(app, access):
     original = app.router.lifespan_context
     app.state.beta_access = access
     app.include_router(create_beta_router(access))
+    for route in app.routes:
+        if isinstance(route, APIRoute):
+            _track_stream_response(route)
     app.add_middleware(BetaBoundary, access=access)
 
     @asynccontextmanager
@@ -311,3 +364,16 @@ def attach_beta_access(app, access):
             task.result()
 
     app.router.lifespan_context = lifespan
+
+
+def _track_stream_response(route):
+    """Own actual response iterators so ending a session unsubscribes immediately."""
+    handler = route.get_route_handler()
+
+    async def tracked(request):
+        response = await handler(request)
+        if isinstance(response, StreamingResponse):
+            request.scope.setdefault("_beta_streams", []).append(response.body_iterator)
+        return response
+
+    route.app = request_response(tracked)

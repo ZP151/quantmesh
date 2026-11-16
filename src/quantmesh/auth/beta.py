@@ -26,6 +26,7 @@ INVITATION_SECONDS = 24 * 3600
 SESSION_SECONDS = 8 * 3600
 MAX_TESTERS = 32
 MAX_SESSIONS = 256
+MAX_INVITATIONS = 256
 
 
 class BetaError(ValueError):
@@ -211,6 +212,11 @@ class BetaAccess:
         with self._lock, self._db:
             self._check(principal, operator=True)
             if (
+                self._db.execute("SELECT count(*) FROM invitations").fetchone()[0]
+                >= MAX_INVITATIONS
+            ):
+                raise BetaError("capacity_exceeded")
+            if (
                 self._db.execute("SELECT count(*) FROM users WHERE role='tester'").fetchone()[0]
                 >= MAX_TESTERS
             ):
@@ -240,6 +246,28 @@ class BetaAccess:
                     for row in self._db.execute("SELECT * FROM users ORDER BY created_at,user_id")
                 ]
             }
+
+    @_store_errors
+    def reinvite(self, principal, user_id):
+        """Operator issues a fresh one-time code for the same owned archive."""
+        with self._lock, self._db:
+            self._check(principal, operator=True)
+            user = self._user(user_id)
+            if user["role"] != "tester" or user["state"] == "revoked":
+                raise BetaError("forbidden")
+            if (
+                self._db.execute("SELECT count(*) FROM invitations").fetchone()[0]
+                >= MAX_INVITATIONS
+            ):
+                raise BetaError("capacity_exceeded")
+            token = secrets.token_urlsafe(32)
+            expires = int(self._clock()) + INVITATION_SECONDS
+            self._db.execute("UPDATE invitations SET consumed=1 WHERE user_id=?", (user_id,))
+            self._db.execute(
+                "INSERT INTO invitations(digest,user_id,expires_at) VALUES (?,?,?)",
+                (_hash("invitation", token), user_id, expires),
+            )
+            return {"user": user, "invitation": {"token": token, "expires_at": expires}}
 
     def _session(self, user_id):
         if self._db.execute("SELECT count(*) FROM sessions").fetchone()[0] >= MAX_SESSIONS:
