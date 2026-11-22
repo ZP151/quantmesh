@@ -1,5 +1,9 @@
 # Iteration0038 — Recoverable research foundation and server market sources
 
+## Current status — 2026-11-22
+
+Development is paused. The [dated development handoff](0038-development-pause-handoff-20261122.md) records the latest verified scope, preserved branches, and remaining work. Historical checkpoints below retain their original as-of dates.
+
 ## Approved controlled-stop lease handoff — issue198, 2026-10-20
 
 The actual human approved the precise first-cause signal/owned-cleanup/fenced

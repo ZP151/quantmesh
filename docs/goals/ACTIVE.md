@@ -1,5 +1,9 @@
 # Active Goal — iteration0038 local workstation product loop
 
+## Current status — 2026-11-22
+
+Development is paused. See the [dated development handoff](../iterations/0038-development-pause-handoff-20261122.md) for the current state and conditions for resuming. Older "ACTIVE" and proposed next steps below are historical records, not authorization to resume work.
+
 ## Selected-instance recovery preparation — issue301
 
 The fixed-IVV task remains ACTIVE. The user confirms OpenD is logged in and
