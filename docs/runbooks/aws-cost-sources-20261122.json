@@ -1,0 +1,13 @@
+{
+  "scope": "Official public information and hypothetical scenarios only; no personal account historical costs or utilization",
+  "checked_date": "2026-11-22",
+  "sources": [
+    {"id": "public_prices", "url": "https://aws.amazon.com/lightsail/pricing/", "facts": "Linux/Unix general-purpose public-IPv4 bundles: configured2GB USD12/month,4GB USD24/month,8GB USD44/month. Tax and extras excluded; no personal free-tier assumptions."},
+    {"id": "billing_rules", "url": "https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-frequently-asked-questions-faq-billing-and-account-management.html", "facts": "Ordinary Lightsail instance fees continue while Stopped until deletion. Snapshot USD0.05/GB-month and independent disk USD0.10/GB-month. Actual accrued charges remain."},
+    {"id": "deletion_residuals", "url": "https://docs.aws.amazon.com/lightsail/latest/userguide/delete-an-amazon-lightsail-instance.html", "facts": "Attached independent storage, snapshots and networking resources need separate residual inspection."},
+    {"id": "metrics", "url": "https://docs.aws.amazon.com/lightsail/latest/userguide/amazon-lightsail-viewing-instance-health-metrics.html", "facts": "Default instance metrics cover CPU, burst, network, status checks. They do not establish collected guest RAM/filesystem or historical percentiles."},
+    {"id": "budget_method", "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/aws-startup-security-baseline/acct-10.html", "facts": "Budgets supports cost/forecast threshold notifications; check current pricing before activation. No alerts or actions were created by this report."}
+  ],
+  "scenario_assumptions": ["Whole-month retention", "Linux/Unix general-purpose bundle including public IPv4", "USD pre-tax", "No excess transfer/storage/domain/backup costs included", "No credits, discounts or trial entitlement assumed", "Capacity gate thresholds are proposals, not measured performance"],
+  "private_financial_sources_used_for_public_numbers": false
+}

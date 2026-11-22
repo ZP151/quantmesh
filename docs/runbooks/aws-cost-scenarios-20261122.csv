@@ -1,0 +1,5 @@
+scenario,instance_count,configured_RAM_GB_each,public_monthly_rate_USD_each,monthly_compute_cap_USD,ratio_to_hypothetical_baseline,kind,price_checked_date,source
+two_8GB_example_baseline,2,8,44,88,1.000000,hypothetical_not_personal_actual,2026-11-22,https://aws.amazon.com/lightsail/pricing/
+one_8GB_example,1,8,44,44,0.500000,hypothetical_not_personal_actual,2026-11-22,https://aws.amazon.com/lightsail/pricing/
+one_4GB_example,1,4,24,24,0.272727,hypothetical_not_personal_actual,2026-11-22,https://aws.amazon.com/lightsail/pricing/
+one_2GB_example,1,2,12,12,0.136364,hypothetical_not_personal_actual,2026-11-22,https://aws.amazon.com/lightsail/pricing/

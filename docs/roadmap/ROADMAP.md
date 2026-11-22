@@ -1,5 +1,11 @@
 # QuantMesh Product Roadmap
 
+## Current status — 2026-11-22
+
+Development is paused. The [dated development handoff](../iterations/0038-development-pause-handoff-20261122.md) is the current status, backlog, source-preservation, and evidence-boundary snapshot. Entries below retain their original historical dates; headings such as "Current" in those entries describe their date of writing and do not supersede this snapshot.
+
+The [public AWS cost-control method](../runbooks/aws-cost-control-20261122.md) compares published rates and explicit hypothetical scenarios. Actual account bills and utilization remain in the private export.
+
 ## Same-build recovery preparation — issue301
 
 Prepare a concrete exact-owned-instance retirement -> proved closure -> one

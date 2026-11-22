@@ -1,5 +1,9 @@
 # QuantMesh Domain Context
 
+## Current status — 2026-11-22
+
+Development is paused. The [dated development handoff](docs/iterations/0038-development-pause-handoff-20261122.md) is the current status and backlog snapshot. Older "Current" headings below are historical as-of entries and do not authorize new work.
+
 ## Current passive same-connection slice — issue299, 2026-11-07
 
 PR298 software/release and actual reference11 are complete engineering facts:
