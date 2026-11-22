@@ -11,12 +11,15 @@ import {
   type IChartApi,
   type ISeriesApi,
   type MouseEventParams,
+  type IRange,
   type Time,
   type UTCTimestamp,
 } from 'lightweight-charts'
 
 import type { ComparisonSeries, ForecastPath, HistoricalSeries } from '@/lib/api'
 import type { Locale } from '@/lib/preferences'
+import type { ChartCandle } from '@/lib/chart-daily-series'
+import type { ChartInteraction, ChartTimeRange } from '@/lib/chart-time-link'
 
 import { ForecastBand } from './ForecastBand'
 
@@ -28,8 +31,11 @@ export interface InstrumentChartProps {
   indicators?: readonly ChartLine[]
   labels?: Partial<InstrumentChartLabels>
   locale?: Locale
+  height?: number
+  interaction?: ChartInteraction
+  sessionTimeZone?: 'America/New_York'
   mode: 'candles' | 'line'
-  primary: Pick<HistoricalSeries, 'instrument' | 'range' | 'bars'>
+  primary: Pick<HistoricalSeries, 'instrument' | 'range'> & { bars: readonly ChartCandle[] }
   volume?: boolean
 }
 
@@ -188,12 +194,12 @@ function datePart(
   return formatter.formatToParts(date).find((part) => part.type === type)?.value ?? ''
 }
 
-function chartTimeFormatters(locale: Locale) {
+function chartTimeFormatters(locale: Locale, sessionTimeZone?: 'America/New_York') {
   const appLocale = locale === 'zh-CN' ? 'zh-CN' : 'en-US'
   const dateFormatter = new Intl.DateTimeFormat(appLocale, {
     day: 'numeric',
     month: 'short',
-    timeZone: 'UTC',
+    timeZone: sessionTimeZone ?? 'UTC',
     year: 'numeric',
   })
   const timeFormatter = new Intl.DateTimeFormat(appLocale, {
@@ -201,7 +207,7 @@ function chartTimeFormatters(locale: Locale) {
     hourCycle: 'h23',
     minute: '2-digit',
     second: '2-digit',
-    timeZone: 'UTC',
+    timeZone: sessionTimeZone ?? 'UTC',
   })
 
   const parts = (date: Date) => ({
@@ -221,6 +227,7 @@ function chartTimeFormatters(locale: Locale) {
       const date = utcDate(time)
       if (date === null) return '—'
       const value = parts(date)
+      if (sessionTimeZone && tickMarkType >= TickMarkType.Time) return dateFormatter.format(date)
       if (tickMarkType === TickMarkType.Year) return value.year
       if (tickMarkType === TickMarkType.Month) return value.month
       if (tickMarkType === TickMarkType.DayOfMonth) {
@@ -235,6 +242,7 @@ function chartTimeFormatters(locale: Locale) {
       const date = utcDate(time)
       if (date === null) return '—'
       const value = parts(date)
+      if (sessionTimeZone) return dateFormatter.format(date)
       return locale === 'zh-CN'
         ? `${value.year}年${value.month}${value.day}日 ${value.hour}:${value.minute} UTC`
         : `${value.month} ${value.day}, ${value.year}, ${value.hour}:${value.minute} UTC`
@@ -250,6 +258,9 @@ export function InstrumentChart({
   indicators = [],
   labels,
   locale = 'en',
+  height,
+  interaction,
+  sessionTimeZone,
   mode,
   primary,
   volume = false,
@@ -260,6 +271,7 @@ export function InstrumentChart({
   const comparisonRefs = useRef(new Map<string, LineApi>())
   const indicatorRefs = useRef(new Map<string, LineApi>())
   const contextRef = useRef<string | null>(null)
+  const pendingRange = useRef<ChartTimeRange | null>(null)
   const chartLabels = useMemo(() => ({
     ...DEFAULT_LABELS,
     ...(locale === 'zh-CN' ? {
@@ -270,7 +282,7 @@ export function InstrumentChart({
     ...labels,
   }), [labels, locale])
   const palette = PALETTES[appearance]
-  const timeFormatters = useMemo(() => chartTimeFormatters(locale), [locale])
+  const timeFormatters = useMemo(() => chartTimeFormatters(locale, sessionTimeZone), [locale, sessionTimeZone])
 
   const priceFormatter = useMemo(() => {
     const formatter = new Intl.NumberFormat(locale === 'zh-CN' ? 'zh-CN' : 'en-US', {
@@ -310,7 +322,7 @@ export function InstrumentChart({
         borderColor: palette.border,
         secondsVisible: false,
         tickMarkFormatter: timeFormatters.tickMarkFormatter,
-        timeVisible: true,
+        timeVisible: !sessionTimeZone,
       },
     })
     const candles = chart.addSeries(CandlestickSeries, {
@@ -360,6 +372,7 @@ export function InstrumentChart({
     forecastSeries.p50.attachPrimitive(band)
 
     const onCrosshairMove = (event: MouseEventParams<Time>) => {
+      interaction?.hoverChanged(event.time === undefined ? null : (utcDate(event.time)?.getTime() ?? NaN) / 1000)
       const tooltip = tooltipRef.current
       if (tooltip === null) return
       const observed = event.seriesData.get(candles) ?? event.seriesData.get(close)
@@ -382,8 +395,36 @@ export function InstrumentChart({
     }
     chart.subscribeCrosshairMove(onCrosshairMove)
 
+    let disposed = false
+    const onRangeChange = (range: IRange<Time> | null) => {
+      if (!range || !interaction) return
+      const from = (utcDate(range.from)?.getTime() ?? NaN) / 1000
+      const to = (utcDate(range.to)?.getTime() ?? NaN) / 1000
+      if (Number.isFinite(from) && Number.isFinite(to) && from < to) {
+        pendingRange.current = { from, to }
+        interaction.rangeChanged({ from, to })
+      }
+    }
+    if (interaction) chart.timeScale().subscribeVisibleTimeRangeChange(onRangeChange)
+    const unmountInteraction = interaction?.mount({
+      setRange(range) {
+        if (disposed) return
+        pendingRange.current = range
+        if (candles.data().length > 1) chart.timeScale().setVisibleRange({ from: range.from as UTCTimestamp, to: range.to as UTCTimestamp })
+      },
+      setCrosshair(time) {
+        if (disposed) return
+        const bar = time === null ? undefined : candles.data().find((value) => value.time === time)
+        if (bar && 'close' in bar && typeof bar.close === 'number') chart.setCrosshairPosition(bar.close, time as UTCTimestamp, candles)
+        else chart.clearCrosshairPosition()
+      },
+    })
+
     refs.current = { band, candles, chart, close, forecast: forecastSeries, volume: volumeSeries }
     return () => {
+      disposed = true
+      unmountInteraction?.()
+      if (interaction) chart.timeScale().unsubscribeVisibleTimeRangeChange(onRangeChange)
       ownedComparisons.clear()
       ownedIndicators.clear()
       contextRef.current = null
@@ -392,12 +433,13 @@ export function InstrumentChart({
       forecastSeries.p50.detachPrimitive(band)
       chart.remove()
     }
-  }, [appearance, chartLabels, compactLabels, palette, priceFormatter, timeFormatters])
+  }, [appearance, chartLabels, compactLabels, interaction, palette, priceFormatter, timeFormatters])
 
   useEffect(() => {
     const current = refs.current
     if (current === null) return
     const { band, candles, chart, close, forecast: forecastSeries, volume: volumeSeries } = current
+    const requestedRange = pendingRange.current
     const nextContext = chartContext(primary)
     const sameContext = contextRef.current === nextContext
     const visibleRange = sameContext ? chart.timeScale().getVisibleRange() : null
@@ -515,7 +557,10 @@ export function InstrumentChart({
     } else if (visibleRange !== null && !followsLiveAppend && primary.bars.some((bar) => bar.is_live_tail)) {
       chart.timeScale().setVisibleRange(visibleRange)
     }
-  }, [chartLabels, compactLabels, comparisons, forecast, indicators, mode, palette, priceFormatter, primary, timeFormatters, volume])
+    if (interaction && requestedRange && candleData.length > 1) {
+      chart.timeScale().setVisibleRange({ from: requestedRange.from as UTCTimestamp, to: requestedRange.to as UTCTimestamp })
+    }
+  }, [chartLabels, compactLabels, comparisons, forecast, indicators, interaction, mode, palette, priceFormatter, primary, timeFormatters, volume])
 
   const accessibleObserved = primary.bars
   return (
@@ -530,6 +575,11 @@ export function InstrumentChart({
       <div
         ref={containerRef}
         className="h-[30rem] w-full"
+        style={height === undefined ? undefined : { height }}
+        onPointerEnter={interaction?.leadHover}
+        onPointerLeave={() => interaction?.hoverChanged(null)}
+        onPointerDownCapture={interaction?.leadRange}
+        onWheelCapture={interaction?.leadRange}
         role="img"
         aria-label={`${primary.instrument.symbol} ${chartLabels.chart}`}
       />

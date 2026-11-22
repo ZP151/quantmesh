@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { ComparisonSeries, HistoricalSeries } from '@/lib/api'
+import type { ChartInteraction, LinkedChartPort } from '@/lib/chart-time-link'
 
 const chartHarness = vi.hoisted(() => {
   const series: Array<{
@@ -14,6 +15,8 @@ const chartHarness = vi.hoisted(() => {
     fitContent: vi.fn(),
     getVisibleRange: vi.fn(() => ({ from: 1, to: 2 })),
     setVisibleRange: vi.fn(),
+    subscribeVisibleTimeRangeChange: vi.fn(),
+    unsubscribeVisibleTimeRangeChange: vi.fn(),
   }
   const chart = {
     addSeries: vi.fn(() => {
@@ -34,6 +37,8 @@ const chartHarness = vi.hoisted(() => {
     subscribeCrosshairMove: vi.fn(),
     timeScale: vi.fn(() => timeScale),
     unsubscribeCrosshairMove: vi.fn(),
+    setCrosshairPosition: vi.fn(),
+    clearCrosshairPosition: vi.fn(),
   }
   return {
     chart,
@@ -196,6 +201,38 @@ describe('InstrumentChart', () => {
   })
 
   afterEach(() => vi.unstubAllGlobals())
+
+  it('owns optional time-linked interactions and cleans listeners before removing the chart', () => {
+    let port: LinkedChartPort | undefined
+    const dispose = vi.fn()
+    const interaction: ChartInteraction = { mount: vi.fn((p) => { port = p; return dispose }), leadRange: vi.fn(), leadHover: vi.fn(), rangeChanged: vi.fn(), hoverChanged: vi.fn() }
+    const view = render(<InstrumentChart mode="candles" primary={primary} interaction={interaction} height={360} sessionTimeZone="America/New_York" />)
+    expect(port).toBeDefined()
+    const image = screen.getByRole('img')
+    fireEvent.pointerEnter(image); fireEvent.wheel(image)
+    expect(interaction.leadHover).toHaveBeenCalledOnce()
+    expect(interaction.leadRange).toHaveBeenCalledOnce()
+    const time = Date.parse(primary.bars[0].timestamp) / 1000
+    port!.setCrosshair(time)
+    expect(chartHarness.chart.setCrosshairPosition).toHaveBeenCalledWith(primary.bars[0].close, time, chartHarness.series[0])
+    port!.setCrosshair(null)
+    expect(chartHarness.chart.clearCrosshairPosition).toHaveBeenCalledOnce()
+    port!.setRange({ from: time, to: time + 86400 })
+    expect(chartHarness.timeScale.setVisibleRange).toHaveBeenLastCalledWith({ from: time, to: time + 86400 })
+    expect(chartHarness.timeScale.subscribeVisibleTimeRangeChange).toHaveBeenCalledOnce()
+    view.unmount()
+    expect(dispose).toHaveBeenCalledOnce()
+    expect(chartHarness.timeScale.unsubscribeVisibleTimeRangeChange).toHaveBeenCalledWith(chartHarness.timeScale.subscribeVisibleTimeRangeChange.mock.calls[0][0])
+    expect(chartHarness.timeScale.unsubscribeVisibleTimeRangeChange.mock.invocationCallOrder[0]).toBeLessThan(chartHarness.chart.remove.mock.invocationCallOrder[0])
+    port!.setCrosshair(time)
+    expect(chartHarness.chart.setCrosshairPosition).toHaveBeenCalledOnce()
+  })
+
+  it('labels daily bars by New York session date without UTC date rollover', () => {
+    render(<InstrumentChart mode="candles" primary={primary} sessionTimeZone="America/New_York" />)
+    const options = (chartHarness.createChart.mock.calls as unknown as [unknown, { localization: { timeFormatter: (time: number) => string } }][])[0][1]
+    expect(options.localization.timeFormatter(Date.parse('2026-03-10T00:30:00Z') / 1000)).toBe('Mar 9, 2026')
+  })
 
   it('owns one chart lifecycle and does not duplicate series on rerender', () => {
     const view = render(
